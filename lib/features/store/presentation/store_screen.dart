@@ -1,16 +1,18 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../application/cart_provider.dart';
 import '../domain/product.dart';
 import 'exchange_wallet.dart';
 
 /// 마일리지 스토어.
 /// 보유 마일리지로 헬스장 내 상품을 교환한다. 현재는 더미 데이터.
-class StoreScreen extends StatelessWidget {
+class StoreScreen extends ConsumerWidget {
   const StoreScreen({super.key});
 
   static const int _myMileage = 2400;
@@ -54,7 +56,9 @@ class StoreScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cartCount = ref.watch(cartCountProvider);
+    final cartTotal = ref.watch(cartTotalProvider);
     return Scaffold(
       body: Stack(
         children: [
@@ -106,9 +110,97 @@ class StoreScreen extends StatelessWidget {
               ],
             ),
           ),
-          // 삼성페이식 교환권 — 쓸어올리면 카드가 세로→가로로 펼쳐짐
-          const Positioned.fill(child: ExchangeWalletOverlay()),
+          // 장바구니가 비었을 때만 교환권 핸들 노출(자리 충돌 방지)
+          if (cartCount == 0)
+            const Positioned.fill(child: ExchangeWalletOverlay()),
+
+          // 담은 상품이 있으면 하단 장바구니 바(배민식)
+          if (cartCount > 0)
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 92,
+              child: _CartBar(
+                count: cartCount,
+                total: cartTotal,
+                onTap: () => context.push('/cart'),
+              ),
+            ),
         ],
+      ),
+    );
+  }
+}
+
+/// 하단 장바구니 바 — 담은 상품이 있을 때만 노출.
+class _CartBar extends StatelessWidget {
+  const _CartBar({
+    required this.count,
+    required this.total,
+    required this.onTap,
+  });
+
+  final int count;
+  final int total;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 18),
+        decoration: BoxDecoration(
+          color: AppColors.lime,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // 개수 배지
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '$count',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.lime,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              '장바구니',
+              style: textTheme.titleMedium?.copyWith(
+                color: Colors.black,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              '${_comma(total)}P',
+              style: textTheme.titleMedium?.copyWith(
+                color: Colors.black,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Symbols.chevron_right, color: Colors.black, size: 22),
+          ],
+        ),
       ),
     );
   }

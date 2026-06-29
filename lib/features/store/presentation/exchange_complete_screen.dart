@@ -3,19 +3,19 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../domain/product.dart';
 
 /// 교환 완료 화면 (토스 이체/결제 완료 스타일).
-/// 교환 수량 시트에서 "교환하기"를 누르면 풀스크린으로 페이드 진입한다.
+/// 장바구니에서 교환하면 풀스크린으로 페이드 진입한다.
 class ExchangeCompleteScreen extends StatefulWidget {
   const ExchangeCompleteScreen({
     super.key,
-    required this.product,
-    required this.qty,
+    required this.summary,
+    required this.totalPoints,
   });
 
-  final Product product;
-  final int qty;
+  /// 교환 요약 (예: "프로틴 쉐이커 외 1건").
+  final String summary;
+  final int totalPoints;
 
   @override
   State<ExchangeCompleteScreen> createState() => _ExchangeCompleteScreenState();
@@ -42,9 +42,8 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
 
   @override
   Widget build(BuildContext context) {
-    final product = widget.product;
     final textTheme = Theme.of(context).textTheme;
-    final total = product.points * widget.qty;
+    final total = widget.totalPoints;
 
     // 체크 아이콘: 팝 등장(스케일 elasticOut) + 페이드
     final scale = CurvedAnimation(
@@ -120,7 +119,7 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
                                 children: [
                                   _InfoRow(
                                     label: '상품',
-                                    value: '${product.name} x${widget.qty}',
+                                    value: widget.summary,
                                   ),
                                   const SizedBox(height: 14),
                                   _InfoRow(

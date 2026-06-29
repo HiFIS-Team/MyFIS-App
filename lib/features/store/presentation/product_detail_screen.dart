@@ -1,26 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../application/cart_provider.dart';
 import '../domain/product.dart';
 
 /// 상품 상세 화면.
 /// 스토어에서 상품 카드를 누르면 오른쪽→왼쪽 슬라이드로 진입(알림·바코드와 동일).
 /// 현재는 더미 데이터.
-class ProductDetailScreen extends StatefulWidget {
+class ProductDetailScreen extends ConsumerStatefulWidget {
   const ProductDetailScreen({super.key, required this.product});
   final Product product;
 
   @override
-  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  ConsumerState<ProductDetailScreen> createState() =>
+      _ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
+class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   bool _liked = false;
 
-  // 교환하기 → 무신사처럼 아래에서 수량 선택 시트가 올라오고 뒤는 어두워짐.
-  // 시트에서 교환하면 선택 수량을 반환받아 완료 화면으로 이동.
+  // 장바구니 담기 → 아래에서 수량 선택 시트가 올라오고 뒤는 어두워짐.
+  // 시트에서 담으면 선택 수량을 반환받아 카트에 추가.
   Future<void> _openExchangeSheet() async {
     final qty = await showModalBottomSheet<int>(
       context: context,
@@ -33,10 +35,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       builder: (_) => _ExchangeSheet(product: widget.product),
     );
     if (qty == null || !mounted) return;
-    context.push(
-      '/exchange-complete',
-      extra: (product: widget.product, qty: qty),
-    );
+    ref.read(cartProvider.notifier).add(widget.product, qty);
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('장바구니에 $qty개 담았어요'),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   @override
@@ -210,10 +218,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Symbols.paid, size: 20, color: Colors.black),
+                    const Icon(Symbols.add_shopping_cart,
+                        size: 20, color: Colors.black),
                     const SizedBox(width: 6),
                     Text(
-                      '${_comma(product.points)}P로 교환하기',
+                      '장바구니 담기',
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                         color: Colors.black,
@@ -360,7 +369,7 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              // 선택 수량을 반환하며 시트 닫기 → 상세에서 완료 화면으로 이동
+              // 선택 수량을 반환하며 시트 닫기 → 상세에서 카트에 담음
               onPressed: () => Navigator.of(context).pop(_qty),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
@@ -369,7 +378,7 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                 ),
               ),
               child: Text(
-                '${_comma(total)}P로 교환하기',
+                '장바구니에 담기',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
