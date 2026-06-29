@@ -68,7 +68,7 @@ class MyPageScreen extends StatelessWidget {
             _SectionLabel('계정'),
             const SizedBox(height: 10),
             const _MenuCard(rows: [
-              _MenuRow(icon: Symbols.person, label: '프로필 수정'),
+              _MenuRow(icon: Symbols.lock, label: '비밀번호 변경'),
               _MenuRow(icon: Symbols.credit_card, label: '결제 카드 관리'),
               _MenuRow(
                   icon: Symbols.notifications,
