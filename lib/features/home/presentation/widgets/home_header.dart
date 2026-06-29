@@ -28,11 +28,11 @@ class HomeHeader extends StatelessWidget {
       children: [
         const _BrandWordmark(),
         const Spacer(),
-        // 출석 체크 (바코드)
+        // 출석 체크 (바코드 + 스캔 프레임)
         IconButton(
           onPressed: onCheckInTap,
           iconSize: 26,
-          icon: const Icon(Symbols.barcode),
+          icon: const Icon(Symbols.barcode_scanner, fill: 1),
           color: iconColor,
         ),
         _NotificationButton(
