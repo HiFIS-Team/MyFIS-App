@@ -236,7 +236,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             // 장바구니 담기 (보조)
             Expanded(
               child: FilledButton(
-                onPressed: () => _openSheet(toCart: false),
+                onPressed: () => _openSheet(toCart: true),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.surfaceAlt,
                   foregroundColor: AppColors.textPrimary,
