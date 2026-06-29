@@ -309,33 +309,12 @@ class _MembershipCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          // 부가상품 2칸
-          IntrinsicHeight(
-            child: Row(
-              children: [
-                Expanded(
-                  child: _AddonItem(
-                    icon: Symbols.lock,
-                    label: '락커',
-                    months: lockerMonths,
-                  ),
-                ),
-                const VerticalDivider(
-                  width: 1,
-                  thickness: 1,
-                  color: AppColors.outline,
-                ),
-                Expanded(
-                  child: _AddonItem(
-                    icon: Symbols.checkroom,
-                    label: '운동복',
-                    months: wearMonths,
-                  ),
-                ),
-              ],
-            ),
-          ),
+          const SizedBox(height: 16),
+          // 부가상품 — 각각 가로 블럭
+          _AddonItem(icon: Symbols.lock, label: '락커', months: lockerMonths),
+          const SizedBox(height: 10),
+          _AddonItem(
+              icon: Symbols.checkroom, label: '운동복', months: wearMonths),
         ],
       ),
     );
@@ -358,34 +337,33 @@ class _AddonItem extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final purchased = months != null;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
         children: [
-          Row(
-            children: [
-              Icon(icon, color: AppColors.textSecondary, size: 18),
-              const SizedBox(width: 6),
-              Text(
-                label,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
+          Icon(icon, color: AppColors.textSecondary, size: 18),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
-          const SizedBox(height: 10),
+          const Spacer(),
           if (purchased)
             Text(
-              '$months개월 남음',
-              style: textTheme.titleMedium?.copyWith(
+              '$months개월',
+              style: textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w800,
               ),
             )
           else
             SizedBox(
-              height: 36,
+              height: 34,
               child: FilledButton(
                 onPressed: () {},
                 style: FilledButton.styleFrom(
