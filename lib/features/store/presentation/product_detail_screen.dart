@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../domain/product.dart';
-import 'exchange_complete_screen.dart';
 
 /// 상품 상세 화면.
 /// 스토어에서 상품 카드를 누르면 오른쪽→왼쪽 슬라이드로 진입(알림·바코드와 동일).
@@ -19,9 +19,10 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _liked = false;
 
-  // 교환하기 → 무신사처럼 아래에서 수량 선택 시트가 올라오고 뒤는 어두워짐
-  void _openExchangeSheet() {
-    showModalBottomSheet<void>(
+  // 교환하기 → 무신사처럼 아래에서 수량 선택 시트가 올라오고 뒤는 어두워짐.
+  // 시트에서 교환하면 선택 수량을 반환받아 완료 화면으로 이동.
+  Future<void> _openExchangeSheet() async {
+    final qty = await showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.background,
@@ -30,6 +31,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (_) => _ExchangeSheet(product: widget.product),
+    );
+    if (qty == null || !mounted) return;
+    context.push(
+      '/exchange-complete',
+      extra: (product: widget.product, qty: qty),
     );
   }
 
@@ -354,22 +360,8 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: () {
-                // 시트 닫고 → 풀스크린 완료 화면으로 페이드 진입
-                final navigator = Navigator.of(context, rootNavigator: true);
-                navigator.pop();
-                navigator.push(
-                  PageRouteBuilder<void>(
-                    transitionDuration: const Duration(milliseconds: 280),
-                    pageBuilder: (_, _, _) => ExchangeCompleteScreen(
-                      product: product,
-                      qty: _qty,
-                    ),
-                    transitionsBuilder: (_, animation, _, child) =>
-                        FadeTransition(opacity: animation, child: child),
-                  ),
-                );
-              },
+              // 선택 수량을 반환하며 시트 닫기 → 상세에서 완료 화면으로 이동
+              onPressed: () => Navigator.of(context).pop(_qty),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
                 shape: RoundedRectangleBorder(

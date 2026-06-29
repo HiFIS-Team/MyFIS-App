@@ -10,6 +10,7 @@ import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
 import '../../features/store/domain/product.dart';
+import '../../features/store/presentation/exchange_complete_screen.dart';
 import '../../features/store/presentation/product_detail_screen.dart';
 import '../../features/store/presentation/store_screen.dart';
 import '../../features/weight/presentation/weight_screen.dart';
@@ -41,6 +42,17 @@ CustomTransitionPage<void> _slideFromRight(GoRouterState state, Widget child) {
         child: child,
       );
     },
+  );
+}
+
+/// 페이드 전환 페이지 (교환 완료 등 결과 화면용).
+CustomTransitionPage<void> _fadePage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    transitionDuration: const Duration(milliseconds: 280),
+    child: child,
+    transitionsBuilder: (_, animation, _, child) =>
+        FadeTransition(opacity: animation, child: child),
   );
 }
 
@@ -83,6 +95,19 @@ final routerProvider = Provider<GoRouter>((ref) {
           state,
           ProductDetailScreen(product: state.extra as Product),
         ),
+      ),
+
+      // 교환 완료 — 수량 시트에서 교환 후 풀스크린 페이드 진입
+      GoRoute(
+        path: '/exchange-complete',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final args = state.extra as ({Product product, int qty});
+          return _fadePage(
+            state,
+            ExchangeCompleteScreen(product: args.product, qty: args.qty),
+          );
+        },
       ),
 
       // 하단 탭 — 탭 전환 시 부드러운 크로스페이드 (상태 보존)

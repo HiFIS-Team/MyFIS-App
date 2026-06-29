@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -161,7 +162,8 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
               child: FilledButton(
-                onPressed: () => Navigator.of(context).pop(),
+                // 확인 → 상세·완료 화면 모두 닫고 스토어로 이동
+                onPressed: () => context.go('/store'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                   shape: RoundedRectangleBorder(
