@@ -47,10 +47,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       ),
       body: ListView(
         padding: EdgeInsets.zero,
+        // 맨 위에서 아래로 당겨도 바운스로 검은 배경이 보이지 않게(오버스크롤 차단)
+        physics: const ClampingScrollPhysics(),
         children: [
           // 상품 이미지 — 헤더 뒤까지 꽉 찬 풀블리드 (토스 스타일). 현재는 placeholder.
           AspectRatio(
-            aspectRatio: 1.4,
+            aspectRatio: 1.25,
             child: Container(
               color: AppColors.lime.withValues(alpha: 0.10),
               alignment: Alignment.center,
