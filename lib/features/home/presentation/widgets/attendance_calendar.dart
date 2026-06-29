@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// 이번 달 출석 달력.
-/// 출석한 날은 라임으로 채워 표시, 오늘은 라임 테두리로 강조.
+/// 출석한 날은 덤벨(운동) 아이콘 + 라임 날짜로 표시, 오늘(미출석)은 라임 테두리.
 /// attendedDays: 이번 달에 출석한 '일(day)' 집합 (더미).
 class AttendanceCalendar extends StatelessWidget {
   const AttendanceCalendar({super.key, required this.attendedDays});
@@ -110,31 +110,52 @@ class AttendanceCalendar extends StatelessWidget {
   }
 
   Widget _dayCell(int? day, int today) {
-    if (day == null) return const SizedBox(height: 36);
+    if (day == null) return const SizedBox(height: 44);
 
     final attended = attendedDays.contains(day);
     final isToday = day == today;
 
+    // 출석한 날 — 덤벨 아이콘 + 라임 날짜
+    if (attended) {
+      return SizedBox(
+        height: 44,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.fitness_center, color: AppColors.lime, size: 18),
+            const SizedBox(height: 2),
+            Text(
+              '$day',
+              style: const TextStyle(
+                color: AppColors.lime,
+                fontWeight: FontWeight.w700,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 미출석 — 날짜 숫자 (오늘은 라임 테두리)
     return SizedBox(
-      height: 36,
+      height: 44,
       child: Center(
         child: Container(
-          width: 34,
-          height: 34,
+          width: 32,
+          height: 32,
           alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: attended ? AppColors.lime : Colors.transparent,
-            shape: BoxShape.circle,
-            border: isToday && !attended
-                ? Border.all(color: AppColors.lime, width: 1.5)
-                : null,
-          ),
+          decoration: isToday
+              ? BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: AppColors.lime, width: 1.5),
+                )
+              : null,
           child: Text(
             '$day',
             style: TextStyle(
-              color: attended ? AppColors.background : AppColors.textPrimary,
-              fontWeight:
-                  attended || isToday ? FontWeight.w700 : FontWeight.w500,
+              color: AppColors.textPrimary,
+              fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
               fontSize: 14,
             ),
           ),
