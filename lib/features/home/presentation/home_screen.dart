@@ -23,6 +23,7 @@ class HomeScreen extends StatelessWidget {
                 hasNotification: true,
                 onNotificationTap: () => context.push('/notifications'),
                 onCheckInTap: () => context.push('/check-in'),
+                onMembershipTap: () => context.push('/membership'),
               ),
             ),
 

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
@@ -60,6 +61,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const CheckinBarcodeScreen()),
+      ),
+
+      // 멤버십 관리 — 오른쪽→왼쪽 슬라이드
+      GoRoute(
+        path: '/membership',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const MembershipScreen()),
       ),
 
       // 하단 5탭을 유지하는 StatefulShellRoute

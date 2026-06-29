@@ -11,6 +11,7 @@ class HomeHeader extends StatelessWidget {
     this.hasNotification = false,
     this.onNotificationTap,
     this.onCheckInTap,
+    this.onMembershipTap,
   });
 
   /// 안 읽은 알림 여부 — 벨 아이콘에 점 표시.
@@ -20,6 +21,9 @@ class HomeHeader extends StatelessWidget {
   /// 출석 체크 (QR 스캔).
   final VoidCallback? onCheckInTap;
 
+  /// 멤버십 관리.
+  final VoidCallback? onMembershipTap;
+
   @override
   Widget build(BuildContext context) {
     final iconColor = Theme.of(context).colorScheme.onSurface;
@@ -28,6 +32,13 @@ class HomeHeader extends StatelessWidget {
       children: [
         const _BrandWordmark(),
         const Spacer(),
+        // 멤버십 관리 (카드)
+        IconButton(
+          onPressed: onMembershipTap,
+          iconSize: 26,
+          icon: const Icon(Symbols.credit_card),
+          color: iconColor,
+        ),
         // 출석 체크 (바코드 + 스캔 프레임)
         IconButton(
           onPressed: onCheckInTap,
