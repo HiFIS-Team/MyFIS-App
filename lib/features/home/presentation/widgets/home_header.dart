@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../core/theme/app_colors.dart';
 
@@ -9,19 +10,31 @@ class HomeHeader extends StatelessWidget {
     super.key,
     this.hasNotification = false,
     this.onNotificationTap,
+    this.onCheckInTap,
   });
 
   /// 안 읽은 알림 여부 — 벨 아이콘에 점 표시.
   final bool hasNotification;
   final VoidCallback? onNotificationTap;
 
+  /// 출석 체크 (QR 스캔).
+  final VoidCallback? onCheckInTap;
+
   @override
   Widget build(BuildContext context) {
+    final iconColor = Theme.of(context).colorScheme.onSurface;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const _BrandWordmark(),
         const Spacer(),
+        // 출석 체크 (바코드)
+        IconButton(
+          onPressed: onCheckInTap,
+          iconSize: 26,
+          icon: const Icon(Symbols.barcode),
+          color: iconColor,
+        ),
         _NotificationButton(
           hasNotification: hasNotification,
           onTap: onNotificationTap,
