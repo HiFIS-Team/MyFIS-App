@@ -310,11 +310,21 @@ class _MembershipCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // 부가상품 — 각각 가로 블럭
-          _AddonItem(icon: Symbols.lock, label: '락커', months: lockerMonths),
-          const SizedBox(height: 10),
-          _AddonItem(
-              icon: Symbols.checkroom, label: '운동복', months: wearMonths),
+          // 부가상품 — 락커(좌) · 운동복(우) 블럭
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _AddonItem(label: '락커', months: lockerMonths),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _AddonItem(label: '운동복', months: wearMonths),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -323,12 +333,10 @@ class _MembershipCard extends StatelessWidget {
 
 class _AddonItem extends StatelessWidget {
   const _AddonItem({
-    required this.icon,
     required this.label,
     required this.months,
   });
 
-  final IconData icon;
   final String label;
   final int? months; // null이면 미구매
 
@@ -345,11 +353,10 @@ class _AddonItem extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppColors.textSecondary, size: 18),
-          const SizedBox(width: 8),
           Text(
             label,
-            style: textTheme.bodyLarge?.copyWith(
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -363,20 +370,20 @@ class _AddonItem extends StatelessWidget {
             )
           else
             SizedBox(
-              height: 34,
+              height: 32,
               child: FilledButton(
                 onPressed: () {},
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(9),
                   ),
                 ),
                 child: Text(
                   '구매하기',
-                  style: textTheme.bodyMedium?.copyWith(
+                  style: textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w800,
                     color: Colors.black,
                   ),
