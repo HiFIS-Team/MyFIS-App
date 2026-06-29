@@ -236,7 +236,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             // 장바구니 담기 (보조)
             Expanded(
               child: FilledButton(
-                onPressed: () => _openSheet(toCart: true),
+                onPressed: () => _openSheet(toCart: false),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.surfaceAlt,
                   foregroundColor: AppColors.textPrimary,
@@ -420,14 +420,26 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: Text(
-                widget.buyNow
-                    ? '${_comma(total)}P 교환하기'
-                    : '장바구니에 담기',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.black,
-                ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widget.buyNow ? Symbols.paid : Symbols.add_shopping_cart,
+                    size: 20,
+                    color: Colors.black,
+                    fill: widget.buyNow ? 1 : 0,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    widget.buyNow
+                        ? '${_comma(total)}P 교환하기'
+                        : '장바구니에 담기',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
