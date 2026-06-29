@@ -127,17 +127,37 @@ class MainShell extends StatelessWidget {
   }
 }
 
+/// 떠 있는 둥근 캡슐형 하단바.
 class _Bar extends StatelessWidget {
   const _Bar({super.key, required this.items});
   final List<Widget> items;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 64,
-      color: AppColors.surface,
-      child: Row(
-        children: [for (final item in items) Expanded(child: item)],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(34),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Material(
+          color: AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(34),
+          clipBehavior: Clip.antiAlias,
+          child: SizedBox(
+            height: 64,
+            child: Row(
+              children: [for (final item in items) Expanded(child: item)],
+            ),
+          ),
+        ),
       ),
     );
   }
