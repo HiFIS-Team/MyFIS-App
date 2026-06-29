@@ -34,16 +34,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
-        actions: [
-          IconButton(
-            onPressed: () => setState(() => _liked = !_liked),
-            icon: Icon(
-              Symbols.favorite,
-              fill: _liked ? 1 : 0,
-              color: _liked ? const Color(0xFFFF6B6B) : null,
-            ),
-          ),
-        ],
       ),
       body: ListView(
         padding: EdgeInsets.zero,
@@ -110,30 +100,89 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           ),
         ],
       ),
-      // 하단 고정 교환 버튼
+      // 하단 고정 바: [하트] [채팅] [교환하기]
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: FilledButton(
-          onPressed: () {},
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(54),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+        child: Row(
+          children: [
+            // 좋아요(하트)
+            _SideButton(
+              icon: Symbols.favorite,
+              fill: _liked,
+              color: _liked ? const Color(0xFFFF6B6B) : null,
+              onTap: () => setState(() => _liked = !_liked),
             ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Symbols.paid, size: 20),
-              const SizedBox(width: 6),
-              Text(
-                '${_comma(product.points)}P로 교환하기',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+            const SizedBox(width: 8),
+            // 채팅(문의)
+            _SideButton(
+              icon: Symbols.chat_bubble,
+              onTap: () {},
+            ),
+            const SizedBox(width: 12),
+            // 교환하기 (남은 폭 채움)
+            Expanded(
+              child: FilledButton(
+                onPressed: () {},
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Symbols.paid, size: 20),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${_comma(product.points)}P로 교환하기',
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 하단 바 좌측의 정사각 보조 버튼(하트·채팅).
+class _SideButton extends StatelessWidget {
+  const _SideButton({
+    required this.icon,
+    required this.onTap,
+    this.fill = false,
+    this.color,
+  });
+
+  final IconData icon;
+  final VoidCallback onTap;
+  final bool fill;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        width: 54,
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Icon(
+          icon,
+          size: 24,
+          fill: fill ? 1 : 0,
+          color: color ?? AppColors.textSecondary,
         ),
       ),
     );
