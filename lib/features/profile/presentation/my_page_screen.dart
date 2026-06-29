@@ -72,22 +72,34 @@ class MyPageScreen extends StatelessWidget {
             ]),
             const SizedBox(height: 22),
 
-            // 계정
-            _SectionLabel('계정'),
+            // 결제
+            _SectionLabel('결제'),
             const SizedBox(height: 10),
             const _MenuCard(rows: [
-              _MenuRow(icon: Symbols.lock, label: '비밀번호 변경'),
+              _MenuRow(icon: Symbols.receipt_long, label: '결제 내역'),
               _MenuRow(icon: Symbols.credit_card, label: '결제 카드 관리'),
-              _MenuRow(
-                  icon: Symbols.notifications,
-                  label: '알림 설정',
-                  isLast: true),
+              _MenuRow(icon: Symbols.confirmation_number, label: '쿠폰'),
+              _MenuRow(icon: Symbols.paid, label: '포인트', isLast: true),
             ]),
             const SizedBox(height: 22),
 
-            // 기타
+            // 설정
+            _SectionLabel('설정'),
+            const SizedBox(height: 10),
             const _MenuCard(rows: [
-              _MenuRow(icon: Symbols.help, label: '고객센터 · 문의'),
+              _MenuRow(icon: Symbols.notifications, label: '알림 설정'),
+              _MenuRow(icon: Symbols.lock, label: '비밀번호 변경'),
+              _MenuRow(
+                icon: Symbols.info,
+                label: '앱 버전',
+                trailing: '1.0.0',
+                isLast: true,
+              ),
+            ]),
+            const SizedBox(height: 22),
+
+            // 로그아웃
+            const _MenuCard(rows: [
               _MenuRow(
                 icon: Symbols.logout,
                 label: '로그아웃',
@@ -95,15 +107,6 @@ class MyPageScreen extends StatelessWidget {
                 isLast: true,
               ),
             ]),
-            const SizedBox(height: 16),
-            Center(
-              child: Text(
-                '버전 1.0.0',
-                style: textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ),
           ],
         ),
       ),
@@ -499,12 +502,14 @@ class _MenuRow extends StatelessWidget {
     required this.label,
     this.isLast = false,
     this.danger = false,
+    this.trailing,
   });
 
   final IconData icon;
   final String label;
   final bool isLast;
   final bool danger;
+  final String? trailing; // 우측 값(예: 앱 버전). 있으면 chevron 대신 표시
 
   @override
   Widget build(BuildContext context) {
@@ -530,7 +535,14 @@ class _MenuRow extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                if (!danger)
+                if (trailing != null)
+                  Text(
+                    trailing!,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  )
+                else if (!danger)
                   const Icon(Icons.chevron_right,
                       color: AppColors.textSecondary, size: 22),
               ],
