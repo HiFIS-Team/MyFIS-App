@@ -46,7 +46,9 @@ class StoreScreen extends StatelessWidget {
                   const SizedBox(height: 24),
                   Text(
                     '상품 교환',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                   ),
                   const SizedBox(height: 12),
                   GridView.builder(
