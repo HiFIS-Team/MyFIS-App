@@ -70,8 +70,15 @@ class AppTheme {
   // ---------------------------------------------------------------------------
   // 공통 베이스
   // ---------------------------------------------------------------------------
+  /// 앱 전역 폰트 — Pretendard (토스풍 깔끔한 산세리프)
+  static const String fontFamily = 'Pretendard';
+
   static ThemeData _base(ColorScheme scheme) {
-    final base = ThemeData(useMaterial3: true, colorScheme: scheme);
+    final base = ThemeData(
+      useMaterial3: true,
+      colorScheme: scheme,
+      fontFamily: fontFamily,
+    );
     // 토스풍: 큰 숫자/타이틀은 굵게 (베이스 텍스트테마 위에 weight만 강조)
     final text = base.textTheme.copyWith(
       displayLarge: base.textTheme.displayLarge?.copyWith(
