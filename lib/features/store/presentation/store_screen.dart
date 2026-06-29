@@ -172,7 +172,8 @@ class _PromoBannerState extends State<_PromoBanner> {
     ),
   ];
 
-  final PageController _controller = PageController();
+  // viewportFraction < 1 → 양옆 카드가 살짝 보이는 토스식 peeking 캐러셀
+  final PageController _controller = PageController(viewportFraction: 0.9);
   Timer? _timer;
   int _index = 0;
 
@@ -199,39 +200,16 @@ class _PromoBannerState extends State<_PromoBanner> {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: AspectRatio(
-        aspectRatio: 2.4, // 가로로 긴 직사각형
-        child: Stack(
-          children: [
-            PageView.builder(
-              controller: _controller,
-              itemCount: _promos.length,
-              onPageChanged: (i) => setState(() => _index = i),
-              itemBuilder: (context, i) => _PromoSlide(promo: _promos[i]),
-            ),
-            // 우하단 1/3 인디케이터
-            Positioned(
-              right: 12,
-              bottom: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  '${_index + 1}/${_promos.length}',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
+    return AspectRatio(
+      aspectRatio: 1.5, // 세로로 좀 더 긴 직사각형
+      child: PageView.builder(
+        controller: _controller,
+        itemCount: _promos.length,
+        onPageChanged: (i) => setState(() => _index = i),
+        itemBuilder: (context, i) => _PromoSlide(
+          promo: _promos[i],
+          index: i,
+          total: _promos.length,
         ),
       ),
     );
@@ -251,43 +229,83 @@ class _Promo {
 }
 
 class _PromoSlide extends StatelessWidget {
-  const _PromoSlide({required this.promo});
+  const _PromoSlide({
+    required this.promo,
+    required this.index,
+    required this.total,
+  });
+
   final _Promo promo;
+  final int index;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      alignment: Alignment.centerLeft,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: promo.colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    // 좌우 여백을 줘서 카드 사이에 틈을 만들고, 자체 라운드로 카드처럼 보이게.
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 5),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(22),
+              alignment: Alignment.centerLeft,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: promo.colors,
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    promo.title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    promo.subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.75),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // 우하단 현재/전체 인디케이터 (카드에 얹혀 함께 이동)
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${index + 1}/$total',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            promo.title,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            promo.subtitle,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.75),
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }
