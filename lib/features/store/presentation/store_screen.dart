@@ -106,66 +106,9 @@ class StoreScreen extends StatelessWidget {
               ],
             ),
           ),
-          // 하단 풀업 핸들 — 위로 끌거나 탭하면 교환권 지갑(삼성페이식)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 96,
-            child: Center(
-              child: _WalletPullHandle(
-                onOpen: () => showExchangeWallet(context),
-              ),
-            ),
-          ),
+          // 삼성페이식 교환권 — 쓸어올리면 카드가 세로→가로로 펼쳐짐
+          const Positioned.fill(child: ExchangeWalletOverlay()),
         ],
-      ),
-    );
-  }
-}
-
-/// 하단 풀업 핸들 — "내 교환권". 탭하거나 위로 끌면 지갑이 열린다.
-class _WalletPullHandle extends StatelessWidget {
-  const _WalletPullHandle({required this.onOpen});
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onOpen,
-      onVerticalDragEnd: (d) {
-        if ((d.primaryVelocity ?? 0) < 0) onOpen(); // 위로 끌면 열기
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: AppColors.outline),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 16,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Symbols.keyboard_arrow_up,
-                size: 20, color: AppColors.textSecondary),
-            const SizedBox(width: 4),
-            const Icon(Symbols.wallet, size: 18, color: AppColors.lime),
-            const SizedBox(width: 6),
-            Text(
-              '내 교환권',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-          ],
-        ),
       ),
     );
   }

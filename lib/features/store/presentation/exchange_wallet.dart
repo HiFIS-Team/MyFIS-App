@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -17,96 +19,197 @@ class _ExchangeOrder {
   final String number; // 교환번호 (프론트 제시용)
   final int qty;
   final String date;
-  final bool done; // 수령 완료 여부
+  final bool done;
 }
 
-const List<_ExchangeOrder> _dummyOrders = [
-  _ExchangeOrder(
-      name: '프로틴 쉐이커', number: 'A3F92', qty: 2, date: '6/29', done: false),
-  _ExchangeOrder(
-      name: '이온음료', number: 'B7K10', qty: 1, date: '6/27', done: true),
-  _ExchangeOrder(
-      name: '운동 타월', number: 'C1D45', qty: 1, date: '6/20', done: true),
-];
+// 지금(가장 최근) 교환 기록만 보여준다.
+const _ExchangeOrder _latestOrder = _ExchangeOrder(
+  name: '프로틴 쉐이커',
+  number: 'A3F92',
+  qty: 2,
+  date: '6/29',
+  done: false,
+);
 
-/// 삼성페이처럼 아래에서 끌어올리는 "내 교환권" 지갑.
-/// 각 카드에 교환번호가 보인다. 현재는 더미 데이터.
-Future<void> showExchangeWallet(BuildContext context) {
-  return showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    useRootNavigator: true, // 하단 네비바까지 덮도록 루트에서 띄움
-    backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.6),
-    builder: (_) => const _ExchangeWalletSheet(),
+/// 삼성페이식 교환권.
+/// 하단 "내 교환권" 핸들을 쓸어올리면 카드가 세로→가로로 회전하며 펼쳐지고,
+/// 쓸어내리면 역재생으로 핸들로 접힌다. 스토어 화면 Stack 위에 올려 사용.
+class ExchangeWalletOverlay extends StatefulWidget {
+  const ExchangeWalletOverlay({super.key});
+
+  @override
+  State<ExchangeWalletOverlay> createState() => _ExchangeWalletOverlayState();
+}
+
+class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 360),
   );
-}
 
-class _ExchangeWalletSheet extends StatelessWidget {
-  const _ExchangeWalletSheet();
+  // 완전히 펼치는 데 필요한 드래그 거리(px)
+  static const double _dragRange = 360;
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _open() =>
+      _c.animateTo(1, curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 360));
+  void _close() =>
+      _c.animateBack(0, curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 320));
+
+  void _onDragUpdate(DragUpdateDetails d) {
+    // 위로(음수 dy) 끌면 진행도 증가
+    _c.value = (_c.value - d.primaryDelta! / _dragRange).clamp(0.0, 1.0);
+  }
+
+  void _onDragEnd(DragEndDetails d) {
+    final v = d.primaryVelocity ?? 0;
+    if (v < -250) {
+      _open();
+    } else if (v > 250) {
+      _close();
+    } else {
+      _c.value > 0.5 ? _open() : _close();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return DraggableScrollableSheet(
-      initialChildSize: 0.72,
-      minChildSize: 0.4,
-      maxChildSize: 0.92,
-      builder: (context, scrollController) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: AppColors.background,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-          ),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              // 그래버
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt,
-                  borderRadius: BorderRadius.circular(2),
+    final size = MediaQuery.of(context).size;
+    final cardW = size.width - 40;
+
+    return AnimatedBuilder(
+      animation: _c,
+      builder: (context, _) {
+        final p = _c.value;
+        final eased = Curves.easeOut.transform(p);
+
+        return Stack(
+          children: [
+            // 뒤 배경 딤 (열릴수록 어두워짐)
+            Positioned.fill(
+              child: IgnorePointer(
+                ignoring: p < 0.02,
+                child: GestureDetector(
+                  onTap: _close,
+                  child: ColoredBox(
+                    color: Colors.black.withValues(alpha: 0.6 * p),
+                  ),
                 ),
               ),
-              const SizedBox(height: 18),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    Text(
-                      '내 교환권',
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
+            ),
+
+            // 접힘 상태: "내 교환권" 핸들 (열리면 사라짐)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 92,
+              child: IgnorePointer(
+                ignoring: p > 0.05,
+                child: Opacity(
+                  opacity: (1 - p * 4).clamp(0.0, 1.0),
+                  child: Center(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: _open,
+                      onVerticalDragUpdate: _onDragUpdate,
+                      onVerticalDragEnd: _onDragEnd,
+                      child: const _WalletHandle(),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // 접힘 상태의 하단 스와이프 감지 영역(핸들 주변에서 끌어올리기)
+            if (p < 0.05)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 150,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.translucent,
+                  onTap: _open,
+                  onVerticalDragUpdate: _onDragUpdate,
+                  onVerticalDragEnd: _onDragEnd,
+                ),
+              ),
+
+            // 카드: 세로(접힘)→가로(펼침)로 회전 + 확대 + 상승
+            Align(
+              alignment: Alignment.lerp(
+                const Alignment(0, 1.25), // 아래(핸들 근처)
+                const Alignment(0, -0.1), // 펼치면 중앙 살짝 위
+                eased,
+              )!,
+              child: Opacity(
+                opacity: (p * 2.4).clamp(0.0, 1.0),
+                child: Transform.rotate(
+                  angle: (1 - eased) * (math.pi / 2), // 90°(세로) → 0°(가로)
+                  child: Transform.scale(
+                    scale: 0.42 + 0.58 * eased, // 작게 → 원래 크기
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onVerticalDragUpdate: _onDragUpdate,
+                      onVerticalDragEnd: _onDragEnd,
+                      child: SizedBox(
+                        width: cardW,
+                        child: const _WalletCard(order: _latestOrder),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${_dummyOrders.length}장',
-                      style: textTheme.titleMedium?.copyWith(
-                        color: AppColors.lime,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              Expanded(
-                child: ListView.separated(
-                  controller: scrollController,
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-                  itemCount: _dummyOrders.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 14),
-                  itemBuilder: (context, i) =>
-                      _WalletCard(order: _dummyOrders[i]),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
+    );
+  }
+}
+
+/// 접힘 상태 핸들 — "내 교환권".
+class _WalletHandle extends StatelessWidget {
+  const _WalletHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.outline),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Symbols.keyboard_arrow_up,
+              size: 20, color: AppColors.textSecondary),
+          const SizedBox(width: 4),
+          const Icon(Symbols.wallet, size: 18, color: AppColors.lime),
+          const SizedBox(width: 6),
+          Text(
+            '내 교환권',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -122,8 +225,8 @@ class _WalletCard extends StatelessWidget {
     final done = order.done;
 
     return Container(
-      height: 172,
-      padding: const EdgeInsets.all(20),
+      height: 196,
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         gradient: LinearGradient(
@@ -133,6 +236,13 @@ class _WalletCard extends StatelessWidget {
               ? const [Color(0xFF202020), Color(0xFF2A2A2A)]
               : const [Color(0xFF2B3514), Color(0xFF566B25)],
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,7 +257,6 @@ class _WalletCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              // 상태 칩
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
