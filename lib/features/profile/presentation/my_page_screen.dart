@@ -96,7 +96,8 @@ class MyPageScreen extends StatelessWidget {
 
             // 로그아웃
             const _MenuCard(rows: [
-              _MenuRow(label: '로그아웃', danger: true),
+              _MenuRow(
+                  label: '로그아웃', danger: true, trailingIcon: Symbols.logout),
             ]),
           ],
         ),
@@ -493,12 +494,14 @@ class _MenuRow extends StatelessWidget {
     required this.label,
     this.danger = false,
     this.trailing,
+    this.trailingIcon,
     this.onTap,
   });
 
   final String label;
   final bool danger;
   final String? trailing; // 우측 값(예: 앱 버전). 있으면 chevron 대신 표시
+  final IconData? trailingIcon; // 우측 아이콘(예: 로그아웃). chevron 자리에 표시
   final VoidCallback? onTap;
 
   @override
@@ -520,7 +523,10 @@ class _MenuRow extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            if (trailing != null)
+            if (trailingIcon != null)
+              Icon(trailingIcon, color: color ?? AppColors.textSecondary,
+                  size: 22)
+            else if (trailing != null)
               Text(
                 trailing!,
                 style: textTheme.bodyMedium?.copyWith(
