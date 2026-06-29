@@ -66,8 +66,8 @@ class MainShell extends StatelessWidget {
           onTap: () => _go(_home),
         ),
         _NavItem(
-          icon: Icons.storefront_outlined,
-          selectedIcon: Icons.storefront,
+          icon: Icons.local_drink_outlined,
+          selectedIcon: Icons.local_drink,
           selected: idx == _store,
           onTap: () => _go(_store),
         ),
@@ -116,6 +116,46 @@ class MainShell extends StatelessWidget {
           onTap: () => _go(_ranking),
         ),
       ],
+    );
+  }
+}
+
+/// 탭 전환 시 부드러운 크로스페이드(+살짝 스케일) 컨테이너.
+/// 모든 브랜치를 살려둬 상태를 보존하면서, 활성 브랜치만 페이드 인.
+class AnimatedBranchContainer extends StatelessWidget {
+  const AnimatedBranchContainer({
+    super.key,
+    required this.currentIndex,
+    required this.children,
+  });
+
+  final int currentIndex;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        for (var i = 0; i < children.length; i++)
+          _branch(active: i == currentIndex, child: children[i]),
+      ],
+    );
+  }
+
+  Widget _branch({required bool active, required Widget child}) {
+    return AnimatedOpacity(
+      opacity: active ? 1 : 0,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOut,
+      child: AnimatedScale(
+        scale: active ? 1 : 0.97,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOut,
+        child: IgnorePointer(
+          ignoring: !active,
+          child: TickerMode(enabled: active, child: child),
+        ),
+      ),
     );
   }
 }

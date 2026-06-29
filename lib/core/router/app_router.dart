@@ -73,10 +73,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             _slideFromRight(state, const MembershipScreen()),
       ),
 
-      // 하단 5탭을 유지하는 StatefulShellRoute
-      StatefulShellRoute.indexedStack(
+      // 하단 탭 — 탭 전환 시 부드러운 크로스페이드 (상태 보존)
+      StatefulShellRoute(
         builder: (context, state, navigationShell) {
           return MainShell(navigationShell: navigationShell);
+        },
+        navigatorContainerBuilder: (context, navigationShell, children) {
+          return AnimatedBranchContainer(
+            currentIndex: navigationShell.currentIndex,
+            children: children,
+          );
         },
         branches: [
           StatefulShellBranch(
