@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -15,10 +16,10 @@ void main() {
     expect(find.text('마이'), findsWidgets);
   });
 
-  testWidgets('홈 헤더에 사용자 이름이 보인다', (tester) async {
+  testWidgets('홈 헤더에 알림 아이콘이 보인다', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MyFisApp()));
     await tester.pumpAndSettle();
 
-    expect(find.text('은후님 👋'), findsOneWidget);
+    expect(find.byIcon(Icons.notifications_outlined), findsOneWidget);
   });
 }
