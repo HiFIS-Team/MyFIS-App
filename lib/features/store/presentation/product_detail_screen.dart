@@ -18,6 +18,20 @@ class ProductDetailScreen extends StatefulWidget {
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   bool _liked = false;
 
+  // 교환하기 → 무신사처럼 아래에서 수량 선택 시트가 올라오고 뒤는 어두워짐
+  void _openExchangeSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => _ExchangeSheet(product: widget.product),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
@@ -179,7 +193,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             // 교환하기 (남은 폭 채움)
             Expanded(
               child: FilledButton(
-                onPressed: () {},
+                onPressed: _openExchangeSheet,
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                   shape: RoundedRectangleBorder(
@@ -203,6 +217,183 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 교환 수량 선택 시트 (아래에서 올라옴).
+class _ExchangeSheet extends StatefulWidget {
+  const _ExchangeSheet({required this.product});
+  final Product product;
+
+  @override
+  State<_ExchangeSheet> createState() => _ExchangeSheetState();
+}
+
+class _ExchangeSheetState extends State<_ExchangeSheet> {
+  int _qty = 1;
+
+  @override
+  Widget build(BuildContext context) {
+    final product = widget.product;
+    final textTheme = Theme.of(context).textTheme;
+    final total = product.points * _qty;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 그래버
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 22),
+            Text(
+              product.name,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Symbols.paid, size: 16, color: AppColors.lime),
+                const SizedBox(width: 4),
+                Text(
+                  '${_comma(product.points)}P',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: AppColors.lime,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            // 수량 선택
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '수량',
+                  style: textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      _StepButton(
+                        icon: Symbols.remove,
+                        onTap: _qty > 1
+                            ? () => setState(() => _qty--)
+                            : null,
+                      ),
+                      SizedBox(
+                        width: 44,
+                        child: Text(
+                          '$_qty',
+                          textAlign: TextAlign.center,
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      _StepButton(
+                        icon: Symbols.add,
+                        onTap: () => setState(() => _qty++),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            Container(height: 1, color: AppColors.outline),
+            const SizedBox(height: 18),
+            // 합계
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '총 교환 마일리지',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Row(
+                  children: [
+                    const Icon(Symbols.paid, size: 22, color: AppColors.lime),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${_comma(total)}P',
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                '${_comma(total)}P로 교환하기',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 수량 증감 버튼.
+class _StepButton extends StatelessWidget {
+  const _StepButton({required this.icon, this.onTap});
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Icon(
+          icon,
+          size: 22,
+          color: enabled ? AppColors.textPrimary : AppColors.outline,
         ),
       ),
     );
