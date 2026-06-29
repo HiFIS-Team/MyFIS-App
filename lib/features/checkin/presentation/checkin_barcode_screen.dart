@@ -6,9 +6,9 @@ import 'package:screen_brightness/screen_brightness.dart';
 import '../../../core/theme/app_colors.dart';
 
 /// 출석 바코드 화면.
-/// 헤더 바코드 아이콘에서 좌→우 슬라이드로 진입(알림과 통일).
-/// 구성: 화면 밝기 슬라이더(상) → 바코드(중) → 출석 현황(하).
-/// 진입 시 밝기를 최대로 올리고, 슬라이더로 직접 조절 가능. 나갈 때 복구.
+/// 진입 시 화면 밝기 바가 헤더 자리로 위에서 내려오며 밝기를 최대로 올린다.
+/// 밝기 바: [아이콘 + 화면 밝기] · [슬라이더] · [X].
+/// X를 누르면 밝기 바가 사라지고 진짜 헤더(뒤로가기 + 출석)가 나타난다.
 class CheckinBarcodeScreen extends StatefulWidget {
   const CheckinBarcodeScreen({super.key});
 
@@ -16,9 +16,9 @@ class CheckinBarcodeScreen extends StatefulWidget {
   State<CheckinBarcodeScreen> createState() => _CheckinBarcodeScreenState();
 }
 
-class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen> {
-  // 더미 회원/출석 데이터
-  static const String _userName = '은후';
+class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
+    with SingleTickerProviderStateMixin {
+  // 더미 데이터
   static const String _barcodeData = '202609031234';
   static const List<_Attendance> _history = [
     _Attendance(date: '6월 29일', day: '일', time: '오후 1:45'),
@@ -28,17 +28,28 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen> {
     _Attendance(date: '6월 23일', day: '월', time: '오후 7:35'),
   ];
 
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 280),
+  );
+  late final Animation<Offset> _slide = Tween(
+    begin: const Offset(0, -1),
+    end: Offset.zero,
+  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
+
   double _brightness = 1.0;
 
   @override
   void initState() {
     super.initState();
     _boostBrightness();
+    _ctrl.forward(); // 밝기 바가 위에서 내려옴
   }
 
   @override
   void dispose() {
     _restoreBrightness();
+    _ctrl.dispose();
     super.dispose();
   }
 
@@ -63,141 +74,165 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen> {
     } catch (_) {}
   }
 
+  void _closeBrightness() => _ctrl.reverse(); // 밝기 바가 위로 사라지고 헤더 노출
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).maybePop(),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 상단 고정 영역: 헤더(아래) + 밝기 바(위에서 덮음)
+            SizedBox(
+              height: kToolbarHeight,
+              child: ClipRect(
+                child: Stack(
+                  children: [
+                    _Header(onBack: () => Navigator.of(context).maybePop()),
+                    SlideTransition(
+                      position: _slide,
+                      child: _BrightnessBar(
+                        value: _brightness,
+                        onChanged: _onBrightnessChanged,
+                        onClose: _closeBrightness,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // 본문
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                children: const [
+                  _BarcodeCard(data: _barcodeData),
+                  SizedBox(height: 32),
+                  _AttendanceHistory(items: _history),
+                ],
+              ),
+            ),
+          ],
         ),
-        title: const Text('출석'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
-        children: [
-          // ① 화면 밝기 슬라이더
-          _BrightnessSlider(
-            value: _brightness,
-            onChanged: _onBrightnessChanged,
-          ),
-          const SizedBox(height: 24),
-
-          // ② 바코드 카드
-          _BarcodeCard(userName: _userName, data: _barcodeData),
-          const SizedBox(height: 32),
-
-          // ③ 출석 현황
-          const _AttendanceHistory(items: _history),
-        ],
       ),
     );
   }
 }
 
-/// 화면 밝기 슬라이더 (가로) — 오른쪽 밝게 / 왼쪽 어둡게.
-class _BrightnessSlider extends StatelessWidget {
-  const _BrightnessSlider({required this.value, required this.onChanged});
-
-  final double value;
-  final ValueChanged<double> onChanged;
+/// 진짜 헤더 — 뒤로가기 + 출석.
+class _Header extends StatelessWidget {
+  const _Header({required this.onBack});
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
         children: [
-          const Icon(Symbols.brightness_low,
-              color: AppColors.textSecondary, size: 20),
-          Expanded(
-            child: SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.lime,
-                inactiveTrackColor: AppColors.outline,
-                thumbColor: AppColors.lime,
-                trackHeight: 4,
-                overlayShape:
-                    const RoundSliderOverlayShape(overlayRadius: 16),
-              ),
-              child: Slider(
-                value: value,
-                min: 0.05, // 완전 검정 방지
-                max: 1.0,
-                onChanged: onChanged,
-              ),
-            ),
+          IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new),
+            onPressed: onBack,
+            color: AppColors.textPrimary,
           ),
-          const Icon(Symbols.brightness_high,
-              color: AppColors.lime, size: 22),
+          const SizedBox(width: 4),
+          Text('출석', style: Theme.of(context).textTheme.titleLarge),
         ],
       ),
     );
   }
 }
 
-/// 바코드 카드 (흰 배경 — 스캐너 인식용).
-class _BarcodeCard extends StatelessWidget {
-  const _BarcodeCard({required this.userName, required this.data});
+/// 화면 밝기 바 (헤더 자리). 왼쪽 라벨 · 가운데 슬라이더 · 오른쪽 X.
+class _BrightnessBar extends StatelessWidget {
+  const _BrightnessBar({
+    required this.value,
+    required this.onChanged,
+    required this.onClose,
+  });
 
-  final String userName;
-  final String data;
+  final double value;
+  final ValueChanged<double> onChanged;
+  final VoidCallback onClose;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
+    // 빈 영역 탭이 뒤 헤더로 새지 않도록 흡수
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {},
+      child: Container(
+        color: AppColors.background,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            const Icon(Symbols.brightness_high,
+                color: AppColors.lime, size: 20),
+            const SizedBox(width: 6),
+            Text(
+              '화면 밝기',
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            Expanded(
+              child: SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: AppColors.lime,
+                  inactiveTrackColor: AppColors.outline,
+                  thumbColor: AppColors.lime,
+                  trackHeight: 4,
+                  overlayShape:
+                      const RoundSliderOverlayShape(overlayRadius: 14),
+                ),
+                child: Slider(
+                  value: value,
+                  min: 0.05,
+                  max: 1.0,
+                  onChanged: onChanged,
+                ),
+              ),
+            ),
+            IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: onClose,
+              color: AppColors.textSecondary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 바코드 카드 (흰 배경 — 스캐너 인식용). 군더더기 없이 바코드만.
+class _BarcodeCard extends StatelessWidget {
+  const _BarcodeCard({required this.data});
+  final String data;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 36),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
       ),
-      child: Column(
-        children: [
-          Text(
-            '$userName님',
-            style: textTheme.titleMedium?.copyWith(
-              color: Colors.black,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 20),
-          BarcodeWidget(
-            barcode: Barcode.code128(),
-            data: data,
-            width: double.infinity,
-            height: 96,
-            drawText: false,
-            color: Colors.black,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            _formatCode(data),
-            style: textTheme.titleMedium?.copyWith(
-              color: Colors.black,
-              letterSpacing: 2,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
+      child: BarcodeWidget(
+        barcode: Barcode.code128(),
+        data: data,
+        width: double.infinity,
+        height: 104,
+        drawText: false,
+        color: Colors.black,
       ),
     );
-  }
-
-  /// 4자리마다 띄어쓰기
-  static String _formatCode(String code) {
-    final buf = StringBuffer();
-    for (var i = 0; i < code.length; i++) {
-      if (i > 0 && i % 4 == 0) buf.write(' ');
-      buf.write(code[i]);
-    }
-    return buf.toString();
   }
 }
 
@@ -213,43 +248,41 @@ class _Attendance {
   final String time;
 }
 
-/// 출석 현황 — 최근 출석 기록 리스트.
+/// 출석 현황 — 제목·목록 모두 박스 안에, 항목 사이 구분선.
 class _AttendanceHistory extends StatelessWidget {
   const _AttendanceHistory({required this.items});
-
   final List<_Attendance> items;
+
+  static const Color _divider = Color(0x14FFFFFF); // white 8%
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('출석 현황', style: textTheme.titleMedium),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+            child: Text('출석 현황', style: textTheme.titleMedium),
           ),
-          child: Column(
-            children: [
-              for (var i = 0; i < items.length; i++) ...[
-                if (i > 0)
-                  const Divider(
-                    height: 1,
-                    thickness: 1,
-                    color: AppColors.outline,
-                    indent: 16,
-                    endIndent: 16,
-                  ),
-                _AttendanceRow(item: items[i]),
-              ],
-            ],
-          ),
-        ),
-      ],
+          for (final item in items) ...[
+            const Divider(
+              height: 1,
+              thickness: 1,
+              color: _divider,
+              indent: 16,
+              endIndent: 16,
+            ),
+            _AttendanceRow(item: item),
+          ],
+        ],
+      ),
     );
   }
 }
