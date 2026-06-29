@@ -10,7 +10,8 @@ import '../application/cart_provider.dart';
 import '../application/product_catalog.dart';
 import '../domain/product.dart';
 import 'exchange_wallet.dart';
-import 'search_screen.dart' show kSearchHeroTag, searchHeroShuttle;
+import 'search_screen.dart'
+    show kSearchHeroTag, kSearchHintStyle, searchHeroShuttle;
 import 'widgets/product_card.dart';
 
 /// 마일리지 스토어.
@@ -199,12 +200,7 @@ class _SearchBar extends StatelessWidget {
               const Icon(Symbols.search,
                   color: AppColors.textSecondary, size: 22),
               const SizedBox(width: 8),
-              Text(
-                '상품 검색',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-              ),
+              const Text('상품 검색', style: kSearchHintStyle),
             ],
           ),
         ),

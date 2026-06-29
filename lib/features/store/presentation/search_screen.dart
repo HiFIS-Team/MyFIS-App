@@ -10,6 +10,10 @@ import '../domain/product.dart';
 /// 스토어 검색창 ↔ 검색 화면 검색 입력창을 잇는 Hero 태그.
 const String kSearchHeroTag = 'store-search-bar';
 
+/// 검색 힌트 공용 스타일 — 스토어 힌트·셔틀·검색 힌트를 통일해 모핑 시 글씨가 안 튀게.
+const TextStyle kSearchHintStyle =
+    TextStyle(color: AppColors.textSecondary, fontSize: 16);
+
 /// Hero 비행 중 보여줄 깔끔한 검색바(아이콘 + "상품 검색"). 양쪽 공용.
 Widget searchHeroShuttle(
   BuildContext flightContext,
@@ -36,7 +40,7 @@ Widget searchHeroShuttle(
                 '상품 검색',
                 maxLines: 1,
                 overflow: TextOverflow.clip,
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+                style: kSearchHintStyle,
               ),
             ),
           ],
@@ -75,72 +79,91 @@ class _SearchScreenState extends State<SearchScreen> {
             .toList();
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        titleSpacing: 0,
-        title: Hero(
-          tag: kSearchHeroTag,
-          flightShuttleBuilder: searchHeroShuttle,
-          child: Container(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            margin: const EdgeInsets.only(right: 16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Row(
-              children: [
-                const Icon(Symbols.search,
-                    color: AppColors.textSecondary, size: 22),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    autofocus: true,
-                    textInputAction: TextInputAction.search,
-                    onChanged: (v) => setState(() => _query = v),
-                    style: Theme.of(context).textTheme.bodyLarge,
-                    decoration: const InputDecoration(
-                      isCollapsed: true,
-                      border: InputBorder.none,
-                      hintText: '상품 검색',
+      body: SafeArea(
+        child: Column(
+          children: [
+            // 헤더: 뒤로가기 + 검색창(Hero) — 스토어와 같은 Expanded-in-Row 레이아웃
+            Padding(
+              padding: const EdgeInsets.fromLTRB(6, 6, 16, 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new),
+                    onPressed: () => Navigator.of(context).maybePop(),
+                  ),
+                  Expanded(
+                    child: Hero(
+                      tag: kSearchHeroTag,
+                      flightShuttleBuilder: searchHeroShuttle,
+                      child: Container(
+                        height: 52,
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.surface,
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Symbols.search,
+                                color: AppColors.textSecondary, size: 22),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: TextField(
+                                controller: _controller,
+                                autofocus: true,
+                                textInputAction: TextInputAction.search,
+                                onChanged: (v) => setState(() => _query = v),
+                                style: kSearchHintStyle.copyWith(
+                                    color: AppColors.textPrimary),
+                                decoration: const InputDecoration(
+                                  isCollapsed: true,
+                                  border: InputBorder.none,
+                                  hintText: '상품 검색',
+                                  hintStyle: kSearchHintStyle,
+                                ),
+                              ),
+                            ),
+                            if (_query.isNotEmpty)
+                              GestureDetector(
+                                onTap: () {
+                                  _controller.clear();
+                                  setState(() => _query = '');
+                                },
+                                child: const Icon(Symbols.cancel,
+                                    color: AppColors.textSecondary,
+                                    size: 20,
+                                    fill: 1),
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
-                ),
-                if (_query.isNotEmpty)
-                  GestureDetector(
-                    onTap: () {
-                      _controller.clear();
-                      setState(() => _query = '');
-                    },
-                    child: const Icon(Symbols.cancel,
-                        color: AppColors.textSecondary, size: 20, fill: 1),
-                  ),
-              ],
+                ],
+              ),
             ),
-          ),
+            Expanded(
+              child: results.isEmpty
+                  ? Center(
+                      child: Text(
+                        "'$q' 검색 결과가 없어요",
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 8),
+                      itemCount: results.length,
+                      separatorBuilder: (_, _) => const SizedBox(height: 4),
+                      itemBuilder: (context, i) =>
+                          _ResultTile(product: results[i]),
+                    ),
+            ),
+          ],
         ),
       ),
-      body: results.isEmpty
-          ? Center(
-              child: Text(
-                "'$q' 검색 결과가 없어요",
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyLarge
-                    ?.copyWith(color: AppColors.textSecondary),
-              ),
-            )
-          : ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              itemCount: results.length,
-              separatorBuilder: (_, _) => const SizedBox(height: 4),
-              itemBuilder: (context, i) => _ResultTile(product: results[i]),
-            ),
     );
   }
 }
