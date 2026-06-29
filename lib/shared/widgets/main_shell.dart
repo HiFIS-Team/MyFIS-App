@@ -305,9 +305,10 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
       cardioAppear = _lin(raw, 0.62, 0.9);
       rankingAppear = _lin(raw, 0.72, 1.0);
     } else {
-      // 나가기: 덤벨과 메인 아이콘이 함께(동시) 등장 — 전처럼(토스식)
-      move = Curves.easeOutCubic.transform(raw);
-      mainAppear = 1 - raw; // 메인 아이콘은 팝하며 함께 등장
+      // 나가기: 덤벨을 진입과 같은 속도로 이동(구간 미러링: 0.2~0.55 → 0.45~0.8).
+      // 나가기 직후 바로 같은 속도로 제자리 복귀, 메인 아이콘은 팝하며 함께 등장.
+      move = Curves.easeOutCubic.transform(_lin(raw, 0.45, 0.8));
+      mainAppear = 1 - raw;
       final fade = _lin(raw, 0.3, 1.0); // 운동 아이콘은 함께 빠르게 사라짐
       exitAppear = fade;
       cardioAppear = fade;
