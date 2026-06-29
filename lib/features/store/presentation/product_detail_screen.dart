@@ -3,6 +3,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../domain/product.dart';
+import 'exchange_complete_screen.dart';
 
 /// 상품 상세 화면.
 /// 스토어에서 상품 카드를 누르면 오른쪽→왼쪽 슬라이드로 진입(알림·바코드와 동일).
@@ -353,7 +354,22 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                // 시트 닫고 → 풀스크린 완료 화면으로 페이드 진입
+                final navigator = Navigator.of(context, rootNavigator: true);
+                navigator.pop();
+                navigator.push(
+                  PageRouteBuilder<void>(
+                    transitionDuration: const Duration(milliseconds: 280),
+                    pageBuilder: (_, _, _) => ExchangeCompleteScreen(
+                      product: product,
+                      qty: _qty,
+                    ),
+                    transitionsBuilder: (_, animation, _, child) =>
+                        FadeTransition(opacity: animation, child: child),
+                  ),
+                );
+              },
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
                 shape: RoundedRectangleBorder(
