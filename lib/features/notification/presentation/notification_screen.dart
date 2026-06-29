@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_top_bar.dart';
 
 /// 알림 조회 화면.
 /// 헤더 알림 벨에서 오른쪽→왼쪽 슬라이드로 진입.
@@ -45,13 +46,7 @@ class NotificationScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: const Text('알림'),
-      ),
+      appBar: const AppTopBar(title: '알림'),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         itemCount: _items.length,

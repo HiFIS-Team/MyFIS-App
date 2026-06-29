@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_top_bar.dart';
 
 /// 출석 바코드 화면.
 /// 진입 시 화면 밝기 바가 헤더 자리로 위에서 내려오며 밝기를 최대로 올린다.
@@ -108,16 +109,31 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
               child: ClipRect(
                 child: Stack(
                   children: [
-                    _Header(
-                      onBack: () => Navigator.of(context).maybePop(),
-                      onBrightness: _openBrightness,
+                    // 진짜 헤더 (다른 화면과 동일한 공통 헤더)
+                    Positioned.fill(
+                      child: AppTopBar(
+                        title: '출석',
+                        primary: false,
+                        onBack: () => Navigator.of(context).maybePop(),
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Symbols.brightness_high),
+                            onPressed: _openBrightness,
+                            color: AppColors.lime,
+                            tooltip: '화면 밝기',
+                          ),
+                        ],
+                      ),
                     ),
-                    SlideTransition(
-                      position: _slide,
-                      child: _BrightnessBar(
-                        value: _brightness,
-                        onChanged: _onBrightnessChanged,
-                        onClose: _closeBrightness,
+                    // 밝기 바 (위에서 덮음)
+                    Positioned.fill(
+                      child: SlideTransition(
+                        position: _slide,
+                        child: _BrightnessBar(
+                          value: _brightness,
+                          onChanged: _onBrightnessChanged,
+                          onClose: _closeBrightness,
+                        ),
                       ),
                     ),
                   ],
@@ -138,39 +154,6 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// 진짜 헤더 — 뒤로가기 + 출석 + (우측) 밝기 다시 열기.
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack, required this.onBrightness});
-  final VoidCallback onBack;
-  final VoidCallback onBrightness;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new),
-            onPressed: onBack,
-            color: AppColors.textPrimary,
-          ),
-          const SizedBox(width: 4),
-          Text('출석', style: Theme.of(context).textTheme.titleLarge),
-          const Spacer(),
-          // 실수로 닫았을 때 밝기 바 다시 내리기
-          IconButton(
-            icon: const Icon(Symbols.brightness_high),
-            onPressed: onBrightness,
-            color: AppColors.lime,
-            tooltip: '화면 밝기',
-          ),
-        ],
       ),
     );
   }

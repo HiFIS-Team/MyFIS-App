@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_top_bar.dart';
 import '../../home/presentation/widgets/membership_card.dart';
 
 /// 멤버십 관리 화면.
@@ -13,13 +14,7 @@ class MembershipScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
-        title: const Text('멤버십'),
-      ),
+      appBar: const AppTopBar(title: '멤버십'),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
         children: const [
