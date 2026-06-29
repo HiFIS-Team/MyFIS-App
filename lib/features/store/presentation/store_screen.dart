@@ -12,12 +12,42 @@ class StoreScreen extends StatelessWidget {
 
   static const int _myMileage = 2400;
   static const List<_Product> _products = [
-    _Product(icon: Symbols.exercise, name: '프로틴 쉐이커', points: 1000),
-    _Product(icon: Symbols.dry_cleaning, name: '운동 타월', points: 500),
-    _Product(icon: Symbols.nutrition, name: '보충제 1회분', points: 800),
-    _Product(icon: Symbols.local_drink, name: '이온음료', points: 300),
-    _Product(icon: Symbols.sports_gymnastics, name: 'PT 1회 체험', points: 5000),
-    _Product(icon: Symbols.lock, name: '락커 1개월', points: 3000),
+    _Product(
+        icon: Symbols.exercise,
+        name: '프로틴 쉐이커',
+        points: 1000,
+        views: 1240,
+        rating: 4.8),
+    _Product(
+        icon: Symbols.dry_cleaning,
+        name: '운동 타월',
+        points: 500,
+        views: 860,
+        rating: 4.5),
+    _Product(
+        icon: Symbols.nutrition,
+        name: '보충제 1회분',
+        points: 800,
+        views: 2030,
+        rating: 4.9),
+    _Product(
+        icon: Symbols.local_drink,
+        name: '이온음료',
+        points: 300,
+        views: 3120,
+        rating: 4.6),
+    _Product(
+        icon: Symbols.sports_gymnastics,
+        name: 'PT 1회 체험',
+        points: 5000,
+        views: 540,
+        rating: 4.7),
+    _Product(
+        icon: Symbols.lock,
+        name: '락커 1개월',
+        points: 3000,
+        views: 410,
+        rating: 4.4),
   ];
 
   @override
@@ -323,20 +353,36 @@ class _Product {
     required this.icon,
     required this.name,
     required this.points,
+    required this.views,
+    required this.rating,
   });
 
   final IconData icon;
   final String name;
   final int points;
+  final int views; // 조회수(몇 명이 봤는지)
+  final double rating; // 평점
 }
 
-class _ProductCard extends StatelessWidget {
+class _ProductCard extends StatefulWidget {
   const _ProductCard({required this.product});
   final _Product product;
 
   @override
+  State<_ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<_ProductCard> {
+  bool _liked = false;
+
+  @override
   Widget build(BuildContext context) {
+    final product = widget.product;
     final textTheme = Theme.of(context).textTheme;
+    final metaStyle = textTheme.bodySmall?.copyWith(
+      color: AppColors.textSecondary,
+      fontWeight: FontWeight.w500,
+    );
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -367,6 +413,22 @@ class _ProductCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
+                // 조회수 + 평점
+                Row(
+                  children: [
+                    Icon(Symbols.visibility,
+                        size: 15, color: AppColors.textSecondary),
+                    const SizedBox(width: 3),
+                    Text(_comma(product.views), style: metaStyle),
+                    const SizedBox(width: 10),
+                    const Icon(Symbols.star,
+                        size: 15, color: AppColors.lime, fill: 1),
+                    const SizedBox(width: 3),
+                    Text(product.rating.toStringAsFixed(1), style: metaStyle),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // 마일리지 + (라인 끝)하트
                 Row(
                   children: [
                     const Icon(Symbols.paid, color: AppColors.lime, size: 16),
@@ -376,6 +438,19 @@ class _ProductCard extends StatelessWidget {
                       style: textTheme.bodyMedium?.copyWith(
                         color: AppColors.lime,
                         fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => setState(() => _liked = !_liked),
+                      child: Icon(
+                        Symbols.favorite,
+                        size: 20,
+                        fill: _liked ? 1 : 0,
+                        color: _liked
+                            ? const Color(0xFFFF6B6B)
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
