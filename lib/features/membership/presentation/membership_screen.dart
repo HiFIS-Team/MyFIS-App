@@ -3,6 +3,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../home/presentation/widgets/membership_card.dart';
 
 /// 멤버십 관리 화면.
@@ -75,9 +76,7 @@ class _MenuRow extends StatelessWidget {
 
     return Column(
       children: [
-        InkWell(
-          onTap: () {},
-          borderRadius: BorderRadius.circular(16),
+        Pressable(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(

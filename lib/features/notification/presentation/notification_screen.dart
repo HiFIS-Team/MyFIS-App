@@ -3,6 +3,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+import '../../../shared/widgets/pressable.dart';
 
 /// 알림 조회 화면.
 /// 헤더 알림 벨에서 오른쪽→왼쪽 슬라이드로 진입.
@@ -79,8 +80,7 @@ class _NotiTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
-    return InkWell(
-      onTap: () {},
+    return Pressable(
       borderRadius: BorderRadius.circular(16),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),

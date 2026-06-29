@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 
 /// 마이 페이지.
 /// 프로필 · 퀵 스탯(마일리지/출석/랭킹) · 신체 정보 · 메뉴. 현재는 더미 데이터.
@@ -117,9 +118,9 @@ class _ProfileHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return Pressable(
       onTap: onTap,
+      borderRadius: BorderRadius.circular(18),
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
@@ -487,7 +488,7 @@ class _MenuCard extends StatelessWidget {
   }
 }
 
-class _MenuRow extends StatefulWidget {
+class _MenuRow extends StatelessWidget {
   const _MenuRow({
     required this.label,
     this.danger = false,
@@ -501,71 +502,36 @@ class _MenuRow extends StatefulWidget {
   final VoidCallback? onTap;
 
   @override
-  State<_MenuRow> createState() => _MenuRowState();
-}
-
-class _MenuRowState extends State<_MenuRow> {
-  bool _pressed = false;
-
-  void _setPressed(bool v) {
-    if (_pressed != v) setState(() => _pressed = v);
-  }
-
-  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final color = widget.danger ? AppColors.error : null;
+    final color = danger ? AppColors.error : null;
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => _setPressed(true),
-      onTapUp: (_) => _setPressed(false),
-      onTapCancel: () => _setPressed(false),
-      onTap: widget.onTap,
-      // 누르면 내용(글씨·화살표)은 작아지고, 흐림은 칸 전체에 깔림
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
-            child: AnimatedScale(
-              scale: _pressed ? 0.97 : 1.0,
-              duration: const Duration(milliseconds: 110),
-              curve: Curves.easeOut,
-              child: Row(
-                children: [
-                  Text(
-                    widget.label,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (widget.trailing != null)
-                    Text(
-                      widget.trailing!,
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    )
-                  else if (!widget.danger)
-                    const Icon(Icons.chevron_right,
-                        color: AppColors.textSecondary, size: 22),
-                ],
+    return Pressable(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: color,
               ),
             ),
-          ),
-          // 칸 전체를 덮는 페이드 스크림 (스케일과 무관하게 풀사이즈)
-          Positioned.fill(
-            child: IgnorePointer(
-              child: AnimatedOpacity(
-                opacity: _pressed ? 0.5 : 0.0,
-                duration: const Duration(milliseconds: 110),
-                child: const ColoredBox(color: AppColors.background),
-              ),
-            ),
-          ),
-        ],
+            const Spacer(),
+            if (trailing != null)
+              Text(
+                trailing!,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              )
+            else if (!danger)
+              const Icon(Icons.chevron_right,
+                  color: AppColors.textSecondary, size: 22),
+          ],
+        ),
       ),
     );
   }

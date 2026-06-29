@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/pressable.dart';
 import '../../application/favorites_provider.dart';
 import '../../domain/product.dart';
 
@@ -22,9 +23,9 @@ class ProductCard extends ConsumerWidget {
       fontWeight: FontWeight.w500,
     );
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return Pressable(
       onTap: () => context.push('/product', extra: product),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(

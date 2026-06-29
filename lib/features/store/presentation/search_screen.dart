@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../application/product_catalog.dart';
 import '../domain/product.dart';
 
@@ -151,7 +152,7 @@ class _ResultTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return InkWell(
+    return Pressable(
       borderRadius: BorderRadius.circular(14),
       onTap: () => context.push('/product', extra: product),
       child: Padding(
