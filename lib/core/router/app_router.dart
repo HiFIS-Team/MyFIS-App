@@ -16,6 +16,7 @@ import '../../features/store/presentation/exchange_complete_screen.dart';
 import '../../features/store/presentation/product_detail_screen.dart';
 import '../../features/store/presentation/search_screen.dart';
 import '../../features/store/presentation/store_screen.dart';
+import '../../features/store/presentation/wishlist_screen.dart';
 import '../../features/weight/presentation/weight_screen.dart';
 import '../../shared/widgets/main_shell.dart';
 
@@ -122,6 +123,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const CartScreen()),
+      ),
+
+      // 찜한 상품 — 오른쪽→왼쪽 슬라이드
+      GoRoute(
+        path: '/wishlist',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const WishlistScreen()),
       ),
 
       // 교환 완료 — 장바구니에서 교환 후 풀스크린 페이드 진입

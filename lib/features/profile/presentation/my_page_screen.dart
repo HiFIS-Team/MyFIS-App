@@ -65,10 +65,16 @@ class MyPageScreen extends StatelessWidget {
             // 내 활동
             _SectionLabel('내 활동'),
             const SizedBox(height: 10),
-            const _MenuCard(rows: [
-              _MenuRow(icon: Symbols.calendar_month, label: '출석 내역'),
-              _MenuRow(icon: Symbols.confirmation_number, label: '교환 내역'),
-              _MenuRow(icon: Symbols.favorite, label: '찜한 상품', isLast: true),
+            _MenuCard(rows: [
+              const _MenuRow(icon: Symbols.calendar_month, label: '출석 내역'),
+              const _MenuRow(
+                  icon: Symbols.confirmation_number, label: '교환 내역'),
+              _MenuRow(
+                icon: Symbols.favorite,
+                label: '찜한 상품',
+                isLast: true,
+                onTap: () => context.push('/wishlist'),
+              ),
             ]),
             const SizedBox(height: 22),
 
@@ -503,6 +509,7 @@ class _MenuRow extends StatelessWidget {
     this.isLast = false,
     this.danger = false,
     this.trailing,
+    this.onTap,
   });
 
   final IconData icon;
@@ -510,6 +517,7 @@ class _MenuRow extends StatelessWidget {
   final bool isLast;
   final bool danger;
   final String? trailing; // 우측 값(예: 앱 버전). 있으면 chevron 대신 표시
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -519,7 +527,7 @@ class _MenuRow extends StatelessWidget {
     return Column(
       children: [
         InkWell(
-          onTap: () {},
+          onTap: onTap ?? () {},
           borderRadius: BorderRadius.circular(16),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

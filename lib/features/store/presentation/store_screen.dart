@@ -11,6 +11,7 @@ import '../application/product_catalog.dart';
 import '../domain/product.dart';
 import 'exchange_wallet.dart';
 import 'search_screen.dart' show kSearchHeroTag, searchHeroShuttle;
+import 'widgets/product_card.dart';
 
 /// 마일리지 스토어.
 /// 보유 마일리지로 헬스장 내 상품을 교환한다. 현재는 더미 데이터.
@@ -69,7 +70,7 @@ class StoreScreen extends ConsumerWidget {
                       childAspectRatio: 0.82,
                     ),
                     itemBuilder: (context, i) =>
-                        _ProductCard(product: _products[i]),
+                        ProductCard(product: _products[i]),
                   ),
                     ],
                   ),
@@ -417,150 +418,6 @@ class _PromoSlide extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 상품 카드 우상단 재고 배지. 재고가 적으면(<=5) 경고색.
-class _StockBadge extends StatelessWidget {
-  const _StockBadge({required this.stock});
-  final int stock;
-
-  @override
-  Widget build(BuildContext context) {
-    final low = stock <= 5;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: low
-            ? AppColors.error.withValues(alpha: 0.92)
-            : Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        low ? '$stock개 남음' : '재고 $stock',
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
-            ),
-      ),
-    );
-  }
-}
-
-class _ProductCard extends StatefulWidget {
-  const _ProductCard({required this.product});
-  final Product product;
-
-  @override
-  State<_ProductCard> createState() => _ProductCardState();
-}
-
-class _ProductCardState extends State<_ProductCard> {
-  bool _liked = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final product = widget.product;
-    final textTheme = Theme.of(context).textTheme;
-    final metaStyle = textTheme.bodySmall?.copyWith(
-      color: AppColors.textSecondary,
-      fontWeight: FontWeight.w500,
-    );
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      // 상품 클릭 → 알림·바코드처럼 오른쪽에서 슬라이드되는 상세 화면
-      onTap: () => context.push('/product', extra: product),
-      child: Container(
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // 상품 이미지 자리 (placeholder) + 우상단 재고 배지
-            Expanded(
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Container(
-                      color: AppColors.lime.withValues(alpha: 0.10),
-                      child:
-                          Icon(product.icon, color: AppColors.lime, size: 40),
-                    ),
-                  ),
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: _StockBadge(stock: product.stock),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  // 조회수 + 평점
-                  Row(
-                    children: [
-                      Icon(Symbols.visibility,
-                          size: 15, color: AppColors.textSecondary),
-                      const SizedBox(width: 3),
-                      Text(_comma(product.views), style: metaStyle),
-                      const SizedBox(width: 10),
-                      const Icon(Symbols.star,
-                          size: 15, color: AppColors.lime, fill: 1),
-                      const SizedBox(width: 3),
-                      Text(product.rating.toStringAsFixed(1), style: metaStyle),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  // 마일리지 + (라인 끝)하트
-                  Row(
-                    children: [
-                      const Icon(Symbols.paid,
-                          color: AppColors.lime, size: 16),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${_comma(product.points)}P',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.lime,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => setState(() => _liked = !_liked),
-                        child: Icon(
-                          Symbols.favorite,
-                          size: 20,
-                          fill: _liked ? 1 : 0,
-                          color: _liked
-                              ? const Color(0xFFFF6B6B)
-                              : AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
               ),
             ),
           ],
