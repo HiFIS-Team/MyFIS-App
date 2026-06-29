@@ -104,42 +104,18 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
               ),
             ),
 
-            // 접힘 상태: "내 교환권" 핸들 (열리면 사라짐)
+            // 접힘 상태: "내 교환권" 핸들 (시각 표시용, 열리면 사라짐)
             Positioned(
               left: 0,
               right: 0,
               bottom: 92,
               child: IgnorePointer(
-                ignoring: p > 0.05,
                 child: Opacity(
                   opacity: (1 - p * 4).clamp(0.0, 1.0),
-                  child: Center(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: _open,
-                      onVerticalDragUpdate: _onDragUpdate,
-                      onVerticalDragEnd: _onDragEnd,
-                      child: const _WalletHandle(),
-                    ),
-                  ),
+                  child: const Center(child: _WalletHandle()),
                 ),
               ),
             ),
-
-            // 접힘 상태의 하단 스와이프 감지 영역(핸들 주변에서 끌어올리기)
-            if (p < 0.05)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 150,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onTap: _open,
-                  onVerticalDragUpdate: _onDragUpdate,
-                  onVerticalDragEnd: _onDragEnd,
-                ),
-              ),
 
             // 카드: 세로(접힘)→가로(펼침)로 회전 + 확대 + 상승
             Align(
@@ -154,17 +130,35 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
                   angle: (1 - eased) * (math.pi / 2), // 90°(세로) → 0°(가로)
                   child: Transform.scale(
                     scale: 0.42 + 0.58 * eased, // 작게 → 원래 크기
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onVerticalDragUpdate: _onDragUpdate,
-                      onVerticalDragEnd: _onDragEnd,
-                      child: SizedBox(
-                        width: cardW,
-                        child: const _WalletCard(order: _latestOrder),
+                    child: IgnorePointer(
+                      ignoring: p < 0.5, // 펼쳐졌을 때만 카드가 드래그 받음
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onVerticalDragUpdate: _onDragUpdate,
+                        onVerticalDragEnd: _onDragEnd,
+                        child: SizedBox(
+                          width: cardW,
+                          child: const _WalletCard(order: _latestOrder),
+                        ),
                       ),
                     ),
                   ),
                 ),
+              ),
+            ),
+
+            // 하단 스와이프 감지 영역 — 항상 유지(드래그 중 사라지지 않게).
+            // 접힘: 위로 끌면 열기 / 펼침: 아래로 끌거나 탭하면 닫기.
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 150,
+              child: GestureDetector(
+                behavior: HitTestBehavior.translucent,
+                onTap: () => _c.value > 0.5 ? _close() : _open(),
+                onVerticalDragUpdate: _onDragUpdate,
+                onVerticalDragEnd: _onDragEnd,
               ),
             ),
           ],
