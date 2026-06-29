@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -21,9 +22,8 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   bool _liked = false;
 
-  // 장바구니 담기 → 아래에서 수량 선택 시트가 올라오고 뒤는 어두워짐.
-  // 시트에서 담으면 선택 수량을 반환받아 카트에 추가.
-  Future<void> _openExchangeSheet() async {
+  // 수량 선택 시트를 열고, 담기(toCart) 또는 바로 교환을 처리한다.
+  Future<void> _openSheet({required bool toCart}) async {
     final qty = await showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
@@ -32,19 +32,31 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (_) => _ExchangeSheet(product: widget.product),
+      builder: (_) => _ExchangeSheet(product: widget.product, buyNow: !toCart),
     );
     if (qty == null || !mounted) return;
-    ref.read(cartProvider.notifier).add(widget.product, qty);
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('장바구니에 $qty개 담았어요'),
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 2),
+
+    if (toCart) {
+      ref.read(cartProvider.notifier).add(widget.product, qty);
+      ScaffoldMessenger.of(context)
+        ..clearSnackBars()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('장바구니에 $qty개 담았어요'),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+    } else {
+      // 바로 교환 → 완료 화면
+      context.push(
+        '/exchange-complete',
+        extra: (
+          summary: '${widget.product.name} x$qty',
+          totalPoints: widget.product.points * qty,
         ),
       );
+    }
   }
 
   @override
@@ -96,6 +108,22 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
+                // 단가 (눈에 띄게 라임 큰 숫자)
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const Icon(Symbols.paid, size: 24, color: AppColors.lime),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${_comma(product.points)}P',
+                      style: textTheme.headlineSmall?.copyWith(
+                        color: AppColors.lime,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
                 // 조회수 + 평점
                 Row(
                   children: [
@@ -205,30 +233,43 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               onTap: () {},
             ),
             const SizedBox(width: 12),
-            // 교환하기 (남은 폭 채움)
+            // 장바구니 담기 (보조)
             Expanded(
               child: FilledButton(
-                onPressed: _openExchangeSheet,
+                onPressed: () => _openSheet(toCart: true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.surfaceAlt,
+                  foregroundColor: AppColors.textPrimary,
+                  minimumSize: const Size.fromHeight(54),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  '장바구니',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // 바로 교환하기 (주요)
+            Expanded(
+              child: FilledButton(
+                onPressed: () => _openSheet(toCart: false),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Symbols.add_shopping_cart,
-                        size: 20, color: Colors.black),
-                    const SizedBox(width: 6),
-                    Text(
-                      '장바구니 담기',
-                      style: textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: Colors.black,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  '교환하기',
+                  style: textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
                 ),
               ),
             ),
@@ -240,9 +281,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 }
 
 /// 교환 수량 선택 시트 (아래에서 올라옴).
+/// buyNow=true면 바로 교환(버튼에 가격 표시), false면 장바구니 담기.
 class _ExchangeSheet extends StatefulWidget {
-  const _ExchangeSheet({required this.product});
+  const _ExchangeSheet({required this.product, required this.buyNow});
   final Product product;
+  final bool buyNow;
 
   @override
   State<_ExchangeSheet> createState() => _ExchangeSheetState();
@@ -378,7 +421,9 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                 ),
               ),
               child: Text(
-                '장바구니에 담기',
+                widget.buyNow
+                    ? '${_comma(total)}P 교환하기'
+                    : '장바구니에 담기',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: Colors.black,
