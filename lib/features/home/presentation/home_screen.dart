@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'widgets/home_header.dart';
 import 'widgets/membership_card.dart';
@@ -16,9 +17,12 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           children: [
             // ① 고정 헤더 (브랜드 로고 + 알림)
-            const Padding(
-              padding: EdgeInsets.fromLTRB(24, 12, 16, 12),
-              child: HomeHeader(hasNotification: true),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 16, 12),
+              child: HomeHeader(
+                hasNotification: true,
+                onNotificationTap: () => context.push('/notifications'),
+              ),
             ),
 
             // 본문 (스크롤 영역)
