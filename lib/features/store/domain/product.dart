@@ -9,6 +9,7 @@ class Product {
     required this.points,
     required this.views,
     required this.rating,
+    required this.stock,
   });
 
   final IconData icon;
@@ -16,4 +17,5 @@ class Product {
   final int points;
   final int views; // 조회수(몇 명이 봤는지)
   final double rating; // 평점
+  final int stock; // 남은 재고
 }

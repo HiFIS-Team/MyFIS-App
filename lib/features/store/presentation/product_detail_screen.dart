@@ -194,16 +194,16 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 ),
                 const SizedBox(height: 16),
                 // 상품 정보 칩
-                const Wrap(
+                Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _InfoChip(
+                    const _InfoChip(
                         icon: Symbols.local_fire_department,
                         label: '인기',
                         accent: true),
-                    _InfoChip(label: '재고 12개'),
-                    _InfoChip(label: '운동용품'),
+                    _InfoChip(label: '재고 ${product.stock}개'),
+                    const _InfoChip(label: '운동용품'),
                   ],
                 ),
 

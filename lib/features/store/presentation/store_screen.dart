@@ -426,6 +426,33 @@ class _PromoSlide extends StatelessWidget {
   }
 }
 
+/// 상품 카드 우상단 재고 배지. 재고가 적으면(<=5) 경고색.
+class _StockBadge extends StatelessWidget {
+  const _StockBadge({required this.stock});
+  final int stock;
+
+  @override
+  Widget build(BuildContext context) {
+    final low = stock <= 5;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: low
+            ? AppColors.error.withValues(alpha: 0.92)
+            : Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        low ? '$stock개 남음' : '재고 $stock',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.w700,
+            ),
+      ),
+    );
+  }
+}
+
 class _ProductCard extends StatefulWidget {
   const _ProductCard({required this.product});
   final Product product;
@@ -459,12 +486,23 @@ class _ProductCardState extends State<_ProductCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 상품 이미지 자리 (placeholder)
+            // 상품 이미지 자리 (placeholder) + 우상단 재고 배지
             Expanded(
-              child: Container(
-                width: double.infinity,
-                color: AppColors.lime.withValues(alpha: 0.10),
-                child: Icon(product.icon, color: AppColors.lime, size: 40),
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: Container(
+                      color: AppColors.lime.withValues(alpha: 0.10),
+                      child:
+                          Icon(product.icon, color: AppColors.lime, size: 40),
+                    ),
+                  ),
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: _StockBadge(stock: product.stock),
+                  ),
+                ],
               ),
             ),
             Padding(
