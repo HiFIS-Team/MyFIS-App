@@ -122,7 +122,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         actions: [
           IconButton(
             icon: const Icon(Symbols.search),
-            onPressed: () {},
+            onPressed: () => context.push('/search'),
           ),
         ],
       ),

@@ -1,0 +1,173 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:material_symbols_icons/symbols.dart';
+
+import '../../../core/theme/app_colors.dart';
+import '../application/product_catalog.dart';
+import '../domain/product.dart';
+
+/// 상품 검색 화면.
+/// 스토어 헤더 검색창·상품 상세 검색 아이콘에서 진입. 현재는 더미 카탈로그 필터.
+class SearchScreen extends StatefulWidget {
+  const SearchScreen({super.key});
+
+  @override
+  State<SearchScreen> createState() => _SearchScreenState();
+}
+
+class _SearchScreenState extends State<SearchScreen> {
+  final _controller = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _query.trim();
+    final results = q.isEmpty
+        ? kStoreProducts
+        : kStoreProducts
+            .where((p) => p.name.toLowerCase().contains(q.toLowerCase()))
+            .toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+        titleSpacing: 0,
+        title: Container(
+          height: 44,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          margin: const EdgeInsets.only(right: 16),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              const Icon(Symbols.search,
+                  color: AppColors.textSecondary, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  autofocus: true,
+                  textInputAction: TextInputAction.search,
+                  onChanged: (v) => setState(() => _query = v),
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  decoration: const InputDecoration(
+                    isCollapsed: true,
+                    border: InputBorder.none,
+                    hintText: '상품 검색',
+                  ),
+                ),
+              ),
+              if (_query.isNotEmpty)
+                GestureDetector(
+                  onTap: () {
+                    _controller.clear();
+                    setState(() => _query = '');
+                  },
+                  child: const Icon(Symbols.cancel,
+                      color: AppColors.textSecondary, size: 20, fill: 1),
+                ),
+            ],
+          ),
+        ),
+      ),
+      body: results.isEmpty
+          ? Center(
+              child: Text(
+                "'$q' 검색 결과가 없어요",
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyLarge
+                    ?.copyWith(color: AppColors.textSecondary),
+              ),
+            )
+          : ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              itemCount: results.length,
+              separatorBuilder: (_, _) => const SizedBox(height: 4),
+              itemBuilder: (context, i) => _ResultTile(product: results[i]),
+            ),
+    );
+  }
+}
+
+class _ResultTile extends StatelessWidget {
+  const _ResultTile({required this.product});
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return InkWell(
+      borderRadius: BorderRadius.circular(14),
+      onTap: () => context.push('/product', extra: product),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.lime.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(product.icon, color: AppColors.lime, size: 26),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Symbols.paid, size: 15, color: AppColors.lime),
+                      const SizedBox(width: 3),
+                      Text(
+                        '${_comma(product.points)}P',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.lime,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Symbols.chevron_right,
+                color: AppColors.textSecondary, size: 22),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 천 단위 콤마.
+String _comma(int n) {
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+    buf.write(s[i]);
+  }
+  return buf.toString();
+}

@@ -13,6 +13,7 @@ import '../../features/store/domain/product.dart';
 import '../../features/store/presentation/cart_screen.dart';
 import '../../features/store/presentation/exchange_complete_screen.dart';
 import '../../features/store/presentation/product_detail_screen.dart';
+import '../../features/store/presentation/search_screen.dart';
 import '../../features/store/presentation/store_screen.dart';
 import '../../features/weight/presentation/weight_screen.dart';
 import '../../shared/widgets/main_shell.dart';
@@ -96,6 +97,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           state,
           ProductDetailScreen(product: state.extra as Product),
         ),
+      ),
+
+      // 검색 — 오른쪽→왼쪽 슬라이드
+      GoRoute(
+        path: '/search',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const SearchScreen()),
       ),
 
       // 장바구니 — 오른쪽→왼쪽 슬라이드

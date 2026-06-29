@@ -7,6 +7,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../application/cart_provider.dart';
+import '../application/product_catalog.dart';
 import '../domain/product.dart';
 import 'exchange_wallet.dart';
 
@@ -16,44 +17,7 @@ class StoreScreen extends ConsumerWidget {
   const StoreScreen({super.key});
 
   static const int _myMileage = 2400;
-  static const List<Product> _products = [
-    Product(
-        icon: Symbols.exercise,
-        name: '프로틴 쉐이커',
-        points: 1000,
-        views: 1240,
-        rating: 4.8),
-    Product(
-        icon: Symbols.dry_cleaning,
-        name: '운동 타월',
-        points: 500,
-        views: 860,
-        rating: 4.5),
-    Product(
-        icon: Symbols.nutrition,
-        name: '보충제 1회분',
-        points: 800,
-        views: 2030,
-        rating: 4.9),
-    Product(
-        icon: Symbols.local_drink,
-        name: '이온음료',
-        points: 300,
-        views: 3120,
-        rating: 4.6),
-    Product(
-        icon: Symbols.sports_gymnastics,
-        name: 'PT 1회 체험',
-        points: 5000,
-        views: 540,
-        rating: 4.7),
-    Product(
-        icon: Symbols.lock,
-        name: '락커 1개월',
-        points: 3000,
-        views: 410,
-        rating: 4.4),
-  ];
+  static const List<Product> _products = kStoreProducts;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,13 +31,15 @@ class StoreScreen extends ConsumerWidget {
             child: Column(
               children: [
                 // 헤더: 검색창 + 보유 마일리지 (토스식, 타이틀 없음)
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(20, 8, 20, 12),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
                   child: Row(
                     children: [
-                      Expanded(child: _SearchBar()),
-                      SizedBox(width: 10),
-                      _MileagePill(points: _myMileage),
+                      Expanded(
+                        child: _SearchBar(onTap: () => context.push('/search')),
+                      ),
+                      const SizedBox(width: 10),
+                      const _MileagePill(points: _myMileage),
                     ],
                   ),
                 ),
@@ -206,30 +172,36 @@ class _CartBar extends StatelessWidget {
   }
 }
 
-/// 헤더 검색창 (현재는 탭 동작 미구현 placeholder).
+/// 헤더 검색창 — 탭하면 검색 화면으로 이동.
 class _SearchBar extends StatelessWidget {
-  const _SearchBar();
+  const _SearchBar({required this.onTap});
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Row(
-        children: [
-          const Icon(Symbols.search, color: AppColors.textSecondary, size: 22),
-          const SizedBox(width: 8),
-          Text(
-            '상품 검색',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-        ],
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        height: 46,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          children: [
+            const Icon(Symbols.search,
+                color: AppColors.textSecondary, size: 22),
+            const SizedBox(width: 8),
+            Text(
+              '상품 검색',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
