@@ -9,6 +9,7 @@ import '../../core/theme/app_colors.dart';
 /// 기본: 홈 · 스토어 · 운동 · 마이
 /// 운동 진입 시: ✕나가기 · 웨이트 · 유산소 · 랭킹 으로 변신
 /// 하단바는 떠 있는 둥근 캡슐 + 반투명 블러(인스타 스타일), 아이콘만 표시.
+/// 선택 표시(라임 pill)는 바 안에서 슬라이드로 이동한다.
 class MainShell extends StatelessWidget {
   const MainShell({super.key, required this.navigationShell});
 
@@ -58,26 +59,26 @@ class MainShell extends StatelessWidget {
     final idx = navigationShell.currentIndex;
     return _Bar(
       key: const ValueKey('main'),
-      items: [
-        _NavItem(
+      specs: [
+        _NavSpec(
           icon: Icons.home_outlined,
           selectedIcon: Icons.home,
           selected: idx == _home,
           onTap: () => _go(_home),
         ),
-        _NavItem(
+        _NavSpec(
           icon: Icons.local_drink_outlined,
           selectedIcon: Icons.local_drink,
           selected: idx == _store,
           onTap: () => _go(_store),
         ),
-        _NavItem(
+        _NavSpec(
           icon: Icons.fitness_center_outlined,
           selectedIcon: Icons.fitness_center,
           selected: false, // 운동 모드 진입 액션
           onTap: () => _go(_weight),
         ),
-        _NavItem(
+        _NavSpec(
           icon: Icons.person_outline,
           selectedIcon: Icons.person,
           selected: idx == _my,
@@ -91,25 +92,25 @@ class MainShell extends StatelessWidget {
     final idx = navigationShell.currentIndex;
     return _Bar(
       key: const ValueKey('workout'),
-      items: [
-        _NavItem(
+      specs: [
+        _NavSpec(
           icon: Icons.close,
           selected: false,
           onTap: () => _go(_home), // 메인으로 나가기
         ),
-        _NavItem(
+        _NavSpec(
           icon: Icons.fitness_center_outlined,
           selectedIcon: Icons.fitness_center,
           selected: idx == _weight,
           onTap: () => _go(_weight),
         ),
-        _NavItem(
+        _NavSpec(
           icon: Icons.directions_run_outlined,
           selectedIcon: Icons.directions_run,
           selected: idx == _cardio,
           onTap: () => _go(_cardio),
         ),
-        _NavItem(
+        _NavSpec(
           icon: Icons.leaderboard_outlined,
           selectedIcon: Icons.leaderboard,
           selected: idx == _ranking,
@@ -160,13 +161,34 @@ class AnimatedBranchContainer extends StatelessWidget {
   }
 }
 
-/// 떠 있는 둥근 캡슐 + 반투명 블러 하단바.
+/// 탭 항목 스펙.
+class _NavSpec {
+  const _NavSpec({
+    required this.icon,
+    this.selectedIcon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final IconData? selectedIcon;
+  final bool selected;
+  final VoidCallback onTap;
+}
+
+/// 떠 있는 둥근 캡슐 + 반투명 블러 하단바. 선택 pill이 슬라이드 이동.
 class _Bar extends StatelessWidget {
-  const _Bar({super.key, required this.items});
-  final List<Widget> items;
+  const _Bar({super.key, required this.specs});
+  final List<_NavSpec> specs;
+
+  static const double _height = 62;
+  static const double _pillW = 60;
+  static const double _pillH = 44;
 
   @override
   Widget build(BuildContext context) {
+    final selectedIndex = specs.indexWhere((s) => s.selected);
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -187,7 +209,7 @@ class _Bar extends StatelessWidget {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
               child: Container(
-                height: 62,
+                height: _height,
                 decoration: BoxDecoration(
                   color: AppColors.surfaceAlt.withValues(alpha: 0.72),
                   borderRadius: BorderRadius.circular(34),
@@ -197,10 +219,36 @@ class _Bar extends StatelessWidget {
                 ),
                 child: Material(
                   color: Colors.transparent,
-                  child: Row(
-                    children: [
-                      for (final item in items) Expanded(child: item),
-                    ],
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final slot = constraints.maxWidth / specs.length;
+                      return Stack(
+                        children: [
+                          // 슬라이드 이동하는 선택 pill
+                          if (selectedIndex >= 0)
+                            AnimatedPositioned(
+                              duration: const Duration(milliseconds: 280),
+                              curve: Curves.easeOutCubic,
+                              top: (_height - _pillH) / 2,
+                              left: selectedIndex * slot + (slot - _pillW) / 2,
+                              width: _pillW,
+                              height: _pillH,
+                              child: DecoratedBox(
+                                decoration: BoxDecoration(
+                                  color: AppColors.lime.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(99),
+                                ),
+                              ),
+                            ),
+                          Row(
+                            children: [
+                              for (final s in specs)
+                                Expanded(child: _NavItem(spec: s)),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
               ),
@@ -212,39 +260,20 @@ class _Bar extends StatelessWidget {
   }
 }
 
-/// 아이콘만 있는 탭 항목 (선택 시 라임 pill).
+/// 아이콘만 있는 탭 항목.
 class _NavItem extends StatelessWidget {
-  const _NavItem({
-    required this.icon,
-    this.selectedIcon,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final IconData? selectedIcon;
-  final bool selected;
-  final VoidCallback onTap;
+  const _NavItem({required this.spec});
+  final _NavSpec spec;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: spec.onTap,
       child: Center(
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          decoration: selected
-              ? BoxDecoration(
-                  color: AppColors.lime.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(99),
-                )
-              : null,
-          child: Icon(
-            selected ? (selectedIcon ?? icon) : icon,
-            color: selected ? AppColors.lime : AppColors.textSecondary,
-            size: 28,
-          ),
+        child: Icon(
+          spec.selected ? (spec.selectedIcon ?? spec.icon) : spec.icon,
+          color: spec.selected ? AppColors.lime : AppColors.textSecondary,
+          size: 28,
         ),
       ),
     );
