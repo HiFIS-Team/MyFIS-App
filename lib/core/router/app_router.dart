@@ -9,6 +9,8 @@ import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
+import '../../features/store/domain/product.dart';
+import '../../features/store/presentation/product_detail_screen.dart';
 import '../../features/store/presentation/store_screen.dart';
 import '../../features/weight/presentation/weight_screen.dart';
 import '../../shared/widgets/main_shell.dart';
@@ -71,6 +73,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const MembershipScreen()),
+      ),
+
+      // 상품 상세 — 스토어 카드에서 오른쪽→왼쪽 슬라이드 진입
+      GoRoute(
+        path: '/product',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideFromRight(
+          state,
+          ProductDetailScreen(product: state.extra as Product),
+        ),
       ),
 
       // 하단 탭 — 탭 전환 시 부드러운 크로스페이드 (상태 보존)

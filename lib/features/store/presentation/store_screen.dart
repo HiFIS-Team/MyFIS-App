@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../domain/product.dart';
 
 /// 마일리지 스토어.
 /// 보유 마일리지로 헬스장 내 상품을 교환한다. 현재는 더미 데이터.
@@ -11,38 +13,38 @@ class StoreScreen extends StatelessWidget {
   const StoreScreen({super.key});
 
   static const int _myMileage = 2400;
-  static const List<_Product> _products = [
-    _Product(
+  static const List<Product> _products = [
+    Product(
         icon: Symbols.exercise,
         name: '프로틴 쉐이커',
         points: 1000,
         views: 1240,
         rating: 4.8),
-    _Product(
+    Product(
         icon: Symbols.dry_cleaning,
         name: '운동 타월',
         points: 500,
         views: 860,
         rating: 4.5),
-    _Product(
+    Product(
         icon: Symbols.nutrition,
         name: '보충제 1회분',
         points: 800,
         views: 2030,
         rating: 4.9),
-    _Product(
+    Product(
         icon: Symbols.local_drink,
         name: '이온음료',
         points: 300,
         views: 3120,
         rating: 4.6),
-    _Product(
+    Product(
         icon: Symbols.sports_gymnastics,
         name: 'PT 1회 체험',
         points: 5000,
         views: 540,
         rating: 4.7),
-    _Product(
+    Product(
         icon: Symbols.lock,
         name: '락커 1개월',
         points: 3000,
@@ -348,25 +350,9 @@ class _PromoSlide extends StatelessWidget {
   }
 }
 
-class _Product {
-  const _Product({
-    required this.icon,
-    required this.name,
-    required this.points,
-    required this.views,
-    required this.rating,
-  });
-
-  final IconData icon;
-  final String name;
-  final int points;
-  final int views; // 조회수(몇 명이 봤는지)
-  final double rating; // 평점
-}
-
 class _ProductCard extends StatefulWidget {
   const _ProductCard({required this.product});
-  final _Product product;
+  final Product product;
 
   @override
   State<_ProductCard> createState() => _ProductCardState();
@@ -384,81 +370,87 @@ class _ProductCardState extends State<_ProductCard> {
       fontWeight: FontWeight.w500,
     );
 
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 상품 이미지 자리 (placeholder)
-          Expanded(
-            child: Container(
-              width: double.infinity,
-              color: AppColors.lime.withValues(alpha: 0.10),
-              child: Icon(product.icon, color: AppColors.lime, size: 40),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      // 상품 클릭 → 알림·바코드처럼 오른쪽에서 슬라이드되는 상세 화면
+      onTap: () => context.push('/product', extra: product),
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 상품 이미지 자리 (placeholder)
+            Expanded(
+              child: Container(
+                width: double.infinity,
+                color: AppColors.lime.withValues(alpha: 0.10),
+                child: Icon(product.icon, color: AppColors.lime, size: 40),
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  product.name,
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 6),
-                // 조회수 + 평점
-                Row(
-                  children: [
-                    Icon(Symbols.visibility,
-                        size: 15, color: AppColors.textSecondary),
-                    const SizedBox(width: 3),
-                    Text(_comma(product.views), style: metaStyle),
-                    const SizedBox(width: 10),
-                    const Icon(Symbols.star,
-                        size: 15, color: AppColors.lime, fill: 1),
-                    const SizedBox(width: 3),
-                    Text(product.rating.toStringAsFixed(1), style: metaStyle),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                // 마일리지 + (라인 끝)하트
-                Row(
-                  children: [
-                    const Icon(Symbols.paid, color: AppColors.lime, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${_comma(product.points)}P',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: AppColors.lime,
-                        fontWeight: FontWeight.w700,
+                  const SizedBox(height: 6),
+                  // 조회수 + 평점
+                  Row(
+                    children: [
+                      Icon(Symbols.visibility,
+                          size: 15, color: AppColors.textSecondary),
+                      const SizedBox(width: 3),
+                      Text(_comma(product.views), style: metaStyle),
+                      const SizedBox(width: 10),
+                      const Icon(Symbols.star,
+                          size: 15, color: AppColors.lime, fill: 1),
+                      const SizedBox(width: 3),
+                      Text(product.rating.toStringAsFixed(1), style: metaStyle),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // 마일리지 + (라인 끝)하트
+                  Row(
+                    children: [
+                      const Icon(Symbols.paid,
+                          color: AppColors.lime, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${_comma(product.points)}P',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.lime,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => setState(() => _liked = !_liked),
-                      child: Icon(
-                        Symbols.favorite,
-                        size: 20,
-                        fill: _liked ? 1 : 0,
-                        color: _liked
-                            ? const Color(0xFFFF6B6B)
-                            : AppColors.textSecondary,
+                      const Spacer(),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => setState(() => _liked = !_liked),
+                        child: Icon(
+                          Symbols.favorite,
+                          size: 20,
+                          fill: _liked ? 1 : 0,
+                          color: _liked
+                              ? const Color(0xFFFF6B6B)
+                              : AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
