@@ -172,19 +172,22 @@ class _PromoBannerState extends State<_PromoBanner> {
     ),
   ];
 
+  // 무한 순환을 위해 중앙에서 시작(앞뒤로 충분한 여유). _promos.length의 배수.
+  static const int _initialPage = 30000;
+
   // viewportFraction < 1 → 양옆 카드가 살짝 보이는 토스식 peeking 캐러셀
-  final PageController _controller = PageController(viewportFraction: 0.9);
+  final PageController _controller =
+      PageController(initialPage: _initialPage, viewportFraction: 0.9);
   Timer? _timer;
-  int _index = 0;
 
   @override
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (!_controller.hasClients) return;
-      final next = (_index + 1) % _promos.length;
+      final cur = _controller.page?.round() ?? _initialPage;
       _controller.animateToPage(
-        next,
+        cur + 1,
         duration: const Duration(milliseconds: 450),
         curve: Curves.easeInOut,
       );
@@ -201,16 +204,18 @@ class _PromoBannerState extends State<_PromoBanner> {
   @override
   Widget build(BuildContext context) {
     return AspectRatio(
-      aspectRatio: 1.5, // 세로로 좀 더 긴 직사각형
+      aspectRatio: 1.9, // 가로로 긴 직사각형
       child: PageView.builder(
         controller: _controller,
-        itemCount: _promos.length,
-        onPageChanged: (i) => setState(() => _index = i),
-        itemBuilder: (context, i) => _PromoSlide(
-          promo: _promos[i],
-          index: i,
-          total: _promos.length,
-        ),
+        // itemCount 없음 → 무한 스크롤(양방향 순환)
+        itemBuilder: (context, i) {
+          final p = i % _promos.length;
+          return _PromoSlide(
+            promo: _promos[p],
+            index: p,
+            total: _promos.length,
+          );
+        },
       ),
     );
   }
