@@ -32,7 +32,12 @@ class MainShell extends StatelessWidget {
           NavigationDestination(
             icon: Icon(Icons.fitness_center_outlined),
             selectedIcon: Icon(Icons.fitness_center),
-            label: '운동',
+            label: '웨이트',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.directions_run_outlined),
+            selectedIcon: Icon(Icons.directions_run),
+            label: '유산소',
           ),
           NavigationDestination(
             icon: Icon(Icons.leaderboard_outlined),
