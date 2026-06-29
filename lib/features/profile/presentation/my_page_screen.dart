@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -38,7 +39,11 @@ class MyPageScreen extends StatelessWidget {
             const SizedBox(height: 8),
 
             // 프로필
-            const _ProfileHeader(name: '김은후', phone: '010-1234-5678'),
+            _ProfileHeader(
+              name: '김은후',
+              phone: '010-1234-5678',
+              onTap: () => context.push('/profile'),
+            ),
             const SizedBox(height: 14),
 
             // 퀵 스탯
@@ -99,20 +104,28 @@ class MyPageScreen extends StatelessWidget {
 }
 
 class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.name, required this.phone});
+  const _ProfileHeader({
+    required this.name,
+    required this.phone,
+    required this.onTap,
+  });
   final String name;
   final String phone;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Row(
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(18),
+        ),
+        child: Row(
         children: [
           // 아바타 (라임 원형)
           Container(
@@ -149,7 +162,8 @@ class _ProfileHeader extends StatelessWidget {
           ),
           const Icon(Icons.chevron_right,
               color: AppColors.textSecondary, size: 24),
-        ],
+          ],
+        ),
       ),
     );
   }

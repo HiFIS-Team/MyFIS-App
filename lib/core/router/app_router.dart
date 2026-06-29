@@ -8,6 +8,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
 import '../../features/store/domain/product.dart';
 import '../../features/store/presentation/cart_screen.dart';
@@ -87,6 +88,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const MembershipScreen()),
+      ),
+
+      // 프로필 상세 — 마이페이지 프로필 카드에서 오른쪽→왼쪽 슬라이드
+      GoRoute(
+        path: '/profile',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const ProfileScreen()),
       ),
 
       // 상품 상세 — 스토어 카드에서 오른쪽→왼쪽 슬라이드 진입
