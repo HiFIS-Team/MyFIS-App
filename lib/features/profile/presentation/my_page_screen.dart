@@ -50,6 +50,14 @@ class MyPageScreen extends StatelessWidget {
             const _QuickStats(mileage: 2400, attendance: 18, rank: 3),
             const SizedBox(height: 14),
 
+            // 멤버십 + 부가상품(락커·운동복)
+            const _MembershipCard(
+              name: '헬스 6개월권',
+              lockerMonths: 3, // 구매함
+              wearMonths: null, // 미구매 → 구매하기
+            ),
+            const SizedBox(height: 14),
+
             // 신체 정보
             const _BodyInfoCard(height: 175, weight: 70, bmi: 22.9),
             const SizedBox(height: 26),
@@ -251,6 +259,155 @@ class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(width: 1, height: 32, color: AppColors.outline);
+  }
+}
+
+/// 멤버십 카드 — 멤버십 이름 + 부가상품(락커·운동복).
+/// 부가상품은 구매했으면 N개월, 안 했으면 구매하기 버튼.
+class _MembershipCard extends StatelessWidget {
+  const _MembershipCard({
+    required this.name,
+    required this.lockerMonths,
+    required this.wearMonths,
+  });
+
+  final String name;
+  final int? lockerMonths; // null이면 미구매
+  final int? wearMonths;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 멤버십 이름 + 상태
+          Row(
+            children: [
+              const Icon(Symbols.card_membership,
+                  color: AppColors.lime, size: 22, fill: 1),
+              const SizedBox(width: 8),
+              Text(
+                name,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                '이용 중',
+                style: textTheme.bodySmall?.copyWith(
+                  color: AppColors.lime,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          // 부가상품 2칸
+          IntrinsicHeight(
+            child: Row(
+              children: [
+                Expanded(
+                  child: _AddonItem(
+                    icon: Symbols.lock,
+                    label: '락커',
+                    months: lockerMonths,
+                  ),
+                ),
+                const VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: AppColors.outline,
+                ),
+                Expanded(
+                  child: _AddonItem(
+                    icon: Symbols.checkroom,
+                    label: '운동복',
+                    months: wearMonths,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AddonItem extends StatelessWidget {
+  const _AddonItem({
+    required this.icon,
+    required this.label,
+    required this.months,
+  });
+
+  final IconData icon;
+  final String label;
+  final int? months; // null이면 미구매
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final purchased = months != null;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: AppColors.textSecondary, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (purchased)
+            Text(
+              '$months개월 남음',
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            )
+          else
+            SizedBox(
+              height: 36,
+              child: FilledButton(
+                onPressed: () {},
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  '구매하기',
+                  style: textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 }
 
