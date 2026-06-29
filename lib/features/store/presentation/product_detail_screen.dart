@@ -34,6 +34,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           icon: const Icon(Icons.arrow_back_ios_new),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Symbols.search),
+            onPressed: () {},
+          ),
+        ],
       ),
       body: ListView(
         padding: EdgeInsets.zero,
@@ -132,12 +138,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Symbols.paid, size: 20),
+                    const Icon(Symbols.paid, size: 20, color: Colors.black),
                     const SizedBox(width: 6),
                     Text(
                       '${_comma(product.points)}P로 교환하기',
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: Colors.black,
                       ),
                     ),
                   ],
