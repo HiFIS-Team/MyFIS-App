@@ -43,7 +43,25 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
   void initState() {
     super.initState();
     _boostBrightness();
-    _ctrl.forward(); // 밝기 바가 위에서 내려옴
+    // 페이지 진입 전환이 완전히 끝난 뒤에 밝기 바를 내린다.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _startBrightnessBar());
+  }
+
+  void _startBrightnessBar() {
+    if (!mounted) return;
+    final routeAnim = ModalRoute.of(context)?.animation;
+    if (routeAnim == null || routeAnim.status == AnimationStatus.completed) {
+      _ctrl.forward();
+      return;
+    }
+    void onStatus(AnimationStatus status) {
+      if (status == AnimationStatus.completed) {
+        routeAnim.removeStatusListener(onStatus);
+        if (mounted) _ctrl.forward(); // 밝기 바가 위에서 내려옴
+      }
+    }
+
+    routeAnim.addStatusListener(onStatus);
   }
 
   @override
@@ -248,18 +266,17 @@ class _Attendance {
   final String time;
 }
 
-/// 출석 현황 — 제목·목록 모두 박스 안에, 항목 사이 구분선.
+/// 출석 현황 — 제목·목록 모두 박스 안에. 구분선 없음(토스 스타일).
 class _AttendanceHistory extends StatelessWidget {
   const _AttendanceHistory({required this.items});
   final List<_Attendance> items;
-
-  static const Color _divider = Color(0x14FFFFFF); // white 8%
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return Container(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -267,20 +284,15 @@ class _AttendanceHistory extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Text('출석 현황', style: textTheme.titleMedium),
-          ),
-          for (final item in items) ...[
-            const Divider(
-              height: 1,
-              thickness: 1,
-              color: _divider,
-              indent: 16,
-              endIndent: 16,
+          Text(
+            '출석 현황',
+            style: textTheme.titleLarge?.copyWith(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
             ),
-            _AttendanceRow(item: item),
-          ],
+          ),
+          const SizedBox(height: 8),
+          for (final item in items) _AttendanceRow(item: item),
         ],
       ),
     );
@@ -296,7 +308,7 @@ class _AttendanceRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
           const Icon(Symbols.check_circle,
