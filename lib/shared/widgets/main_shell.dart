@@ -109,6 +109,15 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
   // 진입(true: 덤벨→운동) / 나가기(false: ←복귀) 방향
   bool _entering = false;
 
+  // 운동 모드 진입 직전의 메인 탭 — 나가기 시 이 탭으로 복귀
+  int _lastMainIndex = _home;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_isWorkout(widget.currentIndex)) _lastMainIndex = widget.currentIndex;
+  }
+
   late final AnimationController _mode = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 580),
@@ -157,6 +166,8 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
     super.didUpdateWidget(oldWidget);
     final wasWorkout = _isWorkout(oldWidget.currentIndex);
     final nowWorkout = _isWorkout(widget.currentIndex);
+    // 메인 탭에 있을 때마다 갱신 → 나가기 복귀 지점으로 사용
+    if (!nowWorkout) _lastMainIndex = widget.currentIndex;
     if (nowWorkout != wasWorkout) {
       _entering = nowWorkout;
       nowWorkout ? _mode.forward() : _mode.reverse();
@@ -354,11 +365,11 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         _item(
           slot: slot,
           slotPos: 0,
-          icon: Icons.arrow_back, // ← 나가기
+          icon: Icons.arrow_back, // ← 나가기 (직전 메인 탭으로 복귀)
           selected: false,
           appear: exitAppear,
           modeIgnore: workoutIgnore,
-          onTap: () => widget.onGo(_home),
+          onTap: () => widget.onGo(_lastMainIndex),
         ),
         _item(
           slot: slot,
