@@ -8,8 +8,17 @@ void main() {
     await tester.pumpWidget(const ProviderScope(child: MyFisApp()));
     await tester.pumpAndSettle();
 
-    // 하단 네비게이션의 탭 라벨 확인
+    // 하단 네비게이션의 4개 탭 라벨 확인
+    expect(find.text('홈'), findsWidgets);
     expect(find.text('운동'), findsWidgets);
-    expect(find.text('멤버십'), findsWidgets);
+    expect(find.text('랭킹'), findsWidgets);
+    expect(find.text('마이'), findsWidgets);
+  });
+
+  testWidgets('홈 헤더에 사용자 이름이 보인다', (tester) async {
+    await tester.pumpWidget(const ProviderScope(child: MyFisApp()));
+    await tester.pumpAndSettle();
+
+    expect(find.text('은후님 👋'), findsOneWidget);
   });
 }
