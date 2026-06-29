@@ -176,18 +176,59 @@ class _NavSpec {
   final VoidCallback onTap;
 }
 
-/// 떠 있는 둥근 캡슐 + 반투명 블러 하단바. 선택 pill이 슬라이드 이동.
-class _Bar extends StatelessWidget {
+/// 떠 있는 둥근 캡슐 + 반투명 블러 하단바.
+/// 선택 pill이 슬라이드 이동하고, 탭하면 톡 커졌다 돌아오는 팝.
+class _Bar extends StatefulWidget {
   const _Bar({super.key, required this.specs});
   final List<_NavSpec> specs;
 
+  @override
+  State<_Bar> createState() => _BarState();
+}
+
+class _BarState extends State<_Bar> with SingleTickerProviderStateMixin {
   static const double _height = 62;
   static const double _pillW = 60;
   static const double _pillH = 44;
 
+  late final AnimationController _pop = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 320),
+  );
+  late final Animation<double> _scale = TweenSequence<double>([
+    TweenSequenceItem(
+      tween: Tween(begin: 1.0, end: 1.16)
+          .chain(CurveTween(curve: Curves.easeOut)),
+      weight: 45,
+    ),
+    TweenSequenceItem(
+      tween: Tween(begin: 1.16, end: 1.0)
+          .chain(CurveTween(curve: Curves.easeIn)),
+      weight: 55,
+    ),
+  ]).animate(_pop);
+
+  int get _selectedIndex => widget.specs.indexWhere((s) => s.selected);
+
+  @override
+  void didUpdateWidget(covariant _Bar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final oldIdx = oldWidget.specs.indexWhere((s) => s.selected);
+    if (_selectedIndex >= 0 && _selectedIndex != oldIdx) {
+      _pop.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _pop.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    final selectedIndex = specs.indexWhere((s) => s.selected);
+    final specs = widget.specs;
+    final selectedIndex = _selectedIndex;
 
     return SafeArea(
       top: false,
@@ -224,7 +265,7 @@ class _Bar extends StatelessWidget {
                       final slot = constraints.maxWidth / specs.length;
                       return Stack(
                         children: [
-                          // 슬라이드 이동하는 선택 pill
+                          // 슬라이드 이동 + 탭 시 팝(커졌다 복귀)하는 선택 pill
                           if (selectedIndex >= 0)
                             AnimatedPositioned(
                               duration: const Duration(milliseconds: 280),
@@ -233,10 +274,14 @@ class _Bar extends StatelessWidget {
                               left: selectedIndex * slot + (slot - _pillW) / 2,
                               width: _pillW,
                               height: _pillH,
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: AppColors.lime.withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(99),
+                              child: ScaleTransition(
+                                scale: _scale,
+                                child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                    color:
+                                        AppColors.lime.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(99),
+                                  ),
                                 ),
                               ),
                             ),
@@ -267,7 +312,9 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    // 리플 없이 — 선택 pill만 보이게 GestureDetector 사용
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: spec.onTap,
       child: Center(
         child: Icon(
