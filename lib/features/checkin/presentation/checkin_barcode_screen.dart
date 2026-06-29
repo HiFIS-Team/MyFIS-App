@@ -93,6 +93,7 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
   }
 
   void _closeBrightness() => _ctrl.reverse(); // 밝기 바가 위로 사라지고 헤더 노출
+  void _openBrightness() => _ctrl.forward(); // 헤더의 밝기 버튼 → 밝기 바 다시 내려옴
 
   @override
   Widget build(BuildContext context) {
@@ -107,7 +108,10 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
               child: ClipRect(
                 child: Stack(
                   children: [
-                    _Header(onBack: () => Navigator.of(context).maybePop()),
+                    _Header(
+                      onBack: () => Navigator.of(context).maybePop(),
+                      onBrightness: _openBrightness,
+                    ),
                     SlideTransition(
                       position: _slide,
                       child: _BrightnessBar(
@@ -139,10 +143,11 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
   }
 }
 
-/// 진짜 헤더 — 뒤로가기 + 출석.
+/// 진짜 헤더 — 뒤로가기 + 출석 + (우측) 밝기 다시 열기.
 class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
+  const _Header({required this.onBack, required this.onBrightness});
   final VoidCallback onBack;
+  final VoidCallback onBrightness;
 
   @override
   Widget build(BuildContext context) {
@@ -157,6 +162,14 @@ class _Header extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text('출석', style: Theme.of(context).textTheme.titleLarge),
+          const Spacer(),
+          // 실수로 닫았을 때 밝기 바 다시 내리기
+          IconButton(
+            icon: const Icon(Symbols.brightness_high),
+            onPressed: onBrightness,
+            color: AppColors.lime,
+            tooltip: '화면 밝기',
+          ),
         ],
       ),
     );
