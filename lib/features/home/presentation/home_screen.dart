@@ -34,7 +34,7 @@ class HomeScreen extends StatelessWidget {
                 children: const [
                   // 이번 달 출석 달력 (더미 출석 데이터)
                   AttendanceCalendar(
-                    attendedDays: {2, 5, 8, 12, 15, 18, 20, 23, 24, 26, 27, 29},
+                    attendedDays: {2, 5, 8, 12, 15, 18, 23, 25, 26, 27, 28, 29},
                   ),
 
                   // 이후: 출석 도장 / 오늘의 운동 / 마일리지·랭킹 요약 등

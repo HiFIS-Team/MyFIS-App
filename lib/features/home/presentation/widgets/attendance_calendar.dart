@@ -3,28 +3,82 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 /// 이번 달 출석 달력.
-/// 출석한 날은 덤벨(운동) 아이콘 + 라임 날짜로 표시, 오늘(미출석)은 라임 테두리.
-/// attendedDays: 이번 달에 출석한 '일(day)' 집합 (더미).
-class AttendanceCalendar extends StatelessWidget {
+/// - 출석한 날: 덤벨 아이콘 + 라임 날짜
+/// - 오늘(미출석): 라임 테두리
+/// - 미래 날짜: 흐리게 / 일요일 빨강 · 토요일 파랑
+/// - 상단: 연속 출석 스트릭(🔥) + 월 이동(◀▶)
+/// attendedDays: 현재(실제) 달에 출석한 '일(day)' 집합 (더미).
+class AttendanceCalendar extends StatefulWidget {
   const AttendanceCalendar({super.key, required this.attendedDays});
 
   final Set<int> attendedDays;
 
+  @override
+  State<AttendanceCalendar> createState() => _AttendanceCalendarState();
+}
+
+class _AttendanceCalendarState extends State<AttendanceCalendar> {
   static const List<String> _weekdays = ['일', '월', '화', '수', '목', '금', '토'];
+  static const Color _sunColor = Color(0xFFFF6B6B);
+  static const Color _satColor = Color(0xFF5B9DFF);
+
+  late DateTime _displayed; // 표시 중인 달 (1일 기준)
+  late final DateTime _dataMonth; // 데이터가 있는 달(= 현재 달)
+
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _displayed = DateTime(now.year, now.month);
+    _dataMonth = DateTime(now.year, now.month);
+  }
+
+  bool get _isDataMonth =>
+      _displayed.year == _dataMonth.year && _displayed.month == _dataMonth.month;
+
+  Set<int> get _attended => _isDataMonth ? widget.attendedDays : const {};
+
+  void _prevMonth() => setState(() {
+        _displayed = DateTime(_displayed.year, _displayed.month - 1);
+      });
+
+  void _nextMonth() => setState(() {
+        _displayed = DateTime(_displayed.year, _displayed.month + 1);
+      });
+
+  /// 오늘 기준 연속 출석 일수 (현재 달 데이터 기준).
+  int get _streak {
+    final today = _dataMonth == DateTime(DateTime.now().year, DateTime.now().month)
+        ? DateTime.now().day
+        : 0;
+    var streak = 0;
+    for (var d = today; d >= 1; d--) {
+      if (widget.attendedDays.contains(d)) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
+  }
+
+  /// 해당 날짜가 미래인지 (흐리게 처리용).
+  bool _isFuture(int day) {
+    if (_displayed.isAfter(_dataMonth)) return true;
+    if (_displayed.isBefore(_dataMonth)) return false;
+    return day > DateTime.now().day; // 현재 달
+  }
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final now = DateTime.now();
-    final year = now.year;
-    final month = now.month;
-    final today = now.day;
+    final year = _displayed.year;
+    final month = _displayed.month;
+    final today = _isDataMonth ? DateTime.now().day : -1;
 
-    // 1일의 요일(일=0 ~ 토=6) / 이번 달 일수
-    final firstColumn = DateTime(year, month, 1).weekday % 7;
+    final firstColumn = DateTime(year, month, 1).weekday % 7; // 일=0
     final daysInMonth = DateTime(year, month + 1, 0).day;
 
-    // 셀 구성: 앞쪽 빈칸 + 날짜들 + 마지막 주 빈칸
     final cells = <int?>[];
     for (var i = 0; i < firstColumn; i++) {
       cells.add(null);
@@ -40,7 +94,7 @@ class AttendanceCalendar extends StatelessWidget {
     ];
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
@@ -48,29 +102,25 @@ class AttendanceCalendar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 제목 + 출석 일수
+          // 제목 + 월 이동 + 스트릭
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
             children: [
+              _NavButton(icon: Icons.chevron_left, onTap: _prevMonth),
+              const SizedBox(width: 2),
               Text(
                 '$year년 $month월',
                 style: textTheme.titleLarge?.copyWith(
-                  fontSize: 20,
+                  fontSize: 19,
                   fontWeight: FontWeight.w800,
                 ),
               ),
+              const SizedBox(width: 2),
+              _NavButton(icon: Icons.chevron_right, onTap: _nextMonth),
               const Spacer(),
-              Text(
-                '출석 ${attendedDays.length}일',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.lime,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              if (_streak > 0) _StreakBadge(days: _streak),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // 요일 헤더
           Row(
@@ -81,9 +131,7 @@ class AttendanceCalendar extends StatelessWidget {
                     child: Text(
                       _weekdays[i],
                       style: textTheme.bodySmall?.copyWith(
-                        color: i == 0
-                            ? const Color(0xFFFF6B6B) // 일요일
-                            : AppColors.textSecondary,
+                        color: _weekdayColor(i),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -91,16 +139,16 @@ class AttendanceCalendar extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
 
           // 날짜 그리드
           for (final week in weeks)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+              padding: const EdgeInsets.symmetric(vertical: 3),
               child: Row(
                 children: [
-                  for (final day in week)
-                    Expanded(child: _dayCell(day, today)),
+                  for (var col = 0; col < 7; col++)
+                    Expanded(child: _dayCell(week[col], col, today)),
                 ],
               ),
             ),
@@ -109,13 +157,20 @@ class AttendanceCalendar extends StatelessWidget {
     );
   }
 
-  Widget _dayCell(int? day, int today) {
+  Color _weekdayColor(int col) {
+    if (col == 0) return _sunColor;
+    if (col == 6) return _satColor;
+    return AppColors.textSecondary;
+  }
+
+  Widget _dayCell(int? day, int col, int today) {
     if (day == null) return const SizedBox(height: 44);
 
-    final attended = attendedDays.contains(day);
+    final attended = _attended.contains(day);
     final isToday = day == today;
+    final isFuture = _isFuture(day);
 
-    // 출석한 날 — 덤벨 아이콘 + 라임 날짜
+    // 출석한 날 — 덤벨 + 라임 날짜
     if (attended) {
       return SizedBox(
         height: 44,
@@ -137,7 +192,14 @@ class AttendanceCalendar extends StatelessWidget {
       );
     }
 
-    // 미출석 — 날짜 숫자 (오늘은 라임 테두리)
+    // 미출석 — 요일색(+미래 흐리게), 오늘은 라임 테두리
+    final base = col == 0
+        ? _sunColor
+        : col == 6
+            ? _satColor
+            : AppColors.textPrimary;
+    final color = isFuture ? base.withValues(alpha: 0.30) : base;
+
     return SizedBox(
       height: 44,
       child: Center(
@@ -154,12 +216,63 @@ class AttendanceCalendar extends StatelessWidget {
           child: Text(
             '$day',
             style: TextStyle(
-              color: AppColors.textPrimary,
+              color: isToday ? AppColors.lime : color,
               fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
               fontSize: 14,
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// 월 이동 버튼.
+class _NavButton extends StatelessWidget {
+  const _NavButton({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(icon, color: AppColors.textSecondary, size: 24),
+      ),
+    );
+  }
+}
+
+/// 연속 출석 스트릭 배지.
+class _StreakBadge extends StatelessWidget {
+  const _StreakBadge({required this.days});
+  final int days;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.lime.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(99),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.local_fire_department,
+              color: AppColors.lime, size: 16),
+          const SizedBox(width: 4),
+          Text(
+            '$days일 연속',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.lime,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+        ],
       ),
     );
   }
