@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
@@ -40,6 +42,8 @@ class StoreScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
                 children: [
+                  const _PromoBanner(),
+                  const SizedBox(height: 24),
                   Text(
                     '상품 교환',
                     style: Theme.of(context).textTheme.titleMedium,
@@ -137,6 +141,156 @@ String _comma(int n) {
     buf.write(s[i]);
   }
   return buf.toString();
+}
+
+/// 헤더 밑 프로모션 배너. 5초마다 자동으로 다음 사진으로 슬라이드되고,
+/// 우하단에 현재/전체(예: 1/3) 인디케이터를 표시한다. 현재는 placeholder.
+class _PromoBanner extends StatefulWidget {
+  const _PromoBanner();
+
+  @override
+  State<_PromoBanner> createState() => _PromoBannerState();
+}
+
+class _PromoBannerState extends State<_PromoBanner> {
+  // 실제 홍보 사진이 들어갈 자리. 지금은 그라데이션 + 문구 placeholder.
+  static const List<_Promo> _promos = [
+    _Promo(
+      title: '신규 회원 이벤트',
+      subtitle: '첫 등록 시 5,000P 적립',
+      colors: [Color(0xFF2B3514), Color(0xFF566B25)],
+    ),
+    _Promo(
+      title: '단백질 보충제 20% 할인',
+      subtitle: '이번 주 한정 특가',
+      colors: [Color(0xFF1E2A33), Color(0xFF2C4250)],
+    ),
+    _Promo(
+      title: '친구 추천 이벤트',
+      subtitle: '추천할 때마다 1,000P',
+      colors: [Color(0xFF33231E), Color(0xFF50362C)],
+    ),
+  ];
+
+  final PageController _controller = PageController();
+  Timer? _timer;
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(seconds: 5), (_) {
+      if (!_controller.hasClients) return;
+      final next = (_index + 1) % _promos.length;
+      _controller.animateToPage(
+        next,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: AspectRatio(
+        aspectRatio: 2.4, // 가로로 긴 직사각형
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _controller,
+              itemCount: _promos.length,
+              onPageChanged: (i) => setState(() => _index = i),
+              itemBuilder: (context, i) => _PromoSlide(promo: _promos[i]),
+            ),
+            // 우하단 1/3 인디케이터
+            Positioned(
+              right: 12,
+              bottom: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${_index + 1}/${_promos.length}',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Promo {
+  const _Promo({
+    required this.title,
+    required this.subtitle,
+    required this.colors,
+  });
+
+  final String title;
+  final String subtitle;
+  final List<Color> colors;
+}
+
+class _PromoSlide extends StatelessWidget {
+  const _PromoSlide({required this.promo});
+  final _Promo promo;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      alignment: Alignment.centerLeft,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: promo.colors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            promo.title,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            promo.subtitle,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.75),
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _Product {
