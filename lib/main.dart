@@ -23,7 +23,7 @@ class MyFisApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      themeMode: ThemeMode.dark, // 다크 토스 — 기본 다크
       routerConfig: router,
     );
   }
