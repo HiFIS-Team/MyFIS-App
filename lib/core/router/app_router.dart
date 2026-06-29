@@ -17,6 +17,26 @@ final _routineNavigatorKey = GlobalKey<NavigatorState>();
 final _rankingNavigatorKey = GlobalKey<NavigatorState>();
 final _myNavigatorKey = GlobalKey<NavigatorState>();
 
+/// 오른쪽→왼쪽 슬라이드 전환 페이지 (네비게이션 진입 공통).
+/// 알림·출석 바코드 등 풀스크린 진입 화면에서 사용.
+CustomTransitionPage<void> _slideFromRight(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      return SlideTransition(
+        position: animation.drive(
+          Tween(
+            begin: const Offset(1, 0), // 오른쪽에서
+            end: Offset.zero, // 왼쪽으로(제자리)
+          ).chain(CurveTween(curve: Curves.easeInOut)),
+        ),
+        child: child,
+      );
+    },
+  );
+}
+
 /// 앱 라우터 provider.
 /// 인증 상태 등에 따라 redirect를 추가하려면 여기에서 처리한다.
 final routerProvider = Provider<GoRouter>((ref) {
@@ -28,42 +48,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/notifications',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const NotificationScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(1, 0), // 오른쪽에서
-                  end: Offset.zero, // 왼쪽으로(제자리)
-                ).chain(CurveTween(curve: Curves.easeInOut)),
-              ),
-              child: child,
-            );
-          },
-        ),
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const NotificationScreen()),
       ),
 
-      // 출석 바코드 — 탭 위로 풀스크린, 아래→위 슬라이드 진입
+      // 출석 바코드 — 알림과 동일하게 오른쪽→왼쪽 슬라이드
       GoRoute(
         path: '/check-in',
         parentNavigatorKey: _rootNavigatorKey,
-        pageBuilder: (context, state) => CustomTransitionPage(
-          key: state.pageKey,
-          child: const CheckinBarcodeScreen(),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return SlideTransition(
-              position: animation.drive(
-                Tween(
-                  begin: const Offset(0, 1), // 아래에서
-                  end: Offset.zero, // 위로(제자리)
-                ).chain(CurveTween(curve: Curves.easeInOut)),
-              ),
-              child: child,
-            );
-          },
-        ),
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const CheckinBarcodeScreen()),
       ),
 
       // 하단 4탭을 유지하는 StatefulShellRoute
