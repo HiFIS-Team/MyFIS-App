@@ -9,12 +9,14 @@ import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
+import '../../features/store/presentation/store_screen.dart';
 import '../../features/weight/presentation/weight_screen.dart';
 import '../../shared/widgets/main_shell.dart';
 
-// 루트 및 각 탭 브랜치의 네비게이터 키
+// 루트 및 각 탭 브랜치의 네비게이터 키 (MainShell 인덱스 순서와 동일)
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 final _homeNavigatorKey = GlobalKey<NavigatorState>();
+final _storeNavigatorKey = GlobalKey<NavigatorState>();
 final _weightNavigatorKey = GlobalKey<NavigatorState>();
 final _cardioNavigatorKey = GlobalKey<NavigatorState>();
 final _rankingNavigatorKey = GlobalKey<NavigatorState>();
@@ -83,6 +85,15 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => const HomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            navigatorKey: _storeNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/store',
+                builder: (context, state) => const StoreScreen(),
               ),
             ],
           ),
