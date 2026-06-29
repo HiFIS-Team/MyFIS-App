@@ -6,6 +6,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 import '../application/cart_provider.dart';
+import '../application/exchange_orders_provider.dart';
 
 /// 장바구니 화면.
 /// 담은 상품의 수량 조절·삭제 후, 마일리지로 한 번에 교환한다.
@@ -106,11 +107,12 @@ class CartScreen extends ConsumerWidget {
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 12),
         child: FilledButton(
           onPressed: () {
-            // 요약 만들고 카트 비운 뒤 완료 화면으로
+            // 요약 만들고 → 교환권 발급(항목 수만큼 카드 추가) → 카트 비움 → 완료 화면
             final first = items.first.product.name;
             final summary = items.length == 1
                 ? '$first x${items.first.qty}'
                 : '$first 외 ${items.length - 1}건';
+            ref.read(exchangeOrdersProvider.notifier).addFromCart(items);
             ref.read(cartProvider.notifier).clear();
             context.push(
               '/exchange-complete',

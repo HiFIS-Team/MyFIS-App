@@ -1,69 +1,48 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../application/exchange_orders_provider.dart';
+import '../domain/exchange_order.dart';
 
-/// 교환권(주문) 한 건. 현재는 더미 데이터.
-class _ExchangeOrder {
-  const _ExchangeOrder({
-    required this.name,
-    required this.number,
-    required this.qty,
-    required this.date,
-    required this.done,
-  });
-
-  final String name;
-  final String number; // 교환번호 (프론트 제시용)
-  final int qty;
-  final String date;
-  final bool done;
-}
-
-// 지금(가장 최근) 교환 기록만 보여준다.
-const _ExchangeOrder _latestOrder = _ExchangeOrder(
-  name: '프로틴 쉐이커',
-  number: 'A3F92',
-  qty: 2,
-  date: '6/29',
-  done: false,
-);
-
-/// 삼성페이식 교환권.
-/// 하단 "내 교환권" 핸들을 쓸어올리면 카드가 세로→가로로 회전하며 펼쳐지고,
-/// 쓸어내리면 역재생으로 핸들로 접힌다. 스토어 화면 Stack 위에 올려 사용.
-class ExchangeWalletOverlay extends StatefulWidget {
+/// 삼성페이식 교환권 지갑.
+/// 하단 "내 교환권" 핸들을 쓸어올리면 카드 묶음이 세로→가로로 회전하며 펼쳐지고,
+/// 펼친 뒤엔 프로모션 배너처럼 좌우로 쓸어넘겨(자동 X) 여러 교환권을 본다.
+class ExchangeWalletOverlay extends ConsumerStatefulWidget {
   const ExchangeWalletOverlay({super.key});
 
   @override
-  State<ExchangeWalletOverlay> createState() => _ExchangeWalletOverlayState();
+  ConsumerState<ExchangeWalletOverlay> createState() =>
+      _ExchangeWalletOverlayState();
 }
 
-class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
+class _ExchangeWalletOverlayState extends ConsumerState<ExchangeWalletOverlay>
     with SingleTickerProviderStateMixin {
   late final AnimationController _c = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 360),
   );
+  final PageController _page = PageController(viewportFraction: 0.84);
 
-  // 완전히 펼치는 데 필요한 드래그 거리(px)
   static const double _dragRange = 360;
+  static const double _cardH = 196;
 
   @override
   void dispose() {
     _c.dispose();
+    _page.dispose();
     super.dispose();
   }
 
-  void _open() =>
-      _c.animateTo(1, curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 360));
-  void _close() =>
-      _c.animateBack(0, curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 320));
+  void _open() => _c.animateTo(1,
+      curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 360));
+  void _close() => _c.animateBack(0,
+      curve: Curves.easeOutCubic, duration: const Duration(milliseconds: 320));
 
   void _onDragUpdate(DragUpdateDetails d) {
-    // 위로(음수 dy) 끌면 진행도 증가
     _c.value = (_c.value - d.primaryDelta! / _dragRange).clamp(0.0, 1.0);
   }
 
@@ -80,8 +59,10 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
 
   @override
   Widget build(BuildContext context) {
+    final orders = ref.watch(exchangeOrdersProvider);
+    if (orders.isEmpty) return const SizedBox.shrink();
+
     final size = MediaQuery.of(context).size;
-    final cardW = size.width - 40;
 
     return AnimatedBuilder(
       animation: _c,
@@ -91,7 +72,7 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
 
         return Stack(
           children: [
-            // 뒤 배경 딤 (열릴수록 어두워짐)
+            // 뒤 배경 딤
             Positioned.fill(
               child: IgnorePointer(
                 ignoring: p < 0.02,
@@ -104,7 +85,7 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
               ),
             ),
 
-            // 접힘 상태: "내 교환권" 핸들 (시각 표시용, 열리면 사라짐)
+            // 접힘 상태 핸들 (시각 표시용)
             Positioned(
               left: 0,
               right: 0,
@@ -112,33 +93,48 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
               child: IgnorePointer(
                 child: Opacity(
                   opacity: (1 - p * 4).clamp(0.0, 1.0),
-                  child: const Center(child: _WalletHandle()),
+                  child: Center(child: _WalletHandle(count: orders.length)),
                 ),
               ),
             ),
 
-            // 카드: 세로(접힘)→가로(펼침)로 회전 + 확대 + 상승
+            // 카드 캐러셀: 세로(접힘)→가로(펼침)로 회전 + 확대 + 상승
             Align(
               alignment: Alignment.lerp(
-                const Alignment(0, 1.25), // 아래(핸들 근처)
-                const Alignment(0, -0.1), // 펼치면 중앙 살짝 위
+                const Alignment(0, 1.25),
+                const Alignment(0, -0.05),
                 eased,
               )!,
               child: Opacity(
                 opacity: (p * 2.4).clamp(0.0, 1.0),
                 child: Transform.rotate(
-                  angle: (1 - eased) * (math.pi / 2), // 90°(세로) → 0°(가로)
+                  angle: (1 - eased) * (math.pi / 2),
                   child: Transform.scale(
-                    scale: 0.42 + 0.58 * eased, // 작게 → 원래 크기
+                    scale: 0.42 + 0.58 * eased,
                     child: IgnorePointer(
-                      ignoring: p < 0.5, // 펼쳐졌을 때만 카드가 드래그 받음
+                      ignoring: p < 0.5, // 펼친 뒤에만 스와이프
                       child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
+                        // 세로 드래그는 닫기(가로 스와이프는 PageView가 처리)
                         onVerticalDragUpdate: _onDragUpdate,
                         onVerticalDragEnd: _onDragEnd,
                         child: SizedBox(
-                          width: cardW,
-                          child: const _WalletCard(order: _latestOrder),
+                          width: size.width,
+                          height: _cardH,
+                          child: orders.length == 1
+                              ? Padding(
+                                  padding:
+                                      const EdgeInsets.symmetric(horizontal: 28),
+                                  child: _WalletCard(order: orders.first),
+                                )
+                              : PageView.builder(
+                                  controller: _page,
+                                  itemCount: orders.length,
+                                  itemBuilder: (context, i) => Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 6),
+                                    child: _WalletCard(order: orders[i]),
+                                  ),
+                                ),
                         ),
                       ),
                     ),
@@ -147,8 +143,7 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
               ),
             ),
 
-            // 하단 스와이프 감지 영역 — 항상 유지(드래그 중 사라지지 않게).
-            // 접힘: 위로 끌면 열기 / 펼침: 아래로 끌거나 탭하면 닫기.
+            // 하단 스와이프 감지 영역 — 항상 유지(접힘=위로 열기 / 펼침=아래로/탭 닫기)
             Positioned(
               left: 0,
               right: 0,
@@ -168,12 +163,14 @@ class _ExchangeWalletOverlayState extends State<ExchangeWalletOverlay>
   }
 }
 
-/// 접힘 상태 핸들 — "내 교환권".
+/// 접힘 상태 핸들 — "내 교환권 N장".
 class _WalletHandle extends StatelessWidget {
-  const _WalletHandle();
+  const _WalletHandle({required this.count});
+  final int count;
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
       decoration: BoxDecoration(
@@ -198,9 +195,15 @@ class _WalletHandle extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             '내 교환권',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            '$count장',
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.lime,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -211,7 +214,7 @@ class _WalletHandle extends StatelessWidget {
 /// 교환권 카드 — 바우처 느낌. 교환번호를 크게 표시.
 class _WalletCard extends StatelessWidget {
   const _WalletCard({required this.order});
-  final _ExchangeOrder order;
+  final ExchangeOrder order;
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +222,6 @@ class _WalletCard extends StatelessWidget {
     final done = order.done;
 
     return Container(
-      height: 196,
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -243,14 +245,18 @@ class _WalletCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                '${order.name} x${order.qty}',
-                style: textTheme.titleMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  '${order.name} x${order.qty}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const Spacer(),
+              const SizedBox(width: 8),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
