@@ -22,6 +22,7 @@ class HomeScreen extends StatelessWidget {
               child: HomeHeader(
                 hasNotification: true,
                 onNotificationTap: () => context.push('/notifications'),
+                onCheckInTap: () => context.push('/check-in'),
               ),
             ),
 

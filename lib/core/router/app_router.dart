@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
@@ -36,6 +37,27 @@ final routerProvider = Provider<GoRouter>((ref) {
                 Tween(
                   begin: const Offset(1, 0), // 오른쪽에서
                   end: Offset.zero, // 왼쪽으로(제자리)
+                ).chain(CurveTween(curve: Curves.easeInOut)),
+              ),
+              child: child,
+            );
+          },
+        ),
+      ),
+
+      // 출석 바코드 — 탭 위로 풀스크린, 아래→위 슬라이드 진입
+      GoRoute(
+        path: '/check-in',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const CheckinBarcodeScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return SlideTransition(
+              position: animation.drive(
+                Tween(
+                  begin: const Offset(0, 1), // 아래에서
+                  end: Offset.zero, // 위로(제자리)
                 ).chain(CurveTween(curve: Curves.easeInOut)),
               ),
               child: child,
