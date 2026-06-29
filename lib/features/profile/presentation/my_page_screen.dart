@@ -66,15 +66,9 @@ class MyPageScreen extends StatelessWidget {
             _SectionLabel('내 활동'),
             const SizedBox(height: 10),
             _MenuCard(rows: [
-              const _MenuRow(icon: Symbols.calendar_month, label: '출석 내역'),
-              const _MenuRow(
-                  icon: Symbols.confirmation_number, label: '교환 내역'),
-              _MenuRow(
-                icon: Symbols.favorite,
-                label: '찜한 상품',
-                isLast: true,
-                onTap: () => context.push('/wishlist'),
-              ),
+              const _MenuRow(label: '출석 내역'),
+              const _MenuRow(label: '교환 내역'),
+              _MenuRow(label: '찜한 상품', onTap: () => context.push('/wishlist')),
             ]),
             const SizedBox(height: 22),
 
@@ -82,10 +76,10 @@ class MyPageScreen extends StatelessWidget {
             _SectionLabel('결제'),
             const SizedBox(height: 10),
             const _MenuCard(rows: [
-              _MenuRow(icon: Symbols.receipt_long, label: '결제 내역'),
-              _MenuRow(icon: Symbols.credit_card, label: '결제 카드 관리'),
-              _MenuRow(icon: Symbols.confirmation_number, label: '쿠폰'),
-              _MenuRow(icon: Symbols.paid, label: '포인트', isLast: true),
+              _MenuRow(label: '결제 내역'),
+              _MenuRow(label: '결제 카드 관리'),
+              _MenuRow(label: '쿠폰'),
+              _MenuRow(label: '포인트'),
             ]),
             const SizedBox(height: 22),
 
@@ -93,25 +87,15 @@ class MyPageScreen extends StatelessWidget {
             _SectionLabel('설정'),
             const SizedBox(height: 10),
             const _MenuCard(rows: [
-              _MenuRow(icon: Symbols.notifications, label: '알림 설정'),
-              _MenuRow(icon: Symbols.lock, label: '비밀번호 변경'),
-              _MenuRow(
-                icon: Symbols.info,
-                label: '앱 버전',
-                trailing: '1.0.0',
-                isLast: true,
-              ),
+              _MenuRow(label: '알림 설정'),
+              _MenuRow(label: '비밀번호 변경'),
+              _MenuRow(label: '앱 버전', trailing: '1.0.0'),
             ]),
             const SizedBox(height: 22),
 
             // 로그아웃
             const _MenuCard(rows: [
-              _MenuRow(
-                icon: Symbols.logout,
-                label: '로그아웃',
-                danger: true,
-                isLast: true,
-              ),
+              _MenuRow(label: '로그아웃', danger: true),
             ]),
           ],
         ),
@@ -504,17 +488,13 @@ class _MenuCard extends StatelessWidget {
 
 class _MenuRow extends StatelessWidget {
   const _MenuRow({
-    required this.icon,
     required this.label,
-    this.isLast = false,
     this.danger = false,
     this.trailing,
     this.onTap,
   });
 
-  final IconData icon;
   final String label;
-  final bool isLast;
   final bool danger;
   final String? trailing; // 우측 값(예: 앱 버전). 있으면 chevron 대신 표시
   final VoidCallback? onTap;
@@ -524,48 +504,34 @@ class _MenuRow extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final color = danger ? AppColors.error : null;
 
-    return Column(
-      children: [
-        InkWell(
-          onTap: onTap ?? () {},
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            child: Row(
-              children: [
-                Icon(icon, color: color ?? AppColors.lime, size: 22),
-                const SizedBox(width: 14),
-                Text(
-                  label,
-                  style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: color,
-                  ),
-                ),
-                const Spacer(),
-                if (trailing != null)
-                  Text(
-                    trailing!,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  )
-                else if (!danger)
-                  const Icon(Icons.chevron_right,
-                      color: AppColors.textSecondary, size: 22),
-              ],
+    return InkWell(
+      onTap: onTap ?? () {},
+      borderRadius: BorderRadius.circular(16),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 17),
+        child: Row(
+          children: [
+            Text(
+              label,
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
-          ),
+            const Spacer(),
+            if (trailing != null)
+              Text(
+                trailing!,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              )
+            else if (!danger)
+              const Icon(Icons.chevron_right,
+                  color: AppColors.textSecondary, size: 22),
+          ],
         ),
-        if (!isLast)
-          const Divider(
-            height: 1,
-            thickness: 1,
-            color: AppColors.outline,
-            indent: 16,
-            endIndent: 16,
-          ),
-      ],
+      ),
     );
   }
 }
