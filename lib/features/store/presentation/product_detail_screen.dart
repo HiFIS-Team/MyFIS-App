@@ -42,9 +42,53 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ..clearSnackBars()
         ..showSnackBar(
           SnackBar(
-            content: Text('장바구니에 $qty개 담았어요'),
             behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.surfaceAlt,
+            elevation: 8,
             duration: const Duration(seconds: 2),
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            content: Row(
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  alignment: Alignment.center,
+                  decoration: const BoxDecoration(
+                    color: AppColors.lime,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Symbols.check_rounded,
+                      size: 18, color: Colors.black, weight: 700),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '장바구니에 담았어요',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                    context.push('/cart');
+                  },
+                  child: Text(
+                    '보기',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppColors.lime,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
     } else {
