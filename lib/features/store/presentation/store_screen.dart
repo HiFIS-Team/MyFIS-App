@@ -10,6 +10,7 @@ import '../application/cart_provider.dart';
 import '../application/product_catalog.dart';
 import '../domain/product.dart';
 import 'exchange_wallet.dart';
+import 'search_screen.dart' show kSearchHeroTag, searchHeroShuttle;
 
 /// 마일리지 스토어.
 /// 보유 마일리지로 헬스장 내 상품을 교환한다. 현재는 더미 데이터.
@@ -182,25 +183,29 @@ class _SearchBar extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        height: 46,
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Row(
-          children: [
-            const Icon(Symbols.search,
-                color: AppColors.textSecondary, size: 22),
-            const SizedBox(width: 8),
-            Text(
-              '상품 검색',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-            ),
-          ],
+      child: Hero(
+        tag: kSearchHeroTag,
+        flightShuttleBuilder: searchHeroShuttle,
+        child: Container(
+          height: 46,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              const Icon(Symbols.search,
+                  color: AppColors.textSecondary, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                '상품 검색',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );

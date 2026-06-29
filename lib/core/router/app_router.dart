@@ -99,12 +99,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // 검색 — 오른쪽→왼쪽 슬라이드
+      // 검색 — 검색창이 Hero로 모핑되도록 배경은 페이드
       GoRoute(
         path: '/search',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
-            _slideFromRight(state, const SearchScreen()),
+            _fadePage(state, const SearchScreen()),
       ),
 
       // 장바구니 — 오른쪽→왼쪽 슬라이드

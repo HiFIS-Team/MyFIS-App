@@ -6,6 +6,45 @@ import '../../../core/theme/app_colors.dart';
 import '../application/product_catalog.dart';
 import '../domain/product.dart';
 
+/// 스토어 검색창 ↔ 검색 화면 검색 입력창을 잇는 Hero 태그.
+const String kSearchHeroTag = 'store-search-bar';
+
+/// Hero 비행 중 보여줄 깔끔한 검색바(아이콘 + "상품 검색"). 양쪽 공용.
+Widget searchHeroShuttle(
+  BuildContext flightContext,
+  Animation<double> animation,
+  HeroFlightDirection direction,
+  BuildContext fromContext,
+  BuildContext toContext,
+) {
+  return Material(
+    type: MaterialType.transparency,
+    child: DecoratedBox(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 14),
+        child: Row(
+          children: [
+            Icon(Symbols.search, color: AppColors.textSecondary, size: 22),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '상품 검색',
+                maxLines: 1,
+                overflow: TextOverflow.clip,
+                style: TextStyle(color: AppColors.textSecondary, fontSize: 15),
+              ),
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
 /// 상품 검색 화면.
 /// 스토어 헤더 검색창·상품 상세 검색 아이콘에서 진입. 현재는 더미 카탈로그 필터.
 class SearchScreen extends StatefulWidget {
@@ -41,43 +80,47 @@ class _SearchScreenState extends State<SearchScreen> {
           onPressed: () => Navigator.of(context).maybePop(),
         ),
         titleSpacing: 0,
-        title: Container(
-          height: 44,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          margin: const EdgeInsets.only(right: 16),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Row(
-            children: [
-              const Icon(Symbols.search,
-                  color: AppColors.textSecondary, size: 22),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _controller,
-                  autofocus: true,
-                  textInputAction: TextInputAction.search,
-                  onChanged: (v) => setState(() => _query = v),
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  decoration: const InputDecoration(
-                    isCollapsed: true,
-                    border: InputBorder.none,
-                    hintText: '상품 검색',
+        title: Hero(
+          tag: kSearchHeroTag,
+          flightShuttleBuilder: searchHeroShuttle,
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                const Icon(Symbols.search,
+                    color: AppColors.textSecondary, size: 22),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    autofocus: true,
+                    textInputAction: TextInputAction.search,
+                    onChanged: (v) => setState(() => _query = v),
+                    style: Theme.of(context).textTheme.bodyLarge,
+                    decoration: const InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: '상품 검색',
+                    ),
                   ),
                 ),
-              ),
-              if (_query.isNotEmpty)
-                GestureDetector(
-                  onTap: () {
-                    _controller.clear();
-                    setState(() => _query = '');
-                  },
-                  child: const Icon(Symbols.cancel,
-                      color: AppColors.textSecondary, size: 20, fill: 1),
-                ),
-            ],
+                if (_query.isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      _controller.clear();
+                      setState(() => _query = '');
+                    },
+                    child: const Icon(Symbols.cancel,
+                        color: AppColors.textSecondary, size: 20, fill: 1),
+                  ),
+              ],
+            ),
           ),
         ),
       ),
