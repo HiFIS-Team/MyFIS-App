@@ -67,7 +67,10 @@ class AnimatedBranchContainer extends StatelessWidget {
         curve: Curves.easeOut,
         child: IgnorePointer(
           ignoring: !active,
-          child: TickerMode(enabled: active, child: child),
+          // 각 탭을 repaint 경계로 격리 — 한 탭 변화가 다른 탭 repaint 유발 X
+          child: RepaintBoundary(
+            child: TickerMode(enabled: active, child: child),
+          ),
         ),
       ),
     );
@@ -192,68 +195,91 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
     final idx = widget.currentIndex;
     final selectedSlot = _slotFor(idx);
 
+    final radius = BorderRadius.circular(34);
+
     return SafeArea(
       top: false,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(34),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(34),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-              child: Container(
-                height: _height,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceAlt.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(34),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.08),
-                  ),
+        // 바 전체를 repaint 경계로 격리 (본문과 서로 영향 X)
+        child: RepaintBoundary(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.3),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
                 ),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final slot = constraints.maxWidth / 4;
-                    return Stack(
-                      children: [
-                        // 슬라이드 + 팝 하는 선택 pill
-                        AnimatedPositioned(
-                          duration: const Duration(milliseconds: 300),
-                          curve: Curves.easeOutCubic,
-                          top: (_height - _pillH) / 2,
-                          left: selectedSlot * slot + (slot - _pillW) / 2,
-                          width: _pillW,
-                          height: _pillH,
-                          child: ScaleTransition(
-                            scale: _popScale,
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                color: AppColors.lime.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(99),
-                              ),
+              ],
+            ),
+            child: SizedBox(
+              height: _height,
+              child: Stack(
+                children: [
+                  // 1) 블러 배경 (정적) — 애니메이션 시 재계산 안 되게 분리
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: AppColors.surfaceAlt.withValues(alpha: 0.72),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.08),
                             ),
+                            borderRadius: radius,
                           ),
                         ),
-                        // 항목들 (모드 변신 애니메이션)
-                        Positioned.fill(
-                          child: AnimatedBuilder(
-                            animation: _mode,
-                            builder: (context, _) => _buildItems(idx, slot),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
+                      ),
+                    ),
+                  ),
+                  // 2) 콘텐츠(pill + 아이콘) — 블러 위, 애니메이션은 여기서만
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: radius,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          final slot = constraints.maxWidth / 4;
+                          return Stack(
+                            children: [
+                              // 슬라이드 + 팝 하는 선택 pill
+                              AnimatedPositioned(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeOutCubic,
+                                top: (_height - _pillH) / 2,
+                                left:
+                                    selectedSlot * slot + (slot - _pillW) / 2,
+                                width: _pillW,
+                                height: _pillH,
+                                child: ScaleTransition(
+                                  scale: _popScale,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: AppColors.lime
+                                          .withValues(alpha: 0.18),
+                                      borderRadius: BorderRadius.circular(99),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              // 항목들 (모드 변신 애니메이션)
+                              Positioned.fill(
+                                child: AnimatedBuilder(
+                                  animation: _mode,
+                                  builder: (context, _) =>
+                                      _buildItems(idx, slot),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
