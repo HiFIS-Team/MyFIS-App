@@ -15,7 +15,7 @@ class HomeRanking extends StatefulWidget {
 }
 
 class _HomeRankingState extends State<HomeRanking> {
-  int _tab = 0; // 0: 출석왕, 1: 지인소개왕
+  int _tab = 0; // 0: 출석왕, 1: 지인소개왕, 2: 적립왕
   static const int _previewCount = 10;
 
   @override

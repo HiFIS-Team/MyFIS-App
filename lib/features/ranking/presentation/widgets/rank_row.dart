@@ -67,7 +67,7 @@ class RankRow extends StatelessWidget {
             ),
           ),
           Text(
-            '${entry.value}$unit',
+            '${_comma(entry.value)}$unit',
             style: textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -76,6 +76,17 @@ class RankRow extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 천 단위 콤마 (마일리지 등 큰 값 가독성).
+String _comma(int n) {
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+    buf.write(s[i]);
+  }
+  return buf.toString();
 }
 
 /// 등락 표시 — ▲상승(초록) / ▼하락(빨강) / NEW / -.
