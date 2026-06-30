@@ -23,11 +23,11 @@ class HomeWeekSummary extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: const [
               Expanded(
-                child: _Stat(label: '웨이트', value: '4회', sub: '목표 5회'),
+                child: _Stat(label: '웨이트', value: '4', sub: '회'),
               ),
               _Divider(),
               Expanded(
-                child: _Stat(label: '러닝', value: '12.5km', sub: '이번 주'),
+                child: _Stat(label: '러닝', value: '12.5', sub: 'km'),
               ),
               _Divider(),
               Expanded(
@@ -58,10 +58,11 @@ class _Stat extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             label,
+            textAlign: TextAlign.center,
             style: textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
@@ -72,7 +73,7 @@ class _Stat extends StatelessWidget {
             width: double.infinity,
             child: FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.center,
               child: Text(
                 value,
                 style: textTheme.titleLarge?.copyWith(
@@ -84,6 +85,7 @@ class _Stat extends StatelessWidget {
           const SizedBox(height: 3),
           Text(
             sub,
+            textAlign: TextAlign.center,
             style: textTheme.bodySmall?.copyWith(
               color: AppColors.textSecondary,
             ),
