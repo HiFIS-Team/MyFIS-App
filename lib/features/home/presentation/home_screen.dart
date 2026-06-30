@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'widgets/attendance_calendar.dart';
+import 'widgets/home_events.dart';
 import 'widgets/home_header.dart';
 
 /// 홈(메인) 대시보드 화면.
@@ -27,14 +28,24 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
 
-            // 본문 (스크롤 영역)
+            // 본문 (스크롤 영역) — 이벤트는 가장자리까지 흐르게(가로 스크롤),
+            // 달력은 좌우 24 패딩.
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                padding: const EdgeInsets.only(top: 8, bottom: 24),
                 children: const [
+                  // 토스식 이벤트 카드 가로 스크롤
+                  HomeEvents(),
+                  SizedBox(height: 28),
+
                   // 이번 달 출석 달력 (더미 출석 데이터)
-                  AttendanceCalendar(
-                    attendedDays: {2, 5, 8, 12, 15, 18, 23, 25, 26, 27, 28, 29},
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 24),
+                    child: AttendanceCalendar(
+                      attendedDays: {
+                        2, 5, 8, 12, 15, 18, 23, 25, 26, 27, 28, 29
+                      },
+                    ),
                   ),
 
                   // 이후: 출석 도장 / 오늘의 운동 / 마일리지·랭킹 요약 등
