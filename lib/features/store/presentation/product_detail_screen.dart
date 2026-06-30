@@ -287,14 +287,15 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               onTap: () {},
             ),
             const SizedBox(width: 12),
-            // 장바구니 담기 (보조)
+            // 장바구니 담기 (보조 — 중립 아웃라인)
             Expanded(
               child: FilledButton(
                 onPressed: () => _openSheet(toCart: true),
                 style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.surfaceAlt,
+                  backgroundColor: Colors.transparent,
                   foregroundColor: AppColors.textPrimary,
                   minimumSize: const Size.fromHeight(54),
+                  side: const BorderSide(color: AppColors.outline, width: 1.4),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
@@ -308,7 +309,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
               ),
             ),
             const SizedBox(width: 10),
-            // 바로 교환하기 (주요)
+            // 바로 교환하기 (주요 — 라임 아웃라인)
             Expanded(
               child: FilledButton(
                 onPressed: () => _openSheet(toCart: false),
@@ -322,7 +323,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                   '교환하기',
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.black,
+                    color: AppColors.lime,
                   ),
                 ),
               ),
@@ -470,6 +471,12 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
               onPressed: () => Navigator.of(context).pop(_qty),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
+                // 교환=라임 아웃라인(테마 기본) / 담기=중립 아웃라인
+                foregroundColor:
+                    widget.buyNow ? AppColors.lime : AppColors.textPrimary,
+                side: widget.buyNow
+                    ? null
+                    : const BorderSide(color: AppColors.outline, width: 1.4),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
@@ -480,7 +487,9 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                   Icon(
                     widget.buyNow ? Symbols.paid : Symbols.add_shopping_cart,
                     size: 20,
-                    color: Colors.black,
+                    color: widget.buyNow
+                        ? AppColors.lime
+                        : AppColors.textPrimary,
                     fill: widget.buyNow ? 1 : 0,
                   ),
                   const SizedBox(width: 6),
@@ -490,7 +499,9 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                         : '장바구니에 담기',
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
-                      color: Colors.black,
+                      color: widget.buyNow
+                          ? AppColors.lime
+                          : AppColors.textPrimary,
                     ),
                   ),
                 ],

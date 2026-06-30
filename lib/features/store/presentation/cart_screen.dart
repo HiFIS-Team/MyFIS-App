@@ -129,7 +129,7 @@ class CartScreen extends ConsumerWidget {
             '${_comma(total)}P로 교환하기',
             style: textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              color: Colors.black,
+              color: AppColors.lime,
             ),
           ),
         ),

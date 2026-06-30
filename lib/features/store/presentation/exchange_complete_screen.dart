@@ -173,7 +173,7 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
                   '확인',
                   style: textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.black,
+                    color: AppColors.lime,
                   ),
                 ),
               ),

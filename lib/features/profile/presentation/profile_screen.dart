@@ -87,7 +87,7 @@ class ProfileScreen extends StatelessWidget {
             '프로필 수정',
             style: textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
-              color: Colors.black,
+              color: AppColors.lime,
             ),
           ),
         ),

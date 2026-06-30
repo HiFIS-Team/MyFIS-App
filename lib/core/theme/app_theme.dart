@@ -122,14 +122,16 @@ class AppTheme {
         ),
         margin: EdgeInsets.zero,
       ),
+      // 기본 CTA: 투명 배경 + 라임 테두리/글씨 아웃라인(전 화면 공통).
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: scheme.primary,
-          foregroundColor: scheme.onPrimary,
+          backgroundColor: Colors.transparent,
+          foregroundColor: AppColors.lime,
           minimumSize: const Size.fromHeight(56), // 토스풍 큰 버튼
           textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+          side: const BorderSide(color: AppColors.lime, width: 1.4),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(radius),
+            borderRadius: BorderRadius.circular(12), // 각진 톤
           ),
         ),
       ),
