@@ -52,13 +52,6 @@ class _HomeRankingState extends State<HomeRanking> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '랭킹',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 12),
           Container(
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
