@@ -49,8 +49,8 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  SizedBox(height: 24),
-                  // 이번 주 운동 요약 (웨이트·유산소·칼로리)
+                  SizedBox(height: 8),
+                  // 운동 요약 (웨이트·유산소·칼로리)
                   HomeWeekSummary(),
 
                   // 이후: 마일리지·랭킹 요약 등
