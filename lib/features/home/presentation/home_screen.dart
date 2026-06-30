@@ -54,7 +54,7 @@ class HomeScreen extends StatelessWidget {
                   // 운동 요약 (웨이트·러닝·페이스)
                   HomeWeekSummary(),
 
-                  SizedBox(height: 28),
+                  SizedBox(height: 8),
                   // 랭킹 (출석왕·지인소개왕) — 토스 증권식 리스트
                   HomeRanking(),
                 ],
