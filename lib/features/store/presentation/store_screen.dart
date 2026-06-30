@@ -54,22 +54,29 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                     ],
                   ),
                 ),
-                // 카테고리 가로 필터
-                SizedBox(
-                  height: 36,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    itemCount: kStoreCategories.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, i) {
-                      final c = kStoreCategories[i];
-                      return _CategoryChip(
-                        label: c,
-                        selected: c == _category,
-                        onTap: () => setState(() => _category = c),
-                      );
-                    },
+                // 카테고리 가로 필터 (언더라인 탭)
+                Container(
+                  decoration: const BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(color: AppColors.outline, width: 1),
+                    ),
+                  ),
+                  child: SizedBox(
+                    height: 40,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      itemCount: kStoreCategories.length,
+                      separatorBuilder: (_, _) => const SizedBox(width: 20),
+                      itemBuilder: (context, i) {
+                        final c = kStoreCategories[i];
+                        return _CategoryTab(
+                          label: c,
+                          selected: c == _category,
+                          onTap: () => setState(() => _category = c),
+                        );
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -267,9 +274,9 @@ class _MileagePill extends StatelessWidget {
   }
 }
 
-/// 카테고리 가로 필터 칩. 선택 시 라임 아웃라인, 비선택은 회색 채움.
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
+/// 카테고리 가로 언더라인 탭. 선택 시 흰 볼드 + 라임 밑줄(찜한 상품과 동일 스타일).
+class _CategoryTab extends StatelessWidget {
+  const _CategoryTab({
     required this.label,
     required this.selected,
     required this.onTap,
@@ -284,22 +291,28 @@ class _CategoryChip extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? Colors.transparent : AppColors.surfaceAlt,
-          borderRadius: BorderRadius.circular(10),
-          border: selected
-              ? Border.all(color: AppColors.lime, width: 1.3)
-              : null,
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: selected ? AppColors.lime : AppColors.textSecondary,
-                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
-              ),
+      child: IntrinsicWidth(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: selected
+                        ? AppColors.textPrimary
+                        : AppColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 9),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 2.5,
+              color: selected ? AppColors.lime : Colors.transparent,
+            ),
+          ],
         ),
       ),
     );
