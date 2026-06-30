@@ -12,6 +12,7 @@ import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/ranking/presentation/ranking_full_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
+import '../../features/splash/presentation/splash_screen.dart';
 import '../../features/store/domain/product.dart';
 import '../../features/store/presentation/cart_screen.dart';
 import '../../features/store/presentation/exchange_complete_screen.dart';
@@ -67,8 +68,15 @@ CustomTransitionPage<void> _fadePage(GoRouterState state, Widget child) {
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/home',
+    initialLocation: '/splash',
     routes: [
+      // 스플래시 — 앱 진입 시 MyFIS 로고 후 홈으로
+      GoRoute(
+        path: '/splash',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const SplashScreen(),
+      ),
+
       // 알림 — 탭 위로 풀스크린, 오른쪽→왼쪽 슬라이드 진입
       GoRoute(
         path: '/notifications',
