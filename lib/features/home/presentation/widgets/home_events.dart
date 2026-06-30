@@ -67,15 +67,16 @@ class _HomeEventsState extends State<HomeEvents> {
       child: SizedBox(
         height: 104,
         child: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 460),
+          duration: const Duration(milliseconds: 520),
           switchInCurve: Curves.easeOutCubic,
           switchOutCurve: Curves.easeInCubic,
           transitionBuilder: (child, animation) {
-            // 들어오는 카드는 커지며 페이드 인, 나가는 카드는 작아지며 페이드 아웃
+            // 들어오는 카드는 작게 나타나 커지며 페이드 인,
+            // 나가는 카드는 많이 작아지며 페이드 아웃
             return FadeTransition(
               opacity: animation,
               child: ScaleTransition(
-                scale: Tween<double>(begin: 0.85, end: 1.0).animate(animation),
+                scale: Tween<double>(begin: 0.55, end: 1.0).animate(animation),
                 child: child,
               ),
             );
