@@ -177,12 +177,12 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.fitness_center, color: AppColors.lime, size: 18),
+            const Icon(Icons.fitness_center, color: AppColors.textPrimary, size: 18),
             const SizedBox(height: 2),
             Text(
               '$day',
               style: const TextStyle(
-                color: AppColors.lime,
+                color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
                 fontSize: 11,
               ),
@@ -210,13 +210,13 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
           decoration: isToday
               ? BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppColors.lime, width: 1.5),
+                  border: Border.all(color: AppColors.textPrimary, width: 1.5),
                 )
               : null,
           child: Text(
             '$day',
             style: TextStyle(
-              color: isToday ? AppColors.lime : color,
+              color: isToday ? AppColors.textPrimary : color,
               fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
               fontSize: 14,
             ),
@@ -256,19 +256,19 @@ class _StreakBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.lime.withValues(alpha: 0.14),
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(99),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.local_fire_department,
-              color: AppColors.lime, size: 16),
+              color: AppColors.textSecondary, size: 16),
           const SizedBox(width: 4),
           Text(
             '$days일 연속',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.lime,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w700,
                 ),
           ),

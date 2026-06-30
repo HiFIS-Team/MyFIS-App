@@ -78,7 +78,7 @@ class MembershipCard extends StatelessWidget {
                   value: usedRatio,
                   minHeight: 6,
                   backgroundColor: AppColors.outline,
-                  valueColor: const AlwaysStoppedAnimation(AppColors.lime),
+                  valueColor: const AlwaysStoppedAnimation(AppColors.textPrimary),
                 ),
               ),
               const SizedBox(height: 8),
@@ -105,13 +105,13 @@ class _PlanChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppColors.lime.withValues(alpha: 0.14),
+        color: AppColors.surfaceAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: AppColors.lime,
+              color: AppColors.textPrimary,
               fontWeight: FontWeight.w700,
             ),
       ),

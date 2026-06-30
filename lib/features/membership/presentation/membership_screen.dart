@@ -81,7 +81,7 @@ class _MenuRow extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             child: Row(
               children: [
-                Icon(icon, color: AppColors.lime, size: 22),
+                Icon(icon, color: AppColors.textSecondary, size: 22),
                 const SizedBox(width: 14),
                 Text(
                   label,

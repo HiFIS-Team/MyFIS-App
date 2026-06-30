@@ -225,7 +225,8 @@ class _MileagePill extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Symbols.paid, color: AppColors.lime, size: 20, fill: 1),
+          const Icon(Symbols.paid,
+              color: AppColors.textSecondary, size: 20, fill: 1),
           const SizedBox(width: 6),
           Text(
             _comma(points),

@@ -106,7 +106,7 @@ class _NotificationButton extends StatelessWidget {
               width: 8,
               height: 8,
               decoration: const BoxDecoration(
-                color: AppColors.lime,
+                color: AppColors.error,
                 shape: BoxShape.circle,
               ),
             ),

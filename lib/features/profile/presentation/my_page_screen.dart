@@ -132,11 +132,11 @@ class _ProfileHeader extends StatelessWidget {
             height: 58,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppColors.lime.withValues(alpha: 0.16),
+              color: AppColors.surfaceAlt,
               shape: BoxShape.circle,
             ),
             child: const Icon(Symbols.person,
-                color: AppColors.lime, size: 32, fill: 1),
+                color: AppColors.textSecondary, size: 32, fill: 1),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -193,7 +193,7 @@ class _QuickStats extends StatelessWidget {
             child: _StatItem(
               value: _comma(mileage),
               label: '마일리지',
-              valueColor: AppColors.lime,
+              valueColor: AppColors.textPrimary,
             ),
           ),
           const _StatDivider(),
@@ -282,7 +282,7 @@ class _MembershipCard extends StatelessWidget {
           Row(
             children: [
               const Icon(Symbols.card_membership,
-                  color: AppColors.lime, size: 22, fill: 1),
+                  color: AppColors.textSecondary, size: 22, fill: 1),
               const SizedBox(width: 8),
               Text(
                 name,
@@ -294,7 +294,7 @@ class _MembershipCard extends StatelessWidget {
               Text(
                 '이용 중',
                 style: textTheme.bodySmall?.copyWith(
-                  color: AppColors.lime,
+                  color: AppColors.textSecondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),

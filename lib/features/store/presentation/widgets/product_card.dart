@@ -41,9 +41,9 @@ class ProductCard extends ConsumerWidget {
                 children: [
                   Positioned.fill(
                     child: Container(
-                      color: AppColors.lime.withValues(alpha: 0.10),
-                      child:
-                          Icon(product.icon, color: AppColors.lime, size: 40),
+                      color: AppColors.surfaceAlt,
+                      child: Icon(product.icon,
+                          color: AppColors.textSecondary, size: 40),
                     ),
                   ),
                   Positioned(
@@ -75,7 +75,7 @@ class ProductCard extends ConsumerWidget {
                       Text(_comma(product.views), style: metaStyle),
                       const SizedBox(width: 10),
                       const Icon(Symbols.star,
-                          size: 15, color: AppColors.lime, fill: 1),
+                          size: 15, color: AppColors.textSecondary, fill: 1),
                       const SizedBox(width: 3),
                       Text(product.rating.toStringAsFixed(1), style: metaStyle),
                     ],
@@ -84,14 +84,11 @@ class ProductCard extends ConsumerWidget {
                   // 마일리지 + (라인 끝)하트
                   Row(
                     children: [
-                      const Icon(Symbols.paid,
-                          color: AppColors.lime, size: 16),
-                      const SizedBox(width: 4),
                       Text(
                         '${_comma(product.points)}P',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.lime,
-                          fontWeight: FontWeight.w700,
+                        style: textTheme.bodyLarge?.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       const Spacer(),

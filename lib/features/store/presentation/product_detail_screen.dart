@@ -145,9 +145,9 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           AspectRatio(
             aspectRatio: 1.25,
             child: Container(
-              color: AppColors.lime.withValues(alpha: 0.10),
+              color: AppColors.surfaceAlt,
               alignment: Alignment.center,
-              child: Icon(product.icon, color: AppColors.lime, size: 96),
+              child: Icon(product.icon, color: AppColors.textSecondary, size: 96),
             ),
           ),
           Padding(
@@ -166,12 +166,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Icon(Symbols.paid, size: 24, color: AppColors.lime),
+                    const Icon(Symbols.paid, size: 24, color: AppColors.textSecondary),
                     const SizedBox(width: 6),
                     Text(
                       '${_comma(product.points)}P',
                       style: textTheme.headlineSmall?.copyWith(
-                        color: AppColors.lime,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -192,7 +192,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ),
                     const SizedBox(width: 14),
                     const Icon(Symbols.star,
-                        size: 18, color: AppColors.lime, fill: 1),
+                        size: 18, color: AppColors.textSecondary, fill: 1),
                     const SizedBox(width: 4),
                     Text(
                       product.rating.toStringAsFixed(1),
@@ -382,12 +382,12 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Symbols.paid, size: 16, color: AppColors.lime),
+                const Icon(Symbols.paid, size: 16, color: AppColors.textSecondary),
                 const SizedBox(width: 4),
                 Text(
                   '${_comma(product.points)}P',
                   style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.lime,
+                    color: AppColors.textPrimary,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -452,7 +452,7 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                 ),
                 Row(
                   children: [
-                    const Icon(Symbols.paid, size: 22, color: AppColors.lime),
+                    const Icon(Symbols.paid, size: 22, color: AppColors.textSecondary),
                     const SizedBox(width: 5),
                     Text(
                       '${_comma(total)}P',
@@ -606,12 +606,12 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = accent ? AppColors.limeStrong : AppColors.textSecondary;
+    final fg = accent ? AppColors.textPrimary : AppColors.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: accent
-            ? AppColors.lime.withValues(alpha: 0.12)
+            ? AppColors.surfaceAlt
             : AppColors.surface,
         borderRadius: BorderRadius.circular(20),
       ),
@@ -708,7 +708,7 @@ class _ReviewSummary extends StatelessWidget {
                   Symbols.star,
                   size: 14,
                   fill: i < rating.round() ? 1 : 0,
-                  color: AppColors.lime,
+                  color: AppColors.textSecondary,
                 ),
               ),
             ),
@@ -748,7 +748,7 @@ class _ReviewSummary extends StatelessWidget {
                                     total == 0 ? 0 : _dist[i] / total,
                                 child: Container(
                                   height: 6,
-                                  color: AppColors.lime,
+                                  color: AppColors.textSecondary,
                                 ),
                               ),
                             ],
@@ -809,7 +809,7 @@ class _ReviewCard extends StatelessWidget {
                     Symbols.star,
                     size: 13,
                     fill: i < rating ? 1 : 0,
-                    color: AppColors.lime,
+                    color: AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -876,10 +876,10 @@ class _RelatedSection extends StatelessWidget {
                       width: 120,
                       height: 110,
                       decoration: BoxDecoration(
-                        color: AppColors.lime.withValues(alpha: 0.10),
+                        color: AppColors.surfaceAlt,
                         borderRadius: BorderRadius.circular(14),
                       ),
-                      child: Icon(item.icon, color: AppColors.lime, size: 36),
+                      child: Icon(item.icon, color: AppColors.textSecondary, size: 36),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -894,12 +894,12 @@ class _RelatedSection extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Symbols.paid,
-                            size: 14, color: AppColors.lime),
+                            size: 14, color: AppColors.textSecondary),
                         const SizedBox(width: 3),
                         Text(
                           '${_comma(item.points)}P',
                           style: textTheme.bodySmall?.copyWith(
-                            color: AppColors.lime,
+                            color: AppColors.textPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),

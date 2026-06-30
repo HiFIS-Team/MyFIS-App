@@ -191,7 +191,7 @@ class _WalletHandle extends StatelessWidget {
           const Icon(Symbols.keyboard_arrow_up,
               size: 20, color: AppColors.textSecondary),
           const SizedBox(width: 4),
-          const Icon(Symbols.wallet, size: 18, color: AppColors.lime),
+          const Icon(Symbols.wallet, size: 18, color: AppColors.textSecondary),
           const SizedBox(width: 6),
           Text(
             '내 교환권',
@@ -201,7 +201,7 @@ class _WalletHandle extends StatelessWidget {
           Text(
             '$count장',
             style: textTheme.bodyMedium?.copyWith(
-              color: AppColors.lime,
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -263,7 +263,7 @@ class _WalletCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: done
                       ? Colors.white.withValues(alpha: 0.10)
-                      : AppColors.lime,
+                      : Colors.white,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(

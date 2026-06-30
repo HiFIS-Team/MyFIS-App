@@ -125,7 +125,7 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
                                   _InfoRow(
                                     label: '차감 마일리지',
                                     value: '${_comma(total)}P',
-                                    valueColor: AppColors.lime,
+                                    valueColor: AppColors.textPrimary,
                                   ),
                                   const SizedBox(height: 16),
                                   Container(

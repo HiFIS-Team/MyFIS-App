@@ -92,11 +92,11 @@ class _NotiTile extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.lime.withValues(alpha: 0.14),
+                color: AppColors.surfaceAlt,
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: Icon(item.icon, color: AppColors.lime, size: 22),
+              child: Icon(item.icon, color: AppColors.textSecondary, size: 22),
             ),
             const SizedBox(width: 14),
 

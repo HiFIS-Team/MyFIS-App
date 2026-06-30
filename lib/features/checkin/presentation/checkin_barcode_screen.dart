@@ -119,7 +119,7 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
                           IconButton(
                             icon: const Icon(Symbols.brightness_high),
                             onPressed: _openBrightness,
-                            color: AppColors.lime,
+                            color: AppColors.textSecondary,
                             tooltip: '화면 밝기',
                           ),
                         ],
@@ -185,7 +185,7 @@ class _BrightnessBar extends StatelessWidget {
         child: Row(
           children: [
             const Icon(Symbols.brightness_high,
-                color: AppColors.lime, size: 20),
+                color: AppColors.textSecondary, size: 20),
             const SizedBox(width: 6),
             Text(
               '화면 밝기',
@@ -197,9 +197,9 @@ class _BrightnessBar extends StatelessWidget {
             Expanded(
               child: SliderTheme(
                 data: SliderTheme.of(context).copyWith(
-                  activeTrackColor: AppColors.lime,
+                  activeTrackColor: AppColors.textPrimary,
                   inactiveTrackColor: AppColors.outline,
-                  thumbColor: AppColors.lime,
+                  thumbColor: AppColors.textPrimary,
                   trackHeight: 4,
                   overlayShape:
                       const RoundSliderOverlayShape(overlayRadius: 14),
@@ -308,7 +308,7 @@ class _AttendanceRow extends StatelessWidget {
       child: Row(
         children: [
           const Icon(Symbols.check_circle,
-              color: AppColors.lime, size: 20, fill: 1),
+              color: AppColors.textSecondary, size: 20, fill: 1),
           const SizedBox(width: 12),
           Text(
             '${item.date} (${item.day})',

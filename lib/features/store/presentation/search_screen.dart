@@ -186,10 +186,10 @@ class _ResultTile extends StatelessWidget {
               width: 52,
               height: 52,
               decoration: BoxDecoration(
-                color: AppColors.lime.withValues(alpha: 0.10),
+                color: AppColors.surfaceAlt,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(product.icon, color: AppColors.lime, size: 26),
+              child: Icon(product.icon, color: AppColors.textSecondary, size: 26),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -205,12 +205,12 @@ class _ResultTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Symbols.paid, size: 15, color: AppColors.lime),
+                      const Icon(Symbols.paid, size: 15, color: AppColors.textSecondary),
                       const SizedBox(width: 3),
                       Text(
                         '${_comma(product.points)}P',
                         style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.lime,
+                          color: AppColors.textPrimary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

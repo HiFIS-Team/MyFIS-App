@@ -52,11 +52,11 @@ class CartScreen extends ConsumerWidget {
                   width: 56,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: AppColors.lime.withValues(alpha: 0.10),
+                    color: AppColors.surfaceAlt,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(item.product.icon,
-                      color: AppColors.lime, size: 28),
+                      color: AppColors.textSecondary, size: 28),
                 ),
                 const SizedBox(width: 14),
                 // 이름 + 가격
@@ -74,12 +74,12 @@ class CartScreen extends ConsumerWidget {
                       Row(
                         children: [
                           const Icon(Symbols.paid,
-                              size: 15, color: AppColors.lime),
+                              size: 15, color: AppColors.textSecondary),
                           const SizedBox(width: 3),
                           Text(
                             '${_comma(item.linePoints)}P',
                             style: textTheme.bodyMedium?.copyWith(
-                              color: AppColors.lime,
+                              color: AppColors.textPrimary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),

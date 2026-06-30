@@ -27,11 +27,11 @@ class ProfileScreen extends StatelessWidget {
                 height: 88,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: AppColors.lime.withValues(alpha: 0.16),
+                  color: AppColors.surfaceAlt,
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(Symbols.person,
-                    color: AppColors.lime, size: 48, fill: 1),
+                    color: AppColors.textSecondary, size: 48, fill: 1),
               ),
               const SizedBox(height: 14),
               Text(
