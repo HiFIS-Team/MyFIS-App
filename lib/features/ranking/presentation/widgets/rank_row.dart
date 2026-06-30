@@ -158,22 +158,31 @@ class RankTabItem extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Padding(
-              padding: const EdgeInsets.only(top: 2, bottom: 10),
-              child: Text(
-                label,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
+              padding: const EdgeInsets.only(top: 2, bottom: 9),
+              child: AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOut,
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      fontSize: 17,
+                      fontWeight:
+                          selected ? FontWeight.w800 : FontWeight.w600,
                       color: selected
                           ? AppColors.textPrimary
                           : AppColors.textSecondary,
                     ),
+                child: Text(label, textAlign: TextAlign.center),
               ),
             ),
+            // 둥근 라임 밑줄 — 글씨 폭보다 살짝 짧게(좌우 인셋), 선택 시 페이드 인
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
-              height: 2.5,
-              color: selected ? AppColors.lime : Colors.transparent,
+              curve: Curves.easeOut,
+              margin: const EdgeInsets.symmetric(horizontal: 2),
+              height: 3,
+              decoration: BoxDecoration(
+                color: selected ? AppColors.lime : Colors.transparent,
+                borderRadius: BorderRadius.circular(3),
+              ),
             ),
           ],
         ),
