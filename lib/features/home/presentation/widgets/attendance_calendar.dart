@@ -102,23 +102,38 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 제목 + 월 이동 + 스트릭
-          Row(
-            children: [
-              _NavButton(icon: Icons.chevron_left, onTap: _prevMonth),
-              const SizedBox(width: 2),
-              Text(
-                '$year년 $month월',
-                style: textTheme.titleLarge?.copyWith(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
+          // 제목(가운데) + 월 이동 / 스트릭(오른쪽)
+          SizedBox(
+            width: double.infinity,
+            height: 36,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // 가운데: ‹ 2026년 6월 ›
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _NavButton(icon: Icons.chevron_left, onTap: _prevMonth),
+                    const SizedBox(width: 2),
+                    Text(
+                      '$year년 $month월',
+                      style: textTheme.titleLarge?.copyWith(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(width: 2),
+                    _NavButton(icon: Icons.chevron_right, onTap: _nextMonth),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 2),
-              _NavButton(icon: Icons.chevron_right, onTap: _nextMonth),
-              const Spacer(),
-              if (_streak > 0) _StreakBadge(days: _streak),
-            ],
+                // 오른쪽: 스트릭 배지
+                if (_streak > 0)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _StreakBadge(days: _streak),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(height: 14),
 
