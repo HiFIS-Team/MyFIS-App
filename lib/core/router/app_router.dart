@@ -6,6 +6,8 @@ import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/coupon/presentation/coupon_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/membership/domain/branch.dart';
+import '../../features/membership/presentation/branch_detail_screen.dart';
 import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
@@ -114,6 +116,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const MembershipScreen()),
+      ),
+
+      // 지점 상세 — 멤버십 지점 목록에서 오른쪽→왼쪽 슬라이드
+      GoRoute(
+        path: '/branch',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideFromRight(
+          state,
+          BranchDetailScreen(branch: state.extra as Branch),
+        ),
       ),
 
       // 프로필 상세 — 마이페이지 프로필 카드에서 오른쪽→왼쪽 슬라이드

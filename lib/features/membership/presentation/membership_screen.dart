@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -8,18 +9,10 @@ import '../domain/branch.dart';
 
 /// 멤버십(지점 선택) 화면.
 /// "어디서 운동을 시작할까요?" + 지점 목록(사진 · 이름 · 주소).
-/// 지점을 탭하면 멤버십 구매로 진입한다.
+/// 지점을 탭하면 지점 상세(소개 + 멤버십 구매)로 이동한다.
 /// (활성 회원권 현황은 마이페이지에서 보여주므로 여기선 생략)
 class MembershipScreen extends StatelessWidget {
   const MembershipScreen({super.key});
-
-  void _purchase(BuildContext context, Branch branch) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('${branch.name} 멤버십 구매 (준비 중)')),
-      );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +35,7 @@ class MembershipScreen extends StatelessWidget {
           for (var i = 0; i < kBranches.length; i++) ...[
             _BranchRow(
               branch: kBranches[i],
-              onTap: () => _purchase(context, kBranches[i]),
+              onTap: () => context.push('/branch', extra: kBranches[i]),
             ),
             if (i != kBranches.length - 1)
               const Divider(height: 1, thickness: 1, color: AppColors.outline),
