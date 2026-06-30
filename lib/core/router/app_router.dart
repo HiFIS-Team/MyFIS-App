@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
+import '../../features/coupon/presentation/coupon_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
@@ -123,6 +124,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const CartScreen()),
+      ),
+
+      // 쿠폰함 — 오른쪽→왼쪽 슬라이드
+      GoRoute(
+        path: '/coupon',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const CouponScreen()),
       ),
 
       // 찜한 상품 — 오른쪽→왼쪽 슬라이드

@@ -71,11 +71,11 @@ class MyPageScreen extends StatelessWidget {
             // 결제
             _SectionLabel('결제'),
             const SizedBox(height: 10),
-            const _MenuCard(rows: [
-              _MenuRow(label: '결제 내역'),
-              _MenuRow(label: '결제 카드 관리'),
-              _MenuRow(label: '쿠폰'),
-              _MenuRow(label: '포인트'),
+            _MenuCard(rows: [
+              const _MenuRow(label: '결제 내역'),
+              const _MenuRow(label: '결제 카드 관리'),
+              _MenuRow(label: '쿠폰', onTap: () => context.push('/coupon')),
+              const _MenuRow(label: '포인트'),
             ]),
             const SizedBox(height: 22),
 
