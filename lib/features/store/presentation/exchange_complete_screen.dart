@@ -113,7 +113,7 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
                               padding: const EdgeInsets.all(20),
                               decoration: BoxDecoration(
                                 color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Column(
                                 children: [
@@ -166,7 +166,7 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 child: Text(

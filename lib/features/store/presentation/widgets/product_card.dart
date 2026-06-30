@@ -25,12 +25,12 @@ class ProductCard extends ConsumerWidget {
 
     return Pressable(
       onTap: () => context.push('/product', extra: product),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Container(
         clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
           color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -132,7 +132,7 @@ class _StockBadge extends StatelessWidget {
         color: low
             ? AppColors.error.withValues(alpha: 0.92)
             : Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Text(
         low ? '$stock개 남음' : '재고 $stock',

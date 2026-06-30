@@ -81,7 +81,7 @@ class _NotiTile extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Pressable(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(10),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         child: Row(

@@ -43,7 +43,7 @@ class CartScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
             ),
             child: Row(
               children: [
@@ -53,7 +53,7 @@ class CartScreen extends ConsumerWidget {
                   height: 56,
                   decoration: BoxDecoration(
                     color: AppColors.surfaceAlt,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(item.product.icon,
                       color: AppColors.textSecondary, size: 28),
@@ -122,7 +122,7 @@ class CartScreen extends ConsumerWidget {
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(54),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
           child: Text(

@@ -224,7 +224,7 @@ class _WalletCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(14),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -264,7 +264,7 @@ class _WalletCard extends StatelessWidget {
                   color: done
                       ? Colors.white.withValues(alpha: 0.10)
                       : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
                   done ? '수령 완료' : '수령 전',

@@ -80,7 +80,7 @@ class ProfileScreen extends StatelessWidget {
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(54),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
           child: Text(
@@ -120,7 +120,7 @@ class _InfoCard extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(10),
           ),
           child: Column(children: rows),
         ),

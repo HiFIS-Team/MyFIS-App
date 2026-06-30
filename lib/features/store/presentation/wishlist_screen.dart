@@ -36,7 +36,7 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 children: [
