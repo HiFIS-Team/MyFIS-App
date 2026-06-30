@@ -5,18 +5,34 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+import '../../coupon/domain/coupon.dart';
+import '../../coupon/presentation/coupon_select_screen.dart';
 import '../application/cart_provider.dart';
 import '../application/exchange_orders_provider.dart';
 
 /// 장바구니 화면.
-/// 담은 상품의 수량 조절·삭제 후, 마일리지로 한 번에 교환한다.
-class CartScreen extends ConsumerWidget {
+/// 담은 상품의 수량 조절·삭제 후, 쿠폰 적용해 마일리지로 한 번에 교환한다.
+class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends ConsumerState<CartScreen> {
+  Coupon? _coupon;
+
+  Future<void> _pickCoupon() async {
+    final picked = await pickExchangeCoupon(context, current: _coupon);
+    if (mounted) setState(() => _coupon = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final items = ref.watch(cartProvider);
-    final total = ref.watch(cartTotalProvider);
+    final rawTotal = ref.watch(cartTotalProvider);
+    final discount = _coupon?.discountFor(rawTotal) ?? 0;
+    final total = rawTotal - discount;
     final textTheme = Theme.of(context).textTheme;
 
     if (items.isEmpty) {
@@ -104,34 +120,90 @@ class CartScreen extends ConsumerWidget {
         },
       ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: FilledButton(
-          onPressed: () {
-            // 요약 만들고 → 교환권 발급(항목 수만큼 카드 추가) → 카트 비움 → 완료 화면
-            final first = items.first.product.name;
-            final summary = items.length == 1
-                ? '$first x${items.first.qty}'
-                : '$first 외 ${items.length - 1}건';
-            ref.read(exchangeOrdersProvider.notifier).addFromCart(items);
-            ref.read(cartProvider.notifier).clear();
-            context.push(
-              '/exchange-complete',
-              extra: (summary: summary, totalPoints: total),
-            );
-          },
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(54),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 쿠폰 적용 행
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: _pickCoupon,
+              child: Row(
+                children: [
+                  Text(
+                    '쿠폰',
+                    style: textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _coupon == null ? '쿠폰 선택' : '${_coupon!.value} 할인',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: _coupon == null
+                          ? AppColors.textSecondary
+                          : AppColors.lime,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const Icon(Symbols.chevron_right,
+                      size: 20, color: AppColors.textSecondary),
+                ],
+              ),
             ),
-          ),
-          child: Text(
-            '${_comma(total)}P로 교환하기',
-            style: textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.w800,
-              color: AppColors.lime,
+            const SizedBox(height: 14),
+            if (discount > 0) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '쿠폰 할인',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    '-${_comma(discount)}P',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.lime,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
+            FilledButton(
+              onPressed: () {
+                // 요약 만들고 → 교환권 발급 → 카트 비움 → 완료 화면(할인 반영)
+                final first = items.first.product.name;
+                final base = items.length == 1
+                    ? '$first x${items.first.qty}'
+                    : '$first 외 ${items.length - 1}건';
+                final summary =
+                    _coupon != null ? '$base · ${_coupon!.name}' : base;
+                ref.read(exchangeOrdersProvider.notifier).addFromCart(items);
+                ref.read(cartProvider.notifier).clear();
+                context.push(
+                  '/exchange-complete',
+                  extra: (summary: summary, totalPoints: total),
+                );
+              },
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(54),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                '${_comma(total)}P로 교환하기',
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.lime,
+                ),
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );

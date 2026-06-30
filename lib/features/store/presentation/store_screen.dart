@@ -117,12 +117,12 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
           if (cartCount == 0)
             const Positioned.fill(child: ExchangeWalletOverlay()),
 
-          // 담은 상품이 있으면 하단 장바구니 바(배민식)
+          // 담은 상품이 있으면 하단 장바구니 바(배민식) — 네비바 위에 띄움
           if (cartCount > 0)
             Positioned(
               left: 16,
               right: 16,
-              bottom: 92,
+              bottom: MediaQuery.of(context).padding.bottom + 12,
               child: _CartBar(
                 count: cartCount,
                 total: cartTotal,
