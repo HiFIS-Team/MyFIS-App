@@ -11,28 +11,48 @@ import '../application/cart_provider.dart';
 import '../application/exchange_orders_provider.dart';
 
 /// 장바구니 화면.
-/// 담은 상품의 수량 조절·삭제 후, 쿠폰 적용해 마일리지로 한 번에 교환한다.
-class CartScreen extends ConsumerStatefulWidget {
+/// 담은 상품의 수량 조절·삭제 후, 교환하기 → 교환 확인 시트(쿠폰 선택)로 교환.
+class CartScreen extends ConsumerWidget {
   const CartScreen({super.key});
 
-  @override
-  ConsumerState<CartScreen> createState() => _CartScreenState();
-}
+  // 교환하기 → 교환 확인 시트(수량 없이 쿠폰만) → 교환 처리.
+  Future<void> _checkout(BuildContext context, WidgetRef ref) async {
+    final items = ref.read(cartProvider);
+    if (items.isEmpty) return;
+    final rawTotal = ref.read(cartTotalProvider);
 
-class _CartScreenState extends ConsumerState<CartScreen> {
-  Coupon? _coupon;
+    final result =
+        await showModalBottomSheet<({Coupon? coupon, int total})>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      barrierColor: Colors.black.withValues(alpha: 0.6),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) =>
+          _CartCheckoutSheet(itemCount: items.length, rawTotal: rawTotal),
+    );
+    if (result == null || !context.mounted) return;
 
-  Future<void> _pickCoupon() async {
-    final picked = await pickExchangeCoupon(context, current: _coupon);
-    if (mounted) setState(() => _coupon = picked);
+    final first = items.first.product.name;
+    final base = items.length == 1
+        ? '$first x${items.first.qty}'
+        : '$first 외 ${items.length - 1}건';
+    final summary =
+        result.coupon != null ? '$base · ${result.coupon!.name}' : base;
+    ref.read(exchangeOrdersProvider.notifier).addFromCart(items);
+    ref.read(cartProvider.notifier).clear();
+    context.push(
+      '/exchange-complete',
+      extra: (summary: summary, totalPoints: result.total),
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final items = ref.watch(cartProvider);
-    final rawTotal = ref.watch(cartTotalProvider);
-    final discount = _coupon?.discountFor(rawTotal) ?? 0;
-    final total = rawTotal - discount;
+    final total = ref.watch(cartTotalProvider);
     final textTheme = Theme.of(context).textTheme;
 
     if (items.isEmpty) {
@@ -120,11 +140,86 @@ class _CartScreenState extends ConsumerState<CartScreen> {
         },
       ),
       bottomNavigationBar: SafeArea(
-        minimum: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+        minimum: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+        child: FilledButton(
+          onPressed: () => _checkout(context, ref),
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(54),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: Text(
+            '${_comma(total)}P로 교환하기',
+            style: textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: AppColors.lime,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// 장바구니 교환 확인 시트 — 수량 없이 쿠폰만 선택해 교환.
+class _CartCheckoutSheet extends StatefulWidget {
+  const _CartCheckoutSheet({required this.itemCount, required this.rawTotal});
+  final int itemCount;
+  final int rawTotal;
+
+  @override
+  State<_CartCheckoutSheet> createState() => _CartCheckoutSheetState();
+}
+
+class _CartCheckoutSheetState extends State<_CartCheckoutSheet> {
+  Coupon? _coupon;
+
+  Future<void> _pickCoupon() async {
+    final picked = await pickExchangeCoupon(context, current: _coupon);
+    if (mounted) setState(() => _coupon = picked);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final discount = _coupon?.discountFor(widget.rawTotal) ?? 0;
+    final total = widget.rawTotal - discount;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 쿠폰 적용 행
+            // 그래버
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 22),
+            Text(
+              '교환 확인',
+              style: textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '상품 ${widget.itemCount}종',
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // 쿠폰 적용
             GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTap: _pickCoupon,
@@ -151,7 +246,10 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 20),
+            Container(height: 1, color: AppColors.outline),
+            const SizedBox(height: 18),
+            // 쿠폰 할인 라인
             if (discount > 0) ...[
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -173,22 +271,36 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               ),
               const SizedBox(height: 12),
             ],
+            // 합계
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  '총 교환 마일리지',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                Row(
+                  children: [
+                    const Icon(Symbols.paid,
+                        size: 22, color: AppColors.textSecondary),
+                    const SizedBox(width: 5),
+                    Text(
+                      '${_comma(total)}P',
+                      style: textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
             FilledButton(
-              onPressed: () {
-                // 요약 만들고 → 교환권 발급 → 카트 비움 → 완료 화면(할인 반영)
-                final first = items.first.product.name;
-                final base = items.length == 1
-                    ? '$first x${items.first.qty}'
-                    : '$first 외 ${items.length - 1}건';
-                final summary =
-                    _coupon != null ? '$base · ${_coupon!.name}' : base;
-                ref.read(exchangeOrdersProvider.notifier).addFromCart(items);
-                ref.read(cartProvider.notifier).clear();
-                context.push(
-                  '/exchange-complete',
-                  extra: (summary: summary, totalPoints: total),
-                );
-              },
+              onPressed: () =>
+                  Navigator.of(context).pop((coupon: _coupon, total: total)),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
                 shape: RoundedRectangleBorder(
@@ -196,7 +308,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 ),
               ),
               child: Text(
-                '${_comma(total)}P로 교환하기',
+                '${_comma(total)}P 교환하기',
                 style: textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   color: AppColors.lime,
