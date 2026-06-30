@@ -1,10 +1,12 @@
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/state/nav_chrome.dart';
 import '../application/exchange_orders_provider.dart';
 import '../domain/exchange_order.dart';
 
@@ -62,7 +64,10 @@ class _ExchangeWalletOverlayState extends ConsumerState<ExchangeWalletOverlay>
     final orders = ref.watch(exchangeOrdersProvider);
     if (orders.isEmpty) return const SizedBox.shrink();
 
+    final collapsed = ref.watch(navCollapsedProvider);
     final size = MediaQuery.of(context).size;
+    // extendBody에서 padding.bottom = 네비바가 차지한 높이 = 네비바 윗변 위치.
+    final navTop = MediaQuery.of(context).padding.bottom;
 
     return AnimatedBuilder(
       animation: _c,
@@ -85,15 +90,29 @@ class _ExchangeWalletOverlayState extends ConsumerState<ExchangeWalletOverlay>
               ),
             ),
 
-            // 접힘 상태 핸들 (시각 표시용)
+            // 접힘 상태: 네비바 윗변에 붙은 아주 작은 투명 핸들.
+            // 네비바와 "같은 바닥점(네비바 바닥)·같은 배율"로만 스케일 → 한 몸처럼
+            // 딜레이 없이 같이 줄고 커진다. (핸들 아래 spacer=네비바 높이)
             Positioned(
               left: 0,
               right: 0,
-              bottom: 92,
+              bottom: navTop - kNavBarHeight, // = 네비바 바닥
               child: IgnorePointer(
-                child: Opacity(
-                  opacity: (1 - p * 4).clamp(0.0, 1.0),
-                  child: Center(child: _WalletHandle(count: orders.length)),
+                child: AnimatedScale(
+                  duration: const Duration(milliseconds: 260),
+                  curve: Curves.easeOut,
+                  alignment: Alignment.bottomCenter, // 피벗 = 네비바 바닥(공유)
+                  scale: collapsed ? kNavCollapsedScale : 1.0,
+                  child: Opacity(
+                    opacity: (1 - p * 4).clamp(0.0, 1.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Center(child: _WalletHandle(count: orders.length)),
+                        const SizedBox(height: kNavBarHeight),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -163,7 +182,8 @@ class _ExchangeWalletOverlayState extends ConsumerState<ExchangeWalletOverlay>
   }
 }
 
-/// 접힘 상태 핸들 — "내 교환권 N장".
+/// 접힘 상태 — 네비바 위에 붙는 아주 작은 투명 핸들.
+/// "내 교환권 N장 ↑" 한 줄만. 네비바와 같은 반투명 블러 톤.
 class _WalletHandle extends StatelessWidget {
   const _WalletHandle({required this.count});
   final int count;
@@ -171,41 +191,34 @@ class _WalletHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.outline),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 4),
+    final radius = BorderRadius.circular(16);
+
+    return ClipRRect(
+      borderRadius: radius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppColors.surfaceAlt.withValues(alpha: 0.55),
+            borderRadius: radius,
+            border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
           ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Symbols.keyboard_arrow_up,
-              size: 20, color: AppColors.textSecondary),
-          const SizedBox(width: 4),
-          const Icon(Symbols.wallet, size: 18, color: AppColors.textSecondary),
-          const SizedBox(width: 6),
-          Text(
-            '내 교환권',
-            style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '내 교환권 $count장',
+                style: textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Symbols.keyboard_arrow_up,
+                  size: 16, color: AppColors.textSecondary),
+            ],
           ),
-          const SizedBox(width: 6),
-          Text(
-            '$count장',
-            style: textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -3,24 +3,26 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show ScrollDirection;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
+import '../state/nav_chrome.dart';
 
 /// 메인 스캐폴드 — 토스식 변신 하단바.
 /// 기본: 홈 · 음료 · 운동 · 마이
 /// 운동 진입 시: ←나가기 · 웨이트 · 유산소 · 랭킹 으로 변신하며,
 /// 덤벨(운동→웨이트)이 자리 이동하고 유산소·랭킹이 차례로 나타난다.
-class MainShell extends StatefulWidget {
+class MainShell extends ConsumerStatefulWidget {
   const MainShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
   @override
-  State<MainShell> createState() => _MainShellState();
+  ConsumerState<MainShell> createState() => _MainShellState();
 }
 
-class _MainShellState extends State<MainShell> {
+class _MainShellState extends ConsumerState<MainShell> {
   // 하단바 축소 상태(아래로 스크롤 시 true) — 바가 직접 구독해 애니메이션.
   final ValueNotifier<bool> _navCollapsed = ValueNotifier(false);
 
@@ -30,8 +32,15 @@ class _MainShellState extends State<MainShell> {
     super.dispose();
   }
 
+  // 네비바(ValueNotifier)와 교환권(Provider)에 동시에 반영 → 둘이 같이 축소/복원.
+  void _setCollapsed(bool v) {
+    if (_navCollapsed.value == v) return;
+    _navCollapsed.value = v;
+    ref.read(navCollapsedProvider.notifier).set(v);
+  }
+
   void _go(int index) {
-    _navCollapsed.value = false; // 탭 눌러 이동하면 다시 펼침
+    _setCollapsed(false); // 탭 눌러 이동하면 다시 펼침
     widget.navigationShell.goBranch(
       index,
       initialLocation: index == widget.navigationShell.currentIndex,
@@ -43,10 +52,10 @@ class _MainShellState extends State<MainShell> {
     if (n.metrics.axis != Axis.vertical) return false; // 가로 캐러셀 무시
     switch (n.direction) {
       case ScrollDirection.reverse: // 아래로 스크롤(콘텐츠 위로) → 축소
-        _navCollapsed.value = true;
+        _setCollapsed(true);
         break;
       case ScrollDirection.forward: // 위로 스크롤 → 복원
-        _navCollapsed.value = false;
+        _setCollapsed(false);
         break;
       case ScrollDirection.idle:
         break;
@@ -145,7 +154,7 @@ class _AnimatedNavBar extends StatefulWidget {
 
 class _AnimatedNavBarState extends State<_AnimatedNavBar>
     with TickerProviderStateMixin {
-  static const double _height = 62;
+  static const double _height = kNavBarHeight;
   static const double _pillW = 60;
   static const double _pillH = 44;
 
@@ -272,7 +281,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
     return SafeArea(
       top: false,
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, kNavBarBottomPad),
         // 바 전체를 repaint 경계로 격리 (본문과 서로 영향 X)
         child: RepaintBoundary(
           child: AnimatedBuilder(
@@ -281,7 +290,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
               final c = Curves.easeOut.transform(_collapse.value);
               return Transform.scale(
                 alignment: Alignment.bottomCenter,
-                scale: lerpDouble(1.0, 0.82, c)!,
+                scale: lerpDouble(1.0, kNavCollapsedScale, c)!,
                 child: Opacity(opacity: lerpDouble(1.0, 0.9, c)!, child: child),
               );
             },
