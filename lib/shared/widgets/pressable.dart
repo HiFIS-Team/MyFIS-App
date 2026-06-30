@@ -10,7 +10,7 @@ class Pressable extends StatefulWidget {
     required this.child,
     this.onTap,
     this.borderRadius = BorderRadius.zero,
-    this.scale = 0.97,
+    this.scale = 0.95,
     this.dim = 0.5,
   });
 
@@ -28,9 +28,31 @@ class Pressable extends StatefulWidget {
 
 class _PressableState extends State<Pressable> {
   bool _pressed = false;
+  DateTime? _downAt;
 
-  void _set(bool v) {
-    if (_pressed != v) setState(() => _pressed = v);
+  // 빠른 탭이어도 축소가 눈에 보이도록 최소 눌림 시간을 보장한다.
+  static const _minVisible = Duration(milliseconds: 130);
+
+  void _down() {
+    _downAt = DateTime.now();
+    if (!_pressed) setState(() => _pressed = true);
+  }
+
+  void _up() {
+    final downAt = _downAt;
+    final elapsed =
+        downAt == null ? Duration.zero : DateTime.now().difference(downAt);
+    if (elapsed < _minVisible) {
+      Future.delayed(_minVisible - elapsed, () {
+        if (mounted) setState(() => _pressed = false);
+      });
+    } else if (_pressed) {
+      setState(() => _pressed = false);
+    }
+  }
+
+  void _cancel() {
+    if (_pressed) setState(() => _pressed = false);
   }
 
   @override
@@ -38,9 +60,9 @@ class _PressableState extends State<Pressable> {
     const dur = Duration(milliseconds: 110);
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTapDown: (_) => _set(true),
-      onTapUp: (_) => _set(false),
-      onTapCancel: () => _set(false),
+      onTapDown: (_) => _down(),
+      onTapUp: (_) => _up(),
+      onTapCancel: _cancel,
       onTap: widget.onTap,
       child: Stack(
         children: [
