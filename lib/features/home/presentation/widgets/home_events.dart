@@ -20,25 +20,25 @@ class _HomeEventsState extends State<HomeEvents> {
       emoji: '🔥',
       title: '출석 챌린지',
       subtitle: '이번 달 개근 시 3,000P 적립',
-      colors: [Color(0xFF2B3514), Color(0xFF3E4D1C)],
+      accent: AppColors.lime,
     ),
     _Event(
       emoji: '🎁',
       title: '친구 추천 이벤트',
       subtitle: '추천할 때마다 1,000P 받기',
-      colors: [Color(0xFF33231E), Color(0xFF50362C)],
+      accent: Color(0xFFFF9F6B),
     ),
     _Event(
       emoji: '💪',
       title: 'PT 무료 체험',
       subtitle: '선착순 1회 무료 체험권 증정',
-      colors: [Color(0xFF1E2A33), Color(0xFF2C4250)],
+      accent: Color(0xFF6FB7FF),
     ),
     _Event(
       emoji: '🥤',
       title: '신상품 입고',
       subtitle: '스토어에서 신규 보충제 교환',
-      colors: [Color(0xFF2A2330), Color(0xFF3D3148)],
+      accent: Color(0xFFC09BFF),
     ),
   ];
 
@@ -64,52 +64,27 @@ class _HomeEventsState extends State<HomeEvents> {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 104,
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 460),
-              switchInCurve: Curves.easeOutCubic,
-              switchOutCurve: Curves.easeInCubic,
-              transitionBuilder: (child, animation) {
-                // 들어오는 카드는 커지며 페이드 인, 나가는 카드는 작아지며 페이드 아웃
-                return FadeTransition(
-                  opacity: animation,
-                  child: ScaleTransition(
-                    scale: Tween<double>(begin: 0.85, end: 1.0)
-                        .animate(animation),
-                    child: child,
-                  ),
-                );
-              },
-              child: _EventBanner(
-                key: ValueKey(_index),
-                event: _events[_index],
+      child: SizedBox(
+        height: 104,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 460),
+          switchInCurve: Curves.easeOutCubic,
+          switchOutCurve: Curves.easeInCubic,
+          transitionBuilder: (child, animation) {
+            // 들어오는 카드는 커지며 페이드 인, 나가는 카드는 작아지며 페이드 아웃
+            return FadeTransition(
+              opacity: animation,
+              child: ScaleTransition(
+                scale: Tween<double>(begin: 0.85, end: 1.0).animate(animation),
+                child: child,
               ),
-            ),
+            );
+          },
+          child: _EventBanner(
+            key: ValueKey(_index),
+            event: _events[_index],
           ),
-          const SizedBox(height: 12),
-          // 현재 위치 점 인디케이터
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 0; i < _events.length; i++)
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 250),
-                  margin: const EdgeInsets.symmetric(horizontal: 3),
-                  width: i == _index ? 18 : 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: i == _index
-                        ? AppColors.textPrimary
-                        : AppColors.outline,
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -120,12 +95,12 @@ class _Event {
     required this.emoji,
     required this.title,
     required this.subtitle,
-    required this.colors,
+    required this.accent,
   });
   final String emoji;
   final String title;
   final String subtitle;
-  final List<Color> colors;
+  final Color accent; // 메인 글씨 색
 }
 
 class _EventBanner extends StatelessWidget {
@@ -141,12 +116,8 @@ class _EventBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 22),
         decoration: BoxDecoration(
+          color: AppColors.surface,
           borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: event.colors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
         ),
         child: Row(
           children: [
@@ -158,7 +129,7 @@ class _EventBanner extends StatelessWidget {
                   Text(
                     event.title,
                     style: textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
+                      color: event.accent,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -166,7 +137,7 @@ class _EventBanner extends StatelessWidget {
                   Text(
                     event.subtitle,
                     style: textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.78),
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],

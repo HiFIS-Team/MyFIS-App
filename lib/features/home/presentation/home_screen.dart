@@ -34,9 +34,9 @@ class HomeScreen extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.only(top: 8, bottom: 24),
                 children: const [
-                  // 토스식 이벤트 카드 가로 스크롤
+                  // 토스식 이벤트 배너(자동 전환)
                   HomeEvents(),
-                  SizedBox(height: 28),
+                  SizedBox(height: 8),
 
                   // 이번 달 출석 달력 (더미 출석 데이터)
                   Padding(
