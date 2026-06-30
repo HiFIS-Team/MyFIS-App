@@ -39,16 +39,15 @@ class MyPageScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // 프로필
-            _ProfileHeader(
+            // 프로필 + 퀵스탯 (한 카드로 통합)
+            _ProfileCard(
               name: '김은후',
               phone: '010-1234-5678',
-              onTap: () => context.push('/profile'),
+              mileage: 2400,
+              attendance: 18,
+              rank: 3,
+              onTapProfile: () => context.push('/profile'),
             ),
-            const SizedBox(height: 14),
-
-            // 퀵 스탯
-            const _QuickStats(mileage: 2400, attendance: 18, rank: 3),
             const SizedBox(height: 14),
 
             // 멤버십 + 부가상품(락커·운동복)
@@ -102,107 +101,105 @@ class MyPageScreen extends StatelessWidget {
   }
 }
 
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({
+/// 프로필 + 퀵스탯 통합 카드.
+/// 위: 아바타·이름·연락처(탭 → 프로필 상세) / 구분선 / 아래: 마일리지·출석·랭킹.
+class _ProfileCard extends StatelessWidget {
+  const _ProfileCard({
     required this.name,
     required this.phone,
-    required this.onTap,
+    required this.mileage,
+    required this.attendance,
+    required this.rank,
+    required this.onTapProfile,
   });
+
   final String name;
   final String phone;
-  final VoidCallback onTap;
+  final int mileage;
+  final int attendance;
+  final int rank;
+  final VoidCallback onTapProfile;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Pressable(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
         children: [
-          // 아바타 (라임 원형)
-          Container(
-            width: 58,
-            height: 58,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.surfaceAlt,
-              shape: BoxShape.circle,
+          // 프로필 (탭 → 상세)
+          Pressable(
+            onTap: onTapProfile,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            child: Padding(
+              padding: const EdgeInsets.all(18),
+              child: Row(
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    alignment: Alignment.center,
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceAlt,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Symbols.person,
+                        color: AppColors.textSecondary, size: 32, fill: 1),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          name,
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          phone,
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right,
+                      color: AppColors.textSecondary, size: 24),
+                ],
+              ),
             ),
-            child: const Icon(Symbols.person,
-                color: AppColors.textSecondary, size: 32, fill: 1),
           ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+          Divider(height: 1, thickness: 1, color: AppColors.outline),
+          // 퀵스탯
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            child: Row(
               children: [
-                Text(
-                  name,
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
+                Expanded(
+                  child: _StatItem(
+                    value: _comma(mileage),
+                    label: '마일리지',
+                    valueColor: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  phone,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
+                const _StatDivider(),
+                Expanded(
+                  child: _StatItem(value: '$attendance일', label: '이번 달 출석'),
+                ),
+                const _StatDivider(),
+                Expanded(
+                  child: _StatItem(value: '$rank위', label: '출석 랭킹'),
                 ),
               ],
             ),
-          ),
-          const Icon(Icons.chevron_right,
-              color: AppColors.textSecondary, size: 24),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _QuickStats extends StatelessWidget {
-  const _QuickStats({
-    required this.mileage,
-    required this.attendance,
-    required this.rank,
-  });
-
-  final int mileage;
-  final int attendance;
-  final int rank;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 18),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _StatItem(
-              value: _comma(mileage),
-              label: '마일리지',
-              valueColor: AppColors.textPrimary,
-            ),
-          ),
-          const _StatDivider(),
-          Expanded(
-            child: _StatItem(value: '$attendance일', label: '이번 달 출석'),
-          ),
-          const _StatDivider(),
-          Expanded(
-            child: _StatItem(value: '$rank위', label: '출석 랭킹'),
           ),
         ],
       ),
@@ -273,29 +270,48 @@ class _MembershipCard extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 18, 20, 18),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 멤버십 이름 + 상태
+          // 라벨
+          Text(
+            '내 멤버십',
+            style: textTheme.bodySmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 멤버십 이름 + 상태 칩
           Row(
             children: [
               const Icon(Symbols.card_membership,
                   color: AppColors.textSecondary, size: 22, fill: 1),
               const SizedBox(width: 8),
-              Text(
-                name,
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  name,
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const Spacer(),
-              Text(
-                '이용 중',
-                style: textTheme.bodySmall?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 8),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '이용 중',
+                  style: textTheme.labelSmall?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -362,21 +378,24 @@ class _AddonItem extends StatelessWidget {
           else
             SizedBox(
               height: 32,
-              child: FilledButton(
+              child: OutlinedButton(
                 onPressed: () {},
-                style: FilledButton.styleFrom(
+                style: OutlinedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: AppColors.lime,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  side: const BorderSide(color: AppColors.lime, width: 1.4),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(9),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                 ),
                 child: Text(
                   '구매하기',
                   style: textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w800,
-                    color: Colors.black,
+                    color: AppColors.lime,
                   ),
                 ),
               ),
