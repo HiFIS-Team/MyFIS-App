@@ -16,7 +16,9 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // 본문이 네비바 뒤(바닥)까지 흐르도록 하단 SafeArea는 끔(스토어와 동일)
       body: SafeArea(
+        bottom: false,
         child: Column(
           children: [
             // ① 고정 헤더 (브랜드 로고 + 알림)
