@@ -237,7 +237,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
                         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceAlt.withValues(alpha: 0.72),
+                            color: AppColors.surfaceAlt.withValues(alpha: 0.45),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.08),
                             ),
