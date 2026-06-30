@@ -8,7 +8,6 @@ import 'package:material_symbols_icons/symbols.dart';
 import '../../../core/theme/app_colors.dart';
 import '../application/cart_provider.dart';
 import '../application/product_catalog.dart';
-import '../domain/product.dart';
 import 'exchange_wallet.dart';
 import 'search_screen.dart'
     show kSearchHeroTag, kSearchHintStyle, searchHeroShuttle;
@@ -16,16 +15,25 @@ import 'widgets/product_card.dart';
 
 /// 마일리지 스토어.
 /// 보유 마일리지로 헬스장 내 상품을 교환한다. 현재는 더미 데이터.
-class StoreScreen extends ConsumerWidget {
+class StoreScreen extends ConsumerStatefulWidget {
   const StoreScreen({super.key});
 
+  @override
+  ConsumerState<StoreScreen> createState() => _StoreScreenState();
+}
+
+class _StoreScreenState extends ConsumerState<StoreScreen> {
   static const int _myMileage = 2400;
-  static const List<Product> _products = kStoreProducts;
+
+  String _category = kStoreCategories.first; // '전체'
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final cartCount = ref.watch(cartCountProvider);
     final cartTotal = ref.watch(cartTotalProvider);
+    final products = _category == kStoreCategories.first
+        ? kStoreProducts
+        : kStoreProducts.where((p) => p.category == _category).toList();
     return Scaffold(
       body: Stack(
         children: [
@@ -46,9 +54,28 @@ class StoreScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
+                // 카테고리 가로 필터
+                SizedBox(
+                  height: 36,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    itemCount: kStoreCategories.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final c = kStoreCategories[i];
+                      return _CategoryChip(
+                        label: c,
+                        selected: c == _category,
+                        onTap: () => setState(() => _category = c),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 4),
                 Expanded(
                   child: ListView(
-                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 110),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 110),
                     children: [
                   const _PromoBanner(),
                   const SizedBox(height: 24),
@@ -62,7 +89,7 @@ class StoreScreen extends ConsumerWidget {
                   GridView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: _products.length,
+                    itemCount: products.length,
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
@@ -71,7 +98,7 @@ class StoreScreen extends ConsumerWidget {
                       childAspectRatio: 0.82,
                     ),
                     itemBuilder: (context, i) =>
-                        ProductCard(product: _products[i]),
+                        ProductCard(product: products[i]),
                   ),
                     ],
                   ),
@@ -235,6 +262,45 @@ class _MileagePill extends StatelessWidget {
                 ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 카테고리 가로 필터 칩. 선택 시 라임 아웃라인, 비선택은 회색 채움.
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? Colors.transparent : AppColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(10),
+          border: selected
+              ? Border.all(color: AppColors.lime, width: 1.3)
+              : null,
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: selected ? AppColors.lime : AppColors.textSecondary,
+                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+              ),
+        ),
       ),
     );
   }

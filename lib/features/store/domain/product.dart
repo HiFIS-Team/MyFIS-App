@@ -6,6 +6,7 @@ class Product {
   const Product({
     required this.icon,
     required this.name,
+    required this.category,
     required this.points,
     required this.views,
     required this.rating,
@@ -14,6 +15,7 @@ class Product {
 
   final IconData icon;
   final String name;
+  final String category; // 분류(음료·보충제·용품·이용권 …)
   final int points;
   final int views; // 조회수(몇 명이 봤는지)
   final double rating; // 평점
