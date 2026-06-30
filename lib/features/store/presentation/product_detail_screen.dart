@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../coupon/domain/coupon.dart';
+import '../../coupon/presentation/coupon_select_screen.dart';
 import '../application/cart_provider.dart';
 import '../application/recent_provider.dart';
 import '../domain/product.dart';
@@ -34,7 +36,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
 
   // 수량 선택 시트를 열고, 담기(toCart) 또는 바로 교환을 처리한다.
   Future<void> _openSheet({required bool toCart}) async {
-    final qty = await showModalBottomSheet<int>(
+    final result =
+        await showModalBottomSheet<({int qty, int total, Coupon? coupon})>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.background,
@@ -44,7 +47,8 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
       ),
       builder: (_) => _ExchangeSheet(product: widget.product, buyNow: !toCart),
     );
-    if (qty == null || !mounted) return;
+    if (result == null || !mounted) return;
+    final qty = result.qty;
 
     if (toCart) {
       ref.read(cartProvider.notifier).add(widget.product, qty);
@@ -102,12 +106,14 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
           ),
         );
     } else {
-      // 바로 교환 → 완료 화면
+      // 바로 교환 → 완료 화면 (쿠폰 할인 반영된 total)
+      final couponNote =
+          result.coupon != null ? ' · ${result.coupon!.name}' : '';
       context.push(
         '/exchange-complete',
         extra: (
-          summary: '${widget.product.name} x$qty',
-          totalPoints: widget.product.points * qty,
+          summary: '${widget.product.name} x$qty$couponNote',
+          totalPoints: result.total,
         ),
       );
     }
@@ -348,12 +354,20 @@ class _ExchangeSheet extends StatefulWidget {
 
 class _ExchangeSheetState extends State<_ExchangeSheet> {
   int _qty = 1;
+  Coupon? _coupon;
+
+  Future<void> _pickCoupon() async {
+    final picked = await pickExchangeCoupon(context, current: _coupon);
+    if (mounted) setState(() => _coupon = picked);
+  }
 
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
     final textTheme = Theme.of(context).textTheme;
-    final total = product.points * _qty;
+    final rawTotal = product.points * _qty;
+    final discount = _coupon?.discountFor(rawTotal) ?? 0;
+    final total = rawTotal - discount;
 
     return SafeArea(
       child: Padding(
@@ -438,8 +452,63 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
               ],
             ),
             const SizedBox(height: 20),
+            // 쿠폰 적용 (교환일 때만)
+            if (widget.buyNow) ...[
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _pickCoupon,
+                child: Row(
+                  children: [
+                    const Icon(Symbols.confirmation_number,
+                        size: 20, color: AppColors.textSecondary, fill: 1),
+                    const SizedBox(width: 8),
+                    Text(
+                      '쿠폰',
+                      style: textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      _coupon == null ? '쿠폰 선택' : '${_coupon!.value} 할인',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: _coupon == null
+                            ? AppColors.textSecondary
+                            : AppColors.lime,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Icon(Symbols.chevron_right,
+                        size: 20, color: AppColors.textSecondary),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
             Container(height: 1, color: AppColors.outline),
             const SizedBox(height: 18),
+            // 쿠폰 할인 라인
+            if (discount > 0) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '쿠폰 할인',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  Text(
+                    '-${_comma(discount)}P',
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.lime,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
             // 합계
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -467,8 +536,9 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              // 선택 수량을 반환하며 시트 닫기 → 상세에서 카트에 담음
-              onPressed: () => Navigator.of(context).pop(_qty),
+              // 수량·할인합계·쿠폰을 반환하며 시트 닫기
+              onPressed: () => Navigator.of(context)
+                  .pop((qty: _qty, total: total, coupon: _coupon)),
               style: FilledButton.styleFrom(
                 minimumSize: const Size.fromHeight(54),
                 // 교환=라임 아웃라인(테마 기본) / 담기=중립 아웃라인
