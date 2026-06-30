@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'widgets/attendance_calendar.dart';
 import 'widgets/home_events.dart';
 import 'widgets/home_header.dart';
+import 'widgets/home_week_summary.dart';
 
 /// 홈(메인) 대시보드 화면.
 /// 데일리 루프(출석·루틴·멤버십·마일리지·랭킹)를 요약하는 페이지.
@@ -32,7 +33,7 @@ class HomeScreen extends StatelessWidget {
             // 달력은 좌우 24 패딩.
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.only(top: 8, bottom: 24),
+                padding: const EdgeInsets.only(top: 8, bottom: 110),
                 children: const [
                   // 토스식 이벤트 배너(자동 전환)
                   HomeEvents(),
@@ -48,7 +49,11 @@ class HomeScreen extends StatelessWidget {
                     ),
                   ),
 
-                  // 이후: 출석 도장 / 오늘의 운동 / 마일리지·랭킹 요약 등
+                  SizedBox(height: 24),
+                  // 이번 주 운동 요약 (웨이트·유산소·칼로리)
+                  HomeWeekSummary(),
+
+                  // 이후: 마일리지·랭킹 요약 등
                 ],
               ),
             ),
