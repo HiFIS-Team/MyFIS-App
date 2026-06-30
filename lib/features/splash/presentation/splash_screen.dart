@@ -32,12 +32,18 @@ class _SplashScreenState extends State<SplashScreen>
     curve: const Interval(0.58, 0.92, curve: Curves.easeOut),
   );
 
+  bool _leaving = false; // 홈으로 넘어가기 직전 페이드아웃
+
   @override
   void initState() {
     super.initState();
-    // 애니메이션 보여준 뒤 홈으로 (실제 초기화/인증 체크 자리)
-    Future.delayed(const Duration(milliseconds: 2700), () {
-      if (mounted) context.go('/home');
+    // 잠깐 보여준 뒤 부드럽게 페이드아웃하며 홈으로
+    Future.delayed(const Duration(milliseconds: 2400), () {
+      if (!mounted) return;
+      setState(() => _leaving = true);
+      Future.delayed(const Duration(milliseconds: 380), () {
+        if (mounted) context.go('/home');
+      });
     });
   }
 
@@ -51,19 +57,40 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: AnimatedBuilder(
-        animation: _c,
-        builder: (context, _) {
-          final logoAlign = Alignment.lerp(
-            Alignment.center,
-            const Alignment(0, -0.45),
-            _moveUp.value,
-          )!;
-          return Stack(
-            children: [
-              // 워드마크: 가운데서 페이드·스케일 인 → 위로 이동
-              Align(
-                alignment: logoAlign,
+      body: AnimatedOpacity(
+        opacity: _leaving ? 0 : 1,
+        duration: const Duration(milliseconds: 380),
+        curve: Curves.easeOut,
+        child: AnimatedBuilder(
+          animation: _c,
+          builder: (context, _) {
+            final logoAlign = Alignment.lerp(
+              Alignment.center,
+              const Alignment(0, -0.45),
+              _moveUp.value,
+            )!;
+            return Stack(
+              children: [
+                // 로고 뒤 은은한 라임 글로우 (깊이감)
+                Align(
+                  alignment: logoAlign,
+                  child: Opacity(
+                    opacity: _logoIn.value,
+                    child: Container(
+                      width: 360,
+                      height: 360,
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: RadialGradient(
+                          colors: [Color(0x2ED7FC51), Color(0x00D7FC51)],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 워드마크: 가운데서 페이드·스케일 인 → 위로 이동
+                Align(
+                  alignment: logoAlign,
                 child: Opacity(
                   opacity: _logoIn.value,
                   child: Transform.scale(
@@ -85,7 +112,8 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ],
           );
-        },
+          },
+        ),
       ),
     );
   }
