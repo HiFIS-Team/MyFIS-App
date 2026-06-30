@@ -1,6 +1,8 @@
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollDirection;
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
@@ -9,26 +11,61 @@ import '../../core/theme/app_colors.dart';
 /// 기본: 홈 · 음료 · 운동 · 마이
 /// 운동 진입 시: ←나가기 · 웨이트 · 유산소 · 랭킹 으로 변신하며,
 /// 덤벨(운동→웨이트)이 자리 이동하고 유산소·랭킹이 차례로 나타난다.
-class MainShell extends StatelessWidget {
+class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  // 하단바 축소 상태(아래로 스크롤 시 true) — 바가 직접 구독해 애니메이션.
+  final ValueNotifier<bool> _navCollapsed = ValueNotifier(false);
+
+  @override
+  void dispose() {
+    _navCollapsed.dispose();
+    super.dispose();
+  }
+
   void _go(int index) {
-    navigationShell.goBranch(
+    _navCollapsed.value = false; // 탭 눌러 이동하면 다시 펼침
+    widget.navigationShell.goBranch(
       index,
-      initialLocation: index == navigationShell.currentIndex,
+      initialLocation: index == widget.navigationShell.currentIndex,
     );
+  }
+
+  // 탭 내부 어떤 스크롤이든 버블링되어 여기로 — 방향만 보고 축소/복원.
+  bool _onUserScroll(UserScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false; // 가로 캐러셀 무시
+    switch (n.direction) {
+      case ScrollDirection.reverse: // 아래로 스크롤(콘텐츠 위로) → 축소
+        _navCollapsed.value = true;
+        break;
+      case ScrollDirection.forward: // 위로 스크롤 → 복원
+        _navCollapsed.value = false;
+        break;
+      case ScrollDirection.idle:
+        break;
+    }
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       extendBody: true, // 본문이 반투명 바 뒤로 비치도록
-      body: navigationShell,
+      body: NotificationListener<UserScrollNotification>(
+        onNotification: _onUserScroll,
+        child: widget.navigationShell,
+      ),
       bottomNavigationBar: _AnimatedNavBar(
-        currentIndex: navigationShell.currentIndex,
+        currentIndex: widget.navigationShell.currentIndex,
         onGo: _go,
+        collapsed: _navCollapsed,
       ),
     );
   }
@@ -90,10 +127,17 @@ bool _isWorkout(int index) =>
 
 /// 떠 있는 반투명 블러 캡슐 + 메인↔운동 변신 애니메이션 하단바.
 class _AnimatedNavBar extends StatefulWidget {
-  const _AnimatedNavBar({required this.currentIndex, required this.onGo});
+  const _AnimatedNavBar({
+    required this.currentIndex,
+    required this.onGo,
+    required this.collapsed,
+  });
 
   final int currentIndex;
   final void Function(int index) onGo;
+
+  /// 스크롤로 축소할지 여부 — 셸이 소유, 바가 구독해 애니메이션.
+  final ValueListenable<bool> collapsed;
 
   @override
   State<_AnimatedNavBar> createState() => _AnimatedNavBarState();
@@ -116,7 +160,18 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
   void initState() {
     super.initState();
     if (!_isWorkout(widget.currentIndex)) _lastMainIndex = widget.currentIndex;
+    widget.collapsed.addListener(_onCollapseChanged);
   }
+
+  void _onCollapseChanged() {
+    widget.collapsed.value ? _collapse.forward() : _collapse.reverse();
+  }
+
+  // 스크롤 축소(0=펼침, 1=축소)
+  late final AnimationController _collapse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 260),
+  );
 
   late final AnimationController _mode = AnimationController(
     vsync: this,
@@ -164,6 +219,10 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
   @override
   void didUpdateWidget(covariant _AnimatedNavBar oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.collapsed != widget.collapsed) {
+      oldWidget.collapsed.removeListener(_onCollapseChanged);
+      widget.collapsed.addListener(_onCollapseChanged);
+    }
     final wasWorkout = _isWorkout(oldWidget.currentIndex);
     final nowWorkout = _isWorkout(widget.currentIndex);
     // 메인 탭에 있을 때마다 갱신 → 나가기 복귀 지점으로 사용
@@ -179,6 +238,8 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
 
   @override
   void dispose() {
+    widget.collapsed.removeListener(_onCollapseChanged);
+    _collapse.dispose();
     _mode.dispose();
     _pop.dispose();
     super.dispose();
@@ -214,7 +275,17 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
         // 바 전체를 repaint 경계로 격리 (본문과 서로 영향 X)
         child: RepaintBoundary(
-          child: DecoratedBox(
+          child: AnimatedBuilder(
+            animation: _collapse,
+            builder: (context, child) {
+              final c = Curves.easeOut.transform(_collapse.value);
+              return Transform.scale(
+                alignment: Alignment.bottomCenter,
+                scale: lerpDouble(1.0, 0.82, c)!,
+                child: Opacity(opacity: lerpDouble(1.0, 0.9, c)!, child: child),
+              );
+            },
+            child: DecoratedBox(
             decoration: BoxDecoration(
               borderRadius: radius,
               boxShadow: [
@@ -293,6 +364,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
                 ],
               ),
             ),
+          ),
           ),
         ),
       ),
