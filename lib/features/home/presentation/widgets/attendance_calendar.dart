@@ -170,22 +170,25 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
     final isToday = day == today;
     final isFuture = _isFuture(day);
 
-    // 출석한 날 — 덤벨 + 라임 날짜
+    // 출석한 날 — 날짜는 가운데(다른 날과 같은 위치), 덤벨은 위 작은 표시
     if (attended) {
       return SizedBox(
         height: 44,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            const Icon(Icons.fitness_center, color: AppColors.textPrimary, size: 18),
-            const SizedBox(height: 2),
             Text(
               '$day',
               style: const TextStyle(
                 color: AppColors.textPrimary,
                 fontWeight: FontWeight.w700,
-                fontSize: 11,
+                fontSize: 14,
               ),
+            ),
+            const Positioned(
+              top: 2,
+              child: Icon(Icons.fitness_center,
+                  color: AppColors.textSecondary, size: 13),
             ),
           ],
         ),
