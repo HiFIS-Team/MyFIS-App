@@ -61,11 +61,36 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   final _controller = TextEditingController();
+  final _focus = FocusNode();
   String _query = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // 진입 전환(Hero 비행 + 페이드)이 끝난 뒤에 포커스 → 키보드가 비행과 안 겹쳐
+    // 첫 진입도 부드럽게. (autofocus는 비행 중 키보드를 띄워 첫 프레임이 끊김)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final anim = ModalRoute.of(context)?.animation;
+      if (anim == null || anim.isCompleted) {
+        _focus.requestFocus();
+        return;
+      }
+      void onStatus(AnimationStatus s) {
+        if (s == AnimationStatus.completed) {
+          anim.removeStatusListener(onStatus);
+          if (mounted) _focus.requestFocus();
+        }
+      }
+
+      anim.addStatusListener(onStatus);
+    });
+  }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -110,7 +135,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             Expanded(
                               child: TextField(
                                 controller: _controller,
-                                autofocus: true,
+                                focusNode: _focus,
                                 textInputAction: TextInputAction.search,
                                 onChanged: (v) => setState(() => _query = v),
                                 style: kSearchHintStyle.copyWith(
