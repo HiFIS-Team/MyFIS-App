@@ -10,6 +10,7 @@ import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/ranking/presentation/ranking_full_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
 import '../../features/store/domain/product.dart';
 import '../../features/store/presentation/cart_screen.dart';
@@ -132,6 +133,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const CouponScreen()),
+      ),
+
+      // 전체 랭킹 — 홈 랭킹 더 보기에서 진입(오른쪽→왼쪽 슬라이드)
+      GoRoute(
+        path: '/ranking-full',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideFromRight(
+          state,
+          RankingFullScreen(initialTab: state.extra as int? ?? 0),
+        ),
       ),
 
       // 찜한 상품 — 오른쪽→왼쪽 슬라이드
