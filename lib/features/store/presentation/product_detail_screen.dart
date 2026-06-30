@@ -5,6 +5,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../application/cart_provider.dart';
+import '../application/recent_provider.dart';
 import '../domain/product.dart';
 
 /// 상품 상세 화면.
@@ -21,6 +22,15 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   bool _liked = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // 상세를 열면 최근 본 상품으로 기록
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(recentProvider.notifier).add(widget.product);
+    });
+  }
 
   // 수량 선택 시트를 열고, 담기(toCart) 또는 바로 교환을 처리한다.
   Future<void> _openSheet({required bool toCart}) async {
