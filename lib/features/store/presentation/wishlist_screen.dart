@@ -29,23 +29,24 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
       appBar: const AppTopBar(title: '찜한 상품'),
       body: Column(
         children: [
-          // 세그먼트 탭
+          // 언더라인 탭
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
             child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(10),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: AppColors.outline, width: 1),
+                ),
               ),
               child: Row(
                 children: [
-                  _SegBtn(
+                  _TabItem(
                     label: '좋아요',
                     selected: _tab == 0,
                     onTap: () => setState(() => _tab = 0),
                   ),
-                  _SegBtn(
+                  const SizedBox(width: 24),
+                  _TabItem(
                     label: '최근 본',
                     selected: _tab == 1,
                     onTap: () => setState(() => _tab = 1),
@@ -72,8 +73,9 @@ class _WishlistScreenState extends ConsumerState<WishlistScreen> {
   }
 }
 
-class _SegBtn extends StatelessWidget {
-  const _SegBtn({
+/// 언더라인 탭 항목 — 선택 시 흰 볼드 글씨 + 라임 밑줄.
+class _TabItem extends StatelessWidget {
+  const _TabItem({
     required this.label,
     required this.selected,
     required this.onTap,
@@ -85,25 +87,33 @@ class _SegBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          height: 38,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: selected ? AppColors.lime : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: selected ? Colors.black : AppColors.textSecondary,
-                ),
-          ),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: IntrinsicWidth(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 4, bottom: 10),
+              child: Text(
+                label,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: selected
+                          ? AppColors.textPrimary
+                          : AppColors.textSecondary,
+                    ),
+              ),
+            ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              height: 2.5,
+              color: selected ? AppColors.lime : Colors.transparent,
+            ),
+          ],
         ),
       ),
     );
