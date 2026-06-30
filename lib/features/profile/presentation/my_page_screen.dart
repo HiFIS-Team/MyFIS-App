@@ -57,10 +57,6 @@ class MyPageScreen extends StatelessWidget {
               lockerMonths: 3, // 구매함
               wearMonths: null, // 미구매 → 구매하기
             ),
-            const SizedBox(height: 14),
-
-            // 신체 정보
-            const _BodyInfoCard(height: 175, weight: 70, bmi: 22.9),
             const SizedBox(height: 26),
 
             // 내 활동
@@ -385,69 +381,6 @@ class _AddonItem extends StatelessWidget {
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BodyInfoCard extends StatelessWidget {
-  const _BodyInfoCard({
-    required this.height,
-    required this.weight,
-    required this.bmi,
-  });
-
-  final int height;
-  final int weight;
-  final double bmi;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 18, 20, 20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                '신체 정보',
-                style: textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                '수정',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.lime,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(child: _StatItem(value: '$height', label: '키 (cm)')),
-              const _StatDivider(),
-              Expanded(child: _StatItem(value: '$weight', label: '몸무게 (kg)')),
-              const _StatDivider(),
-              Expanded(
-                child: _StatItem(
-                  value: bmi.toStringAsFixed(1),
-                  label: 'BMI',
-                  valueColor: AppColors.lime,
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
