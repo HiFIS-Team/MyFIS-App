@@ -459,9 +459,6 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                 onTap: _pickCoupon,
                 child: Row(
                   children: [
-                    const Icon(Symbols.confirmation_number,
-                        size: 20, color: AppColors.textSecondary, fill: 1),
-                    const SizedBox(width: 8),
                     Text(
                       '쿠폰',
                       style: textTheme.titleSmall?.copyWith(
