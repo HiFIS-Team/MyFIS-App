@@ -27,6 +27,7 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return AppBar(
       primary: primary,
+      centerTitle: true,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back_ios_new),
         onPressed: onBack ?? () => Navigator.of(context).maybePop(),
