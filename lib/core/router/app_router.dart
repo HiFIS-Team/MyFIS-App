@@ -52,6 +52,21 @@ CustomTransitionPage<void> _slideFromRight(GoRouterState state, Widget child) {
   );
 }
 
+/// 상단 드롭다운 시트 페이지 (출석 바코드 — 위에서 바코드까지만 내려옴).
+/// 투명 오버레이라 패널이 안 덮은 아래쪽은 뒤 화면(홈)이 비친다.
+/// 슬라이드·스크림 애니메이션은 화면이 ModalRoute.animation으로 직접 처리.
+CustomTransitionPage<void> _topSheetPage(GoRouterState state, Widget child) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    opaque: false,
+    barrierColor: Colors.transparent,
+    transitionDuration: const Duration(milliseconds: 340),
+    reverseTransitionDuration: const Duration(milliseconds: 260),
+    child: child,
+    transitionsBuilder: (_, _, _, child) => child,
+  );
+}
+
 /// 페이드 전환 페이지 (교환 완료 등 결과 화면용).
 CustomTransitionPage<void> _fadePage(GoRouterState state, Widget child) {
   return CustomTransitionPage<void>(
@@ -85,12 +100,12 @@ final routerProvider = Provider<GoRouter>((ref) {
             _slideFromRight(state, const NotificationScreen()),
       ),
 
-      // 출석 바코드 — 알림과 동일하게 오른쪽→왼쪽 슬라이드
+      // 출석 바코드 — 위에서 바코드까지 내려오는 드롭다운 시트
       GoRoute(
         path: '/check-in',
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
-            _slideFromRight(state, const CheckinBarcodeScreen()),
+            _topSheetPage(state, const CheckinBarcodeScreen()),
       ),
 
       // 멤버십 관리 — 오른쪽→왼쪽 슬라이드

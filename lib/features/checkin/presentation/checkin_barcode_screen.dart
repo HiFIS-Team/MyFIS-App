@@ -4,12 +4,11 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/widgets/app_top_bar.dart';
 
-/// 출석 바코드 화면.
-/// 진입 시 화면 밝기 바가 헤더 자리로 위에서 내려오며 밝기를 최대로 올린다.
-/// 밝기 바: [아이콘 + 화면 밝기] · [슬라이더] · [X].
-/// X를 누르면 밝기 바가 사라지고 진짜 헤더(뒤로가기 + 출석)가 나타난다.
+/// 출석 바코드 — 홈 위로 "위에서 바코드까지" 내려오는 드롭다운 시트.
+/// 투명 오버레이라 패널이 안 덮은 아래쪽은 뒤 화면(홈)이 어둡게 비친다.
+/// 패널: 화면 밝기 조절 + 바코드. 진입 시 밝기 최대, 닫으면 원복.
+/// 슬라이드·스크림은 ModalRoute.animation에 맞춰 함께 움직인다.
 class CheckinBarcodeScreen extends StatefulWidget {
   const CheckinBarcodeScreen({super.key});
 
@@ -17,26 +16,8 @@ class CheckinBarcodeScreen extends StatefulWidget {
   State<CheckinBarcodeScreen> createState() => _CheckinBarcodeScreenState();
 }
 
-class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
-    with SingleTickerProviderStateMixin {
-  // 더미 데이터
+class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen> {
   static const String _barcodeData = '202609031234';
-  static const List<_Attendance> _history = [
-    _Attendance(date: '6월 29일', day: '일', time: '오후 1:45'),
-    _Attendance(date: '6월 27일', day: '금', time: '오후 7:20'),
-    _Attendance(date: '6월 26일', day: '목', time: '오후 6:50'),
-    _Attendance(date: '6월 24일', day: '화', time: '오후 8:10'),
-    _Attendance(date: '6월 23일', day: '월', time: '오후 7:35'),
-  ];
-
-  late final AnimationController _ctrl = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 280),
-  );
-  late final Animation<Offset> _slide = Tween(
-    begin: const Offset(0, -1),
-    end: Offset.zero,
-  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeOut));
 
   double _brightness = 1.0;
 
@@ -44,31 +25,11 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
   void initState() {
     super.initState();
     _boostBrightness();
-    // 페이지 진입 전환이 완전히 끝난 뒤에 밝기 바를 내린다.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _startBrightnessBar());
-  }
-
-  void _startBrightnessBar() {
-    if (!mounted) return;
-    final routeAnim = ModalRoute.of(context)?.animation;
-    if (routeAnim == null || routeAnim.status == AnimationStatus.completed) {
-      _ctrl.forward();
-      return;
-    }
-    void onStatus(AnimationStatus status) {
-      if (status == AnimationStatus.completed) {
-        routeAnim.removeStatusListener(onStatus);
-        if (mounted) _ctrl.forward(); // 밝기 바가 위에서 내려옴
-      }
-    }
-
-    routeAnim.addStatusListener(onStatus);
   }
 
   @override
   void dispose() {
     _restoreBrightness();
-    _ctrl.dispose();
     super.dispose();
   }
 
@@ -93,66 +54,113 @@ class _CheckinBarcodeScreenState extends State<CheckinBarcodeScreen>
     } catch (_) {}
   }
 
-  void _closeBrightness() => _ctrl.reverse(); // 밝기 바가 위로 사라지고 헤더 노출
-  void _openBrightness() => _ctrl.forward(); // 헤더의 밝기 버튼 → 밝기 바 다시 내려옴
+  void _close() => Navigator.of(context).maybePop();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Column(
+    final anim = ModalRoute.of(context)?.animation ?? kAlwaysCompleteAnimation;
+    return AnimatedBuilder(
+      animation: anim,
+      builder: (context, _) {
+        final t = anim.value;
+        final slide = Curves.easeOutCubic.transform(t);
+        return Stack(
           children: [
-            // 상단 고정 영역: 헤더(아래) + 밝기 바(위에서 덮음)
-            SizedBox(
-              height: kToolbarHeight,
-              child: ClipRect(
-                child: Stack(
-                  children: [
-                    // 진짜 헤더 (다른 화면과 동일한 공통 헤더)
-                    Positioned.fill(
-                      child: AppTopBar(
-                        title: '출석',
-                        primary: false,
-                        onBack: () => Navigator.of(context).maybePop(),
-                        actions: [
-                          IconButton(
-                            icon: const Icon(Symbols.brightness_high),
-                            onPressed: _openBrightness,
-                            color: AppColors.textSecondary,
-                            tooltip: '화면 밝기',
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 밝기 바 (위에서 덮음)
-                    Positioned.fill(
-                      child: SlideTransition(
-                        position: _slide,
-                        child: _BrightnessBar(
-                          value: _brightness,
-                          onChanged: _onBrightnessChanged,
-                          onClose: _closeBrightness,
-                        ),
-                      ),
-                    ),
-                  ],
+            // 뒤 화면(홈)을 어둡게 — 탭하면 닫힘
+            Positioned.fill(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: _close,
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.55 * t),
                 ),
               ),
             ),
-
-            // 본문
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
-                children: const [
-                  _BarcodeCard(data: _barcodeData),
-                  SizedBox(height: 32),
-                  _AttendanceHistory(items: _history),
-                ],
+            // 위에서 바코드까지 내려오는 패널
+            Align(
+              alignment: Alignment.topCenter,
+              child: FractionalTranslation(
+                translation: Offset(0, slide - 1),
+                child: _Panel(
+                  brightness: _brightness,
+                  onBrightnessChanged: _onBrightnessChanged,
+                  onClose: _close,
+                  barcodeData: _barcodeData,
+                ),
               ),
             ),
           ],
+        );
+      },
+    );
+  }
+}
+
+/// 위에서 내려오는 패널 — 밝기 조절 + 바코드 + 아래 손잡이.
+class _Panel extends StatelessWidget {
+  const _Panel({
+    required this.brightness,
+    required this.onBrightnessChanged,
+    required this.onClose,
+    required this.barcodeData,
+  });
+
+  final double brightness;
+  final ValueChanged<double> onBrightnessChanged;
+  final VoidCallback onClose;
+  final String barcodeData;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      // 위로 쓸어올리면 닫힘
+      onVerticalDragEnd: (d) {
+        if ((d.primaryVelocity ?? 0) < -120) onClose();
+      },
+      child: Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
+          boxShadow: [
+            BoxShadow(color: Colors.black54, blurRadius: 24, offset: Offset(0, 8)),
+          ],
+        ),
+        // Slider 등 머티리얼 위젯을 위한 Material 조상 제공(스캐폴드 없음)
+        child: Material(
+          type: MaterialType.transparency,
+          child: SafeArea(
+            bottom: false,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 화면 밝기 조절 + 닫기
+                SizedBox(
+                  height: kToolbarHeight,
+                  child: _BrightnessBar(
+                    value: brightness,
+                    onChanged: onBrightnessChanged,
+                    onClose: onClose,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 4, 24, 10),
+                  child: _BarcodeCard(data: barcodeData),
+                ),
+                // 아래 손잡이 (쓸어올려 닫기 힌트)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppColors.outline,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -245,83 +253,6 @@ class _BarcodeCard extends StatelessWidget {
         height: 104,
         drawText: false,
         color: Colors.black,
-      ),
-    );
-  }
-}
-
-class _Attendance {
-  const _Attendance({
-    required this.date,
-    required this.day,
-    required this.time,
-  });
-
-  final String date;
-  final String day;
-  final String time;
-}
-
-/// 출석 현황 — 제목·목록 모두 박스 안에. 구분선 없음(토스 스타일).
-class _AttendanceHistory extends StatelessWidget {
-  const _AttendanceHistory({required this.items});
-  final List<_Attendance> items;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 12),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '출석 현황',
-            style: textTheme.titleLarge?.copyWith(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 8),
-          for (final item in items) _AttendanceRow(item: item),
-        ],
-      ),
-    );
-  }
-}
-
-class _AttendanceRow extends StatelessWidget {
-  const _AttendanceRow({required this.item});
-  final _Attendance item;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          const Icon(Symbols.check_circle,
-              color: AppColors.textSecondary, size: 20, fill: 1),
-          const SizedBox(width: 12),
-          Text(
-            '${item.date} (${item.day})',
-            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const Spacer(),
-          Text(
-            item.time,
-            style: textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ],
       ),
     );
   }

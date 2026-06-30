@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'widgets/attendance_calendar.dart';
 import 'widgets/home_events.dart';
 import 'widgets/home_header.dart';
-import 'widgets/home_ranking.dart';
 import 'widgets/home_week_summary.dart';
 
 /// 홈(메인) 대시보드 화면.
@@ -55,10 +54,6 @@ class HomeScreen extends StatelessWidget {
                   SizedBox(height: 8),
                   // 운동 요약 (웨이트·러닝·페이스)
                   HomeWeekSummary(),
-
-                  SizedBox(height: 8),
-                  // 랭킹 (출석왕·지인소개왕) — 토스 증권식 리스트
-                  HomeRanking(),
                 ],
               ),
             ),
