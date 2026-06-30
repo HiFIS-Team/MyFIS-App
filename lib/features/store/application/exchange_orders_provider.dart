@@ -11,7 +11,7 @@ class ExchangeOrdersNotifier extends Notifier<List<ExchangeOrder>> {
   @override
   List<ExchangeOrder> build() => const [
         ExchangeOrder(
-            name: '이온음료', number: 'B7K10', qty: 1, date: '6/27', done: true),
+            name: '이온음료', number: 'B7K10', qty: 1, date: '6/27', done: false),
       ];
 
   /// 장바구니 항목들을 교환권으로 추가(최신이 앞).
