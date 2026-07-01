@@ -470,7 +470,7 @@ class _MenuRow extends StatelessWidget {
             Text(
               label,
               style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
                 color: color,
               ),
             ),

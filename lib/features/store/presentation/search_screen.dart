@@ -224,7 +224,7 @@ class _ResultTile extends StatelessWidget {
                   Text(
                     product.name,
                     style: textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),

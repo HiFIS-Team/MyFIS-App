@@ -159,7 +159,7 @@ class _InfoRow extends StatelessWidget {
               Text(
                 value,
                 style: textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
             ],

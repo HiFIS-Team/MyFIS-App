@@ -137,7 +137,7 @@ class _MileageBar extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             '내 마일리지',
-            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const Spacer(),
           Text(

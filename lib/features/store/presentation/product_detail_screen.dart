@@ -416,7 +416,7 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                 Text(
                   '수량',
                   style: textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Container(
@@ -462,7 +462,7 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
                     Text(
                       '쿠폰',
                       style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const Spacer(),
@@ -965,7 +965,7 @@ class _RelatedSection extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 2),

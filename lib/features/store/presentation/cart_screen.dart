@@ -103,7 +103,7 @@ class CartScreen extends ConsumerWidget {
                       Text(
                         item.product.name,
                         style: textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -228,7 +228,7 @@ class _CartCheckoutSheetState extends State<_CartCheckoutSheet> {
                   Text(
                     '쿠폰',
                     style: textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const Spacer(),

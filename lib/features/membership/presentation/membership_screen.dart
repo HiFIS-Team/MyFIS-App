@@ -267,7 +267,7 @@ class _MenuRow extends StatelessWidget {
                 Text(
                   label,
                   style: textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const Spacer(),
