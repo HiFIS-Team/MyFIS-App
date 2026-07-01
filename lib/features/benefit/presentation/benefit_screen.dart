@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -27,20 +28,18 @@ class BenefitScreen extends StatelessWidget {
       body: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 120),
+          padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
           children: [
-            // 헤더: 인사 + 내 마일리지
-            Text(
-              '오늘도 마일리지\n모아볼까요?',
-              style: textTheme.headlineSmall?.copyWith(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                height: 1.3,
-              ),
-            ),
-            const SizedBox(height: 14),
+            // 내 마일리지
             _MileageBar(mileage: _mileage),
-            const SizedBox(height: 26),
+            const SizedBox(height: 16),
+
+            // 오늘의 루틴 히어로 카드 (토스식)
+            _RoutineHeroCard(
+              points: 30,
+              onGo: () => context.go('/weight'),
+            ),
+            const SizedBox(height: 28),
 
             // 매일 받기
             Text(
@@ -164,6 +163,78 @@ class _MileageBar extends StatelessWidget {
             '${_comma(mileage)}P',
             style: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 오늘의 루틴 히어로 카드 — 루틴 완료 시 받을 마일리지 강조 + 큰 CTA. (토스식)
+class _RoutineHeroCard extends StatelessWidget {
+  const _RoutineHeroCard({required this.points, required this.onGo});
+  final int points;
+  final VoidCallback onGo;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1F2A10), Color(0xFF33450F)],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Symbols.local_fire_department,
+                  color: AppColors.lime, size: 20, fill: 1),
+              const SizedBox(width: 6),
+              Text(
+                '오늘의 루틴',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.lime,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          // 큰 문구
+          Text.rich(
+            TextSpan(
+              style: textTheme.headlineSmall?.copyWith(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: Colors.white,
+                height: 1.35,
+              ),
+              children: [
+                const TextSpan(text: '오늘 루틴을 끝내면\n'),
+                TextSpan(
+                  text: '$points P',
+                  style: const TextStyle(color: AppColors.lime),
+                ),
+                const TextSpan(text: ' 바로 받아요'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          // 큰 CTA
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: FilledButton(
+              onPressed: onGo,
+              child: const Text('마일리지 받으러 가기'),
             ),
           ),
         ],
