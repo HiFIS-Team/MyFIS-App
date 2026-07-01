@@ -38,12 +38,9 @@ class MyPageScreen extends StatelessWidget {
             _ProfileCard(
               name: '김은후',
               phone: '010-1234-5678',
-              mileage: 2400,
-              attendance: 18,
-              rank: 3,
               onTapProfile: () => context.push('/profile'),
             ),
-            const SizedBox(height: 14),
+            const SizedBox(height: 8),
 
             // 멤버십 + 부가상품(락커·운동복)
             const _MembershipCard(
@@ -102,17 +99,11 @@ class _ProfileCard extends StatelessWidget {
   const _ProfileCard({
     required this.name,
     required this.phone,
-    required this.mileage,
-    required this.attendance,
-    required this.rank,
     required this.onTapProfile,
   });
 
   final String name;
   final String phone;
-  final int mileage;
-  final int attendance;
-  final int rank;
   final VoidCallback onTapProfile;
 
   @override
@@ -129,7 +120,7 @@ class _ProfileCard extends StatelessWidget {
           // 프로필 (탭 → 상세)
           Pressable(
             onTap: onTapProfile,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+            borderRadius: BorderRadius.circular(14),
             child: Padding(
               padding: const EdgeInsets.all(18),
               child: Row(
@@ -172,76 +163,9 @@ class _ProfileCard extends StatelessWidget {
               ),
             ),
           ),
-          Divider(height: 1, thickness: 1, color: AppColors.outline),
-          // 퀵스탯
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 18),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _StatItem(
-                    value: _comma(mileage),
-                    label: '마일리지',
-                    valueColor: AppColors.textPrimary,
-                  ),
-                ),
-                const _StatDivider(),
-                Expanded(
-                  child: _StatItem(value: '$attendance일', label: '이번 달 출석'),
-                ),
-                const _StatDivider(),
-                Expanded(
-                  child: _StatItem(value: '$rank위', label: '출석 랭킹'),
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
-  }
-}
-
-class _StatItem extends StatelessWidget {
-  const _StatItem({
-    required this.value,
-    required this.label,
-    this.valueColor,
-  });
-
-  final String value;
-  final String label;
-  final Color? valueColor;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      children: [
-        Text(
-          value,
-          style: textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            color: valueColor,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: textTheme.bodySmall?.copyWith(
-            color: AppColors.textSecondary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  const _StatDivider();
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: 1, height: 32, color: AppColors.outline);
   }
 }
 
@@ -488,15 +412,4 @@ class _MenuRow extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 천 단위 콤마.
-String _comma(int n) {
-  final s = n.toString();
-  final buf = StringBuffer();
-  for (var i = 0; i < s.length; i++) {
-    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
-    buf.write(s[i]);
-  }
-  return buf.toString();
 }
