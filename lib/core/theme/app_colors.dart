@@ -11,11 +11,11 @@ class AppColors {
   static const Color lime = Color(0xFFD7FC51);
   static const Color limeStrong = Color(0xFFB8E02E);
 
-  // === 다크 베이스 ===
-  static const Color background = Color(0xFF0D0D0D); // near-black
-  static const Color surface = Color(0xFF1A1A1A); // 카드/시트
-  static const Color surfaceAlt = Color(0xFF242424); // 한 단계 밝은 카드
-  static const Color outline = Color(0xFF2E2E2E); // 경계선
+  // === 다크 베이스 (토스식: 배경 순검정 + 카드는 그 위에 뜨는 회색) ===
+  static const Color background = Color(0xFF000000); // 순검정 페이지
+  static const Color surface = Color(0xFF141414); // 카드/시트 (덜 떠 보이게 어둡게)
+  static const Color surfaceAlt = Color(0xFF202020); // 한 단계 밝은 카드/중첩 요소
+  static const Color outline = Color(0xFF2A2A2A); // 경계선
 
   // === 다크 텍스트 ===
   static const Color textPrimary = Color(0xFFFFFFFF);
