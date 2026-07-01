@@ -7,6 +7,7 @@ import '../../features/benefit/presentation/mission_detail_screen.dart';
 import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/coupon/presentation/coupon_screen.dart';
+import '../../features/home/presentation/attendance_day_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/membership/domain/branch.dart';
 import '../../features/membership/presentation/branch_detail_screen.dart';
@@ -167,6 +168,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _slideFromRight(
           state,
           MissionDetailScreen(title: state.extra as String? ?? '미션'),
+        ),
+      ),
+
+      // 출석한 날 상세 (달력에서 진입, 현재 placeholder)
+      GoRoute(
+        path: '/attendance-day',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideFromRight(
+          state,
+          AttendanceDayScreen(title: state.extra as String? ?? '운동 기록'),
         ),
       ),
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/press_fade.dart';
@@ -186,27 +187,34 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
     final isToday = day == today;
     final isFuture = _isFuture(day);
 
-    // 출석한 날 — 날짜는 가운데(다른 날과 같은 위치), 덤벨은 위 작은 표시
+    // 출석한 날 — 날짜는 가운데(다른 날과 같은 위치), 덤벨은 위 작은 표시.
+    // 탭하면 그날 운동 기록 페이지로 진입.
     if (attended) {
-      return SizedBox(
-        height: 44,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Text(
-              '$day',
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w700,
-                fontSize: 14,
+      return PressFade(
+        onTap: () => context.push(
+          '/attendance-day',
+          extra: '${_displayed.month}월 $day일',
+        ),
+        child: SizedBox(
+          height: 44,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Text(
+                '$day',
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
               ),
-            ),
-            const Positioned(
-              top: 2,
-              child: Icon(Icons.fitness_center,
-                  color: AppColors.textSecondary, size: 13),
-            ),
-          ],
+              const Positioned(
+                top: 2,
+                child: Icon(Icons.fitness_center,
+                    color: AppColors.textSecondary, size: 13),
+              ),
+            ],
+          ),
         ),
       );
     }
