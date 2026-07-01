@@ -67,6 +67,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/images/
+
   # Pretendard (가변 폰트) — 다크 토스 타이포. 모든 굵기를 한 파일로 커버.
   fonts:
     - family: Pretendard

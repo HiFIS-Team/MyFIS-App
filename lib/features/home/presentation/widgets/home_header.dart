@@ -55,28 +55,17 @@ class HomeHeader extends StatelessWidget {
   }
 }
 
-/// 브랜드 워드마크 — "My" + 라임 "FIS".
-/// (정식 로고 제작 전 텍스트 워드마크)
+/// 브랜드 워드마크 — MyFIS 로고 (플랫, "My" 흰색 + "FIS" 라임).
 class _BrandWordmark extends StatelessWidget {
   const _BrandWordmark();
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.onSurface;
-    const style = TextStyle(
-      fontSize: 22,
-      fontWeight: FontWeight.w800,
-      letterSpacing: -0.5,
-    );
-
-    return Text.rich(
-      TextSpan(
-        style: style,
-        children: [
-          TextSpan(text: 'My', style: TextStyle(color: color)),
-          const TextSpan(text: 'FIS', style: TextStyle(color: AppColors.lime)),
-        ],
-      ),
+    return Image.asset(
+      'assets/images/logo.png',
+      height: 22,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
     );
   }
 }

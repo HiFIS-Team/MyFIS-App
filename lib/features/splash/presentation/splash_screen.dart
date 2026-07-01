@@ -124,18 +124,11 @@ class _Wordmark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Text.rich(
-      TextSpan(
-        style: TextStyle(
-          fontSize: 42,
-          fontWeight: FontWeight.w800,
-          letterSpacing: -1,
-        ),
-        children: [
-          TextSpan(text: 'My', style: TextStyle(color: AppColors.textPrimary)),
-          TextSpan(text: 'FIS', style: TextStyle(color: AppColors.lime)),
-        ],
-      ),
+    return Image.asset(
+      'assets/images/logo.png',
+      height: 52,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.medium,
     );
   }
 }
