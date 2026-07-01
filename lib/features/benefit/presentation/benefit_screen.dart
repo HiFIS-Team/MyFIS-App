@@ -57,7 +57,7 @@ class BenefitScreen extends StatelessWidget {
                       children: const [
                         TextSpan(text: '매일 미션을 하고 '),
                         TextSpan(
-                          text: '포인트',
+                          text: '마일리지',
                           style: TextStyle(color: AppColors.lime),
                         ),
                         TextSpan(text: ' 받아요'),
@@ -67,30 +67,35 @@ class BenefitScreen extends StatelessWidget {
                 ),
                 _RewardRow(
                   icon: Symbols.water_drop,
+                  color: Color(0xFF4DA3FF), // 물 - 블루
                   title: '물 마시기 인증',
                   cta: '방문하기',
                   onTap: () => _reward(context, '물 마시기', 5),
                 ),
                 _RewardRow(
                   icon: Symbols.monitor_weight,
+                  color: Color(0xFFB69CFF), // 체중 - 퍼플
                   title: '체중 기록',
                   cta: '방문하기',
                   onTap: () => _reward(context, '체중 기록', 10),
                 ),
                 _RewardRow(
                   icon: Symbols.self_improvement,
+                  color: Color(0xFF4FD1C5), // 스트레칭 - 민트
                   title: '스트레칭 영상 보기',
                   cta: '방문하기',
                   onTap: () => _reward(context, '스트레칭 영상', 10),
                 ),
                 _RewardRow(
                   icon: Symbols.photo_camera,
+                  color: Color(0xFFFF6BAE), // 인스타 - 핑크
                   title: '인스타 스토리 공유',
                   cta: '방문하기',
                   onTap: () => _reward(context, '스토리 공유', 50),
                 ),
                 _RewardRow(
                   icon: Symbols.casino,
+                  color: Color(0xFFFFC24B), // 룰렛 - 앰버
                   title: '행운 룰렛',
                   cta: '방문하기',
                   onTap: () => _reward(context, '룰렛', 30),
@@ -277,12 +282,14 @@ class _RoutineHeroCardState extends State<_RoutineHeroCard>
 class _RewardRow extends StatelessWidget {
   const _RewardRow({
     required this.icon,
+    required this.color,
     required this.title,
     required this.cta,
     required this.onTap,
   });
 
   final IconData icon;
+  final Color color;
   final String title;
   final String cta;
   final VoidCallback onTap;
@@ -300,9 +307,9 @@ class _RewardRow extends StatelessWidget {
             height: 38,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: AppColors.lime.withValues(alpha: 0.14),
+              color: color.withValues(alpha: 0.16),
             ),
-            child: Icon(icon, color: AppColors.lime, size: 20),
+            child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
