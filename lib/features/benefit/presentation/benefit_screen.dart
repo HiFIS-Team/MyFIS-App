@@ -44,15 +44,28 @@ class BenefitScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
 
-            // 매일 받기
-            Text(
-              '매일 받기',
-              style:
-                  textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
+            // 매일 미션 (헤더를 카드 안으로)
             _MissionCard(
               children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 6),
+                  child: Text.rich(
+                    TextSpan(
+                      style: textTheme.titleMedium?.copyWith(
+                        fontSize: 19,
+                        fontWeight: FontWeight.w900,
+                      ),
+                      children: const [
+                        TextSpan(text: '매일 미션을 하고 '),
+                        TextSpan(
+                          text: '포인트',
+                          style: TextStyle(color: AppColors.lime),
+                        ),
+                        TextSpan(text: ' 받아요'),
+                      ],
+                    ),
+                  ),
+                ),
                 _RewardRow(
                   icon: Symbols.water_drop,
                   title: '물 마시기 인증',
@@ -312,47 +325,41 @@ class _RewardRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Pressable(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.lime.withValues(alpha: 0.14),
-              ),
-              child: Icon(icon, color: AppColors.lime, size: 20),
+    // 행 전체가 아니라 우측 버튼으로만 접근(프레스 효과도 버튼에만).
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.lime.withValues(alpha: 0.14),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style:
-                    textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
+            child: Icon(icon, color: AppColors.lime, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              title,
+              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
-            const SizedBox(width: 10),
-            // 라임 아웃라인 pill 버튼
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: AppColors.lime, width: 1),
-              ),
-              child: Text(
-                cta,
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.lime,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+          ),
+          const SizedBox(width: 10),
+          // 앱 공통 버튼(FilledButton)과 동일한 프레스 효과, 크기만 컴팩트하게
+          FilledButton(
+            onPressed: onTap,
+            style: FilledButton.styleFrom(
+              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+              textStyle:
+                  const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-          ],
-        ),
+            child: Text(cta),
+          ),
+        ],
       ),
     );
   }
@@ -369,7 +376,10 @@ class _MissionCard extends StatelessWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
       ),
-      child: Column(children: children),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      ),
     );
   }
 }
@@ -415,7 +425,7 @@ class _MissionRow extends StatelessWidget {
                   Text(
                     title,
                     style: textTheme.bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.w600),
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                   if (progress != null) ...[
                     const SizedBox(height: 2),
