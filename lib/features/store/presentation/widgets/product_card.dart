@@ -87,7 +87,7 @@ class ProductCard extends ConsumerWidget {
                       Text(
                         '${_comma(product.points)}P',
                         style: textTheme.bodyLarge?.copyWith(
-                          color: AppColors.textPrimary,
+                          color: AppColors.lime,
                           fontWeight: FontWeight.w800,
                         ),
                       ),

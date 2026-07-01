@@ -172,12 +172,12 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Icon(Symbols.paid, size: 24, color: AppColors.textSecondary),
+                    const Icon(Symbols.paid, size: 24, color: AppColors.lime),
                     const SizedBox(width: 6),
                     Text(
                       '${_comma(product.points)}P',
                       style: textTheme.headlineSmall?.copyWith(
-                        color: AppColors.textPrimary,
+                        color: AppColors.lime,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -198,7 +198,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
                     ),
                     const SizedBox(width: 14),
                     const Icon(Symbols.star,
-                        size: 18, color: AppColors.textSecondary, fill: 1),
+                        size: 18, color: AppColors.lime, fill: 1),
                     const SizedBox(width: 4),
                     Text(
                       product.rating.toStringAsFixed(1),
@@ -684,12 +684,12 @@ class _InfoChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = accent ? AppColors.textPrimary : AppColors.textSecondary;
+    final fg = accent ? AppColors.lime : AppColors.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: accent
-            ? AppColors.surfaceAlt
+            ? AppColors.lime.withValues(alpha: 0.14)
             : AppColors.surface,
         borderRadius: BorderRadius.circular(14),
       ),
@@ -786,7 +786,9 @@ class _ReviewSummary extends StatelessWidget {
                   Symbols.star,
                   size: 14,
                   fill: i < rating.round() ? 1 : 0,
-                  color: AppColors.textSecondary,
+                  color: i < rating.round()
+                      ? AppColors.lime
+                      : AppColors.textSecondary,
                 ),
               ),
             ),
@@ -826,7 +828,7 @@ class _ReviewSummary extends StatelessWidget {
                                     total == 0 ? 0 : _dist[i] / total,
                                 child: Container(
                                   height: 6,
-                                  color: AppColors.textSecondary,
+                                  color: AppColors.lime,
                                 ),
                               ),
                             ],
@@ -887,7 +889,9 @@ class _ReviewCard extends StatelessWidget {
                     Symbols.star,
                     size: 13,
                     fill: i < rating ? 1 : 0,
-                    color: AppColors.textSecondary,
+                    color: i < rating
+                        ? AppColors.lime
+                        : AppColors.textSecondary,
                   ),
                 ),
               ),
@@ -972,12 +976,12 @@ class _RelatedSection extends StatelessWidget {
                     Row(
                       children: [
                         const Icon(Symbols.paid,
-                            size: 14, color: AppColors.textSecondary),
+                            size: 14, color: AppColors.lime),
                         const SizedBox(width: 3),
                         Text(
                           '${_comma(item.points)}P',
                           style: textTheme.bodySmall?.copyWith(
-                            color: AppColors.textPrimary,
+                            color: AppColors.lime,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
