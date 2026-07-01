@@ -11,6 +11,7 @@ import '../../features/membership/domain/branch.dart';
 import '../../features/membership/presentation/branch_detail_screen.dart';
 import '../../features/membership/presentation/branch_list_screen.dart';
 import '../../features/membership/presentation/membership_screen.dart';
+import '../../features/meetup/presentation/meetup_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
@@ -36,6 +37,7 @@ final _cardioNavigatorKey = GlobalKey<NavigatorState>();
 final _rankingNavigatorKey = GlobalKey<NavigatorState>();
 final _myNavigatorKey = GlobalKey<NavigatorState>();
 final _benefitNavigatorKey = GlobalKey<NavigatorState>();
+final _meetupNavigatorKey = GlobalKey<NavigatorState>();
 
 /// 오른쪽→왼쪽 슬라이드 전환 페이지 (네비게이션 진입 공통).
 /// 알림·출석 바코드 등 풀스크린 진입 화면에서 사용.
@@ -288,6 +290,16 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/benefit',
                 builder: (context, state) => const BenefitScreen(),
+              ),
+            ],
+          ),
+          // 운동 모임 — 브랜치 인덱스 7 (운동 모드 바에 표시)
+          StatefulShellBranch(
+            navigatorKey: _meetupNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/meetup',
+                builder: (context, state) => const MeetupScreen(),
               ),
             ],
           ),

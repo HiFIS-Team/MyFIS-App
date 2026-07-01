@@ -122,12 +122,16 @@ const int _cardio = 3;
 const int _ranking = 4;
 const int _my = 5;
 const int _benefit = 6;
+const int _meetup = 7;
 
 // 하단바 슬롯 수 (메인: 홈·혜택·스토어·운동·마이)
 const int _slotCount = 5;
 
 bool _isWorkout(int index) =>
-    index == _weight || index == _cardio || index == _ranking;
+    index == _weight ||
+    index == _cardio ||
+    index == _ranking ||
+    index == _meetup;
 
 /// 떠 있는 반투명 블러 캡슐 + 메인↔운동 변신 애니메이션 하단바.
 class _AnimatedNavBar extends StatefulWidget {
@@ -203,7 +207,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
 
   /// 현재 선택 슬롯. 모드에 따라 매핑.
   /// 메인: 홈0·혜택1·스토어2·운동3·마이4
-  /// 운동: 나가기0.5·웨이트1.5·유산소2.5·랭킹3.5 (5슬롯 안 가운데)
+  /// 운동: 나가기0·웨이트1·유산소2·랭킹3·운동모임4 (5슬롯 꽉)
   double _slotFor(int index) {
     switch (index) {
       case _home:
@@ -215,11 +219,13 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
       case _my:
         return 4;
       case _weight:
-        return 1.5;
+        return 1;
       case _cardio:
-        return 2.5;
+        return 2;
       case _ranking:
-        return 3.5;
+        return 3;
+      case _meetup:
+        return 4;
     }
     return 0;
   }
@@ -382,19 +388,21 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
   Widget _buildItems(int idx, double slot) {
     final raw = _mode.value;
 
-    final double move; // 덤벨 이동 진행도(0=슬롯2, 1=슬롯1)
+    final double move; // 덤벨 이동 진행도(0=메인 슬롯3, 1=운동 슬롯1)
     final double mainAppear;
     final double exitAppear;
     final double cardioAppear;
     final double rankingAppear;
+    final double meetupAppear;
 
     if (_entering) {
-      // 진입: 덤벨이 먼저 도착(0.2~0.55) → 유산소·랭킹 차례로 천천히 등장
+      // 진입: 덤벨이 먼저 도착(0.2~0.55) → 유산소·랭킹·운동모임 차례로 천천히 등장
       move = Curves.easeOutCubic.transform(_lin(raw, 0.2, 0.55));
       mainAppear = 1 - _lin(raw, 0.0, 0.28);
       exitAppear = _lin(raw, 0.5, 0.78);
-      cardioAppear = _lin(raw, 0.62, 0.9);
-      rankingAppear = _lin(raw, 0.72, 1.0);
+      cardioAppear = _lin(raw, 0.6, 0.86);
+      rankingAppear = _lin(raw, 0.68, 0.94);
+      meetupAppear = _lin(raw, 0.76, 1.0);
     } else {
       // 나가기: 덤벨을 진입과 같은 속도로 이동(구간 미러링: 0.2~0.55 → 0.45~0.8).
       // 나가기 직후 바로 같은 속도로 제자리 복귀, 메인 아이콘은 팝하며 함께 등장.
@@ -404,9 +412,10 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
       exitAppear = fade;
       cardioAppear = fade;
       rankingAppear = fade;
+      meetupAppear = fade;
     }
 
-    final dumbbellSlot = lerpDouble(3, 1.5, move)!;
+    final dumbbellSlot = lerpDouble(3, 1, move)!;
     final mainIgnore = raw > 0.5;
     final workoutIgnore = raw < 0.5;
 
@@ -452,10 +461,10 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
           onTap: () => widget.onGo(_my),
         ),
 
-        // --- 운동 전용 (스태거 등장, 5슬롯 안 가운데) ---
+        // --- 운동 전용 (스태거 등장, 5슬롯 꽉) ---
         _item(
           slot: slot,
-          slotPos: 0.5,
+          slotPos: 0,
           icon: Icons.arrow_back, // ← 나가기 (직전 메인 탭으로 복귀)
           selected: false,
           appear: exitAppear,
@@ -464,7 +473,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         ),
         _item(
           slot: slot,
-          slotPos: 2.5,
+          slotPos: 2,
           icon: idx == _cardio
               ? Icons.directions_run
               : Icons.directions_run_outlined,
@@ -475,7 +484,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         ),
         _item(
           slot: slot,
-          slotPos: 3.5,
+          slotPos: 3,
           icon: idx == _ranking
               ? Icons.leaderboard
               : Icons.leaderboard_outlined,
@@ -483,6 +492,15 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
           appear: rankingAppear,
           modeIgnore: workoutIgnore,
           onTap: () => widget.onGo(_ranking),
+        ),
+        _item(
+          slot: slot,
+          slotPos: 4,
+          icon: idx == _meetup ? Icons.groups : Icons.groups_outlined,
+          selected: idx == _meetup,
+          appear: meetupAppear,
+          modeIgnore: workoutIgnore,
+          onTap: () => widget.onGo(_meetup),
         ),
 
         // --- 공유 요소: 덤벨 (운동 ↔ 웨이트) ---
