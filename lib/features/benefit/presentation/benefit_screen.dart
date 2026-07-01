@@ -109,7 +109,7 @@ class BenefitScreen extends StatelessWidget {
   }
 }
 
-/// 내 마일리지 잔액 바.
+/// 내 마일리지 — 가로 구분선 가운데에 금액 (토스식).
 class _MileageBar extends StatelessWidget {
   const _MileageBar({required this.mileage});
   final int mileage;
@@ -117,35 +117,28 @@ class _MileageBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.lime,
-            ),
-            child: const Icon(Symbols.paid, color: Colors.black, size: 22),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            '내 마일리지',
-            style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const Spacer(),
-          Text(
-            '${_comma(mileage)}P',
-            style: textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
+          const Expanded(child: Divider(color: AppColors.outline, height: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Symbols.paid, color: AppColors.lime, size: 20),
+                const SizedBox(width: 6),
+                Text(
+                  '${_comma(mileage)}P',
+                  style: textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
             ),
           ),
+          const Expanded(child: Divider(color: AppColors.outline, height: 1)),
         ],
       ),
     );
