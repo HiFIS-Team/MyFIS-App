@@ -56,30 +56,25 @@ class BenefitScreen extends StatelessWidget {
                 _RewardRow(
                   icon: Symbols.event_available,
                   title: '출석 체크',
-                  reward: '+10P',
                   cta: '방문하기',
                   onTap: () => _reward(context, '출석 체크', 10),
                 ),
                 _RewardRow(
                   icon: Symbols.footprint,
                   title: '만보기',
-                  reward: '3,240보',
                   cta: '방문하기',
                   onTap: () => _reward(context, '걸음 리워드', 8),
                 ),
                 _RewardRow(
                   icon: Symbols.quiz,
                   title: '행운 퀴즈',
-                  reward: '+5P',
                   cta: '방문하기',
                   onTap: () => _reward(context, '행운 퀴즈', 5),
                 ),
                 _RewardRow(
                   icon: Symbols.casino,
                   title: '룰렛',
-                  reward: '최대 100P',
                   cta: '방문하기',
-                  isLast: true,
                   onTap: () => _reward(context, '룰렛', 30),
                 ),
               ],
@@ -114,7 +109,6 @@ class BenefitScreen extends StatelessWidget {
                   title: '스토어 첫 교환',
                   progress: null,
                   reward: '+50P',
-                  isLast: true,
                   onTap: () => _reward(context, '첫 교환', 50),
                 ),
               ],
@@ -295,94 +289,65 @@ class _RoutineHeroCardState extends State<_RoutineHeroCard>
   }
 }
 
-/// 매일 받기 한 줄 (마이페이지식 가로 행) — 아이콘 · 제목/보상 · CTA.
+/// 매일 받기 한 줄 (마이페이지식 가로 행) — 아이콘 · 제목 · CTA 버튼.
 class _RewardRow extends StatelessWidget {
   const _RewardRow({
     required this.icon,
     required this.title,
-    required this.reward,
     required this.cta,
     required this.onTap,
-    this.isLast = false,
   });
 
   final IconData icon;
   final String title;
-  final String reward;
   final String cta;
   final VoidCallback onTap;
-  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Column(
-      children: [
-        Pressable(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.lime.withValues(alpha: 0.14),
-                  ),
-                  child: Icon(icon, color: AppColors.lime, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: textTheme.bodyLarge
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        reward,
-                        style: textTheme.bodySmall?.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                // 라임 아웃라인 pill 버튼
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.lime, width: 1),
-                  ),
-                  child: Text(
-                    cta,
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: AppColors.lime,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
+    return Pressable(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.lime.withValues(alpha: 0.14),
+              ),
+              child: Icon(icon, color: AppColors.lime, size: 20),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style:
+                    textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(width: 10),
+            // 라임 아웃라인 pill 버튼
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.lime, width: 1),
+              ),
+              child: Text(
+                cta,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: AppColors.lime,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ),
-        if (!isLast)
-          const Divider(
-            height: 1,
-            thickness: 1,
-            color: AppColors.outline,
-            indent: 16,
-            endIndent: 16,
-          ),
-      ],
+      ),
     );
   }
 }
@@ -410,7 +375,6 @@ class _MissionRow extends StatelessWidget {
     required this.reward,
     required this.onTap,
     this.progress,
-    this.isLast = false,
   });
 
   final IconData icon;
@@ -418,71 +382,58 @@ class _MissionRow extends StatelessWidget {
   final String reward;
   final String? progress;
   final VoidCallback onTap;
-  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Column(
-      children: [
-        Pressable(
-          onTap: onTap,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppColors.lime.withValues(alpha: 0.14),
-                  ),
-                  child: Icon(icon, color: AppColors.lime, size: 20),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: textTheme.bodyLarge
-                            ?.copyWith(fontWeight: FontWeight.w600),
-                      ),
-                      if (progress != null) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          progress!,
-                          style: textTheme.bodySmall?.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  reward,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.lime,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+    return Pressable(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: AppColors.lime.withValues(alpha: 0.14),
+              ),
+              child: Icon(icon, color: AppColors.lime, size: 20),
             ),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: textTheme.bodyLarge
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  if (progress != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      progress!,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              reward,
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.lime,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         ),
-        if (!isLast)
-          const Divider(
-            height: 1,
-            thickness: 1,
-            color: AppColors.outline,
-            indent: 16,
-            endIndent: 16,
-          ),
-      ],
+      ),
     );
   }
 }
