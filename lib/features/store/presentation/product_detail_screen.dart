@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../coupon/domain/coupon.dart';
 import '../../coupon/presentation/coupon_select_screen.dart';
 import '../application/cart_provider.dart';
+import '../application/product_catalog.dart';
 import '../application/recent_provider.dart';
 import '../domain/product.dart';
 
@@ -293,7 +295,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             ),
           ),
           // 함께 교환하면 좋은 상품 — 풀블리드 가로 스크롤
-          const _RelatedSection(),
+          _RelatedSection(current: product),
           const SizedBox(height: 28),
         ],
       ),
@@ -942,19 +944,16 @@ class _ReviewCard extends StatelessWidget {
 }
 
 /// 함께 교환하면 좋은 상품 — 풀블리드 가로 스크롤.
+/// 실제 카탈로그 상품(현재 상품 제외)을 보여주고, 탭하면 그 상품 상세로 이동.
 class _RelatedSection extends StatelessWidget {
-  const _RelatedSection();
-
-  static const List<({IconData icon, String name, int points})> _items = [
-    (icon: Symbols.dry_cleaning, name: '운동 타월', points: 500),
-    (icon: Symbols.nutrition, name: '보충제 1회분', points: 800),
-    (icon: Symbols.local_drink, name: '이온음료', points: 300),
-    (icon: Symbols.lock, name: '락커 1개월', points: 3000),
-  ];
+  const _RelatedSection({required this.current});
+  final Product current;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final items =
+        kStoreProducts.where((p) => p.name != current.name).toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -968,49 +967,55 @@ class _RelatedSection extends StatelessWidget {
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemCount: _items.length,
+            itemCount: items.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (context, i) {
-              final item = _items[i];
-              return SizedBox(
-                width: 120,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 120,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceAlt,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(item.icon, color: AppColors.textSecondary, size: 36),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      item.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        const Icon(Symbols.paid,
-                            size: 14, color: AppColors.lime),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${_comma(item.points)}P',
-                          style: textTheme.bodySmall?.copyWith(
-                            color: AppColors.lime,
-                            fontWeight: FontWeight.w700,
-                          ),
+              final item = items[i];
+              return Pressable(
+                borderRadius: BorderRadius.circular(10),
+                // 탭하면 해당 상품 상세로 이동(뒤로가기 시 이전 상품으로 복귀).
+                onTap: () => context.push('/product', extra: item),
+                child: SizedBox(
+                  width: 120,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 120,
+                        height: 110,
+                        decoration: BoxDecoration(
+                          color: AppColors.surfaceAlt,
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ],
-                    ),
-                  ],
+                        child: Icon(item.icon,
+                            color: AppColors.textSecondary, size: 36),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        item.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          const Icon(Symbols.paid,
+                              size: 14, color: AppColors.lime),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${_comma(item.points)}P',
+                            style: textTheme.bodySmall?.copyWith(
+                              color: AppColors.lime,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               );
             },
