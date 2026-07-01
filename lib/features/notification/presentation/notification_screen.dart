@@ -3,6 +3,7 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+import '../../../shared/widgets/press_fade.dart';
 import '../../../shared/widgets/pressable.dart';
 
 /// 알림 조회 화면.
@@ -54,10 +55,11 @@ class NotificationScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppTopBar(
         title: '알림',
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Symbols.settings, color: AppColors.textSecondary),
+        actions: const [
+          PressableIcon(
+            icon: Symbols.settings,
+            size: 24,
+            color: AppColors.textSecondary,
           ),
         ],
       ),

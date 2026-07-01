@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_back_button.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../application/product_catalog.dart';
 import '../domain/product.dart';
@@ -112,10 +113,7 @@ class _SearchScreenState extends State<SearchScreen> {
               padding: const EdgeInsets.fromLTRB(6, 6, 16, 8),
               child: Row(
                 children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new),
-                    onPressed: () => Navigator.of(context).maybePop(),
-                  ),
+                  const AppBackButton(),
                   Expanded(
                     child: Hero(
                       tag: kSearchHeroTag,

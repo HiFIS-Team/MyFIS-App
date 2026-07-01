@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/press_fade.dart';
 
 /// 이번 달 출석 달력.
 /// - 출석한 날: 덤벨 아이콘 + 라임 날짜
@@ -253,11 +254,10 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return PressFade(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(8),
         child: Icon(icon, color: AppColors.textSecondary, size: 24),
       ),
     );

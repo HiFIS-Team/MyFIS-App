@@ -4,6 +4,7 @@ import 'package:material_symbols_icons/symbols.dart';
 import 'package:screen_brightness/screen_brightness.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/press_fade.dart';
 
 /// 출석 바코드 — 홈 위로 "위에서 바코드까지" 내려오는 드롭다운 시트.
 /// 투명 오버레이라 패널이 안 덮은 아래쪽은 뒤 화면(홈)이 어둡게 비친다.
@@ -220,9 +221,9 @@ class _BrightnessBar extends StatelessWidget {
                 ),
               ),
             ),
-            IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: onClose,
+            PressableIcon(
+              icon: Icons.close,
+              onTap: onClose,
               color: AppColors.textSecondary,
             ),
           ],

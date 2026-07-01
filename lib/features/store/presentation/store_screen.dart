@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/press_fade.dart';
 import '../../../shared/widgets/stagger_in.dart';
 import '../application/cart_provider.dart';
 import '../application/product_catalog.dart';
@@ -141,8 +142,7 @@ class _CartButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return PressFade(
       onTap: onTap,
       child: Container(
         width: 46,

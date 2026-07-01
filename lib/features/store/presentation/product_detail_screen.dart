@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/app_back_button.dart';
+import '../../../shared/widgets/press_fade.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../../coupon/domain/coupon.dart';
 import '../../coupon/presentation/coupon_select_screen.dart';
@@ -155,14 +157,11 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         backgroundColor: AppColors.background.withValues(alpha: headerOpacity),
         elevation: 0,
         scrolledUnderElevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new),
-          onPressed: () => Navigator.of(context).maybePop(),
-        ),
+        leading: const AppBackButton(),
         actions: [
-          IconButton(
-            icon: const Icon(Symbols.search),
-            onPressed: () => context.push('/search'),
+          PressableIcon(
+            icon: Symbols.search,
+            onTap: () => context.push('/search'),
           ),
         ],
       ),
@@ -647,8 +646,7 @@ class _SideButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
+    return PressFade(
       onTap: onTap,
       child: Container(
         width: 54,

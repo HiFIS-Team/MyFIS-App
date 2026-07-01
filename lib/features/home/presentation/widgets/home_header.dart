@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../shared/widgets/press_fade.dart';
 
 /// 홈 상단 고정 헤더 — 브랜드 로고 + 알림.
 /// 다크 토스: 좌측 워드마크 브랜드, 우측 아이콘.
@@ -33,18 +34,19 @@ class HomeHeader extends StatelessWidget {
         const _BrandWordmark(),
         const Spacer(),
         // 멤버십 관리 (카드)
-        IconButton(
-          onPressed: onMembershipTap,
-          iconSize: 26,
-          icon: const Icon(Symbols.credit_card),
+        PressableIcon(
+          onTap: onMembershipTap,
+          size: 26,
           color: iconColor,
+          icon: Symbols.credit_card,
         ),
         // 출석 체크 (바코드 + 스캔 프레임)
-        IconButton(
-          onPressed: onCheckInTap,
-          iconSize: 26,
-          icon: const Icon(Symbols.barcode_scanner, fill: 1),
+        PressableIcon(
+          onTap: onCheckInTap,
+          size: 26,
           color: iconColor,
+          icon: Symbols.barcode_scanner,
+          fill: 1,
         ),
         _NotificationButton(
           hasNotification: hasNotification,
@@ -78,29 +80,36 @@ class _NotificationButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          onPressed: onTap,
-          iconSize: 26,
-          icon: const Icon(Icons.notifications_outlined),
-          color: Theme.of(context).colorScheme.onSurface,
-        ),
-        if (hasNotification)
-          Positioned(
-            right: 8,
-            top: 8,
-            child: Container(
-              width: 8,
-              height: 8,
-              decoration: const BoxDecoration(
-                color: AppColors.error,
-                shape: BoxShape.circle,
-              ),
+    return PressFade(
+      onTap: onTap,
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              Icons.notifications_outlined,
+              size: 26,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
-          ),
-      ],
+            if (hasNotification)
+              Positioned(
+                right: 10,
+                top: 10,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
     );
   }
 }
