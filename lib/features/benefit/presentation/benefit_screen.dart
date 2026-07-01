@@ -1,3 +1,6 @@
+import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -171,70 +174,124 @@ class _MileageBar extends StatelessWidget {
   }
 }
 
-/// 오늘의 루틴 히어로 카드 — 루틴 완료 시 받을 마일리지 강조 + 큰 CTA. (토스식)
-class _RoutineHeroCard extends StatelessWidget {
+/// 오늘의 루틴 히어로 카드 — 어두운 카드에 라임 아우라가 우→좌로 2초마다 스윕. (토스식)
+class _RoutineHeroCard extends StatefulWidget {
   const _RoutineHeroCard({required this.points, required this.onGo});
   final int points;
   final VoidCallback onGo;
 
   @override
+  State<_RoutineHeroCard> createState() => _RoutineHeroCardState();
+}
+
+class _RoutineHeroCardState extends State<_RoutineHeroCard>
+    with SingleTickerProviderStateMixin {
+  // 라임 글로우가 한 지점에서 점점 퍼졌다 사라지는 리플 (느리게 반복).
+  static const Alignment _origin = Alignment(-0.5, 0.15);
+
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 3400),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Container(
-      padding: const EdgeInsets.all(22),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1F2A10), Color(0xFF33450F)],
-        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          Row(
-            children: [
-              const Icon(Symbols.local_fire_department,
-                  color: AppColors.lime, size: 20, fill: 1),
-              const SizedBox(width: 6),
-              Text(
-                '오늘의 루틴',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.lime,
-                  fontWeight: FontWeight.w700,
-                ),
+          // 라임 글로우 리플 — 한 지점에서 점점 퍼지며 사라짐 (콘텐츠 뒤)
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _c,
+                builder: (context, _) {
+                  final t = _c.value; // 0..1
+                  // 작게 시작 → 크게 퍼짐, 밝기는 떠올랐다 사라짐(sin)
+                  final scale = lerpDouble(0.25, 2.0, Curves.easeOut.transform(t))!;
+                  final opacity = math.sin(math.pi * t) * 0.9;
+                  return Opacity(
+                    opacity: opacity.clamp(0.0, 1.0),
+                    child: Transform.scale(
+                      scale: scale,
+                      alignment: _origin,
+                      child: const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: RadialGradient(
+                            center: _origin,
+                            radius: 0.55,
+                            colors: [Color(0x40D7FC51), Color(0x00D7FC51)],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          // 큰 문구
-          Text.rich(
-            TextSpan(
-              style: textTheme.headlineSmall?.copyWith(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: Colors.white,
-                height: 1.35,
-              ),
-              children: [
-                const TextSpan(text: '오늘 루틴을 끝내면\n'),
-                TextSpan(
-                  text: '$points P',
-                  style: const TextStyle(color: AppColors.lime),
-                ),
-                const TextSpan(text: ' 바로 받아요'),
-              ],
             ),
           ),
-          const SizedBox(height: 20),
-          // 큰 CTA
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: FilledButton(
-              onPressed: onGo,
-              child: const Text('마일리지 받으러 가기'),
+          // 콘텐츠
+          Padding(
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Symbols.local_fire_department,
+                        color: AppColors.lime, size: 20, fill: 1),
+                    const SizedBox(width: 6),
+                    Text(
+                      '오늘의 루틴',
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: AppColors.lime,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                // 큰 문구
+                Text.rich(
+                  TextSpan(
+                    style: textTheme.headlineSmall?.copyWith(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                      height: 1.35,
+                    ),
+                    children: [
+                      const TextSpan(text: '오늘 루틴을 끝내면\n'),
+                      TextSpan(
+                        text: '${widget.points}P',
+                        style: const TextStyle(color: AppColors.lime),
+                      ),
+                      const TextSpan(text: ' 바로 받아요'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // 큰 CTA
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: widget.onGo,
+                    child: const Text('마일리지 받으러 가기'),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
