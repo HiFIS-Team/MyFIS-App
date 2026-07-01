@@ -31,7 +31,6 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
   @override
   Widget build(BuildContext context) {
     final cartCount = ref.watch(cartCountProvider);
-    final cartTotal = ref.watch(cartTotalProvider);
     final products = _category == kStoreCategories.first
         ? kStoreProducts
         : kStoreProducts.where((p) => p.category == _category).toList();
@@ -42,16 +41,21 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
             bottom: false,
             child: Column(
               children: [
-                // 헤더: 검색창 + 보유 마일리지 (토스식, 타이틀 없음)
+                // 보유 마일리지 — 구분선 가운데 표기 (혜택 페이지와 동일, 맨 위)
+                const _MileageDivider(points: _myMileage),
+                // 헤더: 검색창 + 장바구니 (토스식, 타이틀 없음)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
                   child: Row(
                     children: [
                       Expanded(
                         child: _SearchBar(onTap: () => context.push('/search')),
                       ),
                       const SizedBox(width: 10),
-                      const _MileagePill(points: _myMileage),
+                      _CartButton(
+                        count: cartCount,
+                        onTap: () => context.push('/cart'),
+                      ),
                     ],
                   ),
                 ),
@@ -121,95 +125,62 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
               ],
             ),
           ),
-          // 장바구니가 비었을 때만 교환권 핸들 노출(자리 충돌 방지)
-          if (cartCount == 0)
-            const Positioned.fill(child: ExchangeWalletOverlay()),
-
-          // 담은 상품이 있으면 하단 장바구니 바(배민식) — 네비바 위에 띄움
-          if (cartCount > 0)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 12,
-              child: _CartBar(
-                count: cartCount,
-                total: cartTotal,
-                onTap: () => context.push('/cart'),
-              ),
-            ),
+          // 교환권 핸들 (장바구니는 헤더 아이콘으로 접근)
+          const Positioned.fill(child: ExchangeWalletOverlay()),
         ],
       ),
     );
   }
 }
 
-/// 하단 장바구니 바 — 담은 상품이 있을 때만 노출.
-class _CartBar extends StatelessWidget {
-  const _CartBar({
-    required this.count,
-    required this.total,
-    required this.onTap,
-  });
-
+/// 헤더 우측 장바구니 버튼 — 담긴 개수 배지, 탭하면 장바구니로.
+class _CartButton extends StatelessWidget {
+  const _CartButton({required this.count, required this.onTap});
   final int count;
-  final int total;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: Container(
-        height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 18),
+        width: 46,
+        height: 46,
         decoration: BoxDecoration(
-          color: AppColors.lime,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 18,
-              offset: const Offset(0, 6),
-            ),
-          ],
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
         ),
-        child: Row(
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
           children: [
-            // 개수 배지
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-              decoration: BoxDecoration(
-                color: Colors.black,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Text(
-                '$count',
-                style: textTheme.bodyMedium?.copyWith(
-                  color: AppColors.lime,
-                  fontWeight: FontWeight.w800,
+            const Icon(Symbols.shopping_cart,
+                color: AppColors.textSecondary, size: 22),
+            if (count > 0)
+              Positioned(
+                top: 5,
+                right: 5,
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minWidth: 16, minHeight: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.lime,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '$count',
+                    style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      height: 1.0,
+                    ),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              '장바구니',
-              style: textTheme.titleMedium?.copyWith(
-                color: Colors.black,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              '${_comma(total)}P',
-              style: textTheme.titleMedium?.copyWith(
-                color: Colors.black,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Symbols.chevron_right, color: Colors.black, size: 22),
           ],
         ),
       ),
@@ -251,31 +222,35 @@ class _SearchBar extends StatelessWidget {
   }
 }
 
-/// 헤더 우측 보유 마일리지 (아이콘 + 숫자만).
-class _MileagePill extends StatelessWidget {
-  const _MileagePill({required this.points});
+/// 보유 마일리지 — 가로 구분선 가운데에 금액 (혜택 페이지와 동일한 토스식).
+class _MileageDivider extends StatelessWidget {
+  const _MileageDivider({required this.points});
   final int points;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 46,
-      padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(10),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 6),
       child: Row(
         children: [
-          const Icon(Symbols.paid,
-              color: AppColors.textSecondary, size: 20, fill: 1),
-          const SizedBox(width: 6),
-          Text(
-            _comma(points),
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
+          const Expanded(child: Divider(color: AppColors.outline, height: 1)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Symbols.paid, color: AppColors.lime, size: 20),
+                const SizedBox(width: 6),
+                Text(
+                  '${_comma(points)}P',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                 ),
+              ],
+            ),
           ),
+          const Expanded(child: Divider(color: AppColors.outline, height: 1)),
         ],
       ),
     );

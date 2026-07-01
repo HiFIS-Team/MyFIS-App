@@ -30,7 +30,7 @@ class BenefitScreen extends StatelessWidget {
       body: SafeArea(
         bottom: false,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 120),
+          padding: const EdgeInsets.fromLTRB(24, 0, 24, 120),
           children: [
             // 내 마일리지
             _MileageBar(mileage: _mileage),
@@ -118,7 +118,7 @@ class _MileageBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.only(top: 10, bottom: 6),
       child: Row(
         children: [
           const Expanded(child: Divider(color: AppColors.outline, height: 1)),
