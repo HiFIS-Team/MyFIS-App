@@ -20,22 +20,17 @@ class MyPageScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
           children: [
-            // 상단: 타이틀 + 설정
-            Row(
-              children: [
-                Text(
+            // 상단: 타이틀 (가운데)
+            SizedBox(
+              height: 48,
+              child: Center(
+                child: Text(
                   'MY',
                   style: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Symbols.settings,
-                      color: AppColors.textSecondary),
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 8),
 
