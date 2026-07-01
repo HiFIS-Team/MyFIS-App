@@ -8,8 +8,8 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_colors.dart';
 
 /// 메인 스캐폴드 — 토스식 변신 하단바.
-/// 기본: 홈 · 음료 · 운동 · 마이
-/// 운동 진입 시: ←나가기 · 웨이트 · 유산소 · 랭킹 으로 변신하며,
+/// 기본: 홈 · 혜택 · 음료 · 운동 · 마이 (5슬롯)
+/// 운동 진입 시: ←나가기 · 웨이트 · 유산소 · 랭킹 으로 변신하며(5슬롯 안 가운데 배치),
 /// 덤벨(운동→웨이트)이 자리 이동하고 유산소·랭킹이 차례로 나타난다.
 class MainShell extends StatefulWidget {
   const MainShell({super.key, required this.navigationShell});
@@ -114,13 +114,17 @@ class AnimatedBranchContainer extends StatelessWidget {
   }
 }
 
-// 브랜치 인덱스
+// 브랜치 인덱스 (라우터 브랜치 순서와 동일)
 const int _home = 0;
 const int _store = 1;
 const int _weight = 2;
 const int _cardio = 3;
 const int _ranking = 4;
 const int _my = 5;
+const int _benefit = 6;
+
+// 하단바 슬롯 수 (메인: 홈·혜택·스토어·운동·마이)
+const int _slotCount = 5;
 
 bool _isWorkout(int index) =>
     index == _weight || index == _cardio || index == _ranking;
@@ -197,21 +201,25 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
     ),
   ]).animate(_pop);
 
-  /// 현재 선택 슬롯(0~3). 모드에 따라 매핑.
-  int _slotFor(int index) {
+  /// 현재 선택 슬롯. 모드에 따라 매핑.
+  /// 메인: 홈0·혜택1·스토어2·운동3·마이4
+  /// 운동: 나가기0.5·웨이트1.5·유산소2.5·랭킹3.5 (5슬롯 안 가운데)
+  double _slotFor(int index) {
     switch (index) {
       case _home:
         return 0;
+      case _benefit:
+        return 1;
       case _store:
-        return 1;
-      case _my:
-        return 3;
-      case _weight:
-        return 1;
-      case _cardio:
         return 2;
+      case _my:
+        return 4;
+      case _weight:
+        return 1.5;
+      case _cardio:
+        return 2.5;
       case _ranking:
-        return 3;
+        return 3.5;
     }
     return 0;
   }
@@ -324,7 +332,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
                       borderRadius: radius,
                       child: LayoutBuilder(
                         builder: (context, constraints) {
-                          final slot = constraints.maxWidth / 4;
+                          final slot = constraints.maxWidth / _slotCount;
                           return Stack(
                             children: [
                               // 슬라이드 + 팝 하는 선택 pill
@@ -398,7 +406,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
       rankingAppear = fade;
     }
 
-    final dumbbellSlot = lerpDouble(2, 1, move)!;
+    final dumbbellSlot = lerpDouble(3, 1.5, move)!;
     final mainIgnore = raw > 0.5;
     final workoutIgnore = raw < 0.5;
 
@@ -417,6 +425,17 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         _item(
           slot: slot,
           slotPos: 1,
+          icon: idx == _benefit
+              ? Icons.card_giftcard
+              : Icons.card_giftcard_outlined,
+          selected: idx == _benefit,
+          appear: mainAppear,
+          modeIgnore: mainIgnore,
+          onTap: () => widget.onGo(_benefit),
+        ),
+        _item(
+          slot: slot,
+          slotPos: 2,
           icon: idx == _store ? Icons.local_drink : Icons.local_drink_outlined,
           selected: idx == _store,
           appear: mainAppear,
@@ -425,7 +444,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         ),
         _item(
           slot: slot,
-          slotPos: 3,
+          slotPos: 4,
           icon: idx == _my ? Icons.person : Icons.person_outline,
           selected: idx == _my,
           appear: mainAppear,
@@ -433,10 +452,10 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
           onTap: () => widget.onGo(_my),
         ),
 
-        // --- 운동 전용 (스태거 등장) ---
+        // --- 운동 전용 (스태거 등장, 5슬롯 안 가운데) ---
         _item(
           slot: slot,
-          slotPos: 0,
+          slotPos: 0.5,
           icon: Icons.arrow_back, // ← 나가기 (직전 메인 탭으로 복귀)
           selected: false,
           appear: exitAppear,
@@ -445,7 +464,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         ),
         _item(
           slot: slot,
-          slotPos: 2,
+          slotPos: 2.5,
           icon: idx == _cardio
               ? Icons.directions_run
               : Icons.directions_run_outlined,
@@ -456,7 +475,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         ),
         _item(
           slot: slot,
-          slotPos: 3,
+          slotPos: 3.5,
           icon: idx == _ranking
               ? Icons.leaderboard
               : Icons.leaderboard_outlined,

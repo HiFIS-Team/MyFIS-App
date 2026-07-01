@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/benefit/presentation/benefit_screen.dart';
 import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/coupon/presentation/coupon_screen.dart';
@@ -34,6 +35,7 @@ final _weightNavigatorKey = GlobalKey<NavigatorState>();
 final _cardioNavigatorKey = GlobalKey<NavigatorState>();
 final _rankingNavigatorKey = GlobalKey<NavigatorState>();
 final _myNavigatorKey = GlobalKey<NavigatorState>();
+final _benefitNavigatorKey = GlobalKey<NavigatorState>();
 
 /// 오른쪽→왼쪽 슬라이드 전환 페이지 (네비게이션 진입 공통).
 /// 알림·출석 바코드 등 풀스크린 진입 화면에서 사용.
@@ -276,6 +278,16 @@ final routerProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/my',
                 builder: (context, state) => const MyPageScreen(),
+              ),
+            ],
+          ),
+          // 혜택 — 브랜치 인덱스 6 (하단바에선 홈과 스토어 사이에 표시)
+          StatefulShellBranch(
+            navigatorKey: _benefitNavigatorKey,
+            routes: [
+              GoRoute(
+                path: '/benefit',
+                builder: (context, state) => const BenefitScreen(),
               ),
             ],
           ),
