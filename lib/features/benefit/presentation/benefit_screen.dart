@@ -54,26 +54,32 @@ class BenefitScreen extends StatelessWidget {
             _MissionCard(
               children: [
                 _RewardRow(
-                  icon: Symbols.event_available,
-                  title: '출석 체크',
+                  icon: Symbols.water_drop,
+                  title: '물 마시기 인증',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '출석 체크', 10),
+                  onTap: () => _reward(context, '물 마시기', 5),
                 ),
                 _RewardRow(
-                  icon: Symbols.footprint,
-                  title: '만보기',
+                  icon: Symbols.monitor_weight,
+                  title: '체중 기록',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '걸음 리워드', 8),
+                  onTap: () => _reward(context, '체중 기록', 10),
                 ),
                 _RewardRow(
-                  icon: Symbols.quiz,
-                  title: '행운 퀴즈',
+                  icon: Symbols.self_improvement,
+                  title: '스트레칭 영상 보기',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '행운 퀴즈', 5),
+                  onTap: () => _reward(context, '스트레칭 영상', 10),
+                ),
+                _RewardRow(
+                  icon: Symbols.photo_camera,
+                  title: '인스타 스토리 공유',
+                  cta: '방문하기',
+                  onTap: () => _reward(context, '스토리 공유', 50),
                 ),
                 _RewardRow(
                   icon: Symbols.casino,
-                  title: '룰렛',
+                  title: '행운 룰렛',
                   cta: '방문하기',
                   onTap: () => _reward(context, '룰렛', 30),
                 ),
