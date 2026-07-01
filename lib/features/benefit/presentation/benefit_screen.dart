@@ -64,9 +64,9 @@ class BenefitScreen extends StatelessWidget {
                 _RewardRow(
                   icon: Symbols.water_drop,
                   color: Color(0xFF4DA3FF), // 물 - 블루
-                  title: '물 마시기 인증',
+                  title: '물 마시기',
                   cta: '방문하기',
-                  onTap: () => _visit(context, '물 마시기 인증'),
+                  onTap: () => _visit(context, '물 마시기'),
                 ),
                 _RewardRow(
                   icon: Symbols.monitor_weight,
@@ -78,9 +78,9 @@ class BenefitScreen extends StatelessWidget {
                 _RewardRow(
                   icon: Symbols.self_improvement,
                   color: Color(0xFF4FD1C5), // 스트레칭 - 민트
-                  title: '스트레칭 영상 보기',
+                  title: '스트레칭',
                   cta: '방문하기',
-                  onTap: () => _visit(context, '스트레칭 영상 보기'),
+                  onTap: () => _visit(context, '스트레칭'),
                 ),
                 _RewardRow(
                   icon: Symbols.photo_camera,
