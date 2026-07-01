@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/benefit/presentation/benefit_screen.dart';
+import '../../features/benefit/presentation/mission_detail_screen.dart';
 import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/coupon/presentation/coupon_screen.dart';
@@ -156,6 +157,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) => _slideFromRight(
           state,
           ProductDetailScreen(product: state.extra as Product),
+        ),
+      ),
+
+      // 혜택 매일 미션 상세 (현재 placeholder)
+      GoRoute(
+        path: '/benefit-mission',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => _slideFromRight(
+          state,
+          MissionDetailScreen(title: state.extra as String? ?? '미션'),
         ),
       ),
 

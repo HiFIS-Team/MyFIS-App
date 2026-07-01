@@ -14,12 +14,8 @@ class BenefitScreen extends StatelessWidget {
 
   static const int _mileage = 2400;
 
-  void _reward(BuildContext context, String label, int points) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text('$label · +${points}P 받았어요 (준비 중)')),
-      );
+  void _visit(BuildContext context, String title) {
+    context.push('/benefit-mission', extra: title);
   }
 
   @override
@@ -70,35 +66,35 @@ class BenefitScreen extends StatelessWidget {
                   color: Color(0xFF4DA3FF), // 물 - 블루
                   title: '물 마시기 인증',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '물 마시기', 5),
+                  onTap: () => _visit(context, '물 마시기 인증'),
                 ),
                 _RewardRow(
                   icon: Symbols.monitor_weight,
                   color: Color(0xFFB69CFF), // 체중 - 퍼플
                   title: '체중 기록',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '체중 기록', 10),
+                  onTap: () => _visit(context, '체중 기록'),
                 ),
                 _RewardRow(
                   icon: Symbols.self_improvement,
                   color: Color(0xFF4FD1C5), // 스트레칭 - 민트
                   title: '스트레칭 영상 보기',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '스트레칭 영상', 10),
+                  onTap: () => _visit(context, '스트레칭 영상 보기'),
                 ),
                 _RewardRow(
                   icon: Symbols.photo_camera,
                   color: Color(0xFFFF6BAE), // 인스타 - 핑크
                   title: '인스타 스토리 공유',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '스토리 공유', 50),
+                  onTap: () => _visit(context, '인스타 스토리 공유'),
                 ),
                 _RewardRow(
                   icon: Symbols.casino,
                   color: Color(0xFFFFC24B), // 룰렛 - 앰버
                   title: '행운 룰렛',
                   cta: '방문하기',
-                  onTap: () => _reward(context, '룰렛', 30),
+                  onTap: () => _visit(context, '행운 룰렛'),
                 ),
               ],
             ),
