@@ -8,6 +8,7 @@ import '../../features/coupon/presentation/coupon_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/membership/domain/branch.dart';
 import '../../features/membership/presentation/branch_detail_screen.dart';
+import '../../features/membership/presentation/branch_list_screen.dart';
 import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
@@ -118,7 +119,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             _slideFromRight(state, const MembershipScreen()),
       ),
 
-      // 지점 상세 — 멤버십 지점 목록에서 오른쪽→왼쪽 슬라이드
+      // 지점 안내(목록) — 멤버십 관리에서 오른쪽→왼쪽 슬라이드
+      GoRoute(
+        path: '/branches',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const BranchListScreen()),
+      ),
+
+      // 지점 상세 — 지점 안내 목록에서 오른쪽→왼쪽 슬라이드
       GoRoute(
         path: '/branch',
         parentNavigatorKey: _rootNavigatorKey,
