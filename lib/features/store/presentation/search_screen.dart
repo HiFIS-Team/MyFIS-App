@@ -230,12 +230,12 @@ class _ResultTile extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Symbols.paid, size: 15, color: AppColors.textSecondary),
+                      const Icon(Symbols.paid, size: 15, color: AppColors.lime),
                       const SizedBox(width: 3),
                       Text(
                         '${_comma(product.points)}P',
                         style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textPrimary,
+                          color: AppColors.lime,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
