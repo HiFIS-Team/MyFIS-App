@@ -25,13 +25,26 @@ class ProductDetailScreen extends ConsumerStatefulWidget {
 class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
   bool _liked = false;
 
+  // 스크롤 위치 → 헤더 검정 배경 불투명도(토스식). 이미지가 앱바 밑으로 지나가면 검정으로 덮임.
+  final ScrollController _scroll = ScrollController();
+  double _offset = 0;
+
   @override
   void initState() {
     super.initState();
+    _scroll.addListener(() {
+      if (_offset != _scroll.offset) setState(() => _offset = _scroll.offset);
+    });
     // 상세를 열면 최근 본 상품으로 기록
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(recentProvider.notifier).add(widget.product);
     });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
   }
 
   // 수량 선택 시트를 열고, 담기(toCart) 또는 바로 교환을 처리한다.
@@ -124,11 +137,20 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
     final product = widget.product;
     final textTheme = Theme.of(context).textTheme;
 
+    // 헤더 검정 배경 불투명도 — 스크롤 0부터 이미지가 지난 뒤 130px까지 천천히 0→1.
+    // 구간을 이미지 밖으로 연장해 아주 완만하게 차오르게 + easeInOut.
+    final media = MediaQuery.of(context);
+    final imageH = media.size.width / 1.25;
+    final appBarBottom = media.padding.top + kToolbarHeight;
+    final fadeEnd = imageH - appBarBottom + 130;
+    final rawT = (_offset / fadeEnd).clamp(0.0, 1.0);
+    final headerOpacity = Curves.easeInOut.transform(rawT);
+
     return Scaffold(
       // 이미지를 헤더(상태바)까지 끌어올리고, 그 위에 버튼이 떠 있는 형태
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.background.withValues(alpha: headerOpacity),
         elevation: 0,
         scrolledUnderElevation: 0,
         leading: IconButton(
@@ -143,6 +165,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
         ],
       ),
       body: ListView(
+        controller: _scroll,
         padding: EdgeInsets.zero,
         // 맨 위에서 아래로 당겨도 바운스로 검은 배경이 보이지 않게(오버스크롤 차단)
         physics: const ClampingScrollPhysics(),
