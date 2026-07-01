@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/stagger_in.dart';
 import '../application/cart_provider.dart';
 import '../application/product_catalog.dart';
 import 'exchange_wallet.dart';
@@ -94,6 +95,8 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                   ),
                   const SizedBox(height: 12),
                   GridView.builder(
+                    // 카테고리 바뀌면 새로 마운트되어 스태거 등장 재생
+                    key: ValueKey(_category),
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: products.length,
@@ -104,8 +107,13 @@ class _StoreScreenState extends ConsumerState<StoreScreen> {
                       crossAxisSpacing: 14,
                       childAspectRatio: 0.68,
                     ),
-                    itemBuilder: (context, i) =>
-                        ProductCard(product: products[i]),
+                    itemBuilder: (context, i) => StaggerIn(
+                      index: i,
+                      step: const Duration(milliseconds: 70),
+                      duration: const Duration(milliseconds: 420),
+                      offset: 24,
+                      child: ProductCard(product: products[i]),
+                    ),
                   ),
                     ],
                   ),
