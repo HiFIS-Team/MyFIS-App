@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/widgets/pressable.dart';
 
 /// 혜택 탭 — 토스식 마이크로 리워드(출석·걸음·퀴즈·룰렛) + 미션.
 /// 소액 마일리지를 매일 모으는 재미. (현재 더미)
@@ -35,14 +34,14 @@ class BenefitScreen extends StatelessWidget {
           children: [
             // 내 마일리지
             _MileageBar(mileage: _mileage),
-            const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             // 오늘의 루틴 히어로 카드 (토스식)
             _RoutineHeroCard(
               points: 30,
               onGo: () => context.go('/weight'),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 8),
 
             // 매일 미션 (헤더를 카드 안으로)
             _MissionCard(
@@ -95,40 +94,6 @@ class BenefitScreen extends StatelessWidget {
                   title: '행운 룰렛',
                   cta: '방문하기',
                   onTap: () => _reward(context, '룰렛', 30),
-                ),
-              ],
-            ),
-            const SizedBox(height: 26),
-
-            // 미션
-            Text(
-              '미션',
-              style:
-                  textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
-            _MissionCard(
-              children: [
-                _MissionRow(
-                  icon: Symbols.exercise,
-                  title: '이번 주 운동 3회 인증',
-                  progress: '2/3',
-                  reward: '+100P',
-                  onTap: () => _reward(context, '운동 미션', 100),
-                ),
-                _MissionRow(
-                  icon: Symbols.group_add,
-                  title: '친구 초대하기',
-                  progress: null,
-                  reward: '+1,000P',
-                  onTap: () => _reward(context, '친구 초대', 1000),
-                ),
-                _MissionRow(
-                  icon: Symbols.redeem,
-                  title: '스토어 첫 교환',
-                  progress: null,
-                  reward: '+50P',
-                  onTap: () => _reward(context, '첫 교환', 50),
                 ),
               ],
             ),
@@ -379,76 +344,6 @@ class _MissionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: children,
-      ),
-    );
-  }
-}
-
-class _MissionRow extends StatelessWidget {
-  const _MissionRow({
-    required this.icon,
-    required this.title,
-    required this.reward,
-    required this.onTap,
-    this.progress,
-  });
-
-  final IconData icon;
-  final String title;
-  final String reward;
-  final String? progress;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Pressable(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.lime.withValues(alpha: 0.14),
-              ),
-              child: Icon(icon, color: AppColors.lime, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: textTheme.bodyLarge
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  if (progress != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      progress!,
-                      style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            const SizedBox(width: 10),
-            Text(
-              reward,
-              style: textTheme.bodyMedium?.copyWith(
-                color: AppColors.lime,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
