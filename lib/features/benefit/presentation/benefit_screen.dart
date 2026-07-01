@@ -51,40 +51,35 @@ class BenefitScreen extends StatelessWidget {
                   textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
             ),
             const SizedBox(height: 12),
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.55,
+            _MissionCard(
               children: [
-                _RewardTile(
+                _RewardRow(
                   icon: Symbols.event_available,
                   title: '출석 체크',
                   reward: '+10P',
-                  cta: '받기',
+                  cta: '방문하기',
                   onTap: () => _reward(context, '출석 체크', 10),
                 ),
-                _RewardTile(
+                _RewardRow(
                   icon: Symbols.footprint,
                   title: '만보기',
                   reward: '3,240보',
-                  cta: '받기',
+                  cta: '방문하기',
                   onTap: () => _reward(context, '걸음 리워드', 8),
                 ),
-                _RewardTile(
+                _RewardRow(
                   icon: Symbols.quiz,
                   title: '행운 퀴즈',
                   reward: '+5P',
-                  cta: '풀기',
+                  cta: '방문하기',
                   onTap: () => _reward(context, '행운 퀴즈', 5),
                 ),
-                _RewardTile(
+                _RewardRow(
                   icon: Symbols.casino,
                   title: '룰렛',
                   reward: '최대 100P',
-                  cta: '돌리기',
+                  cta: '방문하기',
+                  isLast: true,
                   onTap: () => _reward(context, '룰렛', 30),
                 ),
               ],
@@ -300,14 +295,15 @@ class _RoutineHeroCardState extends State<_RoutineHeroCard>
   }
 }
 
-/// 매일 받기 타일.
-class _RewardTile extends StatelessWidget {
-  const _RewardTile({
+/// 매일 받기 한 줄 (마이페이지식 가로 행) — 아이콘 · 제목/보상 · CTA.
+class _RewardRow extends StatelessWidget {
+  const _RewardRow({
     required this.icon,
     required this.title,
     required this.reward,
     required this.cta,
     required this.onTap,
+    this.isLast = false,
   });
 
   final IconData icon;
@@ -315,50 +311,78 @@ class _RewardTile extends StatelessWidget {
   final String reward;
   final String cta;
   final VoidCallback onTap;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    return Pressable(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: AppColors.lime, size: 26),
-            const Spacer(),
-            Text(
-              title,
-              style: textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 2),
-            Row(
+    return Column(
+      children: [
+        Pressable(
+          onTap: onTap,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            child: Row(
               children: [
-                Text(
-                  reward,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.textSecondary,
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.lime.withValues(alpha: 0.14),
+                  ),
+                  child: Icon(icon, color: AppColors.lime, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: textTheme.bodyLarge
+                            ?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        reward,
+                        style: textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  cta,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: AppColors.lime,
-                    fontWeight: FontWeight.w800,
+                const SizedBox(width: 10),
+                // 라임 아웃라인 pill 버튼
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.lime, width: 1),
+                  ),
+                  child: Text(
+                    cta,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: AppColors.lime,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+        if (!isLast)
+          const Divider(
+            height: 1,
+            thickness: 1,
+            color: AppColors.outline,
+            indent: 16,
+            endIndent: 16,
+          ),
+      ],
     );
   }
 }
