@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 import '../../../shared/widgets/press_fade.dart';
 import '../../../shared/widgets/pressable.dart';
+import 'payment_history_screen.dart';
 
 /// 등록 결제 카드.
 class _PayCard {
@@ -241,16 +243,24 @@ class _PaymentCardsScreenState extends State<PaymentCardsScreen> {
           ),
           const SizedBox(height: 28),
 
-          // 결제 내역
+          // 결제 내역 (최근 2건 + 더 보기)
           _SectionCard(
             children: [
               _sectionLabel(textTheme, '결제 내역'),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(18, 6, 18, 20),
-                child: _EmptyRow(text: '아직 내역이 없어요'),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                child: Column(
+                  children: [
+                    for (final tx in kPayHistory.take(2)) PayTxRow(tx: tx),
+                  ],
+                ),
               ),
+              const SizedBox(height: 4),
               const Divider(height: 1, color: AppColors.outline),
-              _MoreRow(text: '내역 더 보기', onTap: () {}),
+              _MoreRow(
+                text: '내역 더 보기',
+                onTap: () => context.push('/payment-history'),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -368,21 +378,6 @@ class _SectionCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-    );
-  }
-}
-
-class _EmptyRow extends StatelessWidget {
-  const _EmptyRow({required this.text});
-  final String text;
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context)
-          .textTheme
-          .bodyLarge
-          ?.copyWith(color: AppColors.textSecondary),
     );
   }
 }

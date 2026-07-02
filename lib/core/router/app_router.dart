@@ -24,6 +24,7 @@ import '../../features/notification/presentation/notification_settings_screen.da
 import '../../features/profile/presentation/change_password_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/profile/presentation/payment_cards_screen.dart';
+import '../../features/profile/presentation/payment_history_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/ranking/presentation/ranking_full_screen.dart';
 import '../../features/ranking/presentation/ranking_screen.dart';
@@ -139,6 +140,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const PaymentCardsScreen()),
+      ),
+
+      // 결제 내역 — 카드 상세에서 진입
+      GoRoute(
+        path: '/payment-history',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const PaymentHistoryScreen()),
       ),
 
       // 출석 바코드 — 위에서 바코드까지 내려오는 드롭다운 시트
