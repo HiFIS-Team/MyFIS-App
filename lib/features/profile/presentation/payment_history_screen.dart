@@ -117,35 +117,35 @@ class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 보유 마일리지 (토스식 큰 표기)
+            // 마일리지 — 다른 페이지(혜택·스토어)와 동일한 가로 구분선 스타일
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 6),
+              child: Row(
                 children: [
-                  Text(
-                    '보유 마일리지',
-                    style: textTheme.bodyMedium
-                        ?.copyWith(color: AppColors.textSecondary),
-                  ),
-                  const SizedBox(height: 4),
-                  Text.rich(
-                    TextSpan(
-                      style: textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -1,
-                        color: AppColors.lime,
-                      ),
+                  const Expanded(
+                      child: Divider(color: AppColors.outline, height: 1)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        TextSpan(text: _comma(_mileage)),
-                        const TextSpan(text: 'P'),
+                        const Icon(Symbols.paid,
+                            color: AppColors.lime, size: 20),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_comma(_mileage)}P',
+                          style: textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
                       ],
                     ),
                   ),
+                  const Expanded(
+                      child: Divider(color: AppColors.outline, height: 1)),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
 
             // 검색
             Padding(
