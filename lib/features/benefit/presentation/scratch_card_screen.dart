@@ -3,7 +3,6 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -66,6 +65,13 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     duration: const Duration(milliseconds: 780),
   );
 
+  // 받기 시 위에서 내려오는 회색 캡슐 토스트.
+  bool _toastActive = false;
+  late final AnimationController _toast = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2800),
+  );
+
   // 포일이 스르륵 사라지는 페이드 + 당첨 숫자 통통 팝.
   late final AnimationController _fade = AnimationController(
     vsync: this,
@@ -108,6 +114,12 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
         setState(() => _phase = _CardPhase.scratch);
       }
     });
+    _toast.addStatusListener((s) {
+      if (s == AnimationStatus.completed) {
+        _toast.reset();
+        if (mounted) setState(() => _toastActive = false);
+      }
+    });
   }
 
   @override
@@ -117,6 +129,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     _fade.dispose();
     _pop.dispose();
     _confetti.dispose();
+    _toast.dispose();
     super.dispose();
   }
 
@@ -184,9 +197,12 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
 
   void _claim() {
     if (_claimed) return;
-    setState(() => _claimed = true);
+    setState(() {
+      _claimed = true;
+      _toastActive = true;
+    });
     HapticFeedback.lightImpact();
-    context.pop();
+    _toast.forward(from: 0);
   }
 
   @override
@@ -239,11 +255,13 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
                 child: FilledButton(
                   onPressed: _phase == _CardPhase.intro
                       ? _startFlip
-                      : (_revealed ? _claim : null),
+                      : (_revealed && !_claimed ? _claim : null),
                   child: Text(
                     _phase == _CardPhase.intro
                         ? '카드 열기'
-                        : (_revealed ? '$_prize 마일리지 받기' : '카드를 긁어주세요'),
+                        : (_revealed
+                            ? (_claimed ? '적립 완료' : '$_prize 마일리지 받기')
+                            : '카드를 긁어주세요'),
                   ),
                 ),
               ),
@@ -266,6 +284,36 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
               ),
             ),
           ),
+
+          // 받기 토스트 — 위에서 내려오는 회색 캡슐
+          if (_toastActive)
+            Positioned(
+              top: 10,
+              left: 0,
+              right: 0,
+              child: IgnorePointer(
+                child: AnimatedBuilder(
+                  animation: _toast,
+                  builder: (context, child) {
+                    final p = _toast.value;
+                    final appear =
+                        Curves.easeOut.transform((p / 0.12).clamp(0.0, 1.0));
+                    final disappear = Curves.easeIn
+                        .transform(((p - 0.86) / 0.14).clamp(0.0, 1.0));
+                    final op = (appear * (1 - disappear)).clamp(0.0, 1.0);
+                    final dy = -60 * (1 - appear) - 50 * disappear;
+                    return Opacity(
+                      opacity: op,
+                      child: Transform.translate(
+                        offset: Offset(0, dy),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Center(child: _RewardCapsule(points: _prize)),
+                ),
+              ),
+            ),
         ],
       ),
     );
@@ -397,6 +445,53 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 받기 완료 토스트 캡슐 — 회색 캡슐 + 라임 체크 + "N 마일리지 받았어요!".
+class _RewardCapsule extends StatelessWidget {
+  const _RewardCapsule({required this.points});
+  final int points;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceAlt,
+        borderRadius: BorderRadius.circular(99),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 22,
+            height: 22,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.lime,
+            ),
+            child: const Icon(Icons.check_rounded,
+                size: 15, color: Colors.black, weight: 800),
+          ),
+          const SizedBox(width: 9),
+          Text(
+            '$points 마일리지 받았어요!',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.w700,
+                ),
           ),
         ],
       ),
