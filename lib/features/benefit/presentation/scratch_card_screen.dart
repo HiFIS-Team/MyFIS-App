@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,6 +8,10 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+
+/// 카드 진행 단계.
+/// intro: 세로 카드가 3D로 회전 → flipping: 눌러서 가로로 눕는 전환 → scratch: 긁기.
+enum _CardPhase { intro, flipping, scratch }
 
 /// 카드 긁기 — 복권식 스크래치 카드.
 /// 은박(포일)을 손가락으로 긁으면 랜덤 마일리지가 드러난다. (현재 더미)
@@ -48,6 +53,19 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
   bool _revealed = false;
   bool _claimed = false;
 
+  // 인트로: 세로 카드가 계속 도는 상태 → 누르면 가로 스크래치 카드로 눕는다.
+  _CardPhase _phase = _CardPhase.intro;
+  double _spinAtTap = 0; // 눌린 순간의 회전각(이어서 정면으로 마무리)
+
+  late final AnimationController _idle = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 3400),
+  )..repeat();
+  late final AnimationController _flip = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 780),
+  );
+
   // 포일이 스르륵 사라지는 페이드 + 당첨 숫자 통통 팝.
   late final AnimationController _fade = AnimationController(
     vsync: this,
@@ -83,11 +101,33 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
   }
 
   @override
+  void initState() {
+    super.initState();
+    _flip.addStatusListener((s) {
+      if (s == AnimationStatus.completed) {
+        setState(() => _phase = _CardPhase.scratch);
+      }
+    });
+  }
+
+  @override
   void dispose() {
+    _idle.dispose();
+    _flip.dispose();
     _fade.dispose();
     _pop.dispose();
     _confetti.dispose();
     super.dispose();
+  }
+
+  // 카드를 눌러 세로→가로로 눕히는 전환 시작.
+  void _startFlip() {
+    if (_phase != _CardPhase.intro) return;
+    HapticFeedback.selectionClick();
+    _spinAtTap = (_idle.value * 2 * math.pi) % (2 * math.pi);
+    _idle.stop();
+    setState(() => _phase = _CardPhase.flipping);
+    _flip.forward(from: 0);
   }
 
   void _addPoint(Offset local) {
@@ -165,16 +205,14 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
             children: [
               const SizedBox(height: 12),
               Text(
-                _revealed ? '축하해요!' : '오늘의 행운 카드',
+                _title,
                 style: textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
-                _revealed
-                    ? '$_prize 마일리지에 당첨됐어요'
-                    : '손가락으로 카드를 긁어\n마일리지를 확인하세요',
+                _subtitle,
                 textAlign: TextAlign.center,
                 style: textTheme.bodyMedium?.copyWith(
                   color: AppColors.textSecondary,
@@ -182,17 +220,13 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
                 ),
               ),
 
-              // 카드 (남는 공간 가운데)
+              // 카드 (남는 공간 가운데) — 인트로엔 세로로 회전, 누르면 가로로 눕는다.
               Expanded(
                 child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 1.6,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        _cardSize =
-                            Size(constraints.maxWidth, constraints.maxHeight);
-                        return _buildCard();
-                      },
+                  child: LayoutBuilder(
+                    builder: (context, constraints) => _buildCardArea(
+                      constraints.maxWidth,
+                      constraints.maxHeight,
                     ),
                   ),
                 ),
@@ -203,8 +237,14 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
                 width: double.infinity,
                 height: 54,
                 child: FilledButton(
-                  onPressed: _revealed ? _claim : null,
-                  child: Text(_revealed ? '$_prize 마일리지 받기' : '카드를 긁어주세요'),
+                  onPressed: _phase == _CardPhase.intro
+                      ? _startFlip
+                      : (_revealed ? _claim : null),
+                  child: Text(
+                    _phase == _CardPhase.intro
+                        ? '카드 열기'
+                        : (_revealed ? '$_prize 마일리지 받기' : '카드를 긁어주세요'),
+                  ),
                 ),
               ),
             ],
@@ -228,6 +268,105 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
           ),
         ],
       ),
+    );
+  }
+
+  String get _title {
+    if (_revealed) return '축하해요!';
+    if (_phase == _CardPhase.scratch) return '오늘의 행운 카드';
+    return '행운 카드가 도착했어요';
+  }
+
+  String get _subtitle {
+    if (_revealed) return '$_prize 마일리지에 당첨됐어요';
+    if (_phase == _CardPhase.scratch) return '손가락으로 카드를 긁어\n마일리지를 확인하세요';
+    return '카드를 눌러 열어보세요';
+  }
+
+  /// 카드 영역 — 세로 회전(intro) → 가로로 눕기(flip) → 스크래치(scratch).
+  Widget _buildCardArea(double maxW, double maxH) {
+    // 가로(스크래치) 카드 목표 크기 (비율 1.6)
+    var lw = maxW;
+    var lh = lw / 1.6;
+    if (lh > maxH) {
+      lh = maxH;
+      lw = lh * 1.6;
+    }
+    // 세로(인트로) 카드 크기 (카드 비율 0.64)
+    var ph = math.min(maxH, lw * 1.02);
+    var pw = ph * 0.64;
+    if (pw > maxW) {
+      pw = maxW;
+      ph = pw / 0.64;
+    }
+    // 스크래치 그리드는 가로 카드 크기 기준
+    _cardSize = Size(lw, lh);
+
+    return GestureDetector(
+      behavior: _phase == _CardPhase.intro
+          ? HitTestBehavior.opaque
+          : HitTestBehavior.deferToChild,
+      onTap: _phase == _CardPhase.intro ? _startFlip : null,
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_idle, _flip]),
+        builder: (context, _) {
+          final isIntro = _phase == _CardPhase.intro;
+          final f = isIntro ? 0.0 : Curves.easeInOut.transform(_flip.value);
+
+          final w = lerpDouble(pw, lw, f)!;
+          final h = lerpDouble(ph, lh, f)!;
+
+          // 회전: 인트로는 계속 회전, flip 시 정면(2π≒정면)으로 이어서 감속.
+          final spin = isIntro
+              ? _idle.value * 2 * math.pi
+              : lerpDouble(_spinAtTap, 2 * math.pi,
+                  Curves.easeOutCubic.transform(_flip.value))!;
+          final tilt = lerpDouble(-0.10, 0.0, f)!; // 살짝 기울임 → 수평
+          final floatY = (1 - f) * math.sin(_idle.value * 2 * math.pi) * 6;
+
+          final m = Matrix4.identity()
+            ..setEntry(3, 2, 0.0012) // 원근
+            ..rotateZ(tilt)
+            ..rotateY(spin);
+
+          return Transform.translate(
+            offset: Offset(0, floatY),
+            child: Transform(
+              alignment: Alignment.center,
+              transform: m,
+              child: SizedBox(width: w, height: h, child: _cardStack(f)),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  /// 카드 앞면(세로 백) ↔ 스크래치 카드 크로스페이드.
+  Widget _cardStack(double f) {
+    final backOp = _phase == _CardPhase.scratch
+        ? 0.0
+        : 1 - Curves.easeIn.transform(((f - 0.25) / 0.5).clamp(0.0, 1.0));
+    final foilOp = _phase == _CardPhase.intro
+        ? 0.0
+        : Curves.easeIn.transform(((f - 0.45) / 0.55).clamp(0.0, 1.0));
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        if (backOp > 0)
+          Opacity(
+            opacity: backOp,
+            child: const IgnorePointer(child: _CardBack()),
+          ),
+        Opacity(
+          opacity: foilOp,
+          child: IgnorePointer(
+            ignoring: _phase != _CardPhase.scratch,
+            child: _buildCard(),
+          ),
+        ),
+      ],
     );
   }
 
@@ -258,6 +397,55 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 인트로 세로 카드 앞면(백) — 회전 중 좌우 대칭이라 뒤집혀도 자연스럽다.
+class _CardBack extends StatelessWidget {
+  const _CardBack();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF20240F), Color(0xFF3C471C), Color(0xFF20240F)],
+        ),
+        border: Border.all(
+          color: AppColors.lime.withValues(alpha: 0.55),
+          width: 1.5,
+        ),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 은은한 라임 글로우
+          const DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.all(Radius.circular(20)),
+              gradient: RadialGradient(
+                radius: 0.75,
+                colors: [Color(0x33D7FC51), Color(0x00D7FC51)],
+              ),
+            ),
+          ),
+          // 가운데 코인 (대칭)
+          Container(
+            width: 88,
+            height: 88,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.lime.withValues(alpha: 0.12),
+            ),
+            child: const Icon(Symbols.paid,
+                color: AppColors.lime, size: 52, fill: 1),
           ),
         ],
       ),
