@@ -319,10 +319,11 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
                     child: ClipRRect(
                       borderRadius: radius,
                       child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                         child: DecoratedBox(
                           decoration: BoxDecoration(
-                            color: AppColors.surfaceAlt.withValues(alpha: 0.45),
+                            // 정상 크기에서도 프로스트 유리처럼 — 뒤/밑이 흐릿하게 비침
+                            color: AppColors.surfaceAlt.withValues(alpha: 0.08),
                             border: Border.all(
                               color: Colors.white.withValues(alpha: 0.08),
                             ),
@@ -354,8 +355,9 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
                                   scale: _popScale,
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
-                                      color: AppColors.lime
-                                          .withValues(alpha: 0.18),
+                                      // 그레이 pill (아이콘만 라임)
+                                      color: Colors.white
+                                          .withValues(alpha: 0.14),
                                       borderRadius: BorderRadius.circular(99),
                                     ),
                                   ),
