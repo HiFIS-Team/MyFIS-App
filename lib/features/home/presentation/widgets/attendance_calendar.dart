@@ -200,21 +200,16 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // 오늘 출석: 라임 링 + 은은한 글로우 배지
+              // 오늘 출석: 하드한 테두리 없이 은은한 라임 글로우(halo)로 강조
               if (isToday)
                 Container(
-                  width: 42,
-                  height: 42,
-                  decoration: BoxDecoration(
+                  width: 46,
+                  height: 46,
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppColors.lime.withValues(alpha: 0.14),
-                    border: Border.all(color: AppColors.lime, width: 1.6),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppColors.lime.withValues(alpha: 0.35),
-                        blurRadius: 10,
-                      ),
-                    ],
+                    gradient: RadialGradient(
+                      colors: [Color(0x66D7FC51), Color(0x00D7FC51)],
+                    ),
                   ),
                 ),
               Text(
@@ -222,7 +217,7 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
                 style: TextStyle(
                   color: isToday ? AppColors.lime : AppColors.textPrimary,
                   fontWeight: isToday ? FontWeight.w800 : FontWeight.w700,
-                  fontSize: 14,
+                  fontSize: isToday ? 15 : 14,
                 ),
               ),
               const Positioned(
