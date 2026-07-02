@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 
 /// 프로필 상세 화면.
@@ -75,7 +76,7 @@ class ProfileScreen extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: FilledButton(
+        child: PressableButton(
           onPressed: () {},
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(54),

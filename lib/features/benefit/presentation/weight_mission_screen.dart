@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 import '../../../shared/widgets/reward_capsule.dart';
 
@@ -167,7 +168,7 @@ class _WeightMissionScreenState extends State<WeightMissionScreen>
                   SizedBox(
                     width: double.infinity,
                     height: 54,
-                    child: FilledButton(
+                    child: PressableButton(
                       onPressed: _recordedToday ? null : _openInput,
                       child: Text(
                         _recordedToday ? '오늘 기록 완료' : '오늘 체중 기록하기',
@@ -388,7 +389,7 @@ class _WeightInputSheetState extends State<_WeightInputSheet> {
           SizedBox(
             width: double.infinity,
             height: 54,
-            child: FilledButton(
+            child: PressableButton(
               onPressed: () => Navigator.of(context)
                   .pop(double.parse(_value.toStringAsFixed(1))),
               child: const Text('기록하고 +5P'),

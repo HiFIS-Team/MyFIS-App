@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 
 /// 교환 완료 화면 (토스 이체/결제 완료 스타일).
 /// 장바구니에서 교환하면 풀스크린으로 페이드 진입한다.
@@ -160,7 +161,7 @@ class _ExchangeCompleteScreenState extends State<ExchangeCompleteScreen>
             // 확인 버튼
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-              child: FilledButton(
+              child: PressableButton(
                 // 확인 → 상세·완료 화면 모두 닫고 스토어로 이동
                 onPressed: () => context.go('/store'),
                 style: FilledButton.styleFrom(

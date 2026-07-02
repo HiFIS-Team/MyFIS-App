@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 import '../../coupon/domain/coupon.dart';
 import '../../coupon/presentation/coupon_select_screen.dart';
@@ -141,7 +142,7 @@ class CartScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: FilledButton(
+        child: PressableButton(
           onPressed: () => _checkout(context, ref),
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(54),
@@ -298,7 +299,7 @@ class _CartCheckoutSheetState extends State<_CartCheckoutSheet> {
               ],
             ),
             const SizedBox(height: 20),
-            FilledButton(
+            PressableButton(
               onPressed: () =>
                   Navigator.of(context).pop((coupon: _coupon, total: total)),
               style: FilledButton.styleFrom(

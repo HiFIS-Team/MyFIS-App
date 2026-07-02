@@ -26,6 +26,47 @@ class Pressable extends StatefulWidget {
   State<Pressable> createState() => _PressableState();
 }
 
+/// 앱 공통 CTA 버튼 — 테마의 FilledButton 스타일 그대로에 "눌리면 작아졌다 커지는"
+/// 스케일 피드백을 더한다. onPressed·style·child는 FilledButton과 동일하게 사용.
+/// 비활성(onPressed=null)일 땐 스케일 없이 기본 비활성 버튼으로 표시.
+class PressableButton extends StatelessWidget {
+  const PressableButton({
+    super.key,
+    required this.onPressed,
+    required this.child,
+    this.style,
+    this.scale = 0.96,
+  });
+
+  final VoidCallback? onPressed;
+  final Widget child;
+  final ButtonStyle? style;
+  final double scale;
+
+  static void _noop() {}
+
+  @override
+  Widget build(BuildContext context) {
+    // 실제 탭은 Pressable이 처리하고, 내부 버튼은 스타일만 담당(포인터 무시).
+    final button = IgnorePointer(
+      child: FilledButton(
+        onPressed: onPressed == null ? null : _noop,
+        style: style,
+        child: child,
+      ),
+    );
+    if (onPressed == null) return button;
+    // 마이페이지처럼 눌리면 살짝 어두워지며(스크림) 작아진다.
+    return Pressable(
+      onTap: onPressed,
+      scale: scale,
+      dim: 0.5,
+      borderRadius: BorderRadius.circular(12),
+      child: button,
+    );
+  }
+}
+
 class _PressableState extends State<Pressable> {
   bool _pressed = false;
   DateTime? _downAt;

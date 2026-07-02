@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 import '../../../shared/widgets/lime_confetti.dart';
 import '../../../shared/widgets/reward_capsule.dart';
@@ -204,7 +205,7 @@ class _WaterMissionScreenState extends State<WaterMissionScreen>
                         : (_cooling
                             ? '$remain초 후 다시 마시기'
                             : '+ 한 컵  ${_cup}ml');
-                    return FilledButton(
+                    return PressableButton(
                       onPressed: (_done || _cooling) ? null : _addCup,
                       child: Text(label),
                     );

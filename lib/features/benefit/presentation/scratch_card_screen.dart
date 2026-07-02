@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 import '../../../shared/widgets/lime_confetti.dart';
 import '../../../shared/widgets/reward_capsule.dart';
@@ -230,7 +231,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
               SizedBox(
                 width: double.infinity,
                 height: 54,
-                child: FilledButton(
+                child: PressableButton(
                   onPressed: _phase == _CardPhase.intro
                       ? _startFlip
                       : (_revealed && !_claimed ? _claim : null),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/app_top_bar.dart';
 import '../application/coupon_catalog.dart';
 import '../domain/coupon.dart';
@@ -57,7 +58,7 @@ class _CouponSelectScreenState extends State<CouponSelectScreen> {
       ),
       bottomNavigationBar: SafeArea(
         minimum: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: FilledButton(
+        child: PressableButton(
           onPressed: () => Navigator.of(context).pop(_CouponResult(_selected)),
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(54),

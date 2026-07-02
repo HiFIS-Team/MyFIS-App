@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../domain/branch.dart';
 
 /// 지점 상세 — 사진 + 지점 소개 + 편의시설, 하단에 멤버십 구매하기.
@@ -175,7 +176,7 @@ class BranchDetailScreen extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(24, 8, 24, 12),
                   child: SizedBox(
                     height: 54,
-                    child: FilledButton(
+                    child: PressableButton(
                       onPressed: () => _purchase(context),
                       child: const Text('멤버십 구매하기'),
                     ),

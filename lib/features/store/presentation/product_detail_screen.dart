@@ -319,7 +319,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             const SizedBox(width: 12),
             // 장바구니 담기 (보조 — 중립 아웃라인)
             Expanded(
-              child: FilledButton(
+              child: PressableButton(
                 onPressed: () => _openSheet(toCart: true),
                 style: FilledButton.styleFrom(
                   backgroundColor: Colors.transparent,
@@ -341,7 +341,7 @@ class _ProductDetailScreenState extends ConsumerState<ProductDetailScreen> {
             const SizedBox(width: 10),
             // 바로 교환하기 (주요 — 라임 아웃라인)
             Expanded(
-              child: FilledButton(
+              child: PressableButton(
                 onPressed: () => _openSheet(toCart: false),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(54),
@@ -556,7 +556,7 @@ class _ExchangeSheetState extends State<_ExchangeSheet> {
               ],
             ),
             const SizedBox(height: 20),
-            FilledButton(
+            PressableButton(
               // 수량·할인합계·쿠폰을 반환하며 시트 닫기
               onPressed: () => Navigator.of(context)
                   .pop((qty: _qty, total: total, coupon: _coupon)),

@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/pressable.dart';
 
 /// 혜택 탭 — 토스식 마이크로 리워드(출석·걸음·퀴즈·룰렛) + 미션.
 /// 소액 마일리지를 매일 모으는 재미. (현재 더미)
@@ -253,7 +254,7 @@ class _RoutineHeroCardState extends State<_RoutineHeroCard>
                 SizedBox(
                   width: double.infinity,
                   height: 52,
-                  child: FilledButton(
+                  child: PressableButton(
                     onPressed: widget.onGo,
                     child: const Text('마일리지 받으러 가기'),
                   ),
@@ -309,7 +310,7 @@ class _RewardRow extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           // 앱 공통 버튼(FilledButton)과 동일한 프레스 효과, 크기만 컴팩트하게
-          FilledButton(
+          PressableButton(
             onPressed: onTap,
             style: FilledButton.styleFrom(
               minimumSize: Size.zero,
