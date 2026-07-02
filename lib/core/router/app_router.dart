@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/benefit/presentation/benefit_screen.dart';
 import '../../features/benefit/presentation/mission_detail_screen.dart';
 import '../../features/benefit/presentation/scratch_card_screen.dart';
+import '../../features/benefit/presentation/stretch_mission_screen.dart';
 import '../../features/benefit/presentation/water_mission_screen.dart';
 import '../../features/benefit/presentation/weight_mission_screen.dart';
 import '../../features/cardio/presentation/cardio_screen.dart';
@@ -196,6 +197,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const WeightMissionScreen()),
+      ),
+
+      // 스트레칭 미션 — 가이드 타이머 링 (혜택에서 진입)
+      GoRoute(
+        path: '/stretch-mission',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const StretchMissionScreen()),
       ),
 
       // 출석한 날 상세 (달력에서 진입, 현재 placeholder)

@@ -81,7 +81,7 @@ class BenefitScreen extends StatelessWidget {
                   color: Color(0xFF4FD1C5), // 스트레칭 - 민트
                   title: '스트레칭',
                   cta: '방문하기',
-                  onTap: () => _visit(context, '스트레칭'),
+                  onTap: () => context.push('/stretch-mission'),
                 ),
                 _RewardRow(
                   icon: Symbols.photo_camera,
