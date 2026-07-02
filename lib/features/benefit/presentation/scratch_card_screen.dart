@@ -7,6 +7,8 @@ import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+import '../../../shared/widgets/lime_confetti.dart';
+import '../../../shared/widgets/reward_capsule.dart';
 
 /// 카드 진행 단계.
 /// intro: 세로 카드가 3D로 회전 → flipping: 눌러서 가로로 눕는 전환 → scratch: 긁기.
@@ -93,14 +95,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     vsync: this,
     duration: const Duration(milliseconds: 2400),
   );
-  final List<_Confetti> _confettiPieces = [];
-
-  static const List<Color> _confettiColors = [
-    AppColors.lime,
-    AppColors.limeStrong,
-    Color(0xFFEBFFA6), // 밝은 라임
-    Color(0xFFFFFFFF), // 하이라이트 소량
-  ];
+  List<ConfettiPiece> _confettiPieces = [];
 
   int _pickPrize() {
     final total = _prizeWeights.values.reduce((a, b) => a + b);
@@ -179,29 +174,8 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     HapticFeedback.mediumImpact();
     _fade.forward();
     _pop.forward();
-    _spawnConfetti();
+    _confettiPieces = spawnLimeConfetti();
     _confetti.forward(from: 0);
-  }
-
-  void _spawnConfetti() {
-    final rnd = math.Random();
-    _confettiPieces
-      ..clear()
-      ..addAll(List.generate(46, (_) {
-        return _Confetti(
-          x0: rnd.nextDouble(),
-          delay: rnd.nextDouble() * 0.35,
-          speed: 0.85 + rnd.nextDouble() * 0.55,
-          driftAmp: 10 + rnd.nextDouble() * 28,
-          driftFreq: 1 + rnd.nextDouble() * 2,
-          driftPhase: rnd.nextDouble() * math.pi * 2,
-          size: 6 + rnd.nextDouble() * 7,
-          rot0: rnd.nextDouble() * math.pi * 2,
-          rotSpeed: (rnd.nextDouble() * 2 - 1) * 6,
-          color: _confettiColors[rnd.nextInt(_confettiColors.length)],
-          round: rnd.nextDouble() < 0.35,
-        );
-      }));
   }
 
   void _claim() {
@@ -280,7 +254,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
               child: AnimatedBuilder(
                 animation: _confetti,
                 builder: (context, _) => CustomPaint(
-                  painter: _ConfettiPainter(
+                  painter: ConfettiPainter(
                     pieces: _confettiPieces,
                     t: _confetti.value,
                   ),
@@ -295,26 +269,14 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
               top: 10,
               left: 0,
               right: 0,
-              child: IgnorePointer(
-                child: AnimatedBuilder(
-                  animation: _toast,
-                  builder: (context, child) {
-                    final p = _toast.value;
-                    final appear =
-                        Curves.easeOut.transform((p / 0.12).clamp(0.0, 1.0));
-                    final disappear = Curves.easeIn
-                        .transform(((p - 0.86) / 0.14).clamp(0.0, 1.0));
-                    final op = (appear * (1 - disappear)).clamp(0.0, 1.0);
-                    final dy = -60 * (1 - appear) - 50 * disappear;
-                    return Opacity(
-                      opacity: op,
-                      child: Transform.translate(
-                        offset: Offset(0, dy),
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: Center(child: _RewardCapsule(points: _prize)),
+              child: AnimatedBuilder(
+                animation: _toast,
+                builder: (context, child) => TopToast(
+                  progress: _toast.value,
+                  child: child!,
+                ),
+                child: Center(
+                  child: RewardCapsule(text: '$_prize 마일리지 받았어요!'),
                 ),
               ),
             ),
@@ -478,53 +440,6 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 받기 완료 토스트 캡슐 — 회색 캡슐 + 라임 체크 + "N 마일리지 받았어요!".
-class _RewardCapsule extends StatelessWidget {
-  const _RewardCapsule({required this.points});
-  final int points;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceAlt,
-        borderRadius: BorderRadius.circular(99),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 22,
-            height: 22,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppColors.lime,
-            ),
-            child: const Icon(Icons.check_rounded,
-                size: 15, color: Colors.black, weight: 800),
-          ),
-          const SizedBox(width: 9),
-          Text(
-            '$points 마일리지 받았어요!',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
           ),
         ],
       ),
@@ -738,82 +653,4 @@ class _FoilPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_FoilPainter oldDelegate) => true;
-}
-
-/// 폭죽 조각 하나 (하늘에서 떨어지는 라임 종이).
-class _Confetti {
-  const _Confetti({
-    required this.x0,
-    required this.delay,
-    required this.speed,
-    required this.driftAmp,
-    required this.driftFreq,
-    required this.driftPhase,
-    required this.size,
-    required this.rot0,
-    required this.rotSpeed,
-    required this.color,
-    required this.round,
-  });
-
-  final double x0; // 시작 가로 위치 (0..1)
-  final double delay; // 낙하 시작 지연 (0..1)
-  final double speed; // 낙하 속도 배수
-  final double driftAmp; // 좌우 흔들림 폭(px)
-  final double driftFreq; // 좌우 흔들림 빈도
-  final double driftPhase;
-  final double size;
-  final double rot0;
-  final double rotSpeed;
-  final Color color;
-  final bool round; // true=원, false=직사각 조각
-}
-
-/// 하늘에서 떨어지는 라임 폭죽 페인터.
-class _ConfettiPainter extends CustomPainter {
-  _ConfettiPainter({required this.pieces, required this.t});
-  final List<_Confetti> pieces;
-  final double t;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (t <= 0) return;
-    for (final p in pieces) {
-      final ct = ((t - p.delay) / (1 - p.delay));
-      if (ct <= 0) continue;
-      final c = ct.clamp(0.0, 1.0);
-
-      final y = -40 + c * p.speed * (size.height + 80);
-      if (y > size.height + 40) continue;
-      final x = p.x0 * size.width +
-          math.sin(c * p.driftFreq * 2 * math.pi + p.driftPhase) * p.driftAmp;
-
-      // 등장 시 페이드인, 후반부 페이드아웃
-      final op = c < 0.08
-          ? c / 0.08
-          : (c > 0.85 ? (1 - (c - 0.85) / 0.15) : 1.0);
-      final paint = Paint()..color = p.color.withValues(alpha: op.clamp(0.0, 1.0));
-
-      canvas.save();
-      canvas.translate(x, y);
-      canvas.rotate(p.rot0 + c * p.rotSpeed);
-      if (p.round) {
-        canvas.drawCircle(Offset.zero, p.size / 2, paint);
-      } else {
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromCenter(
-                center: Offset.zero, width: p.size, height: p.size * 0.5),
-            const Radius.circular(2),
-          ),
-          paint,
-        );
-      }
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(_ConfettiPainter oldDelegate) =>
-      oldDelegate.t != t || oldDelegate.pieces != pieces;
 }
