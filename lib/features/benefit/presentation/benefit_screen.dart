@@ -90,11 +90,11 @@ class BenefitScreen extends StatelessWidget {
                   onTap: () => _visit(context, '인스타 스토리 공유'),
                 ),
                 _RewardRow(
-                  icon: Symbols.casino,
-                  color: Color(0xFFFFC24B), // 룰렛 - 앰버
-                  title: '행운 룰렛',
+                  icon: Symbols.style,
+                  color: Color(0xFFFFC24B), // 카드 긁기 - 앰버
+                  title: '카드 긁기',
                   cta: '방문하기',
-                  onTap: () => _visit(context, '행운 룰렛'),
+                  onTap: () => _visit(context, '카드 긁기'),
                 ),
               ],
             ),
