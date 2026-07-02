@@ -54,7 +54,10 @@ class MyPageScreen extends StatelessWidget {
             _SectionLabel('내 활동'),
             const SizedBox(height: 10),
             _MenuCard(rows: [
-              const _MenuRow(label: '출석 내역'),
+              _MenuRow(
+                label: '출석 내역',
+                onTap: () => context.push('/attendance-history'),
+              ),
               _MenuRow(
                 label: '교환 내역',
                 onTap: () => context.push('/exchange-history'),
