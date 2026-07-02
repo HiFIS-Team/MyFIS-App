@@ -73,7 +73,7 @@ class BenefitScreen extends StatelessWidget {
                   color: Color(0xFFB69CFF), // 체중 - 퍼플
                   title: '체중 기록',
                   cta: '방문하기',
-                  onTap: () => _visit(context, '체중 기록'),
+                  onTap: () => context.push('/weight-mission'),
                 ),
                 _RewardRow(
                   icon: Symbols.self_improvement,
