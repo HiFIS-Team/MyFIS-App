@@ -30,13 +30,18 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     500: 2,
   };
 
-  // 긁힘 감지용 그리드 해상도 + 완전공개 임계치.
+  // 긁힘 감지용 그리드 해상도.
   static const int _cols = 24;
   static const int _rows = 15;
-  static const double _revealThreshold = 0.45;
+
+  // 가운데 당첨(마일리지) 영역 — 이 부분이 드러나면 나머지와 상관없이 자동 공개.
+  static const int _rcLo = 6, _rcHi = 18; // 열 6~17
+  static const int _rrLo = 5, _rrHi = 12; // 행 5~11
+  static const int _prizeCells = (_rcHi - _rcLo) * (_rrHi - _rrLo);
+  static const double _revealThreshold = 0.5; // 당첨 영역의 절반이 긁히면 공개
 
   late final int _prize = _pickPrize();
-  final Set<int> _scratched = {};
+  final Set<int> _prizeHit = {};
   final List<Offset?> _strokes = [];
   Size _cardSize = Size.zero;
   int _hapticTick = 0;
@@ -78,12 +83,17 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
         (local.dx / _cardSize.width * _cols).floor().clamp(0, _cols - 1);
     final row =
         (local.dy / _cardSize.height * _rows).floor().clamp(0, _rows - 1);
-    _scratched.add(row * _cols + col);
 
     // 긁는 느낌의 가벼운 햅틱 (너무 잦지 않게 스로틀).
     if (_hapticTick++ % 6 == 0) HapticFeedback.selectionClick();
 
-    if (_scratched.length / (_cols * _rows) >= _revealThreshold) _reveal();
+    // 가운데 마일리지 영역이 충분히 드러나면 나머지와 상관없이 공개.
+    final inPrize =
+        col >= _rcLo && col < _rcHi && row >= _rrLo && row < _rrHi;
+    if (inPrize) {
+      _prizeHit.add(row * _cols + col);
+      if (_prizeHit.length / _prizeCells >= _revealThreshold) _reveal();
+    }
   }
 
   void _reveal() {

@@ -93,7 +93,7 @@ class BenefitScreen extends StatelessWidget {
                   icon: Symbols.style,
                   color: Color(0xFFFFC24B), // 카드 긁기 - 앰버
                   title: '카드 긁기',
-                  cta: '긁기',
+                  cta: '방문하기',
                   onTap: () => context.push('/scratch-card'),
                 ),
               ],
