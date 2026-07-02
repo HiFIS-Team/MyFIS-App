@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/foundation.dart' show ValueListenable;
@@ -187,6 +188,14 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
     value: _isWorkout(widget.currentIndex) ? 1 : 0,
   );
 
+  // 탭 전환 시 캡슐 전체가 살짝 커지며 방향성 있게 흔들리는 효과
+  // (오른쪽 이동이면 왼쪽으로 살짝 갔다가 오른쪽으로 따라감)
+  late final AnimationController _wobble = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 460),
+  );
+  double _wobbleDir = 1; // +1: 오른쪽 이동, -1: 왼쪽 이동
+
   // 선택 pill 팝(커졌다 복귀)
   late final AnimationController _pop = AnimationController(
     vsync: this,
@@ -245,8 +254,12 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
       _entering = nowWorkout;
       nowWorkout ? _mode.forward() : _mode.reverse();
     }
-    if (_slotFor(oldWidget.currentIndex) != _slotFor(widget.currentIndex)) {
+    final oldSlot = _slotFor(oldWidget.currentIndex);
+    final newSlot = _slotFor(widget.currentIndex);
+    if (oldSlot != newSlot) {
+      _wobbleDir = newSlot > oldSlot ? 1.0 : -1.0;
       _pop.forward(from: 0);
+      _wobble.forward(from: 0);
     }
   }
 
@@ -256,6 +269,7 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
     _collapse.dispose();
     _mode.dispose();
     _pop.dispose();
+    _wobble.dispose();
     super.dispose();
   }
 
@@ -290,13 +304,24 @@ class _AnimatedNavBarState extends State<_AnimatedNavBar>
         // 바 전체를 repaint 경계로 격리 (본문과 서로 영향 X)
         child: RepaintBoundary(
           child: AnimatedBuilder(
-            animation: _collapse,
+            animation: Listenable.merge([_collapse, _wobble]),
             builder: (context, child) {
               final c = Curves.easeOut.transform(_collapse.value);
-              return Transform.scale(
-                alignment: Alignment.bottomCenter,
-                scale: lerpDouble(1.0, 0.82, c)!,
-                child: Opacity(opacity: lerpDouble(1.0, 0.9, c)!, child: child),
+              // 탭 전환 흔들림 — 살짝 커지며(bump) 방향 반대로 튕겼다 따라감(dx)
+              final w = _wobble.value;
+              final active = w > 0 && w < 1;
+              final bump = active ? math.sin(w * math.pi) * 0.03 : 0.0;
+              final dx = active
+                  ? _wobbleDir * -math.sin(w * 2 * math.pi) * (1 - w) * 4
+                  : 0.0;
+              return Transform.translate(
+                offset: Offset(dx, 0),
+                child: Transform.scale(
+                  alignment: Alignment.bottomCenter,
+                  scale: lerpDouble(1.0, 0.82, c)! * (1 + bump),
+                  child:
+                      Opacity(opacity: lerpDouble(1.0, 0.9, c)!, child: child),
+                ),
               );
             },
             child: DecoratedBox(
