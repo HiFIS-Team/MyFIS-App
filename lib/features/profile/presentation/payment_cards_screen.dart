@@ -131,25 +131,14 @@ class _PaymentCardsScreenState extends State<PaymentCardsScreen> {
 
     return Scaffold(
       appBar: AppTopBar(
-        title: '',
+        title: '카드 관리',
         actions: [
           if (card != null)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: PressFade(
-                onTap: _openManage,
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      '관리',
-                      style: textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            PressableIcon(
+              icon: Icons.tune_rounded,
+              size: 22,
+              color: AppColors.textSecondary,
+              onTap: _openManage,
             ),
         ],
       ),

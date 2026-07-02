@@ -64,7 +64,10 @@ class MyPageScreen extends StatelessWidget {
             _SectionLabel('결제'),
             const SizedBox(height: 10),
             _MenuCard(rows: [
-              const _MenuRow(label: '결제 내역'),
+              _MenuRow(
+                label: '결제 내역',
+                onTap: () => context.push('/payment-history'),
+              ),
               _MenuRow(
                 label: '결제 카드 관리',
                 onTap: () => context.push('/payment-cards'),
