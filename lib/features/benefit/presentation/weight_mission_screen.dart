@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../../core/theme/app_colors.dart';
-import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+import '../../../shared/widgets/lime_confetti.dart';
+import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/reward_capsule.dart';
 
 /// 체중 기록 미션 — 라임 추세 그래프 + 눈금자 입력. (현재 더미)
@@ -18,7 +19,7 @@ class WeightMissionScreen extends StatefulWidget {
 }
 
 class _WeightMissionScreenState extends State<WeightMissionScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const int _rewardPoints = 5;
 
   // 최근 기록(오래된→최신), 마지막이 가장 최근 체중. (더미)
@@ -31,6 +32,13 @@ class _WeightMissionScreenState extends State<WeightMissionScreen>
     vsync: this,
     duration: const Duration(milliseconds: 2800),
   );
+
+  // 기록 시 라임 폭죽.
+  late final AnimationController _confetti = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
+  List<ConfettiPiece> _confettiPieces = [];
 
   double get _current => _entries.last;
   double get _delta => _entries.last - _entries.first;
@@ -49,6 +57,7 @@ class _WeightMissionScreenState extends State<WeightMissionScreen>
   @override
   void dispose() {
     _toast.dispose();
+    _confetti.dispose();
     super.dispose();
   }
 
@@ -70,6 +79,8 @@ class _WeightMissionScreenState extends State<WeightMissionScreen>
     });
     HapticFeedback.mediumImpact();
     _toast.forward(from: 0);
+    _confettiPieces = spawnLimeConfetti();
+    _confetti.forward(from: 0);
   }
 
   @override
@@ -176,6 +187,21 @@ class _WeightMissionScreenState extends State<WeightMissionScreen>
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          // 기록 폭죽
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _confetti,
+                builder: (context, _) => CustomPaint(
+                  painter: ConfettiPainter(
+                    pieces: _confettiPieces,
+                    t: _confetti.value,
+                  ),
+                ),
               ),
             ),
           ),
