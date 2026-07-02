@@ -187,7 +187,7 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
     final isToday = day == today;
     final isFuture = _isFuture(day);
 
-    // 출석한 날 — 날짜는 가운데(다른 날과 같은 위치), 덤벨은 위 작은 표시.
+    // 출석한 날 — 라임 덤벨 + 날짜. 오늘 출석은 라임 링/글로우로 강조.
     // 탭하면 그날 운동 기록 페이지로 진입.
     if (attended) {
       return PressFade(
@@ -200,18 +200,35 @@ class _AttendanceCalendarState extends State<AttendanceCalendar> {
           child: Stack(
             alignment: Alignment.center,
             children: [
+              // 오늘 출석: 라임 링 + 은은한 글로우 배지
+              if (isToday)
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: AppColors.lime.withValues(alpha: 0.14),
+                    border: Border.all(color: AppColors.lime, width: 1.6),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.lime.withValues(alpha: 0.35),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                ),
               Text(
                 '$day',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
+                style: TextStyle(
+                  color: isToday ? AppColors.lime : AppColors.textPrimary,
+                  fontWeight: isToday ? FontWeight.w800 : FontWeight.w700,
                   fontSize: 14,
                 ),
               ),
               const Positioned(
                 top: 2,
                 child: Icon(Icons.fitness_center,
-                    color: AppColors.textSecondary, size: 13),
+                    color: AppColors.lime, size: 13),
               ),
             ],
           ),

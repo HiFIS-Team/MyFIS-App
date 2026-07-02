@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/benefit/presentation/benefit_screen.dart';
+import '../../features/benefit/presentation/instagram_mission_screen.dart';
 import '../../features/benefit/presentation/mission_detail_screen.dart';
 import '../../features/benefit/presentation/scratch_card_screen.dart';
 import '../../features/benefit/presentation/stretch_mission_screen.dart';
@@ -205,6 +206,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const StretchMissionScreen()),
+      ),
+
+      // 인스타 스토리 공유 미션 — 출석 달력 카드 공유 (혜택에서 진입)
+      GoRoute(
+        path: '/instagram-mission',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const InstagramMissionScreen()),
       ),
 
       // 출석한 날 상세 (달력에서 진입, 현재 placeholder)

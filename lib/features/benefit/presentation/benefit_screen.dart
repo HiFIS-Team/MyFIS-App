@@ -15,10 +15,6 @@ class BenefitScreen extends StatelessWidget {
 
   static const int _mileage = 2400;
 
-  void _visit(BuildContext context, String title) {
-    context.push('/benefit-mission', extra: title);
-  }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -88,7 +84,7 @@ class BenefitScreen extends StatelessWidget {
                   color: Color(0xFFFF6BAE), // 인스타 - 핑크
                   title: '인스타 스토리 공유',
                   cta: '방문하기',
-                  onTap: () => _visit(context, '인스타 스토리 공유'),
+                  onTap: () => context.push('/instagram-mission'),
                 ),
                 _RewardRow(
                   icon: Symbols.style,
