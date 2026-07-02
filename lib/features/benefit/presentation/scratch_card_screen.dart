@@ -72,6 +72,12 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     duration: const Duration(milliseconds: 2800),
   );
 
+  // 스크래치 단계에서 카드 위를 스윽 지나가는 빛 반사(반짝).
+  late final AnimationController _shine = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2800),
+  );
+
   // 포일이 스르륵 사라지는 페이드 + 당첨 숫자 통통 팝.
   late final AnimationController _fade = AnimationController(
     vsync: this,
@@ -112,6 +118,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     _flip.addStatusListener((s) {
       if (s == AnimationStatus.completed) {
         setState(() => _phase = _CardPhase.scratch);
+        _shine.repeat(); // 긁기 단계 진입 시 반짝 시작
       }
     });
     _toast.addStatusListener((s) {
@@ -130,6 +137,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     _pop.dispose();
     _confetti.dispose();
     _toast.dispose();
+    _shine.dispose();
     super.dispose();
   }
 
@@ -167,6 +175,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
   void _reveal() {
     if (_revealed) return;
     setState(() => _revealed = true);
+    _shine.stop();
     HapticFeedback.mediumImpact();
     _fade.forward();
     _pop.forward();
@@ -455,9 +464,17 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
                 onPanStart: (d) => _addPoint(d.localPosition),
                 onPanUpdate: (d) => _addPoint(d.localPosition),
                 onPanEnd: (_) => _strokes.add(null),
-                child: CustomPaint(
-                  painter: _FoilPainter(strokes: _strokes),
-                  size: Size.infinite,
+                child: AnimatedBuilder(
+                  animation: _shine,
+                  builder: (context, _) {
+                    final raw = _shine.value;
+                    // 앞 42%만 스윕, 이후엔 화면 밖에 두어 잠깐 쉼
+                    final shine = raw < 0.42 ? raw / 0.42 : 1.15;
+                    return CustomPaint(
+                      painter: _FoilPainter(strokes: _strokes, shine: shine),
+                      size: Size.infinite,
+                    );
+                  },
                 ),
               ),
             ),
@@ -611,8 +628,9 @@ class _PrizeLayer extends StatelessWidget {
 
 /// 은박 포일 페인터 — 포일을 그린 뒤 긁은 경로를 BlendMode.clear로 뚫는다.
 class _FoilPainter extends CustomPainter {
-  _FoilPainter({required this.strokes});
+  _FoilPainter({required this.strokes, required this.shine});
   final List<Offset?> strokes;
+  final double shine; // 0..1 스윕 위치 (>1이면 화면 밖 = 안 보임)
 
   static const double _brush = 46;
 
@@ -621,7 +639,7 @@ class _FoilPainter extends CustomPainter {
     final rect = Offset.zero & size;
     canvas.saveLayer(rect, Paint());
 
-    // 포일 그라데이션 (라임 틴트 그래파이트) + 대각 광택
+    // 포일 그라데이션 (라임 틴트 그래파이트)
     final foil = Paint()
       ..shader = const LinearGradient(
         begin: Alignment.topLeft,
@@ -631,21 +649,32 @@ class _FoilPainter extends CustomPainter {
       ).createShader(rect);
     canvas.drawRect(rect, foil);
 
-    final sheen = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.10),
-          Colors.white.withValues(alpha: 0.0),
-        ],
-        stops: const [0.35, 0.5, 0.65],
-      ).createShader(rect);
-    canvas.drawRect(rect, sheen);
-
     // 가운데 안내(아이콘 + 문구) — 긁으면 같이 벗겨짐
     _drawHint(canvas, size);
+
+    // 카드 위를 스윽 지나가는 빛 반사 밴드 (살짝 기울어진 세로 밴드)
+    final cx = lerpDouble(-0.3, 1.3, shine)! * size.width;
+    canvas.save();
+    canvas.clipRect(rect);
+    canvas.translate(cx, size.height / 2);
+    canvas.rotate(-0.32);
+    final bandRect = Rect.fromCenter(
+      center: Offset.zero,
+      width: size.width * 0.22,
+      height: size.height * 2.4,
+    );
+    final band = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          Colors.white.withValues(alpha: 0.0),
+          Colors.white.withValues(alpha: 0.22),
+          Colors.white.withValues(alpha: 0.0),
+        ],
+      ).createShader(bandRect);
+    canvas.drawRect(bandRect, band);
+    canvas.restore();
 
     // 긁은 경로 뚫기
     final erase = Paint()
