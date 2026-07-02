@@ -21,6 +21,7 @@ import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/meetup/presentation/meetup_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/notification/presentation/notification_settings_screen.dart';
+import '../../features/profile/presentation/change_password_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/ranking/presentation/ranking_full_screen.dart';
@@ -121,6 +122,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const NotificationSettingsScreen()),
+      ),
+
+      // 비밀번호 변경 — 마이페이지에서 진입
+      GoRoute(
+        path: '/change-password',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const ChangePasswordScreen()),
       ),
 
       // 출석 바코드 — 위에서 바코드까지 내려오는 드롭다운 시트

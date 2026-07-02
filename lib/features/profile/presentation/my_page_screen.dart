@@ -79,7 +79,10 @@ class MyPageScreen extends StatelessWidget {
                 label: '알림 설정',
                 onTap: () => context.push('/notification-settings'),
               ),
-              const _MenuRow(label: '비밀번호 변경'),
+              _MenuRow(
+                label: '비밀번호 변경',
+                onTap: () => context.push('/change-password'),
+              ),
               const _MenuRow(label: '앱 버전', trailing: '1.0.0'),
             ]),
             const SizedBox(height: 22),
