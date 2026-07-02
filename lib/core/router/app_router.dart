@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/benefit/presentation/benefit_screen.dart';
 import '../../features/benefit/presentation/mission_detail_screen.dart';
+import '../../features/benefit/presentation/scratch_card_screen.dart';
 import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/coupon/presentation/coupon_screen.dart';
@@ -169,6 +170,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           state,
           MissionDetailScreen(title: state.extra as String? ?? '미션'),
         ),
+      ),
+
+      // 카드 긁기 — 복권식 스크래치 카드 (혜택에서 진입)
+      GoRoute(
+        path: '/scratch-card',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const ScratchCardScreen()),
       ),
 
       // 출석한 날 상세 (달력에서 진입, 현재 placeholder)
