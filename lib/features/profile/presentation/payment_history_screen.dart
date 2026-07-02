@@ -73,15 +73,36 @@ final List<PayTx> kPayHistory = [
   ),
 ];
 
-/// 결제 내역 — 날짜별 그룹 거래 리스트 (토스식).
-class PaymentHistoryScreen extends StatelessWidget {
+/// 결제 내역 — 상단 보유 마일리지 + 검색 + 날짜별 그룹 거래 리스트 (토스식).
+class PaymentHistoryScreen extends StatefulWidget {
   const PaymentHistoryScreen({super.key});
 
   @override
+  State<PaymentHistoryScreen> createState() => _PaymentHistoryScreenState();
+}
+
+class _PaymentHistoryScreenState extends State<PaymentHistoryScreen> {
+  static const int _mileage = 2400;
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
+    final q = _query.trim();
+    final list =
+        q.isEmpty ? kPayHistory : kPayHistory.where((t) => t.name.contains(q)).toList();
+
     final children = <Widget>[];
     String? lastDate;
-    for (final tx in kPayHistory) {
+    for (final tx in list) {
       if (tx.date != lastDate) {
         children.add(_DateHeader(tx.date));
         lastDate = tx.date;
@@ -93,13 +114,116 @@ class PaymentHistoryScreen extends StatelessWidget {
       appBar: const AppTopBar(title: '결제 내역'),
       body: SafeArea(
         top: false,
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(18, 4, 18, 40),
-          children: children,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 보유 마일리지 (토스식 큰 표기)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 4),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '보유 마일리지',
+                    style: textTheme.bodyMedium
+                        ?.copyWith(color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 4),
+                  Text.rich(
+                    TextSpan(
+                      style: textTheme.displaySmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: -1,
+                        color: AppColors.lime,
+                      ),
+                      children: [
+                        TextSpan(text: _comma(_mileage)),
+                        const TextSpan(text: 'P'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // 검색
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                child: Row(
+                  children: [
+                    const Icon(Symbols.search,
+                        color: AppColors.textSecondary, size: 22),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextField(
+                        controller: _search,
+                        onChanged: (v) => setState(() => _query = v),
+                        cursorColor: AppColors.lime,
+                        style: textTheme.bodyLarge,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: '결제 내역 검색',
+                          hintStyle:
+                              TextStyle(color: AppColors.textSecondary),
+                          contentPadding:
+                              const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                      ),
+                    ),
+                    if (_query.isNotEmpty)
+                      GestureDetector(
+                        onTap: () => setState(() {
+                          _search.clear();
+                          _query = '';
+                        }),
+                        child: const Icon(Icons.close_rounded,
+                            color: AppColors.textSecondary, size: 20),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // 리스트
+            Expanded(
+              child: children.isEmpty
+                  ? Center(
+                      child: Text(
+                        '검색 결과가 없어요',
+                        style: textTheme.bodyMedium
+                            ?.copyWith(color: AppColors.textSecondary),
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(18, 4, 18, 40),
+                      children: children,
+                    ),
+            ),
+          ],
         ),
       ),
     );
   }
+}
+
+/// 천단위 콤마.
+String _comma(int n) {
+  final s = n.toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(',');
+    buf.write(s[i]);
+  }
+  return buf.toString();
 }
 
 class _DateHeader extends StatelessWidget {
