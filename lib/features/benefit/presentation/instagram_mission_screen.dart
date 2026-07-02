@@ -8,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/app_top_bar.dart';
+import '../../../shared/widgets/lime_confetti.dart';
 import '../../../shared/widgets/pressable.dart';
 import '../../../shared/widgets/reward_capsule.dart';
 import '../../home/presentation/widgets/attendance_calendar.dart';
@@ -21,7 +22,7 @@ class InstagramMissionScreen extends StatefulWidget {
 }
 
 class _InstagramMissionScreenState extends State<InstagramMissionScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   static const int _rewardPoints = 5;
   static const Set<int> _attended = {2, 5, 8, 12, 15, 18, 23, 25, 26, 27, 28, 29};
 
@@ -29,12 +30,19 @@ class _InstagramMissionScreenState extends State<InstagramMissionScreen>
   bool _sharing = false;
   bool _rewarded = false;
 
-  // 공유 성공 시 적립 캡슐.
+  // 공유 완료 시 적립 캡슐.
   bool _toastActive = false;
   late final AnimationController _toast = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 2800),
   );
+
+  // 공유 완료 시 라임 폭죽.
+  late final AnimationController _confetti = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 2400),
+  );
+  List<ConfettiPiece> _confettiPieces = [];
 
   @override
   void initState() {
@@ -50,7 +58,19 @@ class _InstagramMissionScreenState extends State<InstagramMissionScreen>
   @override
   void dispose() {
     _toast.dispose();
+    _confetti.dispose();
     super.dispose();
+  }
+
+  void _reward() {
+    HapticFeedback.mediumImpact();
+    setState(() {
+      _rewarded = true;
+      _toastActive = true;
+    });
+    _confettiPieces = spawnLimeConfetti();
+    _confetti.forward(from: 0);
+    _toast.forward(from: 0);
   }
 
   Future<void> _share() async {
@@ -69,20 +89,17 @@ class _InstagramMissionScreenState extends State<InstagramMissionScreen>
       final result = await SharePlus.instance.share(
         ShareParams(
           files: [XFile(path, mimeType: 'image/png')],
-          text: '이번 달 MyFIS 출석 현황 💪',
+          text: '오늘도 MyFIS 출석 완료 💪',
         ),
       );
 
-      if (result.status == ShareResultStatus.success && !_rewarded) {
-        HapticFeedback.mediumImpact();
-        setState(() {
-          _rewarded = true;
-          _toastActive = true;
-        });
-        _toast.forward(from: 0);
+      // 인스타처럼 "앱으로 열기"로 완료되는 대상은 iOS가 success 대신
+      // dismissed를 주기도 해서, 공유 시트가 실제로 실행됐으면(미지원 아님) 적립.
+      if (result.status != ShareResultStatus.unavailable && !_rewarded) {
+        _reward();
       }
     } catch (_) {
-      // 공유 취소/실패 — 조용히 무시
+      // 공유 실패 — 조용히 무시
     } finally {
       if (mounted) setState(() => _sharing = false);
     }
@@ -135,11 +152,30 @@ class _InstagramMissionScreenState extends State<InstagramMissionScreen>
                     width: double.infinity,
                     height: 54,
                     child: PressableButton(
-                      onPressed: _sharing ? null : _share,
-                      child: Text(_sharing ? '준비 중…' : '인스타 스토리에 공유'),
+                      onPressed: (_sharing || _rewarded) ? null : _share,
+                      child: Text(
+                        _rewarded
+                            ? '오늘 공유 완료'
+                            : (_sharing ? '준비 중…' : '인스타 스토리에 공유'),
+                      ),
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+
+          // 공유 완료 폭죽
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _confetti,
+                builder: (context, _) => CustomPaint(
+                  painter: ConfettiPainter(
+                    pieces: _confettiPieces,
+                    t: _confetti.value,
+                  ),
+                ),
               ),
             ),
           ),
