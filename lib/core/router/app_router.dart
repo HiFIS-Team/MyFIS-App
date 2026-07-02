@@ -22,6 +22,7 @@ import '../../features/meetup/presentation/meetup_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
 import '../../features/notification/presentation/notification_settings_screen.dart';
 import '../../features/profile/presentation/change_password_screen.dart';
+import '../../features/profile/presentation/exchange_history_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/profile/presentation/payment_cards_screen.dart';
 import '../../features/profile/presentation/payment_history_screen.dart';
@@ -140,6 +141,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const PaymentCardsScreen()),
+      ),
+
+      // 교환 내역 — 마이페이지에서 진입 (마일리지 교환권 목록)
+      GoRoute(
+        path: '/exchange-history',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const ExchangeHistoryScreen()),
       ),
 
       // 결제 내역 — 카드 상세에서 진입

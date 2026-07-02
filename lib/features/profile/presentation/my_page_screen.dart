@@ -55,7 +55,10 @@ class MyPageScreen extends StatelessWidget {
             const SizedBox(height: 10),
             _MenuCard(rows: [
               const _MenuRow(label: '출석 내역'),
-              const _MenuRow(label: '교환 내역'),
+              _MenuRow(
+                label: '교환 내역',
+                onTap: () => context.push('/exchange-history'),
+              ),
               _MenuRow(label: '찜한 상품', onTap: () => context.push('/wishlist')),
             ]),
             const SizedBox(height: 22),
