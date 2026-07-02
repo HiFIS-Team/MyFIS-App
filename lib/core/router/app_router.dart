@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/benefit/presentation/benefit_screen.dart';
 import '../../features/benefit/presentation/mission_detail_screen.dart';
 import '../../features/benefit/presentation/scratch_card_screen.dart';
+import '../../features/benefit/presentation/water_mission_screen.dart';
 import '../../features/cardio/presentation/cardio_screen.dart';
 import '../../features/checkin/presentation/checkin_barcode_screen.dart';
 import '../../features/coupon/presentation/coupon_screen.dart';
@@ -178,6 +179,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const ScratchCardScreen()),
+      ),
+
+      // 물 마시기 미션 — 물병 채우기 (혜택에서 진입)
+      GoRoute(
+        path: '/water-mission',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const WaterMissionScreen()),
       ),
 
       // 출석한 날 상세 (달력에서 진입, 현재 placeholder)

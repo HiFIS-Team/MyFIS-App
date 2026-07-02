@@ -66,7 +66,7 @@ class BenefitScreen extends StatelessWidget {
                   color: Color(0xFF4DA3FF), // 물 - 블루
                   title: '물 마시기',
                   cta: '방문하기',
-                  onTap: () => _visit(context, '물 마시기'),
+                  onTap: () => context.push('/water-mission'),
                 ),
                 _RewardRow(
                   icon: Symbols.monitor_weight,
