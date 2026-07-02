@@ -220,12 +220,7 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
           child: Column(
             children: [
               const SizedBox(height: 12),
-              Text(
-                _title,
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              _buildTitle(textTheme),
               const SizedBox(height: 8),
               Text(
                 _subtitle,
@@ -319,10 +314,31 @@ class _ScratchCardScreenState extends State<ScratchCardScreen>
     );
   }
 
-  String get _title {
-    if (_revealed) return '축하해요!';
-    if (_phase == _CardPhase.scratch) return '오늘의 행운 카드';
-    return '행운 카드가 도착했어요';
+  Widget _buildTitle(TextTheme textTheme) {
+    final style = textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800);
+    if (_revealed) return Text('축하해요!', style: style);
+
+    // 스크래치 단계: "행운 카드"만 라임 그라데이션
+    if (_phase == _CardPhase.scratch) {
+      final shader = const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [Color(0xFFF0FFB5), AppColors.lime, AppColors.limeStrong],
+      ).createShader(const Rect.fromLTWH(0, 0, 10, 30));
+      return Text.rich(
+        TextSpan(
+          style: style,
+          children: [
+            const TextSpan(text: '오늘의 '),
+            TextSpan(
+              text: '행운 카드',
+              style: TextStyle(foreground: Paint()..shader = shader),
+            ),
+          ],
+        ),
+      );
+    }
+    return Text('행운 카드가 도착했어요', style: style);
   }
 
   String get _subtitle {
