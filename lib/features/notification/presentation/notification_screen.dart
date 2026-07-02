@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/theme/app_colors.dart';
@@ -55,11 +56,12 @@ class NotificationScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppTopBar(
         title: '알림',
-        actions: const [
+        actions: [
           PressableIcon(
             icon: Symbols.settings,
             size: 24,
             color: AppColors.textSecondary,
+            onTap: () => context.push('/notification-settings'),
           ),
         ],
       ),

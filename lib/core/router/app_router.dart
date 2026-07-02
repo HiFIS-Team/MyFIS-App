@@ -20,6 +20,7 @@ import '../../features/membership/presentation/branch_list_screen.dart';
 import '../../features/membership/presentation/membership_screen.dart';
 import '../../features/meetup/presentation/meetup_screen.dart';
 import '../../features/notification/presentation/notification_screen.dart';
+import '../../features/notification/presentation/notification_settings_screen.dart';
 import '../../features/profile/presentation/my_page_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/ranking/presentation/ranking_full_screen.dart';
@@ -112,6 +113,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         pageBuilder: (context, state) =>
             _slideFromRight(state, const NotificationScreen()),
+      ),
+
+      // 알림 설정 — 마이페이지·알림 화면에서 진입
+      GoRoute(
+        path: '/notification-settings',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) =>
+            _slideFromRight(state, const NotificationSettingsScreen()),
       ),
 
       // 출석 바코드 — 위에서 바코드까지 내려오는 드롭다운 시트
