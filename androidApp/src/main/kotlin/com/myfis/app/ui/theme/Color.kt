@@ -1,0 +1,37 @@
+package com.myfis.app.ui.theme
+
+import androidx.compose.ui.graphics.Color
+
+/**
+ * DESIGN.md §3 컬러 토큰.
+ *
+ * 이 파일 밖에서 Color(0x...) 를 직접 쓰지 않는다.
+ * 새 색이 필요하면 DESIGN.md 에 먼저 추가하고 여기에 옮긴다.
+ */
+object MyFisColor {
+    // 배경 (surface)
+    val BgBase = Color(0xFF000000)
+    val Surface1 = Color(0xFF0E0F12)
+    val Surface2 = Color(0xFF16181D)
+    val Surface3 = Color(0xFF1F2229)
+
+    // 경계
+    val BorderSubtle = Color(0xFF2C3038)
+    val BorderStrong = Color(0xFF6B7383)
+
+    // 텍스트 — TextTertiary 가 AA 하한선(4.5:1). 이보다 어둡게 쓰지 않는다.
+    val TextPrimary = Color(0xFFFFFFFF)
+    val TextSecondary = Color(0xFFA3A9B5)
+    val TextTertiary = Color(0xFF828997)
+
+    // 액센트 — 한 화면에 2곳 이하
+    val Accent = Color(0xFFC9F531)
+    val AccentPressed = Color(0xFFA8CE24)
+    val OnAccent = Color(0xFF000000)
+
+    // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.
+    val Success = Color(0xFF4ADE80)
+    val Warning = Color(0xFFFBBF24)
+    val Danger = Color(0xFFFF6B6B)
+    val Info = Color(0xFF7DA8FF)
+}
