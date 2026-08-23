@@ -28,7 +28,7 @@ struct AppShell: View {
             ForEach(0..<Slot.count, id: \.self) { slot in
                 content(for: slot)
                     .tabItem {
-                        Image(systemName: symbol(for: slot))
+                        icon(for: slot)
                             .accessibilityLabel(label(for: slot))
                     }
                     .tag(slot)
@@ -66,8 +66,13 @@ struct AppShell: View {
 
     // MARK: - 슬롯별 내용
 
-    private func symbol(for slot: Int) -> String {
-        tabSet == .base ? baseTabs[slot].symbol : weightTabs[slot].symbol
+    @ViewBuilder
+    private func icon(for slot: Int) -> some View {
+        switch tabSet == .base ? baseTabs[slot].icon : weightTabs[slot].icon {
+        // 크기는 시스템이 정한다. .font(.system(size:)) / .imageScale 은 탭 바에서 무시된다 (확인함)
+        case .system(let name): Image(systemName: name)
+        case .asset(let name): Image(name)
+        }
     }
 
     private func label(for slot: Int) -> String {
