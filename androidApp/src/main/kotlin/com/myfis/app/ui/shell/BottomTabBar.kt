@@ -30,7 +30,7 @@ import com.myfis.app.ui.theme.MyFisTheme
  *
  * - 배경 surface.1, 상단 border.subtle 1px
  * - 활성 accent / 비활성 text.tertiary
- * - **라벨은 항상 표시한다.** 아이콘만으로는 헬스장 조명·짧은 시선에서 구분이 안 된다 (§9 이탈 #3)
+ * - **Android 는 아이콘 + 라벨.** Material 관행이고, iOS 유리 바(아이콘만)와 다른 게 맞다 (§6.7)
  * - `이전` 탭은 성격이 다르므로 활성 색을 쓰지 않고 text.secondary 로 둔다
  */
 @Composable
@@ -91,7 +91,7 @@ private fun TabItem(
     ) {
         Icon(
             painter = painterResource(tab.icon),
-            contentDescription = tab.label,
+            contentDescription = null, // 라벨이 바로 아래 있으므로 중복 읽지 않는다
             tint = tint,
             modifier = Modifier.size(24.dp),
         )

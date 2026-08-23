@@ -28,27 +28,42 @@ struct AppShell: View {
     private var baseTabView: some View {
         TabView(selection: baseSelection) {
             screen(id: "H-01", title: "홈", description: "회원권 상태 · 오늘 할 운동 · 마일리지")
-                .tabItem { Label(BaseTab.home.label, systemImage: BaseTab.home.symbol) }
+                .tabItem {
+                    Image(systemName: BaseTab.home.symbol)
+                        .accessibilityLabel(BaseTab.home.label)
+                }
                 .tag(BaseTab.home)
 
             screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
-                .tabItem { Label(BaseTab.benefit.label, systemImage: BaseTab.benefit.symbol) }
+                .tabItem {
+                    Image(systemName: BaseTab.benefit.symbol)
+                        .accessibilityLabel(BaseTab.benefit.label)
+                }
                 .tag(BaseTab.benefit)
 
             screen(id: "S-01", title: "스토어", description: "마일리지로 굿즈·음료 교환")
-                .tabItem { Label(BaseTab.store.label, systemImage: BaseTab.store.symbol) }
+                .tabItem {
+                    Image(systemName: BaseTab.store.symbol)
+                        .accessibilityLabel(BaseTab.store.label)
+                }
                 .tag(BaseTab.store)
 
             // 통로다. 선택되지 않고 세트만 바꾼다.
             Color.clear
-                .tabItem { Label(BaseTab.weight.label, systemImage: BaseTab.weight.symbol) }
+                .tabItem {
+                    Image(systemName: BaseTab.weight.symbol)
+                        .accessibilityLabel(BaseTab.weight.label)
+                }
                 .tag(BaseTab.weight)
 
             // TODO: Y-01 마이 화면이 붙으면 교체한다.
             // 그때까지 토큰 확인 화면을 여기 둔다 — 스크롤 콘텐츠가 있어야
             // 유리 바 뒤로 뭐가 지나가는지 확인할 수 있다.
             DesignTokensView()
-                .tabItem { Label(BaseTab.my.label, systemImage: BaseTab.my.symbol) }
+                .tabItem {
+                    Image(systemName: BaseTab.my.symbol)
+                        .accessibilityLabel(BaseTab.my.label)
+                }
                 .tag(BaseTab.my)
         }
     }
@@ -70,23 +85,38 @@ struct AppShell: View {
         TabView(selection: weightSelection) {
             // 나가는 길. 항상 첫 번째 자리에 고정한다 (DESIGN.md §6.7).
             Color.clear
-                .tabItem { Label(WeightTab.back.label, systemImage: WeightTab.back.symbol) }
+                .tabItem {
+                    Image(systemName: WeightTab.back.symbol)
+                        .accessibilityLabel(WeightTab.back.label)
+                }
                 .tag(WeightTab.back)
 
             screen(id: "W-01", title: "이번 주 루틴", description: "AI가 보낸 주간 루틴")
-                .tabItem { Label(WeightTab.weight.label, systemImage: WeightTab.weight.symbol) }
+                .tabItem {
+                    Image(systemName: WeightTab.weight.symbol)
+                        .accessibilityLabel(WeightTab.weight.label)
+                }
                 .tag(WeightTab.weight)
 
             screen(id: "C-01", title: "유산소", description: "기기 목록 · NFC 스캔")
-                .tabItem { Label(WeightTab.cardio.label, systemImage: WeightTab.cardio.symbol) }
+                .tabItem {
+                    Image(systemName: WeightTab.cardio.symbol)
+                        .accessibilityLabel(WeightTab.cardio.label)
+                }
                 .tag(WeightTab.cardio)
 
             screen(id: "R-01", title: "랭킹", description: "웨이트 · 유산소 · 마일리지")
-                .tabItem { Label(WeightTab.ranking.label, systemImage: WeightTab.ranking.symbol) }
+                .tabItem {
+                    Image(systemName: WeightTab.ranking.symbol)
+                        .accessibilityLabel(WeightTab.ranking.label)
+                }
                 .tag(WeightTab.ranking)
 
             screen(id: "G-01", title: "모임", description: "모임 · 커뮤니티")
-                .tabItem { Label(WeightTab.group.label, systemImage: WeightTab.group.symbol) }
+                .tabItem {
+                    Image(systemName: WeightTab.group.symbol)
+                        .accessibilityLabel(WeightTab.group.label)
+                }
                 .tag(WeightTab.group)
         }
     }
