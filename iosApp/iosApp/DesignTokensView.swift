@@ -2,7 +2,7 @@ import SharedKit
 import SwiftUI
 
 /// DESIGN.md 토큰이 실제로 어떻게 보이는지 확인하는 화면. 구현이 시작되면 교체된다.
-struct ContentView: View {
+struct DesignTokensView: View {
     var body: some View {
         ZStack {
             MyFisColor.bgBase.ignoresSafeArea()
@@ -127,5 +127,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView().preferredColorScheme(.dark)
+    DesignTokensView().preferredColorScheme(.dark)
 }

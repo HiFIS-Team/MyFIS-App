@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.tooling.preview.Preview
 import com.myfis.app.shared.Greeting
+import com.myfis.app.ui.shell.AppShell
 import com.myfis.app.ui.theme.ColorSwatch
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
@@ -40,7 +41,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyFisTheme {
-                DesignTokensScreen()
+                AppShell()
             }
         }
     }
