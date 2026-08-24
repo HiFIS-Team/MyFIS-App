@@ -119,7 +119,10 @@ struct AppShell: View {
     private func screen(id: String, title: String, description: String) -> some View {
         ZStack {
             MyFisColor.bgBase.ignoresSafeArea()
-            PlaceholderScreen(id: id, title: title, description: description)
+            VStack(spacing: 0) {
+                AppHeader()
+                PlaceholderScreen(id: id, title: title, description: description)
+            }
         }
     }
 }

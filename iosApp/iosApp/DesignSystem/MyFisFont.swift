@@ -31,19 +31,29 @@ enum MyFisFont {
     static let label = Font.custom(Face.medium, size: 13)
     static let caption = Font.custom(Face.regular, size: 12)
 
+    /// 워드마크(MyFIS) 전용 — Kanit Bold Italic (OFL-1.1, LICENSES/OFL-Kanit.txt).
+    /// 기울어져 있어 움직이는 느낌이 난다. 본문 서체와 별개이며 **로고에만 쓴다.**
+    static let wordmark = Font.custom("Kanit-BoldItalic", size: 22)
+
     /// 번들에 들어 있는 Pretendard 를 프로세스에 등록한다. 앱 시작 시 한 번 호출한다.
     ///
     /// `INFOPLIST_KEY_UIAppFonts` 는 Xcode 가 지원하지 않는 키라 생성된 Info.plist 에 들어가지 않는다.
     /// Info.plist 를 직접 관리하는 대신 여기서 등록한다.
     static func register() {
-        for face in [Face.regular, Face.medium, Face.semibold, Face.bold] {
-            guard let url = Bundle.main.url(forResource: face, withExtension: "otf") else {
-                assertionFailure("폰트를 번들에서 못 찾음: \(face).otf")
+        let faces: [(String, String)] = [
+            (Face.regular, "otf"), (Face.medium, "otf"),
+            (Face.semibold, "otf"), (Face.bold, "otf"),
+            ("Kanit-BoldItalic", "ttf"),
+        ]
+        for (name, ext) in faces {
+            guard let url = Bundle.main.url(forResource: name, withExtension: ext) else {
+                // 폰트가 없다고 앱을 죽이지 않는다. 시스템 폰트로 떨어질 뿐이다.
+                print("[MyFisFont] 번들에서 못 찾음: \(name).\(ext)")
                 continue
             }
             var error: Unmanaged<CFError>?
             if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
-                assertionFailure("폰트 등록 실패: \(face) — \(String(describing: error))")
+                print("[MyFisFont] 등록 실패: \(name) — \(String(describing: error?.takeUnretainedValue()))")
             }
         }
     }

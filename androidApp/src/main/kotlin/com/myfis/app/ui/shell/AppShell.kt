@@ -23,10 +23,13 @@ fun AppShell() {
     var weightTab by rememberSaveable { mutableStateOf(WeightTab.WEIGHT) }
 
     Column(Modifier.fillMaxSize().background(MyFisColor.BgBase)) {
-        Box(Modifier.weight(1f).statusBarsPadding()) {
-            when (tabSet) {
-                TabSet.BASE -> BaseTabContent(baseTab)
-                TabSet.WEIGHT -> WeightTabContent(weightTab)
+        Column(Modifier.weight(1f).statusBarsPadding()) {
+            AppHeader()
+            Box(Modifier.weight(1f)) {
+                when (tabSet) {
+                    TabSet.BASE -> BaseTabContent(baseTab)
+                    TabSet.WEIGHT -> WeightTabContent(weightTab)
+                }
             }
         }
 

@@ -235,7 +235,7 @@ private fun ExitButton(tab: Tab, onClick: () -> Unit, modifier: Modifier = Modif
  * 되돌아올 때 스프링이 살짝 튀게(`dampingRatio` 를 낮게) 둬야 "눌렀다"는 느낌이 산다.
  */
 @Composable
-private fun InteractionSource.pressScale(): State<Float> {
+internal fun InteractionSource.pressScale(): State<Float> {
     val pressed by collectIsPressedAsState()
     return animateFloatAsState(
         targetValue = if (pressed) 0.86f else 1f,
@@ -246,7 +246,7 @@ private fun InteractionSource.pressScale(): State<Float> {
 
 /** 탭에 가벼운 진동을 붙인다. 선택은 결과가 눈에 보이므로 약한 tick 이면 충분하다. */
 @Composable
-private fun Modifier.tapWithHaptics(
+internal fun Modifier.tapWithHaptics(
     interaction: MutableInteractionSource,
     onClick: () -> Unit,
 ): Modifier {

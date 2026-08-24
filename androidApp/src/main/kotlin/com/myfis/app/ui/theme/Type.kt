@@ -29,6 +29,12 @@ private val MyFisFontFamily = FontFamily(
 
 private const val TABULAR = "tnum"
 
+/**
+ * 워드마크 전용 서체 — Kanit Bold Italic (OFL-1.1, LICENSES/OFL-Kanit.txt).
+ * 기울어져 있어 움직이는 느낌이 난다. 본문 서체(Pretendard)와 별개이며 **로고에만 쓴다.**
+ */
+private val WordmarkFontFamily = FontFamily(Font(R.font.kanit_bold_italic, FontWeight.Bold))
+
 @Immutable
 data class MyFisTypography(
     val metricXl: TextStyle,
@@ -41,6 +47,8 @@ data class MyFisTypography(
     val bodySm: TextStyle,
     val label: TextStyle,
     val caption: TextStyle,
+    /** 워드마크(MyFIS) 전용. 로고 외에는 쓰지 않는다 */
+    val wordmark: TextStyle,
 )
 
 internal val myFisTypography = MyFisTypography(
@@ -109,5 +117,12 @@ internal val myFisTypography = MyFisTypography(
         fontSize = 12.sp,
         lineHeight = 16.sp,
         fontWeight = FontWeight.Normal,
+    ),
+    wordmark = TextStyle(
+        fontFamily = WordmarkFontFamily,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = (-0.01).em,
     ),
 )

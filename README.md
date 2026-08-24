@@ -35,7 +35,8 @@ Swift에서는 `import SharedKit` 으로 사용합니다.
 
 | 자산 | 용도 | 라이선스 |
 |------|------|----------|
-| [Pretendard Std](https://github.com/orioncactus/pretendard) | 앱 전체 서체 (Android `res/font/`, iOS `iosApp/iosApp/*.otf`) | SIL OFL 1.1 — [LICENSES/OFL-Pretendard.txt](LICENSES/OFL-Pretendard.txt) |
+| [Pretendard Std](https://github.com/orioncactus/pretendard) | 본문 서체 (Android `res/font/`, iOS `iosApp/iosApp/*.otf`) | SIL OFL 1.1 — [LICENSES/OFL-Pretendard.txt](LICENSES/OFL-Pretendard.txt) |
+| [Kanit](https://fonts.google.com/specimen/Kanit) | 워드마크(MyFIS) 전용 서체 | SIL OFL 1.1 — [LICENSES/OFL-Kanit.txt](LICENSES/OFL-Kanit.txt) |
 
 ## 요구 사항
 
