@@ -3,6 +3,8 @@ import SwiftUI
 /// 헤더에서 밀려 들어오는 화면들.
 enum HeaderRoute: Hashable {
     case notifications
+    /// S-08 스토어 마이 — 마이 탭(Y-01)과 다른 화면이다
+    case storeMy
     // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 여기에 추가한다.
 }
 
@@ -32,7 +34,11 @@ extension Optional where Wrapped == HeaderRoute {
     /// 디버그 빌드에서만 동작한다.
     static var initialForDebug: HeaderRoute? {
         #if DEBUG
-        ProcessInfo.processInfo.environment["MYFIS_ROUTE"] == "notifications" ? .notifications : nil
+        switch ProcessInfo.processInfo.environment["MYFIS_ROUTE"] {
+        case "notifications": .notifications
+        case "store_my": .storeMy
+        default: nil
+        }
         #else
         nil
         #endif

@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
+import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreScreen
 import com.myfis.app.ui.theme.MyFisColor
 
@@ -46,17 +47,23 @@ fun AppShell() {
         popExitTransition = { slideOutHorizontally(pushSpec) { it } },
     ) {
         composable(Route.SHELL) {
-            TabShell(onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) })
+            TabShell(
+                onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) },
+                onStoreMy = { nav.navigateOnce(Route.STORE_MY) },
+            )
         }
         composable(Route.NOTIFICATIONS) {
             NotificationScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Route.STORE_MY) {
+            StoreMyScreen(onBack = { nav.popBackStack() })
         }
     }
 }
 
 /** 탭 셸 — 순검정 위에 헤더와 하단 탭 바. */
 @Composable
-private fun TabShell(onNotification: () -> Unit) {
+private fun TabShell(onNotification: () -> Unit, onStoreMy: () -> Unit) {
     var tabSet by rememberSaveable { mutableStateOf(TabSet.BASE) }
     var baseTab by rememberSaveable { mutableStateOf(BaseTab.HOME) }
     var weightTab by rememberSaveable { mutableStateOf(WeightTab.WEIGHT) }
@@ -69,7 +76,7 @@ private fun TabShell(onNotification: () -> Unit) {
                 TabSet.BASE -> BaseTabContent(
                     tab = baseTab,
                     onNotification = onNotification,
-                    onSelectTab = { baseTab = it },
+                    onStoreMy = onStoreMy,
                 )
                 TabSet.WEIGHT -> WeightTabContent(weightTab)
             }
@@ -95,13 +102,13 @@ private fun TabShell(onNotification: () -> Unit) {
 private fun BaseTabContent(
     tab: BaseTab,
     onNotification: () -> Unit,
-    onSelectTab: (BaseTab) -> Unit,
+    onStoreMy: () -> Unit,
 ) {
     when (tab) {
         BaseTab.HOME -> HomeScreen(onNotification = onNotification)
         BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
-        // 스토어 헤더의 '마이' 는 마이 탭으로 간다. 목적지를 새로 만들지 않는다.
-        BaseTab.STORE -> StoreScreen(onMy = { onSelectTab(BaseTab.MY) })
+        // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
+        BaseTab.STORE -> StoreScreen(onMy = onStoreMy)
         BaseTab.MY -> PlaceholderScreen("Y-01", "마이", "프로필 · 기록 · 설정")
         // 통로라 여기 도달하지 않는다
         BaseTab.WEIGHT -> Unit

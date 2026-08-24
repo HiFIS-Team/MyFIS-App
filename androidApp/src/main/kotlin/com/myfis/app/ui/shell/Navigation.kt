@@ -13,6 +13,9 @@ object Route {
 
     /** H-02 알림함 */
     const val NOTIFICATIONS = "notifications"
+
+    /** S-08 스토어 마이 — 마이 탭(Y-01)과 다른 화면이다 */
+    const val STORE_MY = "store_my"
 }
 
 /**

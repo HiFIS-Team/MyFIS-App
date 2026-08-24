@@ -17,8 +17,6 @@ struct AppShell: View {
         static let weightPortal = 3
         /// 웨이트 세트에서 기본 세트로 나가는 자리 (항상 첫 번째)
         static let backPortal = 0
-        /// 마이 — 스토어 헤더의 '마이' 가 여기로 보낸다
-        static let my = 4
         static let store = 2
 
         /// 시뮬레이터에는 탭을 누를 수단이 없다. 스토어 화면을 스크린샷으로 확인할 때
@@ -74,6 +72,11 @@ struct AppShell: View {
         case .notifications:
             NavigationStack {
                 NotificationScreen(onBack: { close() })
+            }
+            .tint(MyFisColor.textPrimary)
+        case .storeMy:
+            NavigationStack {
+                StoreMyScreen(onBack: { close() })
             }
             .tint(MyFisColor.textPrimary)
         }
@@ -143,8 +146,8 @@ struct AppShell: View {
             case .benefit:
                 screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
             case .store:
-                // 스토어 헤더의 '마이' 는 마이 탭으로 간다. 목적지를 새로 만들지 않는다.
-                TabScreen { StoreScreen(onMy: { baseSlot = Slot.my }) }
+                // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
+                TabScreen { StoreScreen(onMy: { open(.storeMy) }) }
             case .my:
                 // TODO: Y-01 마이 화면이 붙으면 교체한다.
                 // 그때까지 토큰 확인 화면을 여기 둔다 — 스크롤 콘텐츠가 있어야
