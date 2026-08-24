@@ -412,54 +412,97 @@ private struct MileageBand: View {
 ///
 /// `contentMargins` 로 좌우를 물려 두면 다음 장이 자연스럽게 걸친다 —
 /// `TabView(.page)` 는 화면 폭을 꽉 채워서 이 모양이 안 나온다.
+///
+/// **5초마다 저절로 넘어가고, 끝에서 되감지 않는다.** 배너 목록을 여러 바퀴 미리 깔아 두고
+/// 가운데서 시작하면 계속 같은 방향으로 흐른다 — 마지막에서 처음으로 되튀면 눈에 걸린다.
+///
+/// **손을 대면 멈춘다.** 떼고 나서 다시 5초를 센다 (읽는 중에 넘어가면 안 된다).
 private struct BannerCarousel: View {
     let banners: [StoreBanner]
 
-    @State private var current: Int?
+    /// 한 장 = 배너 하나가 몇 바퀴째에 놓였는지까지 포함한 자리. `id` 가 겹치면 스크롤 위치를 못 잡는다
+    private struct Slide: Identifiable, Hashable {
+        let id: Int
+        let banner: StoreBanner
+    }
+
+    /// 5초에 한 장씩이면 200바퀴는 사실상 끝이 없다
+    private static let cycles = 200
+    private static let interval: Duration = .seconds(5)
+    private static let height: CGFloat = 168
+
+    private let slides: [Slide]
+    private let start: Int
+
+    @State private var position: Int?
+    /// 손을 대고 있거나 아직 미끄러지는 중
+    @State private var touching = false
+
+    init(banners: [StoreBanner]) {
+        self.banners = banners
+        slides = (0..<(Self.cycles * banners.count)).map {
+            Slide(id: $0, banner: banners[$0 % banners.count])
+        }
+        start = (Self.cycles / 2) * banners.count
+        _position = State(initialValue: start)
+    }
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MyFisSpacing.md) {
-                ForEach(banners) { banner in
-                    card(banner)
+            LazyHStack(spacing: MyFisSpacing.md) {
+                ForEach(slides) { slide in
+                    card(slide)
                         .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: MyFisSpacing.md)
-                        .id(banner.id)
+                        .id(slide.id)
                 }
             }
             .scrollTargetLayout()
         }
         .contentMargins(.horizontal, MyFisSpacing.screenHorizontal, for: .scrollContent)
         .scrollTargetBehavior(.viewAligned)
-        .scrollPosition(id: $current)
-        .frame(height: 150)
+        .scrollPosition(id: $position)
+        .frame(height: Self.height)
+        .modifier(PauseWhileTouching(touching: $touching))
+        // 자리가 바뀌거나 손을 떼면 타이머를 처음부터 다시 센다
+        .task(id: Tick(position: position ?? start, touching: touching)) {
+            guard !touching else { return }
+            try? await Task.sleep(for: Self.interval)
+            guard !Task.isCancelled, let current = position, current + 1 < slides.count else { return }
+            withAnimation(MyFisMotion.slow) { position = current + 1 }
+        }
     }
 
-    private func card(_ banner: StoreBanner) -> some View {
+    private struct Tick: Equatable {
+        let position: Int
+        let touching: Bool
+    }
+
+    private func card(_ slide: Slide) -> some View {
         ZStack {
             MyFisColor.surface1
 
             // 사진이 없으므로 우리 벡터를 크게 깔아 자리를 잡는다.
             // TODO(서버): 배너 이미지가 오면 교체한다.
-            Image(banner.icon)
+            Image(slide.banner.icon)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 132, height: 132)
+                .frame(width: 144, height: 144)
                 .foregroundStyle(MyFisColor.surface3)
                 .offset(x: 18)
                 .frame(maxWidth: .infinity, alignment: .trailing)
 
             VStack(alignment: .leading, spacing: MyFisSpacing.sm) {
-                Text(banner.title)
+                Text(slide.banner.title)
                     .font(MyFisFont.titleLg)
                     .foregroundStyle(MyFisColor.textPrimary)
-                Text(banner.body)
+                Text(slide.banner.body)
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(MyFisSpacing.cardPadding)
 
-            Text("\(index(of: banner)) / \(banners.count)")
+            Text("\(slide.id % banners.count + 1) / \(banners.count)")
                 .font(MyFisFont.caption.monospacedDigit())
                 .foregroundStyle(MyFisColor.textSecondary)
                 .padding(.horizontal, MyFisSpacing.sm)
@@ -470,9 +513,23 @@ private struct BannerCarousel: View {
         }
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.lg, style: .continuous))
     }
+}
 
-    private func index(of banner: StoreBanner) -> Int {
-        (banners.firstIndex(of: banner) ?? 0) + 1
+/// 스크롤이 멈춰 있을 때만 자동 넘김을 돌린다.
+///
+/// `onScrollPhaseChange` 는 iOS 18+ 다. 그 아래에서는 자동 넘김만 하고 멈춤 판정을 못 한다 —
+/// 손으로 넘기면 자리가 바뀌면서 타이머가 다시 시작되므로 크게 어긋나지는 않는다.
+private struct PauseWhileTouching: ViewModifier {
+    @Binding var touching: Bool
+
+    func body(content: Content) -> some View {
+        if #available(iOS 18.0, *) {
+            content.onScrollPhaseChange { _, phase in
+                touching = phase != .idle
+            }
+        } else {
+            content
+        }
     }
 }
 

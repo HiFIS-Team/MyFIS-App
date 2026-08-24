@@ -1,7 +1,9 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -38,11 +41,13 @@ import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.pressScale
 import com.myfis.app.ui.theme.tapWithHaptics
+import kotlinx.coroutines.delay
 
 /**
  * SPEC.md S-01 스토어 홈. (레퍼런스: 토스 쇼핑)
@@ -208,10 +213,32 @@ private fun MileageBand(balance: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** 배너 — 옆 장이 살짝 보이게 두고 넘긴다. 몇 장 중 몇 번째인지 오른쪽 아래에 적는다 */
+/**
+ * 배너 — 옆 장이 살짝 보이게 두고 넘긴다. 몇 장 중 몇 번째인지 오른쪽 아래에 적는다.
+ *
+ * **5초마다 저절로 넘어가고, 끝에서 되감지 않는다.** 페이지를 사실상 무한히 두고
+ * 나머지 연산으로 배너를 고르면 계속 같은 방향으로 흐른다 — 마지막에서 처음으로 되튀면
+ * 눈에 걸린다.
+ *
+ * **손을 대면 멈춘다.** 떼고 나서 다시 5초를 센다 (읽는 중에 넘어가면 안 된다).
+ */
 @Composable
 private fun BannerCarousel(banners: List<StoreBanner>, modifier: Modifier = Modifier) {
-    val pager = rememberPagerState { banners.size }
+    val pageCount = Int.MAX_VALUE
+    // 뒤로도 넘길 수 있게 한가운데서 시작한다. 배너 개수의 배수로 맞춰야 첫 장이 첫 배너다
+    val startPage = remember(banners.size) { pageCount / 2 - (pageCount / 2) % banners.size }
+    val pager = rememberPagerState(initialPage = startPage) { pageCount }
+
+    val dragged by pager.interactionSource.collectIsDraggedAsState()
+    // settledPage 가 바뀔 때마다 타이머를 다시 센다 — 손으로 넘긴 직후에도 5초를 새로 센다
+    LaunchedEffect(dragged, pager.settledPage) {
+        if (dragged) return@LaunchedEffect
+        delay(BannerAutoScrollMillis)
+        pager.animateScrollToPage(
+            page = pager.currentPage + 1,
+            animationSpec = tween(durationMillis = 320, easing = MyFisMotion.easing),
+        )
+    }
 
     HorizontalPager(
         state = pager,
@@ -219,11 +246,12 @@ private fun BannerCarousel(banners: List<StoreBanner>, modifier: Modifier = Modi
         pageSpacing = MyFisSpacing.md,
         modifier = modifier.padding(top = MyFisSpacing.sm),
     ) { page ->
-        val banner = banners[page]
+        val index = page % banners.size
+        val banner = banners[index]
         Box(
             Modifier
                 .fillMaxWidth()
-                .height(150.dp)
+                .height(BannerHeight)
                 .clip(MyFisRadius.lg)
                 .background(MyFisColor.Surface1),
         ) {
@@ -234,7 +262,7 @@ private fun BannerCarousel(banners: List<StoreBanner>, modifier: Modifier = Modi
                 contentDescription = null,
                 tint = MyFisColor.Surface3,
                 modifier = Modifier
-                    .size(132.dp)
+                    .size(144.dp)
                     .align(Alignment.CenterEnd)
                     .offset(x = 18.dp),
             )
@@ -252,7 +280,7 @@ private fun BannerCarousel(banners: List<StoreBanner>, modifier: Modifier = Modi
                 )
             }
             Text(
-                "${page + 1} / ${banners.size}",
+                "${index + 1} / ${banners.size}",
                 style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
                 color = MyFisColor.TextSecondary,
                 modifier = Modifier
@@ -264,6 +292,9 @@ private fun BannerCarousel(banners: List<StoreBanner>, modifier: Modifier = Modi
         }
     }
 }
+
+private val BannerHeight = 168.dp
+private const val BannerAutoScrollMillis = 5_000L
 
 /**
  * 마일리지 모으기 — 살 수 없는 걸 봤을 때 **바로 모으러 갈 수 있어야 한다.**
