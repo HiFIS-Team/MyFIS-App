@@ -39,3 +39,13 @@ enum MyFisSize {
     static let listRowMin: CGFloat = 56
     static let progressHeight: CGFloat = 8
 }
+
+/// DESIGN.md §7 모션 — 이징은 `cubic-bezier(0.2, 0, 0, 1)` (감속 위주).
+enum MyFisMotion {
+    /// 눌림, 토글, 체크
+    static let fast = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.12)
+    /// 카드 확장, 페이드
+    static let base = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.20)
+    /// 바텀시트, 화면 전환
+    static let slow = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.32)
+}

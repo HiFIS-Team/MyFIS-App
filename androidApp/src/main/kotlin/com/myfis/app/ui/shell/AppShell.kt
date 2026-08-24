@@ -1,30 +1,67 @@
 package com.myfis.app.ui.shell
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.theme.MyFisColor
 
-/** 모든 화면이 올라앉는 배경. 순검정 위에 하단 탭 바만 있다. */
+/**
+ * 앱의 뿌리.
+ *
+ * 탭 셸 위로 잎 화면이 **오른쪽에서 왼쪽으로 들어와 셸을 덮는다.**
+ *
+ * 셸은 움직이지 않는다 — 하단 탭 바가 같이 밀려 나갔다 돌아오면 그 왕복이 눈에 걸린다.
+ * 덮개만 움직이면 돌아왔을 때 바가 원래 자리에 그대로 있다.
+ * (`NavHost` 기본 전환은 700ms 크로스페이드라 직접 지정한다)
+ */
 @Composable
 fun AppShell() {
+    val nav = rememberNavController()
+
+    NavHost(
+        navController = nav,
+        startDestination = Route.SHELL,
+        modifier = Modifier.fillMaxSize().background(MyFisColor.BgBase),
+        enterTransition = { slideInHorizontally(pushSpec) { it } },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { slideOutHorizontally(pushSpec) { it } },
+    ) {
+        composable(Route.SHELL) {
+            TabShell(onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) })
+        }
+        composable(Route.NOTIFICATIONS) {
+            NotificationScreen(onBack = { nav.popBackStack() })
+        }
+    }
+}
+
+/** 탭 셸 — 순검정 위에 헤더와 하단 탭 바. */
+@Composable
+private fun TabShell(onNotification: () -> Unit) {
     var tabSet by rememberSaveable { mutableStateOf(TabSet.BASE) }
     var baseTab by rememberSaveable { mutableStateOf(BaseTab.HOME) }
     var weightTab by rememberSaveable { mutableStateOf(WeightTab.WEIGHT) }
 
     Column(Modifier.fillMaxSize().background(MyFisColor.BgBase)) {
         Column(Modifier.weight(1f).statusBarsPadding()) {
-            AppHeader()
+            AppHeader(onNotification = onNotification)
             Box(Modifier.weight(1f)) {
                 when (tabSet) {
                     TabSet.BASE -> BaseTabContent(baseTab)

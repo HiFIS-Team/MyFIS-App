@@ -23,18 +23,53 @@ struct AppShell: View {
     @State private var baseSlot = 0
     @State private var weightSlot = 1
 
+    /// 셸 위를 덮고 있는 잎 화면. nil 이면 탭만 보인다.
+    @State private var leaf: HeaderRoute? = .initialForDebug
+
     var body: some View {
-        TabView(selection: selection) {
-            ForEach(0..<Slot.count, id: \.self) { slot in
-                content(for: slot)
-                    .tabItem {
-                        icon(for: slot)
-                            .accessibilityLabel(label(for: slot))
-                    }
-                    .tag(slot)
+        ZStack {
+            TabView(selection: selection) {
+                ForEach(0..<Slot.count, id: \.self) { slot in
+                    content(for: slot)
+                        .tabItem {
+                            icon(for: slot)
+                                .accessibilityLabel(label(for: slot))
+                        }
+                        .tag(slot)
+                }
+            }
+            .tint(MyFisColor.accent)
+
+            // 잎 화면은 **탭 바를 감추지 않고 그 위를 덮는다.**
+            // `.toolbar(.hidden, for: .tabBar)` 로 감추면 돌아올 때 시스템이 유리 바를
+            // 다시 그리면서 한 번 깜빡인다. 셸을 건드리지 않으면 그 일이 아예 없다.
+            if let leaf {
+                leafScreen(leaf)
+                    // 탭 스택을 안 쓰니 시스템 pop 제스처가 따라오지 않는다. 직접 붙인다.
+                    .modifier(EdgeSwipeBack { self.leaf = nil })
+                    .transition(.move(edge: .trailing))
+                    .zIndex(1)
             }
         }
-        .tint(MyFisColor.accent)
+    }
+
+    @ViewBuilder
+    private func leafScreen(_ route: HeaderRoute) -> some View {
+        switch route {
+        case .notifications:
+            NavigationStack {
+                NotificationScreen(onBack: { close() })
+            }
+            .tint(MyFisColor.textPrimary)
+        }
+    }
+
+    private func open(_ route: HeaderRoute) {
+        withAnimation(MyFisMotion.slow) { leaf = route }
+    }
+
+    private func close() {
+        withAnimation(MyFisMotion.slow) { leaf = nil }
     }
 
     // MARK: - 선택
@@ -96,7 +131,7 @@ struct AppShell: View {
                 // TODO: Y-01 마이 화면이 붙으면 교체한다.
                 // 그때까지 토큰 확인 화면을 여기 둔다 — 스크롤 콘텐츠가 있어야
                 // 유리 바 뒤로 뭐가 지나가는지 확인할 수 있다.
-                DesignTokensView()
+                TabScreen(onNotification: { open(.notifications) }) { DesignTokensView() }
             case .weight:
                 Color.clear // 통로
             }
@@ -117,12 +152,8 @@ struct AppShell: View {
     }
 
     private func screen(id: String, title: String, description: String) -> some View {
-        ZStack {
-            MyFisColor.bgBase.ignoresSafeArea()
-            VStack(spacing: 0) {
-                AppHeader()
-                PlaceholderScreen(id: id, title: title, description: description)
-            }
+        TabScreen(onNotification: { open(.notifications) }) {
+            PlaceholderScreen(id: id, title: title, description: description)
         }
     }
 }
@@ -145,4 +176,57 @@ private extension TabSet {
 
 #Preview {
     AppShell().preferredColorScheme(.dark)
+}
+
+/// 왼쪽 가장자리에서 오른쪽으로 쓸면 덮개를 걷는다 — iOS 기본 pop 제스처를 흉내 낸다.
+///
+/// 시작점이 **가장자리 24pt 안쪽일 때만** 잡는다. 그래야 안쪽 스크롤·탭을 방해하지 않는다.
+///
+/// 놓아서 닫을 때는 화면 밖까지 직접 밀어낸 뒤 걷어낸다.
+/// `withAnimation` 으로 걷으면 `.transition` 이 같이 돌아 손가락 위치에서 한 번 튄다.
+private struct EdgeSwipeBack: ViewModifier {
+    let onClose: () -> Void
+
+    @State private var width: CGFloat = 0
+    @State private var offset: CGFloat = 0
+
+    /// 이보다 안쪽에서 시작한 드래그는 무시한다
+    private let edge: CGFloat = 24
+    /// 이만큼 끌었거나, 이만큼 갈 기세면 닫는다 (화면 폭 대비)
+    private let closeRatio: CGFloat = 0.3
+    private let flingRatio: CGFloat = 0.5
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: offset)
+            .background(
+                GeometryReader { geo in
+                    Color.clear.onAppear { width = geo.size.width }
+                }
+            )
+            .simultaneousGesture(drag)
+    }
+
+    private var drag: some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .global)
+            .onChanged { value in
+                guard value.startLocation.x <= edge else { return }
+                offset = max(0, value.translation.width)
+            }
+            .onEnded { value in
+                guard value.startLocation.x <= edge else { return }
+                let dragged = value.translation.width > width * closeRatio
+                let flung = value.predictedEndTranslation.width > width * flingRatio
+                if dragged || flung {
+                    withAnimation(MyFisMotion.slow, completionCriteria: .removed) {
+                        offset = width
+                    } completion: {
+                        onClose()
+                        offset = 0
+                    }
+                } else {
+                    withAnimation(MyFisMotion.slow) { offset = 0 }
+                }
+            }
+    }
 }
