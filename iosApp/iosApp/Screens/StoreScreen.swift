@@ -573,8 +573,9 @@ private struct CategoryFilter: View {
                 }
             }
             .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-            // 밑줄만 흐르게 한다 — 범위를 여기로 좁혀야 상품 그리드가 딸려 움직이지 않는다
-            .animation(MyFisMotion.base, value: selected)
+            // 밑줄만 흐르게 한다 — 범위를 여기로 좁혀야 상품 그리드가 딸려 움직이지 않는다.
+            // 고르는 동작이라 `fast`(120ms) 다. `base`(200ms) 는 감속 커브 때문에 끝이 끌린다
+            .animation(MyFisMotion.fast, value: selected)
         }
         // 스티키 헤더라 배경이 불투명해야 아래 카드가 비쳐 지나가지 않는다
         .background(MyFisColor.bgBase)

@@ -324,11 +324,12 @@ private fun CategoryFilter(
     var containerX by remember { mutableFloatStateOf(0f) }
     val bars = remember { mutableStateMapOf<StoreCategory, Pair<Float, Float>>() }
     val bar = bars[selected]
+    // 고르는 동작이라 `fast`(120ms) 다. `base`(200ms) 는 감속 커브 때문에 끝이 끌린다
     val barX by animateDpAsState(
-        with(density) { (bar?.first ?: 0f).toDp() }, MyFisMotion.base(), label = "barX",
+        with(density) { (bar?.first ?: 0f).toDp() }, MyFisMotion.fast(), label = "barX",
     )
     val barWidth by animateDpAsState(
-        with(density) { (bar?.second ?: 0f).toDp() }, MyFisMotion.base(), label = "barWidth",
+        with(density) { (bar?.second ?: 0f).toDp() }, MyFisMotion.fast(), label = "barWidth",
     )
 
     Box(
