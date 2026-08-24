@@ -31,7 +31,8 @@ struct HomeCalendar: View {
         }
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
         // 줄 수가 바뀌는 것을 높이 애니메이션으로 잇는다 — 펼침이 툭 끊기면 안 된다
-        .animation(MyFisMotion.base, value: expanded)
+        // 접힘/펼침은 `slow`(320ms) — `base` 는 달이 툭 튀어나오는 느낌이었다
+        .animation(MyFisMotion.slow, value: expanded)
     }
 
     // MARK: - 접힌 줄
@@ -50,7 +51,11 @@ struct HomeCalendar: View {
         return VStack(spacing: MyFisSpacing.xs) {
             Text(MyFisCalendar.weekdayLabel(day))
                 .font(MyFisFont.caption)
-                .foregroundStyle(isSelected ? MyFisColor.bgBase : MyFisColor.textTertiary)
+                .foregroundStyle(
+                    isSelected
+                        ? MyFisColor.bgBase
+                        : MyFisCalendar.weekendColor(day) ?? MyFisColor.textTertiary
+                )
                 .frame(width: markSize, height: markSize)
                 .background {
                     if isSelected {
@@ -60,7 +65,11 @@ struct HomeCalendar: View {
             Text(MyFisCalendar.dayNumber(day))
                 // 날짜는 자릿수가 바뀌어도 칸 안에서 흔들리면 안 된다 (DESIGN §4.1)
                 .font(MyFisFont.titleSm.monospacedDigit())
-                .foregroundStyle(isSelected ? MyFisColor.textPrimary : MyFisColor.textSecondary)
+                .foregroundStyle(
+                    isSelected
+                        ? MyFisColor.textPrimary
+                        : MyFisCalendar.weekendColor(day) ?? MyFisColor.textSecondary
+                )
         }
         .frame(maxWidth: .infinity)
         .frame(height: pillHeight)
@@ -87,7 +96,7 @@ struct HomeCalendar: View {
             ForEach(MyFisCalendar.weekdayLabels, id: \.self) { label in
                 Text(label)
                     .font(MyFisFont.caption)
-                    .foregroundStyle(MyFisColor.textTertiary)
+                    .foregroundStyle(MyFisCalendar.weekendColor(label: label) ?? MyFisColor.textTertiary)
                     .frame(maxWidth: .infinity)
             }
         }
@@ -115,7 +124,11 @@ struct HomeCalendar: View {
 
         return Text(MyFisCalendar.dayNumber(day))
             .font(MyFisFont.bodySm.monospacedDigit())
-            .foregroundStyle(isSelected ? MyFisColor.bgBase : MyFisColor.textSecondary)
+            .foregroundStyle(
+                isSelected
+                    ? MyFisColor.bgBase
+                    : MyFisCalendar.weekendColor(day) ?? MyFisColor.textSecondary
+            )
             .frame(width: markSize + 6, height: markSize + 6)
             .background {
                 if isSelected {
@@ -130,23 +143,22 @@ struct HomeCalendar: View {
     }
 }
 
-/// 홈 캘린더가 쓰는 날짜 계산. **주는 월요일에 시작한다.**
+/// 홈 캘린더가 쓰는 날짜 계산. **주는 일요일에 시작한다** (한국 달력 관행).
 ///
-/// 기기 지역 설정이 일요일 시작이어도 우리 주는 월요일부터다 —
-/// 루틴이 주 단위로 오고, 그 주의 기준이 흔들리면 안 된다.
+/// 기기 지역 설정을 따르지 않고 우리가 고정한다 — 기준이 기기마다 다르면 안 된다.
 enum MyFisCalendar {
     static let calendar: Calendar = {
         var c = Calendar(identifier: .gregorian)
-        c.firstWeekday = 2 // 월요일
+        c.firstWeekday = 1 // 일요일 — 한국 달력 관행
         c.locale = Locale(identifier: "ko_KR")
         return c
     }()
 
     /// 기기 로케일을 따르지 않고 우리가 정한다 — 한국어 전용 앱이고,
     /// 요일 한 글자는 폭이 일정해야 칸이 흔들리지 않는다.
-    static let weekdayLabels = ["월", "화", "수", "목", "금", "토", "일"]
+    static let weekdayLabels = ["일", "월", "화", "수", "목", "금", "토"]
 
-    /// [date] 가 속한 주를 월요일부터 7일 반환한다.
+    /// [date] 가 속한 주를 일요일부터 7일 반환한다.
     static func week(of date: Date) -> [Date] {
         let start = calendar.dateInterval(of: .weekOfYear, for: date)?.start ?? date
         return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: start) }
@@ -179,7 +191,24 @@ enum MyFisCalendar {
     }
 
     static func weekdayLabel(_ date: Date) -> String {
-        let labels = ["일", "월", "화", "수", "목", "금", "토"]
-        return labels[calendar.component(.weekday, from: date) - 1]
+        weekdayLabels[calendar.component(.weekday, from: date) - 1]
+    }
+
+    /// 토요일 파랑 · 일요일 빨강 — 한국 달력 관행 (DESIGN.md §3.1).
+    /// 고른 날은 흰 알약/원이 더 센 신호라 그쪽을 따른다.
+    static func weekendColor(_ date: Date) -> Color? {
+        switch calendar.component(.weekday, from: date) {
+        case 1: MyFisColor.weekendSunday
+        case 7: MyFisColor.weekendSaturday
+        default: nil
+        }
+    }
+
+    static func weekendColor(label: String) -> Color? {
+        switch label {
+        case "일": MyFisColor.weekendSunday
+        case "토": MyFisColor.weekendSaturday
+        default: nil
+        }
     }
 }

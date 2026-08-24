@@ -48,7 +48,7 @@ private struct CalendarBar: View {
     var body: some View {
         HStack(spacing: 0) {
             Button {
-                withAnimation(MyFisMotion.base) { expanded.toggle() }
+                withAnimation(MyFisMotion.slow) { expanded.toggle() }
             } label: {
                 HStack(spacing: 2) {
                     Text(expanded ? "접기" : "펼쳐보기")

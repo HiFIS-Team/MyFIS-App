@@ -1,8 +1,12 @@
 package com.myfis.app.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -51,19 +55,27 @@ fun HomeCalendar(
     onSelect: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            // 줄 수가 바뀌는 것을 높이 애니메이션으로 잇는다 — 펼침이 툭 끊기면 안 된다
-            .animateContentSize(MyFisMotion.base()),
-    ) {
-        if (expanded) {
-            WeekdayHeader()
-            monthWeeks(selected).forEach { week ->
-                MonthRow(week = week, selected = selected, onSelect = onSelect)
-            }
-        } else {
+    // 높이만 줄이면 **내용이 먼저 사라지고 빈칸이 뒤늦게 닫힌다** — 아래 줄이 늦게 따라오는 것처럼 보인다.
+    // 접힐 때도 내용과 높이가 같이 움직이도록 `AnimatedVisibility` 로 감싼다.
+    Column(modifier.fillMaxWidth()) {
+        AnimatedVisibility(
+            visible = !expanded,
+            enter = expandVertically(MyFisMotion.slow()) + fadeIn(MyFisMotion.slow()),
+            exit = shrinkVertically(MyFisMotion.slow()) + fadeOut(MyFisMotion.slow()),
+        ) {
             WeekStrip(week = weekOf(selected), selected = selected, onSelect = onSelect)
+        }
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(MyFisMotion.slow()) + fadeIn(MyFisMotion.slow()),
+            exit = shrinkVertically(MyFisMotion.slow()) + fadeOut(MyFisMotion.slow()),
+        ) {
+            Column {
+                WeekdayHeader()
+                monthWeeks(selected).forEach { week ->
+                    MonthRow(week = week, selected = selected, onSelect = onSelect)
+                }
+            }
         }
     }
 }
@@ -111,6 +123,17 @@ private fun WeekStrip(
 }
 
 /** 펼친 상태의 요일 머리글 — 칸마다 요일을 반복하면 달력이 시끄럽다 */
+/**
+ * 토요일 파랑 · 일요일 빨강 — 한국 달력 관행 (DESIGN.md §3.1).
+ * 고른 날은 흰 알약/원이 더 센 신호라 그쪽을 따른다.
+ */
+private val DayOfWeek.weekendColor: Color?
+    get() = when (this) {
+        DayOfWeek.SATURDAY -> MyFisColor.WeekendSaturday
+        DayOfWeek.SUNDAY -> MyFisColor.WeekendSunday
+        else -> null
+    }
+
 @Composable
 private fun WeekdayHeader() {
     Row(
@@ -122,7 +145,7 @@ private fun WeekdayHeader() {
             Text(
                 day.koLabel,
                 style = MyFisTheme.type.caption,
-                color = MyFisColor.TextTertiary,
+                color = day.weekendColor ?: MyFisColor.TextTertiary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .weight(1f)
@@ -160,7 +183,9 @@ private fun MonthDay(day: LocalDate, selected: Boolean, onClick: () -> Unit) {
         if (selected) MyFisColor.TextPrimary else Color.Transparent, motion, label = "monthBg",
     )
     val markFg by animateColorAsState(
-        if (selected) MyFisColor.BgBase else MyFisColor.TextSecondary, motion, label = "monthFg",
+        if (selected) MyFisColor.BgBase else day.dayOfWeek.weekendColor ?: MyFisColor.TextSecondary,
+        motion,
+        label = "monthFg",
     )
 
     Box(
@@ -178,10 +203,10 @@ private fun MonthDay(day: LocalDate, selected: Boolean, onClick: () -> Unit) {
     }
 }
 
-/** [date] 가 속한 주를 **월요일부터** 7일 반환한다. */
+/** [date] 가 속한 주를 **일요일부터** 7일 반환한다 (한국 달력 관행). */
 fun weekOf(date: LocalDate): List<LocalDate> {
-    val monday = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
-    return (0 until DAYS).map { monday.plusDays(it.toLong()) }
+    val sunday = date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+    return (0 until DAYS).map { sunday.plusDays(it.toLong()) }
 }
 
 /**
@@ -191,7 +216,8 @@ fun weekOf(date: LocalDate): List<LocalDate> {
  */
 fun monthWeeks(date: LocalDate): List<List<LocalDate?>> {
     val first = date.withDayOfMonth(1)
-    val lead = (first.dayOfWeek.value - DayOfWeek.MONDAY.value + DAYS) % DAYS
+    // 일요일이 첫 칸이다. `DayOfWeek.SUNDAY.value` 는 7 이라 그대로 나머지 연산에 쓴다
+    val lead = first.dayOfWeek.value % DAYS
     val days: List<LocalDate?> = List(lead) { null } +
         (1..date.lengthOfMonth()).map { first.withDayOfMonth(it) }
     val padded = days + List((DAYS - days.size % DAYS) % DAYS) { null }
@@ -206,8 +232,8 @@ private val PillWidth = 44.dp
 private val MarkSize = 26.dp
 
 private val weekdayOrder = listOf(
-    DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY,
-    DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY,
+    DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
+    DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY,
 )
 
 @Composable
@@ -222,11 +248,12 @@ private fun DayCell(
     val markBg by animateColorAsState(
         if (selected) MyFisColor.TextPrimary else Color.Transparent, motion, label = "markBg",
     )
+    val weekend = day.dayOfWeek.weekendColor
     val markFg by animateColorAsState(
-        if (selected) MyFisColor.BgBase else MyFisColor.TextTertiary, motion, label = "markFg",
+        if (selected) MyFisColor.BgBase else weekend ?: MyFisColor.TextTertiary, motion, label = "markFg",
     )
     val dateFg by animateColorAsState(
-        if (selected) MyFisColor.TextPrimary else MyFisColor.TextSecondary, motion, label = "dateFg",
+        if (selected) MyFisColor.TextPrimary else weekend ?: MyFisColor.TextSecondary, motion, label = "dateFg",
     )
 
     Column(

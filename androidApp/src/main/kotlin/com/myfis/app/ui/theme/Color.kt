@@ -29,6 +29,10 @@ object MyFisColor {
     val AccentPressed = Color(0xFFA8CE24)
     val OnAccent = Color(0xFF000000)
 
+    // 달력 주말 — 한국 달력 관행. 시맨틱(상태)과 값은 같아도 쓰임이 달라 따로 둔다.
+    val WeekendSaturday = Color(0xFF7DA8FF)
+    val WeekendSunday = Color(0xFFFF6B6B)
+
     // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.
     val Success = Color(0xFF4ADE80)
     val Warning = Color(0xFFFBBF24)
