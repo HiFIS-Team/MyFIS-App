@@ -151,16 +151,11 @@ private fun StoreHeader(
 @Composable
 private fun SearchField(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
-    val press by interaction.pressScale()
 
     Row(
         modifier = modifier
             .height(40.dp)
-            .graphicsLayer {
-                scaleX = press
-                scaleY = press
-            }
-            // 알약이 아니라 **모서리만** 둥글다 (§6.9). 완전 라운드는 헤더에서 과하게 동그래 보인다
+            // 누름 축소는 **아이콘에만** 준다 (§6.7). 판이 통째로 움찔거리면 화면이 흔들려 보인다
             .background(MyFisColor.Surface2, MyFisRadius.md)
             .tapWithHaptics(interaction, onClick)
             .padding(horizontal = MyFisSpacing.md),
@@ -440,16 +435,12 @@ private fun ItemCard(
     modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
-    val press by interaction.pressScale()
     val short = (item.price - balance).coerceAtLeast(0)
     val dimmed = item.soldOut
 
     Column(
+        // 누름 축소는 **아이콘에만** 준다 (§6.7). 카드가 통째로 움찔거리면 그리드가 흔들려 보인다
         modifier = modifier
-            .graphicsLayer {
-                scaleX = press
-                scaleY = press
-            }
             .clip(MyFisRadius.md)
             .background(MyFisColor.Surface1)
             .tapWithHaptics(interaction, onClick),

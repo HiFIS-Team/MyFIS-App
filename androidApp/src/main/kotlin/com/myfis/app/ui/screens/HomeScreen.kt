@@ -20,7 +20,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -33,7 +32,6 @@ import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
-import com.myfis.app.ui.theme.pressScale
 import com.myfis.app.ui.theme.tapWithHaptics
 import java.time.LocalDate
 
@@ -121,14 +119,10 @@ private fun ShortcutCard(
     modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
-    val press by interaction.pressScale()
 
     Row(
+        // 누름 축소는 **아이콘에만** 준다 (§6.7). 카드가 통째로 움찔거리면 화면이 흔들려 보인다
         modifier = modifier
-            .graphicsLayer {
-                scaleX = press
-                scaleY = press
-            }
             .clip(MyFisRadius.md)
             .background(MyFisColor.Surface1)
             .tapWithHaptics(interaction, onClick)
