@@ -538,11 +538,14 @@ private struct PauseWhileTouching: ViewModifier {
 /// 알약이 아니라 **글자 + 밑줄**이다. 상품 목록 위에서는 알약이 시각적으로 너무 무겁고,
 /// 여기서 고른 것은 "지금 보고 있는 목록"이라 제목처럼 읽혀야 한다.
 ///
-/// 밑줄은 칸을 따라 **흐른다** (`matchedGeometryEffect`) — 하단 탭·캘린더와 같은 규칙이다.
+/// 밑줄은 칸을 따라 **흐른다** — 글자의 자식이 아니라 **위치를 재서** 옮긴다 (Android 와 같은 방식).
+/// `matchedGeometryEffect` 로 하면 이동이 우리 애니메이션을 타지 않아 속도를 못 정한다 (확인함).
 private struct CategoryFilter: View {
     @Binding var selected: StoreCategory
 
-    @Namespace private var underline
+    @State private var frames: [StoreCategory: CGRect] = [:]
+
+    private static let space = "storeFilter"
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
@@ -552,30 +555,37 @@ private struct CategoryFilter: View {
                     Button {
                         // ⚠️ withAnimation 을 쓰면 **아래 그리드까지** 트랜잭션에 걸려
                         // 상품이 한 장씩 제각각 나타난다 (Android 는 그냥 갈린다).
-                        // 애니메이션은 밑줄에만 걸리도록 아래 `.animation(value:)` 으로 범위를 좁힌다.
                         selected = category
                     } label: {
                         Text(category.label)
                             .font(isSelected ? MyFisFont.titleSm : MyFisFont.body)
                             .foregroundStyle(isSelected ? MyFisColor.textPrimary : MyFisColor.textTertiary)
-                            .padding(.horizontal, MyFisSpacing.sm)
-                            .padding(.vertical, 12)
-                            .overlay(alignment: .bottom) {
-                                if isSelected {
-                                    Rectangle()
-                                        .fill(MyFisColor.textPrimary)
-                                        .frame(height: 2)
-                                        .matchedGeometryEffect(id: "underline", in: underline)
+                            // 글자 자체를 잰다 — 패딩까지 재면 밑줄이 글자보다 넓어진다
+                            .background {
+                                GeometryReader { geo in
+                                    Color.clear.preference(
+                                        key: TabFrames.self,
+                                        value: [category: geo.frame(in: .named(Self.space))]
+                                    )
                                 }
                             }
+                            .padding(.horizontal, MyFisSpacing.sm)
+                            .padding(.vertical, 12)
                     }
                     .buttonStyle(.plain)
                 }
             }
+            .coordinateSpace(.named(Self.space))
             .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-            // 밑줄만 흐르게 한다 — 범위를 여기로 좁혀야 상품 그리드가 딸려 움직이지 않는다.
-            // 고르는 동작이라 `fast`(120ms) 다. `base`(200ms) 는 감속 커브 때문에 끝이 끌린다
-            .animation(MyFisMotion.fast, value: selected)
+            .overlay(alignment: .bottomLeading) {
+                Rectangle()
+                    .fill(MyFisColor.textPrimary)
+                    .frame(width: frames[selected]?.width ?? 0, height: 2)
+                    .offset(x: (frames[selected]?.minX ?? 0) + MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+                    // 고르는 동작이라 `fast`(120ms). `base`(200ms) 는 감속 커브 때문에 끝이 끌린다
+                    .animation(MyFisMotion.fast, value: selected)
+            }
+            .onPreferenceChange(TabFrames.self) { frames = $0 }
         }
         // 스티키 헤더라 배경이 불투명해야 아래 카드가 비쳐 지나가지 않는다
         .background(MyFisColor.bgBase)
@@ -584,6 +594,18 @@ private struct CategoryFilter: View {
                 .fill(MyFisColor.borderSubtle)
                 .frame(height: 1)
         }
+    }
+}
+
+/// 각 카테고리 글자가 어디서 시작해 얼마나 넓은지 — 밑줄을 그리려면 이게 있어야 한다
+private struct TabFrames: PreferenceKey {
+    static let defaultValue: [StoreCategory: CGRect] = [:]
+
+    static func reduce(
+        value: inout [StoreCategory: CGRect],
+        nextValue: () -> [StoreCategory: CGRect]
+    ) {
+        value.merge(nextValue()) { _, new in new }
     }
 }
 
