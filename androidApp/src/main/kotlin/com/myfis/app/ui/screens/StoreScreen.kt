@@ -121,9 +121,10 @@ private fun StoreHeader(
     ) {
         SearchField(
             onClick = onSearch,
+            // 왼쪽은 헤더 여백까지 그대로 쓴다. 여백을 더 주면 필드만 안쪽으로 밀려 짧아 보인다
             modifier = Modifier
                 .weight(1f)
-                .padding(start = MyFisSpacing.sm, end = MyFisSpacing.xs),
+                .padding(end = MyFisSpacing.xs),
         )
         HeaderIcon(R.drawable.ic_header_cart, "장바구니", onCart)
         HeaderIcon(R.drawable.ic_header_my, "마이", onMy)
@@ -146,7 +147,8 @@ private fun SearchField(onClick: () -> Unit, modifier: Modifier = Modifier) {
                 scaleX = press
                 scaleY = press
             }
-            .background(MyFisColor.Surface2, MyFisRadius.full)
+            // 알약이 아니라 **모서리만** 둥글다 (§6.9). 완전 라운드는 헤더에서 과하게 동그래 보인다
+            .background(MyFisColor.Surface2, MyFisRadius.md)
             .tapWithHaptics(interaction, onClick)
             .padding(horizontal = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,

@@ -132,7 +132,7 @@ private struct StoreHeader: View {
     private var row: some View {
         HStack(spacing: 0) {
             SearchField(query: $query, isSearching: $isSearching, focused: $focused, onEnter: onSearch)
-                .padding(.leading, MyFisSpacing.sm)
+                // 왼쪽은 헤더 여백까지 그대로 쓴다. 여백을 더 주면 필드만 안쪽으로 밀려 짧아 보인다
                 .padding(.trailing, isSearching ? MyFisSpacing.sm : MyFisSpacing.xs)
 
             if isSearching {
@@ -176,7 +176,7 @@ private struct GlassMorph: ViewModifier {
         if #available(iOS 26.0, *) {
             if filled {
                 content
-                    .glassEffect(.regular.interactive(), in: .capsule)
+                    .glassEffect(.regular.interactive(), in: SearchField.shape)
                     .glassEffectID(id, in: namespace)
                     .glassEffectTransition(.matchedGeometry)
             } else {
@@ -185,7 +185,7 @@ private struct GlassMorph: ViewModifier {
                     .glassEffectTransition(.matchedGeometry)
             }
         } else if filled {
-            content.background(MyFisColor.surface3, in: Capsule())
+            content.background(MyFisColor.surface3, in: SearchField.shape)
         } else {
             content
         }
@@ -201,6 +201,8 @@ private struct SearchField: View {
     @Binding var isSearching: Bool
     @FocusState.Binding var focused: Bool
     let onEnter: () -> Void
+
+    static let shape = RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
 
     var body: some View {
         HStack(spacing: MyFisSpacing.sm) {
@@ -244,8 +246,9 @@ private struct SearchField: View {
         .padding(.horizontal, MyFisSpacing.md)
         .frame(height: 40)
         .frame(maxWidth: .infinity)
-        .background(MyFisColor.surface2, in: Capsule())
-        .contentShape(Capsule())
+        // 알약이 아니라 **모서리만** 둥글다 (§6.9). 완전 라운드는 헤더에서 과하게 동그래 보인다
+        .background(MyFisColor.surface2, in: Self.shape)
+        .contentShape(Self.shape)
         .onTapGesture {
             guard !isSearching else { return }
             withAnimation(MyFisMotion.slow) { isSearching = true }
