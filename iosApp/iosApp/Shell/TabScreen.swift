@@ -6,18 +6,19 @@ enum HeaderRoute: Hashable {
     // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 여기에 추가한다.
 }
 
-/// 탭 하나의 뼈대 — 배경 + 헤더 + 내용.
+/// 탭 하나의 뼈대 — 배경 + 내용.
 ///
-/// 잎 화면은 여기서 열지 않는다. 셸 위에 통째로 덮이므로 [AppShell] 이 들고 있다.
+/// **헤더는 여기 없다.** 화면마다 헤더가 달라서 각 화면이 직접 들고 있다 (DESIGN.md §6.9) —
+/// 홈은 지점·멤버십·알림, 스토어는 검색·장바구니·마이.
+///
+/// 잎 화면도 여기서 열지 않는다. 셸 위에 통째로 덮이므로 [AppShell] 이 들고 있다.
 struct TabScreen<Content: View>: View {
-    var onNotification: () -> Void = {}
     @ViewBuilder var content: Content
 
     var body: some View {
         ZStack {
             MyFisColor.bgBase.ignoresSafeArea()
             VStack(spacing: 0) {
-                AppHeader(onNotification: onNotification)
                 content
             }
         }

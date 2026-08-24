@@ -17,10 +17,23 @@ struct AppShell: View {
         static let weightPortal = 3
         /// 웨이트 세트에서 기본 세트로 나가는 자리 (항상 첫 번째)
         static let backPortal = 0
+        /// 마이 — 스토어 헤더의 '마이' 가 여기로 보낸다
+        static let my = 4
+        static let store = 2
+
+        /// 시뮬레이터에는 탭을 누를 수단이 없다. 스토어 화면을 스크린샷으로 확인할 때
+        /// `SIMCTL_CHILD_MYFIS_TAB=store` 로 띄운다. 디버그 빌드에서만 동작한다.
+        static var initialBaseForDebug: Int {
+            #if DEBUG
+            ProcessInfo.processInfo.environment["MYFIS_TAB"] == "store" ? store : 0
+            #else
+            0
+            #endif
+        }
     }
 
     @State private var tabSet: TabSet = .initialForDebug
-    @State private var baseSlot = 0
+    @State private var baseSlot = Slot.initialBaseForDebug
     @State private var weightSlot = 1
 
     /// 셸 위를 덮고 있는 잎 화면. nil 이면 탭만 보인다.
@@ -126,16 +139,17 @@ struct AppShell: View {
         if tabSet == .base {
             switch baseTabs[slot] {
             case .home:
-                TabScreen(onNotification: { open(.notifications) }) { HomeScreen() }
+                TabScreen { HomeScreen(onNotification: { open(.notifications) }) }
             case .benefit:
                 screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
             case .store:
-                screen(id: "S-01", title: "스토어", description: "마일리지로 굿즈·음료 교환")
+                // 스토어 헤더의 '마이' 는 마이 탭으로 간다. 목적지를 새로 만들지 않는다.
+                TabScreen { StoreScreen(onMy: { baseSlot = Slot.my }) }
             case .my:
                 // TODO: Y-01 마이 화면이 붙으면 교체한다.
                 // 그때까지 토큰 확인 화면을 여기 둔다 — 스크롤 콘텐츠가 있어야
                 // 유리 바 뒤로 뭐가 지나가는지 확인할 수 있다.
-                TabScreen(onNotification: { open(.notifications) }) { DesignTokensView() }
+                TabScreen { DesignTokensView() }
             case .weight:
                 Color.clear // 통로
             }
@@ -156,7 +170,7 @@ struct AppShell: View {
     }
 
     private func screen(id: String, title: String, description: String) -> some View {
-        TabScreen(onNotification: { open(.notifications) }) {
+        TabScreen {
             PlaceholderScreen(id: id, title: title, description: description)
         }
     }

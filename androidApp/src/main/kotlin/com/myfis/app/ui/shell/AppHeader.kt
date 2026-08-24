@@ -25,10 +25,13 @@ import com.myfis.app.ui.theme.pressScale
 import com.myfis.app.ui.theme.tapWithHaptics
 
 /**
- * 화면 상단 헤더.
+ * **홈 헤더** (DESIGN.md §6.9).
  *
  * - 왼쪽: 지점 (누르면 지점 선택 M-01)
  * - 오른쪽: 멤버십 (M-06) · 알림 (H-02)
+ *
+ * 헤더는 셸이 아니라 **화면이 들고 있다.** 화면마다 헤더가 다르기 때문이다 —
+ * 스토어는 검색·장바구니·마이를 쓴다 ([StoreHeader]).
  *
  * 아이콘은 §8 아웃라인 1.5px 규칙을 따른다. 하단 탭과 달리 시스템 컴포넌트가 아니므로
  * 두 플랫폼이 같은 벡터를 쓴다.
@@ -67,8 +70,9 @@ fun AppHeader(
     }
 }
 
+/** 헤더의 아이콘 버튼. 홈·스토어 등 화면별 헤더가 같이 쓴다 (DESIGN.md §6.9). */
 @Composable
-private fun HeaderIcon(icon: Int, description: String, onClick: () -> Unit) {
+internal fun HeaderIcon(icon: Int, description: String, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val press by interaction.pressScale()
 

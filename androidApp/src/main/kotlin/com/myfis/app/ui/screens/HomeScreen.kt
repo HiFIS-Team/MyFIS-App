@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.myfis.app.ui.components.WeekCalendar
 import com.myfis.app.ui.components.weekOf
+import com.myfis.app.ui.shell.AppHeader
 import com.myfis.app.ui.shell.PlaceholderScreen
 import com.myfis.app.ui.theme.MyFisSpacing
 import java.time.LocalDate
@@ -21,9 +22,12 @@ import java.time.LocalDate
  *
  * 헤더 바로 밑에 **이번 주 캘린더**가 있고, 그 아래가 고른 날의 내용이다.
  * 아직 카드가 없어 자리값만 둔다.
+ *
+ * **헤더는 셸이 아니라 화면이 들고 있다.** 지점·멤버십·알림 헤더는 홈에서만 쓴다 —
+ * 스토어는 검색·장바구니·마이를 쓴다 (DESIGN.md §6.9).
  */
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onNotification: () -> Unit = {}) {
     val today = remember { LocalDate.now() }
     val week = remember(today) { weekOf(today) }
 
@@ -32,6 +36,7 @@ fun HomeScreen() {
     val selected = LocalDate.ofEpochDay(selectedEpochDay)
 
     Column(Modifier.fillMaxSize()) {
+        AppHeader(onNotification = onNotification)
         WeekCalendar(
             week = week,
             selected = selected,

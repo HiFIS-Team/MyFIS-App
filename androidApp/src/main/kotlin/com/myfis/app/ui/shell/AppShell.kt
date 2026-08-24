@@ -20,6 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
+import com.myfis.app.ui.screens.StoreScreen
 import com.myfis.app.ui.theme.MyFisColor
 
 /**
@@ -61,13 +62,16 @@ private fun TabShell(onNotification: () -> Unit) {
     var weightTab by rememberSaveable { mutableStateOf(WeightTab.WEIGHT) }
 
     Column(Modifier.fillMaxSize().background(MyFisColor.BgBase)) {
-        Column(Modifier.weight(1f).statusBarsPadding()) {
-            AppHeader(onNotification = onNotification)
-            Box(Modifier.weight(1f)) {
-                when (tabSet) {
-                    TabSet.BASE -> BaseTabContent(baseTab)
-                    TabSet.WEIGHT -> WeightTabContent(weightTab)
-                }
+        // 헤더는 셸이 아니라 **화면마다** 다르다 (DESIGN.md §6.9).
+        // 셸은 상태바 여백까지만 책임진다.
+        Box(Modifier.weight(1f).statusBarsPadding()) {
+            when (tabSet) {
+                TabSet.BASE -> BaseTabContent(
+                    tab = baseTab,
+                    onNotification = onNotification,
+                    onSelectTab = { baseTab = it },
+                )
+                TabSet.WEIGHT -> WeightTabContent(weightTab)
             }
         }
 
@@ -88,11 +92,16 @@ private fun TabShell(onNotification: () -> Unit) {
 }
 
 @Composable
-private fun BaseTabContent(tab: BaseTab) {
+private fun BaseTabContent(
+    tab: BaseTab,
+    onNotification: () -> Unit,
+    onSelectTab: (BaseTab) -> Unit,
+) {
     when (tab) {
-        BaseTab.HOME -> HomeScreen()
+        BaseTab.HOME -> HomeScreen(onNotification = onNotification)
         BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
-        BaseTab.STORE -> PlaceholderScreen("S-01", "스토어", "마일리지로 굿즈·음료 교환")
+        // 스토어 헤더의 '마이' 는 마이 탭으로 간다. 목적지를 새로 만들지 않는다.
+        BaseTab.STORE -> StoreScreen(onMy = { onSelectTab(BaseTab.MY) })
         BaseTab.MY -> PlaceholderScreen("Y-01", "마이", "프로필 · 기록 · 설정")
         // 통로라 여기 도달하지 않는다
         BaseTab.WEIGHT -> Unit
