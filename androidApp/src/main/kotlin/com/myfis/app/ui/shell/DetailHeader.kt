@@ -20,6 +20,8 @@ import com.myfis.app.R
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
+import com.myfis.app.ui.theme.pressScale
+import com.myfis.app.ui.theme.tapWithHaptics
 
 /**
  * 밀려 들어온 화면(잎 화면)의 상단 바.

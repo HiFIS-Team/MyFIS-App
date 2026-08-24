@@ -28,10 +28,14 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // minSdk 24 에서 java.time 을 쓰려면 필요하다 (java.time 은 API 26+)
+        isCoreLibraryDesugaringEnabled = true
     }
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
+
     implementation(project(":shared"))
 
     implementation(libs.androidx.core.ktx)

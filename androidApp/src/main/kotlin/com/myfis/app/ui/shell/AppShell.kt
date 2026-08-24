@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.theme.MyFisColor
 
@@ -89,7 +90,7 @@ private fun TabShell(onNotification: () -> Unit) {
 @Composable
 private fun BaseTabContent(tab: BaseTab) {
     when (tab) {
-        BaseTab.HOME -> PlaceholderScreen("H-01", "홈", "회원권 상태 · 오늘 할 운동 · 마일리지")
+        BaseTab.HOME -> HomeScreen()
         BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
         BaseTab.STORE -> PlaceholderScreen("S-01", "스토어", "마일리지로 굿즈·음료 교환")
         BaseTab.MY -> PlaceholderScreen("Y-01", "마이", "프로필 · 기록 · 설정")

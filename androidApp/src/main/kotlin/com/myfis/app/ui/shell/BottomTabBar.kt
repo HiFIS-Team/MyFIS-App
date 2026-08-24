@@ -4,14 +4,10 @@ import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.animateBounds
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
@@ -38,8 +33,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.layout.LookaheadScope
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -47,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
+import com.myfis.app.ui.theme.pressScale
+import com.myfis.app.ui.theme.tapWithHaptics
 import kotlinx.coroutines.delay
 
 /**
@@ -227,38 +222,6 @@ private fun ExitButton(tab: Tab, onClick: () -> Unit, modifier: Modifier = Modif
             modifier = Modifier.size(24.dp),
         )
     }
-}
-
-/**
- * 누르면 살짝 작아졌다 되돌아온다.
- *
- * 되돌아올 때 스프링이 살짝 튀게(`dampingRatio` 를 낮게) 둬야 "눌렀다"는 느낌이 산다.
- */
-@Composable
-internal fun InteractionSource.pressScale(): State<Float> {
-    val pressed by collectIsPressedAsState()
-    return animateFloatAsState(
-        targetValue = if (pressed) 0.86f else 1f,
-        animationSpec = spring(dampingRatio = 0.45f, stiffness = 900f),
-        label = "pressScale",
-    )
-}
-
-/** 탭에 가벼운 진동을 붙인다. 선택은 결과가 눈에 보이므로 약한 tick 이면 충분하다. */
-@Composable
-internal fun Modifier.tapWithHaptics(
-    interaction: MutableInteractionSource,
-    onClick: () -> Unit,
-): Modifier {
-    val haptics = LocalHapticFeedback.current
-    return this.clickable(
-        interactionSource = interaction,
-        indication = null,
-        onClick = {
-            haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
-            onClick()
-        },
-    )
 }
 
 @Composable

@@ -126,7 +126,7 @@ struct AppShell: View {
         if tabSet == .base {
             switch baseTabs[slot] {
             case .home:
-                screen(id: "H-01", title: "홈", description: "회원권 상태 · 오늘 할 운동 · 마일리지")
+                TabScreen(onNotification: { open(.notifications) }) { HomeScreen() }
             case .benefit:
                 screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
             case .store:

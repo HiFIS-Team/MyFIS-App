@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisSpacing
+import com.myfis.app.ui.theme.pressScale
+import com.myfis.app.ui.theme.tapWithHaptics
 
 /**
  * 화면 상단 헤더.
