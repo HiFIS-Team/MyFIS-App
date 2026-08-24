@@ -60,15 +60,19 @@ fun HomeScreen(
     // LocalDate 는 Saveable 이 아니라 epochDay 로 들고 있는다.
     var selectedEpochDay by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
     var expanded by rememberSaveable { mutableStateOf(false) }
+    // 펼쳤을 때 보고 있는 달. 고른 날과 따로 둔다 — 지난 달을 넘겨봐도 고른 날은 그대로다
+    var monthEpochDay by rememberSaveable { mutableLongStateOf(today.withDayOfMonth(1).toEpochDay()) }
     val selected = LocalDate.ofEpochDay(selectedEpochDay)
 
     Column(Modifier.fillMaxSize()) {
         AppHeader(onNotification = onNotification)
         HomeCalendar(
             selected = selected,
+            month = LocalDate.ofEpochDay(monthEpochDay),
             expanded = expanded,
             attended = remember(today) { attendedPlaceholder(today) },
             onSelect = { selectedEpochDay = it.toEpochDay() },
+            onMonthChange = { monthEpochDay = it.withDayOfMonth(1).toEpochDay() },
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
         CalendarBar(
@@ -197,7 +201,8 @@ private fun CalendarBar(
             modifier = Modifier
                 .clip(MyFisRadius.full)
                 .tapWithHaptics(interaction, onToggle)
-                .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.sm),
+                // 오른쪽 뱃지와 세로 중심을 맞춘다 (패딩이 다르면 한쪽이 떠 보인다)
+                .padding(horizontal = MyFisSpacing.sm, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
@@ -230,10 +235,8 @@ private fun CalendarBar(
             Image(
                 painter = painterResource(R.drawable.ic_stamp),
                 contentDescription = null, // 옆 글자가 이름 역할을 한다
-                modifier = Modifier
-                    .size(22.dp)
-                    // 달력의 도장들과 같은 규칙 — 반듯하면 스티커처럼 보인다
-                    .graphicsLayer { rotationZ = -8f },
+                // 달력 안에서는 기울여 찍지만, 뱃지에서는 **반듯하게** 둔다 — 여기선 기호에 가깝다
+                modifier = Modifier.size(22.dp),
             )
             Text("연속 출석", style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
             Row(verticalAlignment = Alignment.Bottom) {

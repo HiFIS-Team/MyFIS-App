@@ -9,6 +9,8 @@ import SwiftUI
 /// 접힌 줄의 알약은 칸을 따라 **흐른다** (`matchedGeometryEffect`).
 struct HomeCalendar: View {
     @Binding var selected: Date
+    /// 펼쳤을 때 보이는 달 (그 달의 아무 날)
+    @Binding var month: Date
     let expanded: Bool
     /// 출석한 날인지 — `Set<Date>` 는 시분초 때문에 그대로 못 쓴다
     var isAttended: (Date) -> Bool = { _ in false }
@@ -25,8 +27,9 @@ struct HomeCalendar: View {
     var body: some View {
         VStack(spacing: 0) {
             if expanded {
+                monthHeader
                 weekdayHeader
-                ForEach(Array(MyFisCalendar.monthWeeks(of: selected).enumerated()), id: \.offset) { _, week in
+                ForEach(Array(MyFisCalendar.monthWeeks(of: month).enumerated()), id: \.offset) { _, week in
                     monthRow(week)
                 }
             } else {
@@ -111,6 +114,39 @@ struct HomeCalendar: View {
 
     // MARK: - 펼친 달
 
+    /// 펼친 상태의 달 머리글 — `2026년 8월` 과 앞뒤 달로 가는 화살표
+    private var monthHeader: some View {
+        HStack(spacing: 0) {
+            Text(MyFisCalendar.monthTitle(month))
+                .font(MyFisFont.titleMd.monospacedDigit())
+                .foregroundStyle(MyFisColor.textPrimary)
+            Spacer(minLength: 0)
+            // 화살표는 아래쪽 화살표 한 벌을 돌려 쓴다 (§6.11)
+            monthArrow(degrees: 90, label: "이전 달", step: -1)
+            monthArrow(degrees: -90, label: "다음 달", step: 1)
+        }
+        .padding(.trailing, -MyFisSpacing.sm)
+        .padding(.bottom, MyFisSpacing.md)
+    }
+
+    private func monthArrow(degrees: Double, label: String, step: Int) -> some View {
+        Button {
+            guard let next = MyFisCalendar.calendar.date(byAdding: .month, value: step, to: month)
+            else { return }
+            month = next
+        } label: {
+            Image("ic_chevron_down")
+                .resizable()
+                .frame(width: 20, height: 20)
+                .rotationEffect(.degrees(degrees))
+                .foregroundStyle(MyFisColor.textSecondary)
+                .frame(width: 40, height: 40)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+
     /// 칸마다 요일을 반복하면 달력이 시끄럽다 — 머리글 한 줄로 뺀다
     private var weekdayHeader: some View {
         HStack(spacing: 0) {
@@ -135,7 +171,7 @@ struct HomeCalendar: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
-                .frame(height: 44)
+                .frame(height: 50)
             }
         }
     }
@@ -143,27 +179,30 @@ struct HomeCalendar: View {
     private func monthDay(_ day: Date) -> some View {
         let isSelected = MyFisCalendar.isSameDay(day, selected)
 
-        return Text(MyFisCalendar.dayNumber(day))
-            .font(MyFisFont.bodySm.monospacedDigit())
-            .foregroundStyle(
-                isSelected
-                    ? MyFisColor.bgBase
-                    : MyFisCalendar.weekendColor(day) ?? MyFisColor.textSecondary
-            )
-            .frame(width: markSize + 6, height: markSize + 6)
-            .background {
-                if isSelected {
-                    Circle().fill(MyFisColor.textPrimary)
-                }
+        return VStack(spacing: 0) {
+            ZStack {
+                Text(MyFisCalendar.dayNumber(day))
+                    .font(MyFisFont.bodySm.monospacedDigit())
+                    .foregroundStyle(
+                        isSelected
+                            ? MyFisColor.textPrimary
+                            : MyFisCalendar.weekendColor(day) ?? MyFisColor.textSecondary
+                    )
+                // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
+                stamp(day)
             }
             .frame(width: stampSize, height: stampSize)
-            // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
-            .overlay { stamp(day) }
-            .contentShape(Circle())
-            .onTapGesture {
-                guard !isSelected else { return }
-                withAnimation(MyFisMotion.base) { selected = day }
-            }
+
+            // 고른 날은 **동그라미 대신 밑에 점**이다. 도장과 겹치지 않고, 달력이 조용해진다
+            Circle()
+                .fill(isSelected ? MyFisColor.textPrimary : .clear)
+                .frame(width: 5, height: 5)
+        }
+        .contentShape(Rectangle())
+        .onTapGesture {
+            guard !isSelected else { return }
+            withAnimation(MyFisMotion.base) { selected = day }
+        }
     }
 }
 
@@ -212,6 +251,12 @@ enum MyFisCalendar {
 
     static func dayNumber(_ date: Date) -> String {
         String(calendar.component(.day, from: date))
+    }
+
+    /// `2026년 8월`
+    static func monthTitle(_ date: Date) -> String {
+        let parts = calendar.dateComponents([.year, .month], from: date)
+        return "\(parts.year ?? 0)년 \(parts.month ?? 0)월"
     }
 
     static func weekdayLabel(_ date: Date) -> String {

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
@@ -28,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
@@ -39,6 +41,7 @@ import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
+import com.myfis.app.ui.theme.pressScale
 import com.myfis.app.ui.theme.tapWithHaptics
 import java.time.DayOfWeek
 import java.time.LocalDate
@@ -54,9 +57,12 @@ import java.time.temporal.TemporalAdjusters
 @Composable
 fun HomeCalendar(
     selected: LocalDate,
+    /** 펼쳤을 때 보이는 달 (그 달의 아무 날) */
+    month: LocalDate,
     expanded: Boolean,
     attended: Set<LocalDate>,
     onSelect: (LocalDate) -> Unit,
+    onMonthChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // 높이만 줄이면 **내용이 먼저 사라지고 빈칸이 뒤늦게 닫힌다** — 아래 줄이 늦게 따라오는 것처럼 보인다.
@@ -80,8 +86,13 @@ fun HomeCalendar(
             exit = shrinkVertically(MyFisMotion.slow()) + fadeOut(MyFisMotion.slow()),
         ) {
             Column {
+                MonthHeader(
+                    month = month,
+                    onPrev = { onMonthChange(month.minusMonths(1)) },
+                    onNext = { onMonthChange(month.plusMonths(1)) },
+                )
                 WeekdayHeader()
-                monthWeeks(selected).forEach { week ->
+                monthWeeks(month).forEach { week ->
                     MonthRow(
                         week = week,
                         selected = selected,
@@ -138,6 +149,58 @@ private fun WeekStrip(
     }
 }
 
+/** 펼친 상태의 달 머리글 — `2026년 8월` 과 앞뒤 달로 가는 화살표 */
+@Composable
+private fun MonthHeader(month: LocalDate, onPrev: () -> Unit, onNext: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(
+                start = MyFisSpacing.screenHorizontal,
+                end = MyFisSpacing.screenHorizontal - MyFisSpacing.sm,
+                bottom = MyFisSpacing.md,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            "${month.year}년 ${month.monthValue}월",
+            style = MyFisTheme.type.titleMd.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextPrimary,
+        )
+        Spacer(Modifier.weight(1f))
+        // 화살표는 아래쪽 화살표 한 벌을 돌려 쓴다 (§6.11)
+        MonthArrow(rotation = 90f, description = "이전 달", onClick = onPrev)
+        MonthArrow(rotation = -90f, description = "다음 달", onClick = onNext)
+    }
+}
+
+@Composable
+private fun MonthArrow(rotation: Float, description: String, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val press by interaction.pressScale()
+
+    Box(
+        Modifier
+            .size(40.dp)
+            .clip(MyFisRadius.full)
+            .tapWithHaptics(interaction, onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_chevron_down),
+            contentDescription = description,
+            tint = MyFisColor.TextSecondary,
+            modifier = Modifier
+                .size(20.dp)
+                .graphicsLayer {
+                    rotationZ = rotation
+                    scaleX = press
+                    scaleY = press
+                },
+        )
+    }
+}
+
 /** 펼친 상태의 요일 머리글 — 칸마다 요일을 반복하면 달력이 시끄럽다 */
 /**
  * 토요일 파랑 · 일요일 빨강 — 한국 달력 관행 (DESIGN.md §3.1).
@@ -185,7 +248,7 @@ private fun MonthRow(
             .padding(horizontal = MyFisSpacing.screenHorizontal),
     ) {
         week.forEach { day ->
-            Box(Modifier.weight(1f).height(44.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.weight(1f).height(50.dp), contentAlignment = Alignment.Center) {
                 if (day != null) MonthDay(day, day == selected, day in attended) { onSelect(day) }
             }
         }
@@ -200,34 +263,34 @@ private fun MonthDay(
     onClick: () -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
-    val motion = MyFisMotion.base<Color>()
-    val markBg by animateColorAsState(
-        if (selected) MyFisColor.TextPrimary else Color.Transparent, motion, label = "monthBg",
-    )
-    val markFg by animateColorAsState(
-        if (selected) MyFisColor.BgBase else day.dayOfWeek.weekendColor ?: MyFisColor.TextSecondary,
-        motion,
+    val dateFg by animateColorAsState(
+        if (selected) MyFisColor.TextPrimary else day.dayOfWeek.weekendColor ?: MyFisColor.TextSecondary,
+        MyFisMotion.base(),
         label = "monthFg",
     )
 
-    Box(
-        Modifier
-            .size(StampSize)
-            .tapWithHaptics(interaction, onClick),
-        contentAlignment = Alignment.Center,
+    Column(
+        modifier = Modifier.tapWithHaptics(interaction, onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(
-            Modifier.size(MarkSize + 6.dp).background(markBg, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
+        Box(Modifier.size(StampSize), contentAlignment = Alignment.Center) {
             Text(
                 day.dayOfMonth.toString(),
                 style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-                color = markFg,
+                color = dateFg,
             )
+            // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
+            if (attended) Stamp(day)
         }
-        // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
-        if (attended) Stamp(day)
+        // 고른 날은 **동그라미 대신 밑에 점**이다. 도장과 겹치지 않고, 달력이 조용해진다
+        Box(
+            Modifier
+                .size(DotSize)
+                .background(
+                    if (selected) MyFisColor.TextPrimary else Color.Transparent,
+                    CircleShape,
+                ),
+        )
     }
 }
 
@@ -261,6 +324,9 @@ private val MarkSize = 26.dp
 
 /** 출석 도장이 날짜를 감싸는 크기 */
 private val StampSize = 40.dp
+
+/** 고른 날 표시 — 날짜 밑 점 */
+private val DotSize = 5.dp
 
 /**
  * 출석 도장 — 우리 로고 도장 그대로다.

@@ -14,12 +14,15 @@ struct HomeScreen: View {
 
     @State private var selected = Date()
     @State private var expanded = false
+    /// 펼쳤을 때 보고 있는 달. 고른 날과 따로 둔다 — 지난 달을 넘겨봐도 고른 날은 그대로다
+    @State private var month = Date()
 
     var body: some View {
         VStack(spacing: 0) {
             AppHeader(onNotification: onNotification)
             HomeCalendar(
                 selected: $selected,
+                month: $month,
                 expanded: expanded,
                 isAttended: HomePlaceholder.isAttended
             )
@@ -63,8 +66,9 @@ private struct CalendarBar: View {
                         .rotationEffect(.degrees(expanded ? 180 : 0))
                 }
                 .foregroundStyle(MyFisColor.textSecondary)
+                // 오른쪽 뱃지와 세로 중심을 맞춘다 (패딩이 다르면 한쪽이 떠 보인다)
                 .padding(.horizontal, MyFisSpacing.sm)
-                .padding(.vertical, MyFisSpacing.sm)
+                .padding(.vertical, 6)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -73,11 +77,10 @@ private struct CalendarBar: View {
 
             // 도장을 모은 결과라 **도장 자체를 뱃지에 넣는다.** 체크 아이콘보다 무슨 숫자인지가 분명해진다
             HStack(spacing: MyFisSpacing.xs) {
+                // 달력 안에서는 기울여 찍지만, 뱃지에서는 **반듯하게** 둔다 — 여기선 기호에 가깝다
                 Image("ic_stamp")
                     .resizable()
                     .frame(width: 22, height: 22)
-                    // 달력의 도장들과 같은 규칙 — 반듯하면 스티커처럼 보인다
-                    .rotationEffect(.degrees(-8))
                 Text("연속 출석")
                     .font(MyFisFont.caption)
                     .foregroundStyle(MyFisColor.textTertiary)
