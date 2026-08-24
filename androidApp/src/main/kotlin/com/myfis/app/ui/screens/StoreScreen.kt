@@ -50,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.myfis.app.R
 import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisColor
@@ -484,14 +485,15 @@ private fun ItemCard(
         Column(Modifier.padding(MyFisSpacing.md)) {
             Text(
                 item.name,
-                style = MyFisTheme.type.bodySm,
+                // 행간은 토큰(24)보다 좁힌다 — 두 줄을 미리 잡아 두므로 그대로 두면 제목 아래가 휑하다
+                style = MyFisTheme.type.body.copy(lineHeight = 20.sp),
                 color = if (dimmed) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
                 // 두 줄로 고정해야 카드 높이가 서로 같다
                 minLines = 2,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            MetaRow(item, Modifier.padding(top = MyFisSpacing.xs))
+            MetaRow(item, Modifier.padding(top = 2.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -529,7 +531,13 @@ private fun MetaRow(item: StoreItem, modifier: Modifier = Modifier) {
             style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
             color = MyFisColor.TextTertiary,
         )
-        Text("·", style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
+        // 구분은 점이 아니라 **세로선**이다. 점은 조회수 숫자에 묻힌다
+        Box(
+            Modifier
+                .padding(horizontal = 2.dp)
+                .size(width = 1.dp, height = 10.dp)
+                .background(MyFisColor.BorderStrong),
+        )
         Icon(
             painter = painterResource(R.drawable.ic_store_rating),
             contentDescription = null,

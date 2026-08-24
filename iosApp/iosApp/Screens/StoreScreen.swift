@@ -655,14 +655,14 @@ private struct ItemCard: View {
             image
             VStack(alignment: .leading, spacing: 0) {
                 Text(item.name)
-                    .font(MyFisFont.bodySm)
+                    .font(MyFisFont.body)
                     .foregroundStyle(dimmed ? MyFisColor.textTertiary : MyFisColor.textPrimary)
                     // 두 줄로 고정해야 카드 높이가 서로 같다
                     .lineLimit(2, reservesSpace: true)
                     .multilineTextAlignment(.leading)
 
                 meta
-                    .padding(.top, MyFisSpacing.xs)
+                    .padding(.top, 2)
 
                 HStack(spacing: 0) {
                     Text(item.price.mileage)
@@ -716,8 +716,11 @@ private struct ItemCard: View {
                 .frame(width: 13, height: 13)
             Text(item.views.viewCount)
                 .font(MyFisFont.caption.monospacedDigit())
-            Text("·")
-                .font(MyFisFont.caption)
+            // 구분은 점이 아니라 **세로선**이다. 점은 조회수 숫자에 묻힌다
+            Rectangle()
+                .fill(MyFisColor.borderStrong)
+                .frame(width: 1, height: 10)
+                .padding(.horizontal, 2)
             Image("ic_store_rating")
                 .resizable()
                 .frame(width: 11, height: 11)
