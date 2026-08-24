@@ -105,6 +105,7 @@ struct HomeCalendar: View {
             Image("ic_stamp")
                 .resizable()
                 .frame(width: stampSize, height: stampSize)
+                .rotationEffect(.degrees(MyFisCalendar.stampAngle(day)))
         }
     }
 
@@ -225,6 +226,16 @@ enum MyFisCalendar {
         case 7: MyFisColor.weekendSaturday
         default: nil
         }
+    }
+
+    /// 진짜 도장은 삐뚤게 찍힌다. 날짜에서 각도를 뽑아 **-10°~+10°** 로 기울인다.
+    ///
+    /// 무작위가 아니라 **날짜에서 계산**한다 — 다시 그릴 때마다 각도가 바뀌면 화면이 들썩인다.
+    /// 두 플랫폼이 같은 식을 쓰므로 같은 날은 같은 각도다.
+    static func stampAngle(_ date: Date) -> Double {
+        let parts = calendar.dateComponents([.day, .month], from: date)
+        let value = ((parts.day ?? 0) * 37 + (parts.month ?? 0) * 13) % 21 - 10
+        return Double(value)
     }
 
     static func weekendColor(label: String) -> Color? {

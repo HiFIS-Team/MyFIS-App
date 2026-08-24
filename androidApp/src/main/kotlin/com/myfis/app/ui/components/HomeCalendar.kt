@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -226,7 +227,7 @@ private fun MonthDay(
             )
         }
         // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
-        if (attended) Stamp()
+        if (attended) Stamp(day)
     }
 }
 
@@ -269,13 +270,24 @@ private val StampSize = 40.dp
  * 색이 있는 그림이라 `Icon`(tint)이 아니라 `Image` 로 그린다.
  */
 @Composable
-private fun Stamp() {
+private fun Stamp(day: LocalDate) {
     Image(
         painter = painterResource(R.drawable.ic_stamp),
         contentDescription = null, // 출석 여부는 화면 낭독에서 날짜와 함께 읽히면 된다
-        modifier = Modifier.size(StampSize),
+        modifier = Modifier
+            .size(StampSize)
+            .graphicsLayer { rotationZ = day.stampAngle() },
     )
 }
+
+/**
+ * 진짜 도장은 삐뚤게 찍힌다. 날짜에서 각도를 뽑아 **-10°~+10°** 로 기울인다.
+ *
+ * 무작위가 아니라 **날짜에서 계산**한다 — 다시 그릴 때마다 각도가 바뀌면 화면이 들썩인다.
+ * 두 플랫폼이 같은 식을 쓰므로 같은 날은 같은 각도다.
+ */
+private fun LocalDate.stampAngle(): Float =
+    ((dayOfMonth * 37 + monthValue * 13) % 21 - 10).toFloat()
 
 private val weekdayOrder = listOf(
     DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
@@ -329,7 +341,7 @@ private fun DayCell(
                 color = dateFg,
             )
             // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
-            if (attended) Stamp()
+            if (attended) Stamp(day)
         }
     }
 }
