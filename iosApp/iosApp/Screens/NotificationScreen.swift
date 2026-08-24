@@ -92,7 +92,10 @@ private struct NotificationRow: View {
                 .frame(width: 6, height: 6)
                 .padding(.top, 8)
 
+            // 하단 탭과 같은 벡터를 쓴다. 탭에서는 28pt 로 그리므로 목록 크기는 여기서 정한다.
             Image(item.kind.icon)
+                .resizable()
+                .frame(width: 22, height: 22)
                 .foregroundStyle(MyFisColor.textSecondary)
 
             VStack(alignment: .leading, spacing: MyFisSpacing.xs) {

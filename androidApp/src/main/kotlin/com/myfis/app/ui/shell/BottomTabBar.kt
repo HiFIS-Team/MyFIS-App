@@ -264,9 +264,11 @@ internal fun Modifier.tapWithHaptics(
 @Composable
 private fun TabItem(slot: BarSlot, modifier: Modifier = Modifier) {
     val label = slot.tab.label
-    val icon = slot.tab.icon
+    // 선택은 **색이 아니라 채움**으로 알린다 (DESIGN.md §6.7).
+    // 실루엣은 그대로 두고 안쪽만 차므로 눌렀을 때 아이콘이 튀지 않는다.
+    val icon = if (slot.selected) slot.tab.iconFill else slot.tab.icon
     val onClick = slot.onClick
-    val tint: Color = if (slot.selected) MyFisColor.Accent else MyFisColor.TextTertiary
+    val tint: Color = if (slot.selected) MyFisColor.TextPrimary else MyFisColor.TextTertiary
     val interaction = remember { MutableInteractionSource() }
     val press by interaction.pressScale()
 

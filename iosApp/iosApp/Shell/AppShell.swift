@@ -38,7 +38,9 @@ struct AppShell: View {
                         .tag(slot)
                 }
             }
-            .tint(MyFisColor.accent)
+            // 선택은 **색이 아니라 채움**으로 알린다 (DESIGN.md §6.7).
+            // 라임은 화면 콘텐츠 몫으로 남긴다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
+            .tint(MyFisColor.textPrimary)
 
             // 잎 화면은 **탭 바를 감추지 않고 그 위를 덮는다.**
             // `.toolbar(.hidden, for: .tabBar)` 로 감추면 돌아올 때 시스템이 유리 바를
@@ -101,13 +103,15 @@ struct AppShell: View {
 
     // MARK: - 슬롯별 내용
 
-    @ViewBuilder
-    private func icon(for slot: Int) -> some View {
-        switch tabSet == .base ? baseTabs[slot].icon : weightTabs[slot].icon {
-        // 크기는 시스템이 정한다. .font(.system(size:)) / .imageScale 은 탭 바에서 무시된다 (확인함)
-        case .system(let name): Image(systemName: name)
-        case .asset(let name): Image(name)
-        }
+    /// 선택된 자리만 **안쪽이 찬 벌**로 바꾼다. 실루엣은 같아서 바뀔 때 튀지 않는다.
+    ///
+    /// 통로 자리(`웨이트`·`이전`)는 선택되지 않으므로 항상 아웃라인이다.
+    private func icon(for slot: Int) -> Image {
+        let selected = slot == (tabSet == .base ? baseSlot : weightSlot)
+        // 크기는 우리 SVG 의 width/height 가 정한다 (28pt).
+        // .font(.system(size:)) / .imageScale 은 탭 바에서 무시된다 (확인함)
+        let tab: any MyFisTab = tabSet == .base ? baseTabs[slot] : weightTabs[slot]
+        return Image(selected ? tab.iconFilled : tab.icon)
     }
 
     private func label(for slot: Int) -> String {
