@@ -18,6 +18,8 @@ struct AppShell: View {
         /// 웨이트 세트에서 기본 세트로 나가는 자리 (항상 첫 번째)
         static let backPortal = 0
         static let store = 2
+        /// 웨이트 세트의 유산소 자리 — 홈 바로가기가 여기로 보낸다
+        static let cardio = 2
 
         /// 시뮬레이터에는 탭을 누를 수단이 없다. 스토어 화면을 스크린샷으로 확인할 때
         /// `SIMCTL_CHILD_MYFIS_TAB=store` 로 띄운다. 디버그 빌드에서만 동작한다.
@@ -142,7 +144,16 @@ struct AppShell: View {
         if tabSet == .base {
             switch baseTabs[slot] {
             case .home:
-                TabScreen { HomeScreen(onNotification: { open(.notifications) }) }
+                TabScreen {
+                    HomeScreen(
+                        onNotification: { open(.notifications) },
+                        // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
+                        onCardio: {
+                            weightSlot = Slot.cardio
+                            withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
+                        }
+                    )
+                }
             case .benefit:
                 screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
             case .store:
