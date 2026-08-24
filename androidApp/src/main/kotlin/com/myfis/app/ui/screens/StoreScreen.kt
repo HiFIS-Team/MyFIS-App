@@ -1,7 +1,6 @@
 package com.myfis.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,16 +21,12 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -66,19 +61,15 @@ fun StoreScreen(
     onSearch: () -> Unit = {},
     onCart: () -> Unit = {},
     onMy: () -> Unit = {},
-    onHistory: () -> Unit = {},
     onQuest: (StoreQuest) -> Unit = {},
     onItem: (StoreItem) -> Unit = {},
 ) {
-    var category by rememberSaveable { mutableStateOf(StoreCategory.ALL) }
-    val items = remember(category) {
-        storeItemPlaceholder.filter { category == StoreCategory.ALL || it.category == category }
-    }
+    // 🔵 카테고리 필터는 상품이 몇 개 안 되는 지금 자리만 차지한다. 늘어나면 다시 넣는다
+    val items = storeItemPlaceholder
 
     Column(Modifier.fillMaxSize()) {
         StoreHeader(onSearch = onSearch, onCart = onCart, onMy = onMy)
-        CategoryTabs(selected = category, onSelect = { category = it })
-        MileageStrip(balance = mileageBalancePlaceholder, onHistory = onHistory)
+        MileageBand(balance = mileageBalancePlaceholder)
 
         LazyColumn(contentPadding = PaddingValues(bottom = MyFisSpacing.xxxl)) {
             item { BannerCarousel(storeBannerPlaceholder) }
@@ -164,73 +155,50 @@ private fun SearchField(onClick: () -> Unit, modifier: Modifier = Modifier) {
     }
 }
 
-/** 카테고리 — 고른 것만 알약이 채워진다. 하단 탭·캘린더와 같은 규칙이다 (색이 아니라 채움) */
+/**
+ * 보유 마일리지 — **구분선 사이에 아이콘과 값만** 띄운다.
+ *
+ * 라벨("내 마일리지")을 지웠다. 동전 아이콘이 이미 무슨 숫자인지 말한다.
+ * 값 표기가 `n P` 라 아이콘도 동전 안에 P 를 넣어 **둘이 같은 말을 하게** 했다.
+ *
+ * 스크롤해도 남는다 (SPEC S 공통 규칙). 이 화면의 라임은 여기 하나다.
+ */
 @Composable
-private fun CategoryTabs(
-    selected: StoreCategory,
-    onSelect: (StoreCategory) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .horizontalScroll(rememberScrollState())
-            .padding(horizontal = MyFisSpacing.md),
-        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
-    ) {
-        StoreCategory.entries.forEach { category ->
-            val isSelected = category == selected
-            val interaction = remember { MutableInteractionSource() }
-            Box(
-                modifier = Modifier
-                    .clip(MyFisRadius.md)
-                    .background(if (isSelected) MyFisColor.Surface2 else Color.Transparent)
-                    .tapWithHaptics(interaction) { onSelect(category) }
-                    .padding(horizontal = MyFisSpacing.md, vertical = 10.dp),
-            ) {
-                Text(
-                    category.label,
-                    style = MyFisTheme.type.titleSm,
-                    color = if (isSelected) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
-                )
-            }
+private fun MileageBand(balance: Int, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth()) {
+        Divider()
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_mileage),
+                contentDescription = null, // 옆 숫자가 이름 역할을 한다
+                tint = MyFisColor.Accent,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                balance.toMileage(),
+                style = MyFisTheme.type.titleMd.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.Accent,
+                modifier = Modifier.padding(start = MyFisSpacing.sm),
+            )
         }
+        Divider()
     }
 }
 
-/**
- * 보유 마일리지 — **스크롤해도 남는다** (SPEC S 공통 규칙).
- *
- * 이 화면의 라임은 여기 하나다.
- */
 @Composable
-private fun MileageStrip(balance: Int, onHistory: () -> Unit, modifier: Modifier = Modifier) {
-    val interaction = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = modifier
+private fun Divider() {
+    Box(
+        Modifier
             .fillMaxWidth()
-            .padding(horizontal = MyFisSpacing.screenHorizontal, vertical = MyFisSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("내 마일리지", style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
-        Text(
-            balance.toMileage(),
-            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-            color = MyFisColor.Accent,
-            modifier = Modifier.padding(start = MyFisSpacing.sm),
-        )
-        Spacer(Modifier.weight(1f))
-        Text(
-            "교환 내역 ›",
-            style = MyFisTheme.type.bodySm,
-            color = MyFisColor.TextTertiary,
-            modifier = Modifier
-                .clip(MyFisRadius.full)
-                .tapWithHaptics(interaction, onHistory)
-                .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.xs),
-        )
-    }
+            .height(1.dp)
+            .background(MyFisColor.BorderSubtle),
+    )
 }
 
 /** 배너 — 옆 장이 살짝 보이게 두고 넘긴다. 몇 장 중 몇 번째인지 오른쪽 아래에 적는다 */

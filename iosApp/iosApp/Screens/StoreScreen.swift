@@ -14,11 +14,8 @@ struct StoreScreen: View {
     var onSearch: () -> Void = {}
     var onCart: () -> Void = {}
     var onMy: () -> Void = {}
-    var onHistory: () -> Void = {}
     var onQuest: (StoreQuest) -> Void = { _ in }
     var onItem: (StoreItem) -> Void = { _ in }
-
-    @State private var category: StoreCategory = .all
 
     /// 검색 모드 — 헤더가 화면을 통째로 가져간다 (검색 화면으로 따로 밀지 않는다)
     @State private var isSearching = StoreSearch.initialForDebug
@@ -26,9 +23,8 @@ struct StoreScreen: View {
     @FocusState private var searchFocused: Bool
     @Namespace private var glass
 
-    private var items: [StoreItem] {
-        StorePlaceholder.items.filter { category == .all || $0.category == category }
-    }
+    // 🔵 카테고리 필터는 상품이 몇 개 안 되는 지금 자리만 차지한다. 늘어나면 다시 넣는다
+    private var items: [StoreItem] { StorePlaceholder.items }
 
     private var results: [StoreItem] {
         StorePlaceholder.items.filter { $0.name.localizedCaseInsensitiveContains(query) }
@@ -64,11 +60,10 @@ struct StoreScreen: View {
         }
     }
 
-    /// 평소의 스토어 — 카테고리부터 상품 그리드까지
+    /// 평소의 스토어 — 마일리지 띠부터 상품 그리드까지
     private var browse: some View {
         VStack(spacing: 0) {
-            CategoryTabs(selected: $category)
-            MileageStrip(balance: StorePlaceholder.balance, onHistory: onHistory)
+            MileageBand(balance: StorePlaceholder.balance)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
@@ -374,63 +369,38 @@ enum StoreSearch {
     }
 }
 
-/// 카테고리 — 고른 것만 알약이 채워진다. 하단 탭·캘린더와 같은 규칙이다 (색이 아니라 채움)
-private struct CategoryTabs: View {
-    @Binding var selected: StoreCategory
-
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: MyFisSpacing.xs) {
-                ForEach(StoreCategory.allCases) { category in
-                    let isSelected = category == selected
-                    Button {
-                        withAnimation(MyFisMotion.fast) { selected = category }
-                    } label: {
-                        Text(category.label)
-                            .font(MyFisFont.titleSm)
-                            .foregroundStyle(isSelected ? MyFisColor.textPrimary : MyFisColor.textTertiary)
-                            .padding(.horizontal, MyFisSpacing.md)
-                            .padding(.vertical, 10)
-                            .background {
-                                if isSelected {
-                                    RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-                                        .fill(MyFisColor.surface2)
-                                }
-                            }
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
-            .padding(.horizontal, MyFisSpacing.md)
-        }
-    }
-}
-
-/// 보유 마일리지 — **스크롤해도 남는다** (SPEC S 공통 규칙).
+/// 보유 마일리지 — **구분선 사이에 아이콘과 값만** 띄운다.
 ///
-/// 이 화면의 라임은 여기 하나다.
-private struct MileageStrip: View {
+/// 라벨("내 마일리지")을 지웠다. 동전 아이콘이 이미 무슨 숫자인지 말한다.
+/// 값 표기가 `n P` 라 아이콘도 동전 안에 P 를 넣어 **둘이 같은 말을 하게** 했다.
+///
+/// 스크롤해도 남는다 (SPEC S 공통 규칙). 이 화면의 라임은 여기 하나다.
+private struct MileageBand: View {
     let balance: Int
-    let onHistory: () -> Void
 
     var body: some View {
-        HStack(spacing: MyFisSpacing.sm) {
-            Text("내 마일리지")
-                .font(MyFisFont.label)
-                .foregroundStyle(MyFisColor.textSecondary)
-            Text(balance.mileage)
-                .font(MyFisFont.titleSm.monospacedDigit())
-                .foregroundStyle(MyFisColor.accent)
-            Spacer(minLength: 0)
-            Button(action: onHistory) {
-                Text("교환 내역 ›")
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textTertiary)
+        VStack(spacing: 0) {
+            divider
+            HStack(spacing: MyFisSpacing.sm) {
+                Image("ic_mileage")
+                    .resizable()
+                    .frame(width: 20, height: 20)
+                Text(balance.mileage)
+                    .font(MyFisFont.titleMd.monospacedDigit())
             }
-            .buttonStyle(.plain)
+            .foregroundStyle(MyFisColor.accent)
+            .frame(maxWidth: .infinity)
+            .frame(height: 48)
+            divider
         }
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
-        .padding(.vertical, MyFisSpacing.sm)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("내 마일리지 \(balance.mileage)")
+    }
+
+    private var divider: some View {
+        Rectangle()
+            .fill(MyFisColor.borderSubtle)
+            .frame(height: 1)
     }
 }
 
