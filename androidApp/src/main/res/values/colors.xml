@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#202124</color>
+    <!-- DESIGN.md §3 bg.base — 시작 화면 배경용 -->
+    <color name="bg_base">#000000</color>
 </resources>

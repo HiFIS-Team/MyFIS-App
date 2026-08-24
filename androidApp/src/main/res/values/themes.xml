@@ -1,4 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.MyFIS" parent="android:Theme.Material.Light.NoActionBar" />
+    <!--
+        다크 전용 앱이다 (DESIGN.md §9 의도된 이탈 #1).
+        Light 테마를 쓰면 콜드 스타트마다 흰 화면이 번쩍인다 — 실제로 겪었다.
+        windowBackground 를 bg.base 로 맞춰 시작 화면부터 검정으로 뜨게 한다.
+    -->
+    <style name="Theme.MyFIS" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/bg_base</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
 </resources>
