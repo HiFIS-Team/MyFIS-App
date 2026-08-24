@@ -71,18 +71,30 @@ private struct CalendarBar: View {
 
             Spacer(minLength: 0)
 
+            // 도장을 모은 결과라 **도장 자체를 뱃지에 넣는다.** 체크 아이콘보다 무슨 숫자인지가 분명해진다
             HStack(spacing: MyFisSpacing.xs) {
-                Image("ic_quest_attend")
+                Image("ic_stamp")
                     .resizable()
-                    .frame(width: 16, height: 16)
-                    .foregroundStyle(MyFisColor.textTertiary)
+                    .frame(width: 22, height: 22)
+                    // 달력의 도장들과 같은 규칙 — 반듯하면 스티커처럼 보인다
+                    .rotationEffect(.degrees(-8))
                 Text("연속 출석")
-                    .font(MyFisFont.bodySm)
+                    .font(MyFisFont.caption)
                     .foregroundStyle(MyFisColor.textTertiary)
-                Text("\(streak)일")
-                    .font(MyFisFont.titleSm.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
+                HStack(alignment: .bottom, spacing: 1) {
+                    Text("\(streak)")
+                        .font(MyFisFont.titleMd.monospacedDigit())
+                        .foregroundStyle(MyFisColor.textPrimary)
+                    Text("일")
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                        .padding(.bottom, 2)
+                }
             }
+            .padding(.leading, MyFisSpacing.sm)
+            .padding(.trailing, MyFisSpacing.md)
+            .padding(.vertical, 6)
+            .background(MyFisColor.surface1, in: Capsule())
             .padding(.horizontal, MyFisSpacing.sm)
         }
         .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)

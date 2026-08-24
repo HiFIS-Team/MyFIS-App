@@ -1,6 +1,7 @@
 package com.myfis.app.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -217,23 +218,37 @@ private fun CalendarBar(
 
         Spacer(Modifier.weight(1f))
 
+        // 도장을 모은 결과라 **도장 자체를 뱃지에 넣는다.** 체크 아이콘보다 무슨 숫자인지가 분명해진다
         Row(
-            modifier = Modifier.padding(horizontal = MyFisSpacing.sm),
+            modifier = Modifier
+                .padding(horizontal = MyFisSpacing.sm)
+                .background(MyFisColor.Surface1, MyFisRadius.full)
+                .padding(start = MyFisSpacing.sm, end = MyFisSpacing.md, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
         ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_quest_attend),
-                contentDescription = null,
-                tint = MyFisColor.TextTertiary,
-                modifier = Modifier.size(16.dp),
+            Image(
+                painter = painterResource(R.drawable.ic_stamp),
+                contentDescription = null, // 옆 글자가 이름 역할을 한다
+                modifier = Modifier
+                    .size(22.dp)
+                    // 달력의 도장들과 같은 규칙 — 반듯하면 스티커처럼 보인다
+                    .graphicsLayer { rotationZ = -8f },
             )
-            Text("연속 출석", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
-            Text(
-                "${streak}일",
-                style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextPrimary,
-            )
+            Text("연속 출석", style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    streak.toString(),
+                    style = MyFisTheme.type.titleMd.copy(fontFeatureSettings = "tnum"),
+                    color = MyFisColor.TextPrimary,
+                )
+                Text(
+                    "일",
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextSecondary,
+                    modifier = Modifier.padding(start = 1.dp, bottom = 2.dp),
+                )
+            }
         }
     }
 }
