@@ -75,7 +75,8 @@ struct HomeCalendar: View {
                         : MyFisCalendar.weekendColor(day) ?? MyFisColor.textSecondary
                 )
                 .frame(width: stampSize, height: stampSize)
-                .background { stamp(day) }
+                // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
+                .overlay { stamp(day) }
         }
         .frame(maxWidth: .infinity)
         .frame(height: pillHeight)
@@ -94,10 +95,10 @@ struct HomeCalendar: View {
         }
     }
 
-    /// 출석 도장 — 우리 로고 도장에서 **바깥 링만** 남긴 그림이다.
+    /// 출석 도장 — 우리 로고 도장 그대로다.
     ///
-    /// 가운데 FS 를 그대로 두면 날짜 숫자와 겹쳐 둘 다 안 읽힌다.
-    /// 색이 있는 그림이라 tint 하지 않는다.
+    /// **숫자 위에 겹쳐 찍는다.** 종이 달력에 도장을 찍은 자국이라 겹치는 게 의도다
+    /// (며칠인지는 칸 위치로도 읽힌다). 색이 있는 그림이라 tint 하지 않는다.
     @ViewBuilder
     private func stamp(_ day: Date) -> some View {
         if isAttended(day) {
@@ -155,7 +156,8 @@ struct HomeCalendar: View {
                 }
             }
             .frame(width: stampSize, height: stampSize)
-            .background { stamp(day) }
+            // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
+            .overlay { stamp(day) }
             .contentShape(Circle())
             .onTapGesture {
                 guard !isSelected else { return }

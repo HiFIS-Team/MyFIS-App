@@ -215,7 +215,6 @@ private fun MonthDay(
             .tapWithHaptics(interaction, onClick),
         contentAlignment = Alignment.Center,
     ) {
-        if (attended) Stamp()
         Box(
             Modifier.size(MarkSize + 6.dp).background(markBg, CircleShape),
             contentAlignment = Alignment.Center,
@@ -226,6 +225,8 @@ private fun MonthDay(
                 color = markFg,
             )
         }
+        // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
+        if (attended) Stamp()
     }
 }
 
@@ -261,9 +262,10 @@ private val MarkSize = 26.dp
 private val StampSize = 40.dp
 
 /**
- * 출석 도장 — 우리 로고 도장에서 **바깥 링만** 남긴 그림이다.
+ * 출석 도장 — 우리 로고 도장 그대로다.
  *
- * 가운데 FS 를 그대로 두면 날짜 숫자와 겹쳐 둘 다 안 읽힌다.
+ * **숫자 위에 겹쳐 찍는다.** 종이 달력에 도장을 찍은 자국이라 겹치는 게 의도다
+ * (며칠인지는 칸 위치로도 읽힌다).
  * 색이 있는 그림이라 `Icon`(tint)이 아니라 `Image` 로 그린다.
  */
 @Composable
@@ -320,13 +322,14 @@ private fun DayCell(
                 .size(StampSize),
             contentAlignment = Alignment.Center,
         ) {
-            if (attended) Stamp()
             Text(
                 text = day.dayOfMonth.toString(),
                 // 날짜는 자릿수가 바뀌어도 칸 안에서 흔들리면 안 된다 (DESIGN §4.1 tabular)
                 style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
                 color = dateFg,
             )
+            // 도장은 **숫자 위**에 온다 — 달력에 찍은 자국이라 겹치는 게 맞다
+            if (attended) Stamp()
         }
     }
 }
