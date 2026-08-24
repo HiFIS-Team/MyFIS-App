@@ -1,7 +1,9 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -23,19 +25,29 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
@@ -66,11 +78,12 @@ fun StoreScreen(
     onSearch: () -> Unit = {},
     onCart: () -> Unit = {},
     onMy: () -> Unit = {},
-    onQuest: (StoreQuest) -> Unit = {},
     onItem: (StoreItem) -> Unit = {},
 ) {
-    // 🔵 카테고리 필터는 상품이 몇 개 안 되는 지금 자리만 차지한다. 늘어나면 다시 넣는다
-    val items = storeItemPlaceholder
+    var category by rememberSaveable { mutableStateOf(StoreCategory.ALL) }
+    val items = remember(category) {
+        storeItemPlaceholder.filter { category == StoreCategory.ALL || it.category == category }
+    }
 
     Column(Modifier.fillMaxSize()) {
         StoreHeader(onSearch = onSearch, onCart = onCart, onMy = onMy)
@@ -78,14 +91,9 @@ fun StoreScreen(
 
         LazyColumn(contentPadding = PaddingValues(bottom = MyFisSpacing.xxxl)) {
             item { BannerCarousel(storeBannerPlaceholder) }
-            item { QuestSection(storeQuestPlaceholder, onQuest) }
-            item {
-                SectionHeader(
-                    title = "추천 상품",
-                    // 상품은 지점별로 다를 수 있다 (SPEC S-01) — 무엇이 걸러진 목록인지 밝힌다
-                    chip = "내 지점",
-                    modifier = Modifier.padding(top = MyFisSpacing.xxl),
-                )
+            // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
+            stickyHeader {
+                CategoryFilter(selected = category, onSelect = { category = it })
             }
             items(items.chunked(2)) { row ->
                 ItemRow(row = row, balance = mileageBalancePlaceholder, onItem = onItem)
@@ -297,102 +305,78 @@ private val BannerHeight = 168.dp
 private const val BannerAutoScrollMillis = 5_000L
 
 /**
- * 마일리지 모으기 — 살 수 없는 걸 봤을 때 **바로 모으러 갈 수 있어야 한다.**
- * 혜택 탭(P)의 미니 활동으로 가는 지름길이다.
+ * 카테고리 필터 (레퍼런스: 무신사 탭).
+ *
+ * 알약이 아니라 **글자 + 밑줄**이다. 상품 목록 위에서는 알약이 시각적으로 너무 무겁고,
+ * 여기서 고른 것은 "지금 보고 있는 목록"이라 제목처럼 읽혀야 한다.
+ *
+ * 밑줄은 칸을 따라 **흐른다** — 하단 탭·캘린더와 같은 규칙이다.
  */
 @Composable
-private fun QuestSection(
-    quests: List<StoreQuest>,
-    onQuest: (StoreQuest) -> Unit,
+private fun CategoryFilter(
+    selected: StoreCategory,
+    onSelect: (StoreCategory) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier.padding(top = MyFisSpacing.xxl)) {
-        SectionHeader(
-            title = "마일리지 모으기",
-            chip = "오늘 최대 ${quests.sumOf { it.reward }.toMileage()}",
-        )
-        LazyRow(
-            contentPadding = PaddingValues(horizontal = MyFisSpacing.screenHorizontal),
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
-            modifier = Modifier.padding(top = MyFisSpacing.md),
-        ) {
-            items(quests) { quest -> QuestTile(quest, onClick = { onQuest(quest) }) }
-        }
-    }
-}
+    val density = LocalDensity.current
+    // 밑줄을 그리려면 고른 글자가 **어디서 시작해 얼마나 넓은지**를 알아야 한다.
+    // 스크롤하면 위치가 바뀌므로 화면 기준으로 재고 컨테이너 기준으로 환산한다.
+    var containerX by remember { mutableFloatStateOf(0f) }
+    val bars = remember { mutableStateMapOf<StoreCategory, Pair<Float, Float>>() }
+    val bar = bars[selected]
+    val barX by animateDpAsState(
+        with(density) { (bar?.first ?: 0f).toDp() }, MyFisMotion.base(), label = "barX",
+    )
+    val barWidth by animateDpAsState(
+        with(density) { (bar?.second ?: 0f).toDp() }, MyFisMotion.base(), label = "barWidth",
+    )
 
-@Composable
-private fun QuestTile(quest: StoreQuest, onClick: () -> Unit) {
-    val interaction = remember { MutableInteractionSource() }
-    val press by interaction.pressScale()
-
-    Column(
-        modifier = Modifier
-            .width(64.dp)
-            .clip(MyFisRadius.md)
-            .tapWithHaptics(interaction, onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Box(Modifier.height(66.dp), contentAlignment = Alignment.BottomCenter) {
-            Box(
-                Modifier
-                    .size(56.dp)
-                    .graphicsLayer {
-                        scaleX = press
-                        scaleY = press
-                    }
-                    .background(MyFisColor.Surface2, RoundedCornerShape(18.dp)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(quest.icon),
-                    contentDescription = null, // 라벨이 바로 아래 있다
-                    tint = MyFisColor.TextPrimary,
-                    modifier = Modifier.size(26.dp),
-                )
-            }
-            // 뱃지는 타일 위로 떠서 걸친다 (레퍼런스와 같은 배치)
-            Text(
-                "+${quest.reward}P",
-                style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextPrimary,
-                modifier = Modifier
-                    .align(Alignment.TopCenter)
-                    .background(MyFisColor.Surface3, MyFisRadius.full)
-                    .padding(horizontal = MyFisSpacing.sm, vertical = 1.dp),
-            )
-        }
-        Text(
-            quest.label,
-            style = MyFisTheme.type.caption,
-            color = MyFisColor.TextSecondary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = MyFisSpacing.sm),
-        )
-    }
-}
-
-@Composable
-private fun SectionHeader(title: String, chip: String? = null, modifier: Modifier = Modifier) {
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = MyFisSpacing.screenHorizontal),
-        verticalAlignment = Alignment.CenterVertically,
+            // 스티키 헤더라 배경이 불투명해야 아래 카드가 비쳐 지나가지 않는다
+            .background(MyFisColor.BgBase)
+            .onGloballyPositioned { containerX = it.positionInRoot().x },
     ) {
-        Text(title, style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
-        if (chip != null) {
-            Text(
-                chip,
-                style = MyFisTheme.type.caption,
-                color = MyFisColor.TextSecondary,
-                modifier = Modifier
-                    .padding(start = MyFisSpacing.sm)
-                    .background(MyFisColor.Surface2, MyFisRadius.full)
-                    .padding(horizontal = MyFisSpacing.sm, vertical = 3.dp),
-            )
+        Row(
+            Modifier
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
+        ) {
+            StoreCategory.entries.forEach { entry ->
+                val isSelected = entry == selected
+                val interaction = remember { MutableInteractionSource() }
+                Text(
+                    entry.label,
+                    style = MyFisTheme.type.titleSm.copy(
+                        fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                    ),
+                    color = if (isSelected) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+                    modifier = Modifier
+                        .tapWithHaptics(interaction) { onSelect(entry) }
+                        .padding(horizontal = MyFisSpacing.sm, vertical = 12.dp)
+                        .onGloballyPositioned { coords ->
+                            bars[entry] = (coords.positionInRoot().x - containerX) to coords.size.width.toFloat()
+                        },
+                )
+            }
         }
+
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MyFisColor.BorderSubtle),
+        )
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = barX)
+                .width(barWidth)
+                .height(2.dp)
+                .background(MyFisColor.TextPrimary),
+        )
     }
 }
 

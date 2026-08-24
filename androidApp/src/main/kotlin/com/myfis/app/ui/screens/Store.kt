@@ -11,8 +11,10 @@ import com.myfis.app.R
  */
 enum class StoreCategory(val label: String) {
     ALL("전체"),
+    DRINK("음료수"),
+    CAFFEINE("카페인"),
+    PROTEIN("프로틴"),
     GOODS("굿즈"),
-    DRINK("음료"),
 }
 
 /** 상단 배너 한 장 */
@@ -26,8 +28,7 @@ data class StoreBanner(
 /**
  * 마일리지를 모으는 길 하나. SPEC.md §5 P-03 ~ P-10 과 1:1 이다.
  *
- * **스토어에 두는 이유** — 살 수 없는 걸 봤을 때 바로 모으러 갈 수 있어야 한다.
- * S-01 규칙 "부족한 상품도 가리지 않는다. 목표가 되어야 한다" 의 짝이다.
+ * TODO: 스토어에 잠깐 뒀다가 뺐다 (자리를 필터에 내줬다). **혜택 탭 P-04 미니 이벤트 허브**가 쓸 자리다.
  */
 data class StoreQuest(
     val id: Int,
@@ -67,13 +68,15 @@ val storeQuestPlaceholder = listOf(
 
 val storeItemPlaceholder = listOf(
     StoreItem(1, "이온음료 500ml", 300, StoreCategory.DRINK),
-    StoreItem(2, "아메리카노", 400, StoreCategory.DRINK),
-    StoreItem(3, "프로틴 쉐이크", 600, StoreCategory.DRINK),
-    StoreItem(4, "MyFIS 스포츠 타월", 1_200, StoreCategory.GOODS),
-    StoreItem(5, "쉐이커 보틀", 1_500, StoreCategory.GOODS),
-    StoreItem(6, "헬스 장갑", 2_400, StoreCategory.GOODS, soldOut = true),
-    StoreItem(7, "요가 매트", 5_000, StoreCategory.GOODS),
-    StoreItem(8, "단백질 바", 700, StoreCategory.DRINK),
+    StoreItem(2, "제로 콜라 250ml", 250, StoreCategory.DRINK),
+    StoreItem(3, "아메리카노", 400, StoreCategory.CAFFEINE),
+    StoreItem(4, "콜드브루", 500, StoreCategory.CAFFEINE),
+    StoreItem(5, "프로틴 쉐이크", 600, StoreCategory.PROTEIN),
+    StoreItem(6, "단백질 바", 700, StoreCategory.PROTEIN),
+    StoreItem(7, "MyFIS 스포츠 타월", 1_200, StoreCategory.GOODS),
+    StoreItem(8, "쉐이커 보틀", 1_500, StoreCategory.GOODS),
+    StoreItem(9, "헬스 장갑", 2_400, StoreCategory.GOODS, soldOut = true),
+    StoreItem(10, "요가 매트", 5_000, StoreCategory.GOODS),
 )
 
 /** `1,240 P` */

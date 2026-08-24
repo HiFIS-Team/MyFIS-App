@@ -5,15 +5,17 @@ import Foundation
 /// TODO(서버): 상품·마일리지 API 가 아직 없다. 화면을 먼저 세우려고 자리값을 둔다.
 /// 붙으면 이 파일의 `placeholder` 만 지우면 된다.
 enum StoreCategory: String, CaseIterable, Identifiable {
-    case all, goods, drink
+    case all, drink, caffeine, protein, goods
 
     var id: String { rawValue }
 
     var label: String {
         switch self {
         case .all: "전체"
+        case .drink: "음료수"
+        case .caffeine: "카페인"
+        case .protein: "프로틴"
         case .goods: "굿즈"
-        case .drink: "음료"
         }
     }
 }
@@ -28,8 +30,7 @@ struct StoreBanner: Identifiable, Hashable {
 
 /// 마일리지를 모으는 길 하나. SPEC.md §5 P-03 ~ P-10 과 1:1 이다.
 ///
-/// **스토어에 두는 이유** — 살 수 없는 걸 봤을 때 바로 모으러 갈 수 있어야 한다.
-/// S-01 규칙 "부족한 상품도 가리지 않는다. 목표가 되어야 한다" 의 짝이다.
+/// TODO: 스토어에 잠깐 뒀다가 뺐다 (자리를 필터에 내줬다). **혜택 탭 P-04 미니 이벤트 허브**가 쓸 자리다.
 struct StoreQuest: Identifiable, Hashable {
     let id: Int
     let label: String
@@ -69,13 +70,15 @@ enum StorePlaceholder {
 
     static let items: [StoreItem] = [
         .init(id: 1, name: "이온음료 500ml", price: 300, category: .drink),
-        .init(id: 2, name: "아메리카노", price: 400, category: .drink),
-        .init(id: 3, name: "프로틴 쉐이크", price: 600, category: .drink),
-        .init(id: 4, name: "MyFIS 스포츠 타월", price: 1_200, category: .goods),
-        .init(id: 5, name: "쉐이커 보틀", price: 1_500, category: .goods),
-        .init(id: 6, name: "헬스 장갑", price: 2_400, category: .goods, soldOut: true),
-        .init(id: 7, name: "요가 매트", price: 5_000, category: .goods),
-        .init(id: 8, name: "단백질 바", price: 700, category: .drink),
+        .init(id: 2, name: "제로 콜라 250ml", price: 250, category: .drink),
+        .init(id: 3, name: "아메리카노", price: 400, category: .caffeine),
+        .init(id: 4, name: "콜드브루", price: 500, category: .caffeine),
+        .init(id: 5, name: "프로틴 쉐이크", price: 600, category: .protein),
+        .init(id: 6, name: "단백질 바", price: 700, category: .protein),
+        .init(id: 7, name: "MyFIS 스포츠 타월", price: 1_200, category: .goods),
+        .init(id: 8, name: "쉐이커 보틀", price: 1_500, category: .goods),
+        .init(id: 9, name: "헬스 장갑", price: 2_400, category: .goods, soldOut: true),
+        .init(id: 10, name: "요가 매트", price: 5_000, category: .goods),
     ]
 }
 

@@ -14,7 +14,6 @@ struct StoreScreen: View {
     var onSearch: () -> Void = {}
     var onCart: () -> Void = {}
     var onMy: () -> Void = {}
-    var onQuest: (StoreQuest) -> Void = { _ in }
     var onItem: (StoreItem) -> Void = { _ in }
 
     /// 검색 모드 — 헤더가 화면을 통째로 가져간다 (검색 화면으로 따로 밀지 않는다)
@@ -23,8 +22,11 @@ struct StoreScreen: View {
     @FocusState private var searchFocused: Bool
     @Namespace private var glass
 
-    // 🔵 카테고리 필터는 상품이 몇 개 안 되는 지금 자리만 차지한다. 늘어나면 다시 넣는다
-    private var items: [StoreItem] { StorePlaceholder.items }
+    @State private var category: StoreCategory = .all
+
+    private var items: [StoreItem] {
+        StorePlaceholder.items.filter { category == .all || $0.category == category }
+    }
 
     private var results: [StoreItem] {
         StorePlaceholder.items.filter { $0.name.localizedCaseInsensitiveContains(query) }
@@ -66,25 +68,23 @@ struct StoreScreen: View {
             MileageBand(balance: StorePlaceholder.balance)
 
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 0) {
+                // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
+                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     BannerCarousel(banners: StorePlaceholder.banners)
                         .padding(.top, MyFisSpacing.sm)
+                        .padding(.bottom, MyFisSpacing.lg)
 
-                    QuestSection(quests: StorePlaceholder.quests, onQuest: onQuest)
-                        .padding(.top, MyFisSpacing.xxl)
-
-                    SectionHeader(title: "추천 상품", chip: "내 지점")
-                        // 상품은 지점별로 다를 수 있다 (SPEC S-01) — 무엇이 걸러진 목록인지 밝힌다
-                        .padding(.top, MyFisSpacing.xxl)
-                        .padding(.horizontal, MyFisSpacing.screenHorizontal)
-
-                    LazyVGrid(columns: columns, spacing: MyFisSpacing.lg) {
-                        ForEach(items) { item in
-                            ItemCard(item: item, balance: StorePlaceholder.balance) { onItem(item) }
+                    Section {
+                        LazyVGrid(columns: columns, spacing: MyFisSpacing.lg) {
+                            ForEach(items) { item in
+                                ItemCard(item: item, balance: StorePlaceholder.balance) { onItem(item) }
+                            }
                         }
+                        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                        .padding(.top, MyFisSpacing.md)
+                    } header: {
+                        CategoryFilter(selected: $category)
                     }
-                    .padding(.horizontal, MyFisSpacing.screenHorizontal)
-                    .padding(.top, MyFisSpacing.md)
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
@@ -533,91 +533,50 @@ private struct PauseWhileTouching: ViewModifier {
     }
 }
 
-/// 마일리지 모으기 — 살 수 없는 걸 봤을 때 **바로 모으러 갈 수 있어야 한다.**
-/// 혜택 탭(P)의 미니 활동으로 가는 지름길이다.
-private struct QuestSection: View {
-    let quests: [StoreQuest]
-    let onQuest: (StoreQuest) -> Void
+/// 카테고리 필터 (레퍼런스: 무신사 탭).
+///
+/// 알약이 아니라 **글자 + 밑줄**이다. 상품 목록 위에서는 알약이 시각적으로 너무 무겁고,
+/// 여기서 고른 것은 "지금 보고 있는 목록"이라 제목처럼 읽혀야 한다.
+///
+/// 밑줄은 칸을 따라 **흐른다** (`matchedGeometryEffect`) — 하단 탭·캘린더와 같은 규칙이다.
+private struct CategoryFilter: View {
+    @Binding var selected: StoreCategory
+
+    @Namespace private var underline
 
     var body: some View {
-        VStack(alignment: .leading, spacing: MyFisSpacing.md) {
-            SectionHeader(
-                title: "마일리지 모으기",
-                chip: "오늘 최대 " + quests.reduce(0) { $0 + $1.reward }.mileage
-            )
-            .padding(.horizontal, MyFisSpacing.screenHorizontal)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(alignment: .top, spacing: MyFisSpacing.md) {
-                    ForEach(quests) { quest in
-                        QuestTile(quest: quest) { onQuest(quest) }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 0) {
+                ForEach(StoreCategory.allCases) { category in
+                    let isSelected = category == selected
+                    Button {
+                        withAnimation(MyFisMotion.base) { selected = category }
+                    } label: {
+                        Text(category.label)
+                            .font(isSelected ? MyFisFont.titleSm : MyFisFont.body)
+                            .foregroundStyle(isSelected ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                            .padding(.horizontal, MyFisSpacing.sm)
+                            .padding(.vertical, 12)
+                            .overlay(alignment: .bottom) {
+                                if isSelected {
+                                    Rectangle()
+                                        .fill(MyFisColor.textPrimary)
+                                        .frame(height: 2)
+                                        .matchedGeometryEffect(id: "underline", in: underline)
+                                }
+                            }
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding(.horizontal, MyFisSpacing.screenHorizontal)
             }
+            .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
         }
-    }
-}
-
-private struct QuestTile: View {
-    let quest: StoreQuest
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: MyFisSpacing.sm) {
-                ZStack(alignment: .top) {
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .fill(MyFisColor.surface2)
-                        .frame(width: 56, height: 56)
-                        .overlay {
-                            Image(quest.icon)
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 26, height: 26)
-                                .foregroundStyle(MyFisColor.textPrimary)
-                        }
-                        .frame(maxHeight: .infinity, alignment: .bottom)
-
-                    // 뱃지는 타일 위로 떠서 걸친다 (레퍼런스와 같은 배치)
-                    Text("+\(quest.reward)P")
-                        .font(MyFisFont.caption.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textPrimary)
-                        .padding(.horizontal, MyFisSpacing.sm)
-                        .padding(.vertical, 1)
-                        .background(MyFisColor.surface3, in: Capsule())
-                }
-                .frame(width: 64, height: 66)
-
-                Text(quest.label)
-                    .font(MyFisFont.caption)
-                    .foregroundStyle(MyFisColor.textSecondary)
-                    .lineLimit(1)
-            }
-            .frame(width: 64)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct SectionHeader: View {
-    let title: String
-    var chip: String?
-
-    var body: some View {
-        HStack(spacing: MyFisSpacing.sm) {
-            Text(title)
-                .font(MyFisFont.titleMd)
-                .foregroundStyle(MyFisColor.textPrimary)
-            if let chip {
-                Text(chip)
-                    .font(MyFisFont.caption)
-                    .foregroundStyle(MyFisColor.textSecondary)
-                    .padding(.horizontal, MyFisSpacing.sm)
-                    .padding(.vertical, 3)
-                    .background(MyFisColor.surface2, in: Capsule())
-            }
-            Spacer(minLength: 0)
+        // 스티키 헤더라 배경이 불투명해야 아래 카드가 비쳐 지나가지 않는다
+        .background(MyFisColor.bgBase)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(MyFisColor.borderSubtle)
+                .frame(height: 1)
         }
     }
 }
