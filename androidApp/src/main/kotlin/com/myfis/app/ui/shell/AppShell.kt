@@ -1,7 +1,5 @@
 package com.myfis.app.ui.shell
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,29 +30,19 @@ fun AppShell() {
             }
         }
 
-        // 세트가 바뀌는 걸 사용자가 눈치채야 한다 — 탭 바만 크로스페이드 (DESIGN.md §6.7)
-        Crossfade(targetState = tabSet, animationSpec = tween(200), label = "tabSet") { set ->
-            when (set) {
-                TabSet.BASE -> BottomTabBar(
-                    tabs = BaseTab.entries,
-                    selected = baseTab,
-                    onSelect = { tab ->
-                        // 웨이트는 목적지가 아니라 통로다. baseTab 을 바꾸지 않아야
-                        // '이전' 으로 돌아왔을 때 보던 탭으로 복귀한다.
-                        if (tab == BaseTab.WEIGHT) tabSet = TabSet.WEIGHT else baseTab = tab
-                    },
-                )
-
-                TabSet.WEIGHT -> BottomTabBar(
-                    tabs = WeightTab.entries,
-                    selected = weightTab,
-                    isExit = { it == WeightTab.BACK },
-                    onSelect = { tab ->
-                        if (tab == WeightTab.BACK) tabSet = TabSet.BASE else weightTab = tab
-                    },
-                )
-            }
-        }
+        MyFisTabBar(
+            tabSet = tabSet,
+            baseTab = baseTab,
+            weightTab = weightTab,
+            onBaseSelect = { tab ->
+                // 웨이트는 목적지가 아니라 통로다. baseTab 을 바꾸지 않아야
+                // '이전' 으로 돌아왔을 때 보던 탭으로 복귀한다.
+                if (tab == BaseTab.WEIGHT) tabSet = TabSet.WEIGHT else baseTab = tab
+            },
+            onWeightSelect = { tab ->
+                if (tab == WeightTab.BACK) tabSet = TabSet.BASE else weightTab = tab
+            },
+        )
     }
 }
 
