@@ -46,6 +46,10 @@ struct StoreItem: Identifiable, Hashable {
     let name: String
     let price: Int
     let category: StoreCategory
+    /// 이 상품을 본 사람 수
+    let views: Int
+    let rating: Double
+    let reviewCount: Int
     var soldOut: Bool = false
 }
 
@@ -69,24 +73,43 @@ enum StorePlaceholder {
     ]
 
     static let items: [StoreItem] = [
-        .init(id: 1, name: "이온음료 500ml", price: 300, category: .drink),
-        .init(id: 2, name: "제로 콜라 250ml", price: 250, category: .drink),
-        .init(id: 3, name: "아메리카노", price: 400, category: .caffeine),
-        .init(id: 4, name: "콜드브루", price: 500, category: .caffeine),
-        .init(id: 5, name: "프로틴 쉐이크", price: 600, category: .protein),
-        .init(id: 6, name: "단백질 바", price: 700, category: .protein),
-        .init(id: 7, name: "MyFIS 스포츠 타월", price: 1_200, category: .goods),
-        .init(id: 8, name: "쉐이커 보틀", price: 1_500, category: .goods),
-        .init(id: 9, name: "헬스 장갑", price: 2_400, category: .goods, soldOut: true),
-        .init(id: 10, name: "요가 매트", price: 5_000, category: .goods),
+        .init(id: 1, name: "이온음료 500ml", price: 300, category: .drink,
+              views: 12_400, rating: 4.6, reviewCount: 218),
+        .init(id: 2, name: "제로 콜라 250ml", price: 250, category: .drink,
+              views: 8_300, rating: 4.4, reviewCount: 96),
+        .init(id: 3, name: "아메리카노", price: 400, category: .caffeine,
+              views: 23_100, rating: 4.8, reviewCount: 512),
+        .init(id: 4, name: "콜드브루", price: 500, category: .caffeine,
+              views: 6_400, rating: 4.7, reviewCount: 143),
+        .init(id: 5, name: "프로틴 쉐이크", price: 600, category: .protein,
+              views: 31_000, rating: 4.5, reviewCount: 874),
+        .init(id: 6, name: "단백질 바", price: 700, category: .protein,
+              views: 15_200, rating: 4.3, reviewCount: 331),
+        .init(id: 7, name: "MyFIS 스포츠 타월", price: 1_200, category: .goods,
+              views: 4_100, rating: 4.9, reviewCount: 64),
+        .init(id: 8, name: "쉐이커 보틀", price: 1_500, category: .goods,
+              views: 9_800, rating: 4.6, reviewCount: 205),
+        .init(id: 9, name: "헬스 장갑", price: 2_400, category: .goods,
+              views: 2_700, rating: 4.2, reviewCount: 38, soldOut: true),
+        .init(id: 10, name: "요가 매트", price: 5_000, category: .goods,
+              views: 5_600, rating: 4.7, reviewCount: 121),
     ]
 }
 
 extension Int {
     /// `1,240 P`
-    var mileage: String {
+    var mileage: String { decimal + " P" }
+
+    /// `1.2만 명` · `724 명` — 만 단위부터는 자릿수를 줄인다. 정확한 수보다 "많다"가 읽히면 된다
+    var viewCount: String {
+        guard self >= 10_000 else { return decimal + " 명" }
+        let man = String(format: "%.1f", Double(self) / 10_000)
+        return (man.hasSuffix(".0") ? String(man.dropLast(2)) : man) + "만 명"
+    }
+
+    var decimal: String {
         let n = NumberFormatter()
         n.numberStyle = .decimal
-        return (n.string(from: NSNumber(value: self)) ?? "\(self)") + " P"
+        return n.string(from: NSNumber(value: self)) ?? "\(self)"
     }
 }

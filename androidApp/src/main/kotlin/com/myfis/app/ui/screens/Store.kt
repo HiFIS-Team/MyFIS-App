@@ -45,6 +45,10 @@ data class StoreItem(
     val name: String,
     val price: Int,
     val category: StoreCategory,
+    /** 이 상품을 본 사람 수 */
+    val views: Int,
+    val rating: Double,
+    val reviewCount: Int,
     val soldOut: Boolean = false,
 )
 
@@ -67,17 +71,23 @@ val storeQuestPlaceholder = listOf(
 )
 
 val storeItemPlaceholder = listOf(
-    StoreItem(1, "이온음료 500ml", 300, StoreCategory.DRINK),
-    StoreItem(2, "제로 콜라 250ml", 250, StoreCategory.DRINK),
-    StoreItem(3, "아메리카노", 400, StoreCategory.CAFFEINE),
-    StoreItem(4, "콜드브루", 500, StoreCategory.CAFFEINE),
-    StoreItem(5, "프로틴 쉐이크", 600, StoreCategory.PROTEIN),
-    StoreItem(6, "단백질 바", 700, StoreCategory.PROTEIN),
-    StoreItem(7, "MyFIS 스포츠 타월", 1_200, StoreCategory.GOODS),
-    StoreItem(8, "쉐이커 보틀", 1_500, StoreCategory.GOODS),
-    StoreItem(9, "헬스 장갑", 2_400, StoreCategory.GOODS, soldOut = true),
-    StoreItem(10, "요가 매트", 5_000, StoreCategory.GOODS),
+    StoreItem(1, "이온음료 500ml", 300, StoreCategory.DRINK, 12_400, 4.6, 218),
+    StoreItem(2, "제로 콜라 250ml", 250, StoreCategory.DRINK, 8_300, 4.4, 96),
+    StoreItem(3, "아메리카노", 400, StoreCategory.CAFFEINE, 23_100, 4.8, 512),
+    StoreItem(4, "콜드브루", 500, StoreCategory.CAFFEINE, 6_400, 4.7, 143),
+    StoreItem(5, "프로틴 쉐이크", 600, StoreCategory.PROTEIN, 31_000, 4.5, 874),
+    StoreItem(6, "단백질 바", 700, StoreCategory.PROTEIN, 15_200, 4.3, 331),
+    StoreItem(7, "MyFIS 스포츠 타월", 1_200, StoreCategory.GOODS, 4_100, 4.9, 64),
+    StoreItem(8, "쉐이커 보틀", 1_500, StoreCategory.GOODS, 9_800, 4.6, 205),
+    StoreItem(9, "헬스 장갑", 2_400, StoreCategory.GOODS, 2_700, 4.2, 38, soldOut = true),
+    StoreItem(10, "요가 매트", 5_000, StoreCategory.GOODS, 5_600, 4.7, 121),
 )
 
 /** `1,240 P` */
 fun Int.toMileage(): String = "%,d P".format(this)
+
+/** `1.2만 명` · `724 명` — 만 단위부터는 자릿수를 줄인다. 정확한 수보다 "많다"가 읽히면 된다 */
+fun Int.toViewCount(): String = when {
+    this >= 10_000 -> "%s만 명".format("%.1f".format(this / 10_000.0).removeSuffix(".0"))
+    else -> "%,d 명".format(this)
+}

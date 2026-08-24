@@ -23,6 +23,8 @@ struct StoreScreen: View {
     @Namespace private var glass
 
     @State private var category: StoreCategory = .all
+    /// TODO(서버): 찜은 계정에 붙는다. 지금은 화면이 들고 있다
+    @State private var liked: Set<Int> = []
 
     private var items: [StoreItem] {
         StorePlaceholder.items.filter { category == .all || $0.category == category }
@@ -36,6 +38,10 @@ struct StoreScreen: View {
         GridItem(.flexible(), spacing: MyFisSpacing.cardGap),
         GridItem(.flexible(), spacing: MyFisSpacing.cardGap),
     ]
+
+    private func toggleLike(_ id: Int) {
+        if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -54,6 +60,8 @@ struct StoreScreen: View {
                     query: $query,
                     results: results,
                     balance: StorePlaceholder.balance,
+                    liked: liked,
+                    onLike: { toggleLike($0) },
                     onItem: onItem
                 )
             } else {
@@ -77,7 +85,13 @@ struct StoreScreen: View {
                     Section {
                         LazyVGrid(columns: columns, spacing: MyFisSpacing.lg) {
                             ForEach(items) { item in
-                                ItemCard(item: item, balance: StorePlaceholder.balance) { onItem(item) }
+                                ItemCard(
+                                    item: item,
+                                    balance: StorePlaceholder.balance,
+                                    liked: liked.contains(item.id),
+                                    onLike: { toggleLike(item.id) },
+                                    onTap: { onItem(item) }
+                                )
                             }
                         }
                         .padding(.horizontal, MyFisSpacing.screenHorizontal)
@@ -263,6 +277,8 @@ private struct SearchResults: View {
     @Binding var query: String
     let results: [StoreItem]
     let balance: Int
+    let liked: Set<Int>
+    let onLike: (Int) -> Void
     let onItem: (StoreItem) -> Void
 
     private let suggestions = ["음료", "프로틴", "타월", "보틀", "매트"]
@@ -324,7 +340,13 @@ private struct SearchResults: View {
         ScrollView {
             LazyVGrid(columns: columns, spacing: MyFisSpacing.lg) {
                 ForEach(results) { item in
-                    ItemCard(item: item, balance: balance) { onItem(item) }
+                    ItemCard(
+                        item: item,
+                        balance: balance,
+                        liked: liked.contains(item.id),
+                        onLike: { onLike(item.id) },
+                        onTap: { onItem(item) }
+                    )
                 }
             }
             .padding(.horizontal, MyFisSpacing.screenHorizontal)
@@ -609,57 +631,114 @@ private struct TabFrames: PreferenceKey {
     }
 }
 
-/// 상품 카드.
+/// 상품 카드 (레퍼런스: 토스 쇼핑).
 ///
-/// **부족해도 가리지 않는다** (SPEC S-01) — 얼마가 모자란지 적어 목표로 삼게 한다.
-/// 품절도 숨기지 않는다.
+/// **카드 높이는 모두 같다.** 원본은 제목 줄 수에 따라 카드가 들쭉날쭉한데,
+/// 그러면 그리드가 어긋나 보인다 — 제목을 **두 줄로 고정**해 자리를 미리 잡아 둔다.
+///
+/// 제목과 마일리지 사이에 **몇 명이 봤는지 · 평점(리뷰 수)** 을 둔다.
+/// 배송 문구(내일도착 같은 것)는 없다 — 여기 상품은 **지점에서 받는다.**
+///
+/// **부족해도 가리지 않는다** (SPEC S-01) — 얼마가 모자란지 적어 목표로 삼게 한다. 품절도 마찬가지다.
 private struct ItemCard: View {
     let item: StoreItem
     let balance: Int
+    let liked: Bool
+    let onLike: () -> Void
     let onTap: () -> Void
 
     private var short: Int { max(0, item.price - balance) }
+    private var dimmed: Bool { item.soldOut }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: MyFisSpacing.sm) {
-                ZStack {
-                    MyFisColor.surface2
-                    // TODO(서버): 상품 이미지가 오면 교체한다. 지금은 자리만 잡는다.
-                    Image("ic_tab_store")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 52, height: 52)
-                        .foregroundStyle(MyFisColor.surface3)
+        VStack(alignment: .leading, spacing: 0) {
+            image
+            VStack(alignment: .leading, spacing: 0) {
+                Text(item.name)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(dimmed ? MyFisColor.textTertiary : MyFisColor.textPrimary)
+                    // 두 줄로 고정해야 카드 높이가 서로 같다
+                    .lineLimit(2, reservesSpace: true)
+                    .multilineTextAlignment(.leading)
 
-                    if item.soldOut || short > 0 {
-                        Text(item.soldOut ? "품절" : "\(short.mileage) 부족")
-                            .font(MyFisFont.caption)
-                            .foregroundStyle(item.soldOut ? MyFisColor.textSecondary : MyFisColor.textTertiary)
-                            .padding(.horizontal, MyFisSpacing.sm)
-                            .padding(.vertical, 2)
-                            .background(
-                                MyFisColor.surface3,
-                                in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
-                            )
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                            .padding(MyFisSpacing.sm)
-                    }
-                }
-                .aspectRatio(1, contentMode: .fit)
-                .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+                meta
+                    .padding(.top, MyFisSpacing.xs)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(item.soldOut ? MyFisColor.textTertiary : MyFisColor.textPrimary)
-                        .lineLimit(1)
+                HStack(spacing: 0) {
                     Text(item.price.mileage)
                         .font(MyFisFont.titleSm.monospacedDigit())
-                        .foregroundStyle(item.soldOut ? MyFisColor.textTertiary : MyFisColor.textPrimary)
+                        .foregroundStyle(dimmed ? MyFisColor.textTertiary : MyFisColor.textPrimary)
+                    Spacer(minLength: 0)
+                    likeButton
                 }
+                .padding(.top, MyFisSpacing.sm)
+            }
+            .padding(MyFisSpacing.md)
+        }
+        .background(MyFisColor.surface1)
+        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
+    }
+
+    private var image: some View {
+        ZStack {
+            MyFisColor.surface2
+            // TODO(서버): 상품 이미지가 오면 교체한다. 지금은 자리만 잡는다.
+            Image("ic_tab_store")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 52, height: 52)
+                .foregroundStyle(MyFisColor.surface3)
+
+            if item.soldOut || short > 0 {
+                Text(item.soldOut ? "품절" : "\(short.mileage) 부족")
+                    .font(MyFisFont.caption)
+                    .foregroundStyle(item.soldOut ? MyFisColor.textSecondary : MyFisColor.textTertiary)
+                    .padding(.horizontal, MyFisSpacing.sm)
+                    .padding(.vertical, 2)
+                    .background(
+                        MyFisColor.surface3,
+                        in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
+                    )
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                    .padding(MyFisSpacing.sm)
             }
         }
+        .aspectRatio(1, contentMode: .fit)
+    }
+
+    /// 몇 명이 봤는지 · 평점(리뷰 수) — 제목과 가격 사이
+    private var meta: some View {
+        HStack(spacing: 3) {
+            Image("ic_store_views")
+                .resizable()
+                .frame(width: 13, height: 13)
+            Text(item.views.viewCount)
+                .font(MyFisFont.caption.monospacedDigit())
+            Text("·")
+                .font(MyFisFont.caption)
+            Image("ic_store_rating")
+                .resizable()
+                .frame(width: 11, height: 11)
+            Text("\(String(format: "%.1f", item.rating)) (\(item.reviewCount.decimal))")
+                .font(MyFisFont.caption.monospacedDigit())
+                .lineLimit(1)
+        }
+        .foregroundStyle(MyFisColor.textTertiary)
+    }
+
+    /// 찜. 카드 전체를 누르면 상세로 가므로 여기만 따로 눌리게 한다
+    private var likeButton: some View {
+        Button(action: onLike) {
+            Image(liked ? "ic_store_like_fill" : "ic_store_like")
+                .resizable()
+                .frame(width: 20, height: 20)
+                .foregroundStyle(liked ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                .frame(width: 28, height: 28)
+                .contentShape(Rectangle())
+        }
         .buttonStyle(.plain)
+        .accessibilityLabel(liked ? "찜 해제" : "찜하기")
     }
 }

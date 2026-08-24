@@ -81,6 +81,8 @@ fun StoreScreen(
     onItem: (StoreItem) -> Unit = {},
 ) {
     var category by rememberSaveable { mutableStateOf(StoreCategory.ALL) }
+    // TODO(서버): 찜은 계정에 붙는다. 지금은 화면이 들고 있다
+    val liked = remember { mutableStateMapOf<Int, Boolean>() }
     val items = remember(category) {
         storeItemPlaceholder.filter { category == StoreCategory.ALL || it.category == category }
     }
@@ -96,7 +98,13 @@ fun StoreScreen(
                 CategoryFilter(selected = category, onSelect = { category = it })
             }
             items(items.chunked(2)) { row ->
-                ItemRow(row = row, balance = mileageBalancePlaceholder, onItem = onItem)
+                ItemRow(
+                    row = row,
+                    balance = mileageBalancePlaceholder,
+                    liked = liked,
+                    onLike = { id -> liked[id] = liked[id] != true },
+                    onItem = onItem,
+                )
             }
         }
     }
@@ -382,7 +390,13 @@ private fun CategoryFilter(
 }
 
 @Composable
-private fun ItemRow(row: List<StoreItem>, balance: Int, onItem: (StoreItem) -> Unit) {
+private fun ItemRow(
+    row: List<StoreItem>,
+    balance: Int,
+    liked: Map<Int, Boolean>,
+    onLike: (Int) -> Unit,
+    onItem: (StoreItem) -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -390,7 +404,14 @@ private fun ItemRow(row: List<StoreItem>, balance: Int, onItem: (StoreItem) -> U
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
     ) {
         row.forEach { item ->
-            ItemCard(item, balance, onClick = { onItem(item) }, modifier = Modifier.weight(1f))
+            ItemCard(
+                item = item,
+                balance = balance,
+                liked = liked[item.id] == true,
+                onLike = { onLike(item.id) },
+                onClick = { onItem(item) },
+                modifier = Modifier.weight(1f),
+            )
         }
         // 홀수로 끝나면 왼쪽 카드가 폭을 다 먹지 않도록 빈자리를 남긴다
         if (row.size == 1) Spacer(Modifier.weight(1f))
@@ -398,36 +419,44 @@ private fun ItemRow(row: List<StoreItem>, balance: Int, onItem: (StoreItem) -> U
 }
 
 /**
- * 상품 카드.
+ * 상품 카드 (레퍼런스: 토스 쇼핑).
  *
- * **부족해도 가리지 않는다** (SPEC S-01) — 얼마가 모자란지 적어 목표로 삼게 한다.
- * 품절도 숨기지 않는다.
+ * **카드 높이는 모두 같다.** 원본은 제목 줄 수에 따라 카드가 들쭉날쭉한데,
+ * 그러면 그리드가 어긋나 보인다 — 제목을 **두 줄로 고정**해 자리를 미리 잡아 둔다.
+ *
+ * 제목과 마일리지 사이에 **몇 명이 봤는지 · 평점(리뷰 수)** 을 둔다.
+ * 배송 문구(내일도착 같은 것)는 없다 — 여기 상품은 **지점에서 받는다.**
+ *
+ * **부족해도 가리지 않는다** (SPEC S-01) — 얼마가 모자란지 적어 목표로 삼게 한다. 품절도 마찬가지다.
  */
 @Composable
 private fun ItemCard(
     item: StoreItem,
     balance: Int,
+    liked: Boolean,
+    onLike: () -> Unit,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val interaction = remember { MutableInteractionSource() }
     val press by interaction.pressScale()
     val short = (item.price - balance).coerceAtLeast(0)
+    val dimmed = item.soldOut
 
     Column(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = press
+                scaleY = press
+            }
             .clip(MyFisRadius.md)
+            .background(MyFisColor.Surface1)
             .tapWithHaptics(interaction, onClick),
     ) {
         Box(
             Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .graphicsLayer {
-                    scaleX = press
-                    scaleY = press
-                }
-                .clip(MyFisRadius.md)
                 .background(MyFisColor.Surface2),
             contentAlignment = Alignment.Center,
         ) {
@@ -438,7 +467,7 @@ private fun ItemCard(
                 tint = MyFisColor.Surface3,
                 modifier = Modifier.size(52.dp),
             )
-            if (item.soldEnough(balance).not() || item.soldOut) {
+            if (item.soldOut || short > 0) {
                 Text(
                     if (item.soldOut) "품절" else "${short.toMileage()} 부족",
                     style = MyFisTheme.type.caption,
@@ -451,22 +480,98 @@ private fun ItemCard(
                 )
             }
         }
-        Text(
-            item.name,
-            style = MyFisTheme.type.bodySm,
-            color = if (item.soldOut) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = MyFisSpacing.sm),
+
+        Column(Modifier.padding(MyFisSpacing.md)) {
+            Text(
+                item.name,
+                style = MyFisTheme.type.bodySm,
+                color = if (dimmed) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
+                // 두 줄로 고정해야 카드 높이가 서로 같다
+                minLines = 2,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
+            MetaRow(item, Modifier.padding(top = MyFisSpacing.xs))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = MyFisSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    item.price.toMileage(),
+                    style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+                    color = if (dimmed) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
+                )
+                Spacer(Modifier.weight(1f))
+                LikeButton(liked = liked, onClick = onLike)
+            }
+        }
+    }
+}
+
+/** 몇 명이 봤는지 · 평점(리뷰 수) — 제목과 가격 사이 */
+@Composable
+private fun MetaRow(item: StoreItem, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_store_views),
+            contentDescription = null,
+            tint = MyFisColor.TextTertiary,
+            modifier = Modifier.size(13.dp),
         )
         Text(
-            item.price.toMileage(),
-            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-            color = if (item.soldOut) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
-            modifier = Modifier.padding(top = 2.dp),
+            item.views.toViewCount(),
+            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextTertiary,
+        )
+        Text("·", style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
+        Icon(
+            painter = painterResource(R.drawable.ic_store_rating),
+            contentDescription = null,
+            tint = MyFisColor.TextTertiary,
+            modifier = Modifier.size(11.dp),
+        )
+        Text(
+            "%.1f (%,d)".format(item.rating, item.reviewCount),
+            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextTertiary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
     }
 }
 
-/** 지금 가진 마일리지로 바꿀 수 있나 */
-private fun StoreItem.soldEnough(balance: Int): Boolean = price <= balance
+/** 찜. 카드 전체를 누르면 상세로 가므로 여기만 따로 눌리게 한다 */
+@Composable
+private fun LikeButton(liked: Boolean, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val press by interaction.pressScale()
+
+    Box(
+        modifier = Modifier
+            .size(28.dp)
+            .clip(MyFisRadius.full)
+            .tapWithHaptics(interaction, onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(
+                if (liked) R.drawable.ic_store_like_fill else R.drawable.ic_store_like,
+            ),
+            contentDescription = if (liked) "찜 해제" else "찜하기",
+            tint = if (liked) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+            modifier = Modifier
+                .size(20.dp)
+                .graphicsLayer {
+                    scaleX = press
+                    scaleY = press
+                },
+        )
+    }
+}
+
