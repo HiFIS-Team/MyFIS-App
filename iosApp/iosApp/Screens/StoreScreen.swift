@@ -550,7 +550,10 @@ private struct CategoryFilter: View {
                 ForEach(StoreCategory.allCases) { category in
                     let isSelected = category == selected
                     Button {
-                        withAnimation(MyFisMotion.base) { selected = category }
+                        // ⚠️ withAnimation 을 쓰면 **아래 그리드까지** 트랜잭션에 걸려
+                        // 상품이 한 장씩 제각각 나타난다 (Android 는 그냥 갈린다).
+                        // 애니메이션은 밑줄에만 걸리도록 아래 `.animation(value:)` 으로 범위를 좁힌다.
+                        selected = category
                     } label: {
                         Text(category.label)
                             .font(isSelected ? MyFisFont.titleSm : MyFisFont.body)
@@ -570,6 +573,8 @@ private struct CategoryFilter: View {
                 }
             }
             .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+            // 밑줄만 흐르게 한다 — 범위를 여기로 좁혀야 상품 그리드가 딸려 움직이지 않는다
+            .animation(MyFisMotion.base, value: selected)
         }
         // 스티키 헤더라 배경이 불투명해야 아래 카드가 비쳐 지나가지 않는다
         .background(MyFisColor.bgBase)
