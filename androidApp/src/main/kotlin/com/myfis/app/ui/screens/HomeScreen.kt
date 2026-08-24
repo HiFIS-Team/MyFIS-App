@@ -66,6 +66,7 @@ fun HomeScreen(
         HomeCalendar(
             selected = selected,
             expanded = expanded,
+            attended = remember(today) { attendedPlaceholder(today) },
             onSelect = { selectedEpochDay = it.toEpochDay() },
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
@@ -239,3 +240,14 @@ private fun CalendarBar(
 
 /** TODO(서버): 출석 기록이 붙으면 계산한다 */
 private const val attendanceStreakPlaceholder = 12
+
+/**
+ * TODO(서버): 출석 API 가 붙으면 지운다.
+ *
+ * 연속 12일(= 위 자리값)과 앞선 며칠. 숫자와 달력이 서로 다른 말을 하면 안 된다.
+ */
+private fun attendedPlaceholder(today: LocalDate): Set<LocalDate> {
+    val streak = (0 until attendanceStreakPlaceholder).map { today.minusDays(it.toLong()) }
+    val earlier = listOf(16L, 17L, 20L, 21L).map { today.minusDays(it) }
+    return (streak + earlier).toSet()
+}

@@ -7,6 +7,7 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
@@ -52,6 +54,7 @@ import java.time.temporal.TemporalAdjusters
 fun HomeCalendar(
     selected: LocalDate,
     expanded: Boolean,
+    attended: Set<LocalDate>,
     onSelect: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -63,7 +66,12 @@ fun HomeCalendar(
             enter = expandVertically(MyFisMotion.slow()) + fadeIn(MyFisMotion.slow()),
             exit = shrinkVertically(MyFisMotion.slow()) + fadeOut(MyFisMotion.slow()),
         ) {
-            WeekStrip(week = weekOf(selected), selected = selected, onSelect = onSelect)
+            WeekStrip(
+                week = weekOf(selected),
+                selected = selected,
+                attended = attended,
+                onSelect = onSelect,
+            )
         }
         AnimatedVisibility(
             visible = expanded,
@@ -73,7 +81,12 @@ fun HomeCalendar(
             Column {
                 WeekdayHeader()
                 monthWeeks(selected).forEach { week ->
-                    MonthRow(week = week, selected = selected, onSelect = onSelect)
+                    MonthRow(
+                        week = week,
+                        selected = selected,
+                        attended = attended,
+                        onSelect = onSelect,
+                    )
                 }
             }
         }
@@ -85,6 +98,7 @@ fun HomeCalendar(
 private fun WeekStrip(
     week: List<LocalDate>,
     selected: LocalDate,
+    attended: Set<LocalDate>,
     onSelect: (LocalDate) -> Unit,
 ) {
     val index = week.indexOf(selected).coerceAtLeast(0)
@@ -114,6 +128,7 @@ private fun WeekStrip(
                 DayCell(
                     day = day,
                     selected = day == selected,
+                    attended = day in attended,
                     onClick = { onSelect(day) },
                     modifier = Modifier.weight(1f),
                 )
@@ -160,6 +175,7 @@ private fun WeekdayHeader() {
 private fun MonthRow(
     week: List<LocalDate?>,
     selected: LocalDate,
+    attended: Set<LocalDate>,
     onSelect: (LocalDate) -> Unit,
 ) {
     Row(
@@ -169,14 +185,19 @@ private fun MonthRow(
     ) {
         week.forEach { day ->
             Box(Modifier.weight(1f).height(44.dp), contentAlignment = Alignment.Center) {
-                if (day != null) MonthDay(day, day == selected) { onSelect(day) }
+                if (day != null) MonthDay(day, day == selected, day in attended) { onSelect(day) }
             }
         }
     }
 }
 
 @Composable
-private fun MonthDay(day: LocalDate, selected: Boolean, onClick: () -> Unit) {
+private fun MonthDay(
+    day: LocalDate,
+    selected: Boolean,
+    attended: Boolean,
+    onClick: () -> Unit,
+) {
     val interaction = remember { MutableInteractionSource() }
     val motion = MyFisMotion.base<Color>()
     val markBg by animateColorAsState(
@@ -190,16 +211,21 @@ private fun MonthDay(day: LocalDate, selected: Boolean, onClick: () -> Unit) {
 
     Box(
         Modifier
-            .size(MarkSize + 6.dp)
-            .background(markBg, CircleShape)
+            .size(StampSize)
             .tapWithHaptics(interaction, onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            day.dayOfMonth.toString(),
-            style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-            color = markFg,
-        )
+        if (attended) Stamp()
+        Box(
+            Modifier.size(MarkSize + 6.dp).background(markBg, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                day.dayOfMonth.toString(),
+                style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+                color = markFg,
+            )
+        }
     }
 }
 
@@ -231,6 +257,24 @@ private val PillHeight = 68.dp
 private val PillWidth = 44.dp
 private val MarkSize = 26.dp
 
+/** 출석 도장이 날짜를 감싸는 크기 */
+private val StampSize = 40.dp
+
+/**
+ * 출석 도장 — 우리 로고 도장에서 **바깥 링만** 남긴 그림이다.
+ *
+ * 가운데 FS 를 그대로 두면 날짜 숫자와 겹쳐 둘 다 안 읽힌다.
+ * 색이 있는 그림이라 `Icon`(tint)이 아니라 `Image` 로 그린다.
+ */
+@Composable
+private fun Stamp() {
+    Image(
+        painter = painterResource(R.drawable.ic_stamp),
+        contentDescription = null, // 출석 여부는 화면 낭독에서 날짜와 함께 읽히면 된다
+        modifier = Modifier.size(StampSize),
+    )
+}
+
 private val weekdayOrder = listOf(
     DayOfWeek.SUNDAY, DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY,
     DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY,
@@ -240,6 +284,7 @@ private val weekdayOrder = listOf(
 private fun DayCell(
     day: LocalDate,
     selected: Boolean,
+    attended: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -269,13 +314,20 @@ private fun DayCell(
         ) {
             Text(day.dayOfWeek.koLabel, style = MyFisTheme.type.caption, color = markFg)
         }
-        Text(
-            text = day.dayOfMonth.toString(),
-            // 날짜는 자릿수가 바뀌어도 칸 안에서 흔들리면 안 된다 (DESIGN §4.1 tabular)
-            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-            color = dateFg,
-            modifier = Modifier.padding(top = MyFisSpacing.xs),
-        )
+        Box(
+            Modifier
+                .padding(top = MyFisSpacing.xs)
+                .size(StampSize),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (attended) Stamp()
+            Text(
+                text = day.dayOfMonth.toString(),
+                // 날짜는 자릿수가 바뀌어도 칸 안에서 흔들리면 안 된다 (DESIGN §4.1 tabular)
+                style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+                color = dateFg,
+            )
+        }
     }
 }
 

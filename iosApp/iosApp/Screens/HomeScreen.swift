@@ -18,7 +18,11 @@ struct HomeScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             AppHeader(onNotification: onNotification)
-            HomeCalendar(selected: $selected, expanded: expanded)
+            HomeCalendar(
+                selected: $selected,
+                expanded: expanded,
+                isAttended: HomePlaceholder.isAttended
+            )
                 .padding(.top, MyFisSpacing.sm)
             CalendarBar(
                 expanded: $expanded,
@@ -88,6 +92,19 @@ private struct CalendarBar: View {
 enum HomePlaceholder {
     /// TODO(서버): 출석 기록이 붙으면 계산한다
     static let attendanceStreak = 12
+
+    /// TODO(서버): 출석 API 가 붙으면 지운다.
+    ///
+    /// 연속 12일(= 위 자리값)과 앞선 며칠. 숫자와 달력이 서로 다른 말을 하면 안 된다.
+    static func isAttended(_ day: Date) -> Bool {
+        let calendar = MyFisCalendar.calendar
+        guard let diff = calendar.dateComponents(
+            [.day],
+            from: calendar.startOfDay(for: day),
+            to: calendar.startOfDay(for: Date())
+        ).day else { return false }
+        return (0..<attendanceStreak).contains(diff) || [16, 17, 20, 21].contains(diff)
+    }
 }
 
 /// 홈 바로가기 두 장 (DESIGN.md §6.13).

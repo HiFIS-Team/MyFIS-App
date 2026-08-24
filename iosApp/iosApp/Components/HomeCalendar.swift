@@ -10,11 +10,15 @@ import SwiftUI
 struct HomeCalendar: View {
     @Binding var selected: Date
     let expanded: Bool
+    /// 출석한 날인지 — `Set<Date>` 는 시분초 때문에 그대로 못 쓴다
+    var isAttended: (Date) -> Bool = { _ in false }
 
     /// 칸이 터치 타겟(44)보다 커야 하므로 알약 높이가 곧 행 높이다
     private let pillHeight: CGFloat = 68
     private let pillWidth: CGFloat = 44
     private let markSize: CGFloat = 26
+    /// 출석 도장이 날짜를 감싸는 크기
+    private let stampSize: CGFloat = 40
 
     @Namespace private var pill
 
@@ -70,6 +74,8 @@ struct HomeCalendar: View {
                         ? MyFisColor.textPrimary
                         : MyFisCalendar.weekendColor(day) ?? MyFisColor.textSecondary
                 )
+                .frame(width: stampSize, height: stampSize)
+                .background { stamp(day) }
         }
         .frame(maxWidth: .infinity)
         .frame(height: pillHeight)
@@ -85,6 +91,19 @@ struct HomeCalendar: View {
         .onTapGesture {
             guard !MyFisCalendar.isSameDay(day, selected) else { return }
             withAnimation(MyFisMotion.base) { selected = day }
+        }
+    }
+
+    /// 출석 도장 — 우리 로고 도장에서 **바깥 링만** 남긴 그림이다.
+    ///
+    /// 가운데 FS 를 그대로 두면 날짜 숫자와 겹쳐 둘 다 안 읽힌다.
+    /// 색이 있는 그림이라 tint 하지 않는다.
+    @ViewBuilder
+    private func stamp(_ day: Date) -> some View {
+        if isAttended(day) {
+            Image("ic_stamp")
+                .resizable()
+                .frame(width: stampSize, height: stampSize)
         }
     }
 
@@ -135,6 +154,8 @@ struct HomeCalendar: View {
                     Circle().fill(MyFisColor.textPrimary)
                 }
             }
+            .frame(width: stampSize, height: stampSize)
+            .background { stamp(day) }
             .contentShape(Circle())
             .onTapGesture {
                 guard !isSelected else { return }
