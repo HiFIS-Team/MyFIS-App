@@ -12,14 +12,19 @@ struct HomeScreen: View {
     var onDiet: () -> Void = {}
     var onCardio: () -> Void = {}
 
-    private let today = Date()
     @State private var selected = Date()
+    @State private var expanded = false
 
     var body: some View {
         VStack(spacing: 0) {
             AppHeader(onNotification: onNotification)
-            WeekCalendar(week: MyFisCalendar.week(of: today), selected: $selected)
+            HomeCalendar(selected: $selected, expanded: expanded)
                 .padding(.top, MyFisSpacing.sm)
+            CalendarBar(
+                expanded: $expanded,
+                streak: HomePlaceholder.attendanceStreak
+            )
+            .padding(.top, MyFisSpacing.xs)
             ShortcutRow(onDiet: onDiet, onCardio: onCardio)
                 .padding(.top, MyFisSpacing.lg)
             // TODO: 회원권 카드 · 오늘 할 운동 · 마일리지가 붙으면 교체한다 (SPEC H-01).
@@ -30,6 +35,59 @@ struct HomeScreen: View {
             )
         }
     }
+}
+
+/// 캘린더 아래 한 줄 — 왼쪽 `펼쳐보기`, 오른쪽 `연속 출석`.
+///
+/// 펼치기는 **화살표가 뒤집히며** 캘린더가 그 달로 늘어난다 (§6.11).
+/// 연속 출석은 이 화면에서 **자랑거리**라 숫자만 흰색으로 세운다.
+private struct CalendarBar: View {
+    @Binding var expanded: Bool
+    let streak: Int
+
+    var body: some View {
+        HStack(spacing: 0) {
+            Button {
+                withAnimation(MyFisMotion.base) { expanded.toggle() }
+            } label: {
+                HStack(spacing: 2) {
+                    Text(expanded ? "접기" : "펼쳐보기")
+                        .font(MyFisFont.bodySm)
+                    Image("ic_chevron_down")
+                        .resizable()
+                        .frame(width: 18, height: 18)
+                        .rotationEffect(.degrees(expanded ? 180 : 0))
+                }
+                .foregroundStyle(MyFisColor.textSecondary)
+                .padding(.horizontal, MyFisSpacing.sm)
+                .padding(.vertical, MyFisSpacing.sm)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            Spacer(minLength: 0)
+
+            HStack(spacing: MyFisSpacing.xs) {
+                Image("ic_quest_attend")
+                    .resizable()
+                    .frame(width: 16, height: 16)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                Text("연속 출석")
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                Text("\(streak)일")
+                    .font(MyFisFont.titleSm.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textPrimary)
+            }
+            .padding(.horizontal, MyFisSpacing.sm)
+        }
+        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+    }
+}
+
+enum HomePlaceholder {
+    /// TODO(서버): 출석 기록이 붙으면 계산한다
+    static let attendanceStreak = 12
 }
 
 /// 홈 바로가기 두 장 (DESIGN.md §6.13).

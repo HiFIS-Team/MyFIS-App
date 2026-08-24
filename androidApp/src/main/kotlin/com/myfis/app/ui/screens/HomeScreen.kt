@@ -1,10 +1,12 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,21 +16,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
-import com.myfis.app.ui.components.WeekCalendar
-import com.myfis.app.ui.components.weekOf
+import com.myfis.app.ui.components.HomeCalendar
 import com.myfis.app.ui.shell.AppHeader
 import com.myfis.app.ui.shell.PlaceholderScreen
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
@@ -51,19 +55,25 @@ fun HomeScreen(
     onCardio: () -> Unit = {},
 ) {
     val today = remember { LocalDate.now() }
-    val week = remember(today) { weekOf(today) }
 
     // LocalDate 는 Saveable 이 아니라 epochDay 로 들고 있는다.
     var selectedEpochDay by rememberSaveable { mutableLongStateOf(today.toEpochDay()) }
+    var expanded by rememberSaveable { mutableStateOf(false) }
     val selected = LocalDate.ofEpochDay(selectedEpochDay)
 
     Column(Modifier.fillMaxSize()) {
         AppHeader(onNotification = onNotification)
-        WeekCalendar(
-            week = week,
+        HomeCalendar(
             selected = selected,
+            expanded = expanded,
             onSelect = { selectedEpochDay = it.toEpochDay() },
             modifier = Modifier.padding(top = MyFisSpacing.sm),
+        )
+        CalendarBar(
+            expanded = expanded,
+            onToggle = { expanded = !expanded },
+            streak = attendanceStreakPlaceholder,
+            modifier = Modifier.padding(top = MyFisSpacing.xs),
         )
         ShortcutRow(
             onDiet = onDiet,
@@ -154,3 +164,78 @@ private fun ShortcutCard(
         }
     }
 }
+
+/**
+ * 캘린더 아래 한 줄 — 왼쪽 `펼쳐보기`, 오른쪽 `연속 출석`.
+ *
+ * 펼치기는 **화살표가 뒤집히며** 캘린더가 그 달로 늘어난다 (§6.11).
+ * 연속 출석은 이 화면에서 **자랑거리**라 숫자만 흰색으로 세운다.
+ */
+@Composable
+private fun CalendarBar(
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    streak: Int,
+    modifier: Modifier = Modifier,
+) {
+    val interaction = remember { MutableInteractionSource() }
+    val arrow by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        animationSpec = MyFisMotion.base(),
+        label = "arrow",
+    )
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier
+                .clip(MyFisRadius.full)
+                .tapWithHaptics(interaction, onToggle)
+                .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                if (expanded) "접기" else "펼쳐보기",
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextSecondary,
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = null, // 옆 글자가 이름 역할을 한다
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier
+                    .size(18.dp)
+                    .graphicsLayer { rotationZ = arrow },
+            )
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        Row(
+            modifier = Modifier.padding(horizontal = MyFisSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_quest_attend),
+                contentDescription = null,
+                tint = MyFisColor.TextTertiary,
+                modifier = Modifier.size(16.dp),
+            )
+            Text("연속 출석", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
+            Text(
+                "${streak}일",
+                style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextPrimary,
+            )
+        }
+    }
+}
+
+/** TODO(서버): 출석 기록이 붙으면 계산한다 */
+private const val attendanceStreakPlaceholder = 12
