@@ -28,6 +28,10 @@ enum MyFisColor {
     /// 액센트 위 텍스트는 항상 검정. 흰 글자는 1.3:1 이라 안 읽힌다.
     static let onAccent = Color(hex: 0x000000)
 
+    // 달력 주말 — 한국 달력 관행. 시맨틱(상태)과 값은 같아도 쓰임이 달라 따로 둔다.
+    static let weekendSaturday = Color(hex: 0x7DA8FF)
+    static let weekendSunday = Color(hex: 0xFF6B6B)
+
     // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.
     static let success = Color(hex: 0x4ADE80)
     static let warning = Color(hex: 0xFBBF24)

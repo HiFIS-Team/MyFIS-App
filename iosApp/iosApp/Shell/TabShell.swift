@@ -86,11 +86,22 @@ struct TabShell: View {
             if tabSet == .base {
                 switch Self.baseTabs[slot] {
                 case .home:
-                    // TODO: H-01 홈 화면이 붙는다 (다음 단계)
-                    VStack(spacing: 0) {
-                        homeHeader
-                        PlaceholderScreen(id: "H-01", title: "홈", description: "출석 · 오늘의 루틴 · 혼잡도")
-                    }
+                    HomeScreen(
+                        onNotification: { open(.notifications) },
+                        // TODO: H-03 AI 식단이 붙으면 onDiet 을 연결한다
+                        // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
+                        onCardio: {
+                            weightTab = .cardio
+                            withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
+                        },
+                        // 홈의 오늘의 루틴 카드 — 같은 길로 웨이트(W-01)에 들어간다
+                        onWeight: {
+                            weightTab = .weight
+                            withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
+                        },
+                        // 홈의 마일리지 상품 — 같은 세트 안이라 탭만 옮긴다
+                        onStore: { baseTab = .store }
+                    )
                 case .benefit:
                     PlaceholderScreen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
                 case .store:
@@ -117,22 +128,6 @@ struct TabShell: View {
                 case .back:
                     Color.clear // 통로
                 }
-            }
-        }
-    }
-
-    /// 홈 헤더 (§6.9) — 지점 · 워드마크 · 멤버십 · 알림
-    private var homeHeader: some View {
-        HeaderBar {
-            // TODO: 지점 선택(M-01) 이 붙으면 연결한다
-            HeaderIcon("ic_header_branch", "지점") {}
-        } center: {
-            Wordmark()
-        } trailing: {
-            HStack(spacing: 0) {
-                // TODO: 회원권(M-06) 이 붙으면 연결한다
-                HeaderIcon("ic_header_membership", "멤버십") {}
-                HeaderIcon("ic_header_notification", "알림") { open(.notifications) }
             }
         }
     }

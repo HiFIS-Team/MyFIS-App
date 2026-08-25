@@ -10,6 +10,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_ROUTE=notifications      잎 화면을 띄운 채로 시작
 /// SIMCTL_CHILD_MYFIS_TAB=store                스토어 탭에서 시작
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
+/// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
@@ -51,6 +52,15 @@ enum MyFisDebug {
         env["MYFIS_TABSET"] == "weight" ? .weight : .base
         #else
         .base
+        #endif
+    }
+
+    /// 홈처럼 긴 화면의 아래쪽을 보려면 `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom`
+    static var homeScrollAnchor: UnitPoint {
+        #if DEBUG
+        env["MYFIS_HOME_SCROLL"] == "bottom" ? .bottom : .top
+        #else
+        .top
         #endif
     }
 
