@@ -95,6 +95,7 @@ fun AppShell() {
                 StoreItemScreen(
                     item = it,
                     onBack = { nav.popBackStack() },
+                    onSearch = { nav.navigateOnce(Route.STORE_SEARCH) },
                     onCart = { nav.navigateOnce(Route.STORE_CART) },
                 )
             }
