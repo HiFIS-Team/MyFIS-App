@@ -95,10 +95,42 @@ struct StoreScreen: View {
     }
 }
 
-/// 스토어 검색 필드 — **내비 바 안**에 산다 (DESIGN.md §6.9).
+/// 스토어 헤더의 검색 자리 — 평소에는 **필드처럼 보이는 버튼**이다 (DESIGN.md §6.9).
 ///
-/// 누르면 화면을 옮기지 않고 **헤더가 검색 모드로 늘어난다** — 오른쪽 아이콘 자리가 `취소` 로 바뀌고
-/// 필드가 그만큼 길어진다. 하단 탭은 그동안 감춘다
+/// 누르는 즉시 검색 모드로 들어간다. `@FocusState` 가 켜지기를 기다리지 않는다 —
+/// 내비 바 안의 `TextField` 는 포커스가 셸까지 안 올라와서, 그걸 조건으로 삼으면
+/// **글자를 쳐야** 검색 화면이 나타난다 (실제로 그랬다).
+struct StoreSearchButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: MyFisSpacing.sm) {
+                Image("ic_header_search")
+                    .resizable()
+                    .frame(width: 18, height: 18)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                Text("상품 검색")
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, MyFisSpacing.md)
+            .frame(height: 40)
+            .frame(maxWidth: .infinity)
+            .background(
+                MyFisColor.surface2,
+                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.myFisTap)
+        .accessibilityLabel("상품 검색")
+    }
+}
+
+/// 검색 모드일 때의 입력 필드 — 버튼이 있던 자리에서 **오른쪽으로 늘어난다**.
+/// 오른쪽 아이콘 자리는 `취소` 로 바뀌고, 하단 탭은 그동안 감춘다 (§6.9)
 struct StoreSearchField: View {
     @Binding var query: String
     var focused: FocusState<Bool>.Binding
@@ -118,16 +150,7 @@ struct StoreSearchField: View {
             .foregroundStyle(MyFisColor.textPrimary)
             .focused(focused)
             .submitLabel(.search)
-            if !query.isEmpty {
-                Button { query = "" } label: {
-                    Image("ic_header_clear")
-                        .resizable()
-                        .frame(width: 16, height: 16)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                }
-                .buttonStyle(.myFisTap)
-                .accessibilityLabel("지우기")
-            }
+            // **지우기(X)를 두지 않는다.** 바로 옆이 `취소` 라 같은 자리에 비슷한 버튼이 둘이 된다
         }
         .padding(.horizontal, MyFisSpacing.md)
         .frame(height: 40)
@@ -241,7 +264,16 @@ private struct FlowRow<Item: Hashable, Content: View>: View {
 /// `SIMCTL_CHILD_MYFIS_SEARCH=1` (빈 검색) 또는 `=음료` (결과) 로 띄운다.
 
 enum StoreSearch {
-    /// 검색 모드는 이제 **시스템 검색 바**가 켠다. 여기서는 검색어만 심어 준다
+    /// 시뮬레이터에는 탭을 자동화할 수단이 없다. 검색 모드를 스크린샷으로 확인할 때
+    /// `SIMCTL_CHILD_MYFIS_SEARCH=1`(빈 검색어) 또는 `=음료`(결과) 로 앱을 띄운다
+    static var initialForDebug: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["MYFIS_SEARCH"] != nil
+        #else
+        false
+        #endif
+    }
+
     static var initialQueryForDebug: String {
         #if DEBUG
         let value = ProcessInfo.processInfo.environment["MYFIS_SEARCH"] ?? ""

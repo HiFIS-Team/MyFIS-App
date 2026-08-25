@@ -50,8 +50,8 @@ struct AppShell: View {
     @State private var storeQuery = StoreSearch.initialQueryForDebug
     @FocusState private var storeFocused: Bool
 
-    /// 검색 모드 — 필드에 커서가 있거나 검색어가 남아 있는 동안
-    private var storeSearching: Bool { storeFocused || !storeQuery.isEmpty }
+    /// 검색 모드. **누르는 즉시** 켠다 — 포커스를 조건으로 삼으면 글자를 쳐야 켜졌다
+    @State private var storeSearching = StoreSearch.initialForDebug
 
     @State private var path: [HeaderRoute] = HeaderRoute?.initialForDebug.map { [$0] } ?? []
 
@@ -110,16 +110,26 @@ struct AppShell: View {
             ToolbarItem(placement: .principal) {
                 // 내비 바는 principal 에 **딱 필요한 만큼만** 자리를 준다.
                 // 검색이 폭을 다 써야 하는 헤더라(§6.9) 오른쪽 자리를 뺀 폭을 직접 잡는다 —
-                // 검색 모드에서는 `취소` 만큼만 빼서 필드가 오른쪽으로 늘어난다
-                StoreSearchField(query: $storeQuery, focused: $storeFocused)
-                    .frame(width: max(160, UIScreen.main.bounds.width - (storeSearching ? 116 : 160)))
-                    .animation(MyFisMotion.base, value: storeSearching)
+                // 검색 모드에서는 `취소` **바로 옆까지** 온다
+                Group {
+                    if storeSearching {
+                        StoreSearchField(query: $storeQuery, focused: $storeFocused)
+                    } else {
+                        StoreSearchButton {
+                            storeSearching = true
+                            storeFocused = true
+                        }
+                    }
+                }
+                .frame(width: max(160, UIScreen.main.bounds.width - (storeSearching ? 88 : 160)))
+                .animation(MyFisMotion.base, value: storeSearching)
             }
             if storeSearching {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("취소") {
                         storeQuery = ""
                         storeFocused = false
+                        storeSearching = false
                     }
                     .font(MyFisFont.bodySm)
                 }
