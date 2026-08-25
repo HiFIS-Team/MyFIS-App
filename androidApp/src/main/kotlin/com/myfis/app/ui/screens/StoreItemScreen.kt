@@ -39,6 +39,7 @@ import com.myfis.app.ui.theme.MyFisPrimaryButton
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
+import com.myfis.app.ui.theme.pressScale
 import com.myfis.app.ui.theme.tapWithHaptics
 
 /**
@@ -52,6 +53,7 @@ fun StoreItemScreen(
     item: StoreItem,
     balance: Int = mileageBalancePlaceholder,
     onBack: () -> Unit,
+    onSearch: () -> Unit = {},
     onCart: () -> Unit = {},
     onExchange: () -> Unit = {},
 ) {
@@ -80,7 +82,8 @@ fun StoreItemScreen(
             ) {
                 FloatingIcon(R.drawable.ic_tab_back, "뒤로", onBack)
                 Spacer(Modifier.weight(1f))
-                // TODO: S-06 장바구니가 붙으면 연결한다
+                // TODO: S-07 검색 · S-06 장바구니가 붙으면 연결한다
+                FloatingIcon(R.drawable.ic_header_search, "검색", onSearch)
                 FloatingIcon(R.drawable.ic_header_cart, "장바구니", onCart)
             }
         }
@@ -117,16 +120,21 @@ private fun ItemImage() {
     }
 }
 
-/** 이미지 위에 뜨는 둥근 버튼. 배경을 깔아야 밝은 상품 사진 위에서도 아이콘이 보인다 */
+/**
+ * 이미지 위에 뜨는 아이콘.
+ *
+ * **배경(원)을 깔지 않는다.** 아이콘만 얹어야 사진이 안 가린다 —
+ * iOS 는 시스템 유리 버튼이 같은 자리를 맡는다 (플랫폼이 주는 것을 그대로 쓴다, §6.7 과 같은 판단).
+ */
 @Composable
 private fun FloatingIcon(icon: Int, label: String, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
+    val press by interaction.pressScale()
 
     Box(
         modifier = Modifier
-            .size(40.dp)
+            .size(44.dp)
             .clip(CircleShape)
-            .background(MyFisColor.BgBase.copy(alpha = 0.45f))
             .tapWithHaptics(interaction, onClick),
         contentAlignment = Alignment.Center,
     ) {
@@ -134,7 +142,12 @@ private fun FloatingIcon(icon: Int, label: String, onClick: () -> Unit) {
             painter = painterResource(icon),
             contentDescription = label,
             tint = MyFisColor.TextPrimary,
-            modifier = Modifier.size(22.dp),
+            modifier = Modifier
+                .size(24.dp)
+                .graphicsLayer {
+                    scaleX = press
+                    scaleY = press
+                },
         )
     }
 }

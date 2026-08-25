@@ -8,6 +8,7 @@ struct StoreItemScreen: View {
     let item: StoreItem
     var balance: Int = StorePlaceholder.balance
     let onBack: () -> Void
+    var onSearch: () -> Void = {}
     var onCart: () -> Void = {}
     var onExchange: () -> Void = {}
 
@@ -31,21 +32,32 @@ struct StoreItemScreen: View {
             }
             .ignoresSafeArea(edges: .top)
 
-            // **버튼은 스크롤을 따라가지 않는다.** 내려 읽다가 뒤로가기가 사라지면 안 된다.
-            // 안전 영역을 지키는 바깥 층에 두어야 상태바와 겹치지 않는다
-            VStack(spacing: 0) {
-                HStack {
-                    FloatingIcon(icon: "ic_tab_back", label: "뒤로", action: onBack)
-                    Spacer(minLength: 0)
-                    // TODO: S-06 장바구니가 붙으면 연결한다
-                    FloatingIcon(icon: "ic_header_cart", label: "장바구니", action: onCart)
+        }
+        // 떠 있는 버튼은 **시스템 툴바**에 맡긴다 — iOS 26 이 알아서 유리 원으로 그리고,
+        // 스크롤에도 고정되며 터치 타겟까지 맞춰 준다 (직접 그리면 굴절이 없어 유리로 안 보인다)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button(action: onBack) {
+                    Image(systemName: "chevron.left")
                 }
-                .padding(.horizontal, MyFisSpacing.md)
-                .padding(.top, MyFisSpacing.sm)
-                Spacer(minLength: 0)
+                .accessibilityLabel("뒤로")
+            }
+            // TODO: S-07 검색 · S-06 장바구니가 붙으면 연결한다
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: onSearch) {
+                    Image("ic_header_search")
+                }
+                .accessibilityLabel("검색")
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button(action: onCart) {
+                    Image("ic_header_cart")
+                }
+                .accessibilityLabel("장바구니")
             }
         }
-        .toolbar(.hidden, for: .navigationBar)
     }
 
     /// 상품 이미지. 위 버튼들은 이미지 **위에 떠 있다** — 이미지를 화면 끝까지 쓰기 위해서다
@@ -164,26 +176,6 @@ struct StoreItemScreen: View {
             .filter { $0.category == item.category }
             .sorted { $0.views > $1.views }
         return (ranked.firstIndex { $0.id == item.id } ?? 0) + 1
-    }
-}
-
-/// 이미지 위에 뜨는 둥근 버튼. 배경을 깔아야 밝은 상품 사진 위에서도 아이콘이 보인다
-private struct FloatingIcon: View {
-    let icon: String
-    let label: String
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Image(icon)
-                .resizable()
-                .frame(width: 22, height: 22)
-                .foregroundStyle(MyFisColor.textPrimary)
-                .frame(width: 40, height: 40)
-                .background(MyFisColor.bgBase.opacity(0.45), in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
     }
 }
 
