@@ -20,44 +20,46 @@ struct HomeScreen: View {
     @State private var month = Date()
 
     var body: some View {
-        VStack(spacing: 0) {
-            // 헤더는 고정, 그 아래만 스크롤한다 (스토어와 같은 구조)
-            AppHeader(onNotification: onNotification)
-            ScrollView {
+        // 헤더가 스크롤에 따라 접히고, 떠 있을 때는 유리로 바뀐다 (§6.17)
+        CollapsingHeaderScroll(
+            scrollAnchor: HomeScroll.initialForDebug,
+            header: { glass in
+                AppHeader(onNotification: onNotification, glass: glass)
+            },
+            content: {
                 VStack(spacing: 0) {
-            HomeCalendar(
-                selected: $selected,
-                month: $month,
-                expanded: expanded,
-                isAttended: HomePlaceholder.isAttended
-            )
-                .padding(.top, MyFisSpacing.sm)
-            CalendarBar(
-                expanded: $expanded,
-                streak: HomePlaceholder.attendanceStreak
-            )
-            .padding(.top, MyFisSpacing.xs)
-            ShortcutRow(onDiet: onDiet, onCardio: onCardio)
-                .padding(.top, MyFisSpacing.lg)
-            TodayRoutineSection(
-                routine: HomePlaceholder.todayRoutine,
-                onStart: onWeight
-            )
-            .padding(.top, MyFisSpacing.sectionGap)
-            CongestionSection(congestion: HomePlaceholder.congestion)
+                HomeCalendar(
+                    selected: $selected,
+                    month: $month,
+                    expanded: expanded,
+                    isAttended: HomePlaceholder.isAttended
+                )
+                    .padding(.top, MyFisSpacing.sm)
+                CalendarBar(
+                    expanded: $expanded,
+                    streak: HomePlaceholder.attendanceStreak
+                )
+                .padding(.top, MyFisSpacing.xs)
+                ShortcutRow(onDiet: onDiet, onCardio: onCardio)
+                    .padding(.top, MyFisSpacing.lg)
+                TodayRoutineSection(
+                    routine: HomePlaceholder.todayRoutine,
+                    onStart: onWeight
+                )
                 .padding(.top, MyFisSpacing.sectionGap)
-            MileageShopSection(
-                balance: StorePlaceholder.balance,
-                items: HomePlaceholder.affordable(StorePlaceholder.balance),
-                onStore: onStore
-            )
-            .padding(.top, MyFisSpacing.sectionGap)
-            // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권 · 휴관 공지)이 아래에 붙는다 (SPEC H-01 ⑦).
+                CongestionSection(congestion: HomePlaceholder.congestion)
+                    .padding(.top, MyFisSpacing.sectionGap)
+                MileageShopSection(
+                    balance: StorePlaceholder.balance,
+                    items: HomePlaceholder.affordable(StorePlaceholder.balance),
+                    onStore: onStore
+                )
+                .padding(.top, MyFisSpacing.sectionGap)
+                // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권 · 휴관 공지)이 아래에 붙는다 (SPEC H-01 ⑦).
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
-            .defaultScrollAnchor(HomeScroll.initialForDebug)
-        }
+        )
     }
 }
 
