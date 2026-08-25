@@ -298,8 +298,8 @@ private fun BuyBar(
     onCart: () -> Unit,
     onExchange: () -> Unit,
 ) {
-    val interaction = remember { MutableInteractionSource() }
     val cartInteraction = remember { MutableInteractionSource() }
+    val cartPress by cartInteraction.pressScale()
 
     Column {
         Divider()
@@ -315,28 +315,27 @@ private fun BuyBar(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         ) {
-            Icon(
-                painter = painterResource(
-                    if (liked) R.drawable.ic_store_like_fill else R.drawable.ic_store_like,
-                ),
-                contentDescription = if (liked) "찜 해제" else "찜하기",
-                tint = if (liked) MyFisColor.Like else MyFisColor.TextSecondary,
+            // 스토어 그리드와 **같은 하트**를 쓴다 — 누를 때 반응(팝 + 고리)까지 같아야 한 앱으로 읽힌다
+            LikeButton(liked = liked, onClick = onLike, box = BarIconBox, icon = BarIconSize)
+            Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(BarIconBox)
                     .clip(CircleShape)
-                    .tapWithHaptics(interaction, onLike)
-                    .padding(MyFisSpacing.md),
-            )
-            Icon(
-                painter = painterResource(R.drawable.ic_header_cart),
-                contentDescription = "장바구니",
-                tint = MyFisColor.TextSecondary,
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .tapWithHaptics(cartInteraction, onCart)
-                    .padding(MyFisSpacing.md),
-            )
+                    .tapWithHaptics(cartInteraction, onCart),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_header_cart),
+                    contentDescription = "장바구니",
+                    tint = MyFisColor.TextSecondary,
+                    modifier = Modifier
+                        .size(BarIconSize)
+                        .graphicsLayer {
+                            scaleX = cartPress
+                            scaleY = cartPress
+                        },
+                )
+            }
             MyFisPrimaryButton(
                 text = when {
                     item.soldOut -> "품절"
@@ -350,6 +349,10 @@ private fun BuyBar(
         }
     }
 }
+
+/** 하단 바 아이콘 — 사진처럼 크게. 작으면 엄지로 겨냥하기도 어렵다 */
+private val BarIconBox = 48.dp
+private val BarIconSize = 28.dp
 
 /** 같은 분류 안에서 몇 번째로 많이 봤는지. TODO(서버): 랭킹이 오면 지운다 */
 private fun popularityRank(item: StoreItem): Int =

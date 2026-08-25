@@ -34,7 +34,7 @@ fun MyFisPrimaryButton(
         onClick = onClick,
         enabled = enabled,
         modifier = modifier.fillMaxWidth().height(MyFisSize.buttonPrimary),
-        shape = MyFisRadius.full,
+        shape = MyFisRadius.md,
         colors = ButtonDefaults.buttonColors(
             containerColor = MyFisColor.Accent,
             contentColor = MyFisColor.OnAccent,
@@ -53,7 +53,7 @@ fun MyFisSecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier =
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().height(MyFisSize.buttonSecondary),
-        shape = MyFisRadius.full,
+        shape = MyFisRadius.md,
         colors = ButtonDefaults.buttonColors(
             containerColor = MyFisColor.Surface2,
             contentColor = MyFisColor.TextPrimary,
@@ -85,7 +85,7 @@ fun MyFisSmallButton(text: String, onClick: () -> Unit, modifier: Modifier = Mod
     Button(
         onClick = onClick,
         modifier = modifier.height(MyFisSize.buttonSmall),
-        shape = MyFisRadius.full,
+        shape = MyFisRadius.md,
         contentPadding = PaddingValues(horizontal = MyFisSpacing.lg),
         colors = ButtonDefaults.buttonColors(
             containerColor = MyFisColor.Surface2,
@@ -102,7 +102,7 @@ fun MyFisDangerButton(text: String, onClick: () -> Unit, modifier: Modifier = Mo
     OutlinedButton(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().height(MyFisSize.buttonSecondary),
-        shape = MyFisRadius.full,
+        shape = MyFisRadius.md,
         colors = ButtonDefaults.outlinedButtonColors(contentColor = MyFisColor.Danger),
     ) {
         Text(text = text, style = MyFisTheme.type.bodySm)

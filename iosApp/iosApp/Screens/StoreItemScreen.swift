@@ -146,11 +146,13 @@ struct StoreItemScreen: View {
         VStack(spacing: 0) {
             divider
             HStack(spacing: MyFisSpacing.sm) {
-                BarIcon(
-                    icon: liked ? "ic_store_like_fill" : "ic_store_like",
-                    label: liked ? "찜 해제" : "찜하기",
-                    tint: liked ? MyFisColor.like : MyFisColor.textSecondary
-                ) { liked.toggle() }
+                // 스토어 그리드와 **같은 하트**를 쓴다 — 누를 때 반응(팝 + 고리)까지 같아야 한 앱으로 읽힌다
+                LikeButton(
+                    liked: liked,
+                    action: { liked.toggle() },
+                    box: Self.barIconBox,
+                    icon: Self.barIconSize
+                )
                 BarIcon(icon: "ic_header_cart", label: "장바구니", tint: MyFisColor.textSecondary, action: onCart)
                 MyFisPrimaryButton(
                     title: buyLabel,
@@ -169,6 +171,10 @@ struct StoreItemScreen: View {
         if short > 0 { return "\(short.mileage) 부족" }
         return "교환하기"
     }
+
+    /// 하단 바 아이콘 — 사진처럼 크게. 작으면 엄지로 겨냥하기도 어렵다
+    private static let barIconBox: CGFloat = 48
+    private static let barIconSize: CGFloat = 28
 
     /// 같은 분류 안에서 몇 번째로 많이 봤는지. TODO(서버): 랭킹이 오면 지운다
     private var popularityRank: Int {
@@ -235,9 +241,9 @@ private struct BarIcon: View {
         Button(action: action) {
             Image(icon)
                 .resizable()
-                .frame(width: 22, height: 22)
+                .frame(width: 28, height: 28)
                 .foregroundStyle(tint)
-                .frame(width: 44, height: 44)
+                .frame(width: 48, height: 48)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

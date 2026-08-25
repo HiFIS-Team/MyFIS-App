@@ -54,6 +54,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.myfis.app.R
@@ -501,7 +502,13 @@ private fun MetaRow(item: StoreItem, modifier: Modifier = Modifier) {
 
 /** 찜. 카드 전체를 누르면 상세로 가므로 여기만 따로 눌리게 한다 */
 @Composable
-private fun LikeButton(liked: Boolean, onClick: () -> Unit) {
+fun LikeButton(
+    liked: Boolean,
+    onClick: () -> Unit,
+    /** 터치 영역. 상세 화면의 하단 바처럼 크게 써야 하는 자리가 있다 */
+    box: Dp = 28.dp,
+    icon: Dp = 20.dp,
+) {
     val interaction = remember { MutableInteractionSource() }
     val pop = remember { Animatable(1f) }
     // 1f = 끝난 상태(안 보임). 찜할 때만 0f 로 되감아 다시 퍼뜨린다
@@ -520,7 +527,7 @@ private fun LikeButton(liked: Boolean, onClick: () -> Unit) {
 
     Box(
         modifier = Modifier
-            .size(28.dp)
+            .size(box)
             .clip(MyFisRadius.full)
             .tapWithHaptics(interaction, onClick),
         contentAlignment = Alignment.Center,
@@ -545,7 +552,7 @@ private fun LikeButton(liked: Boolean, onClick: () -> Unit) {
             contentDescription = if (liked) "찜 해제" else "찜하기",
             tint = if (liked) MyFisColor.Like else MyFisColor.TextTertiary,
             modifier = Modifier
-                .size(20.dp)
+                .size(icon)
                 .graphicsLayer {
                     scaleX = pop.value
                     scaleY = pop.value

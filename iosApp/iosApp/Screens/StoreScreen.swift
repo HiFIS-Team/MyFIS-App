@@ -696,9 +696,12 @@ private struct ItemCard: View {
 }
 
 /// 찜. 카드 전체를 누르면 상세로 가므로 여기만 따로 눌리게 한다 (DESIGN.md §6.12).
-private struct LikeButton: View {
+struct LikeButton: View {
     let liked: Bool
     let action: () -> Void
+    /// 터치 영역. 상세 화면의 하단 바처럼 크게 써야 하는 자리가 있다
+    var box: CGFloat = 28
+    var icon: CGFloat = 20
 
     /// 1 = 끝난 상태(안 보임). 찜할 때만 0 으로 되감아 다시 퍼뜨린다
     @State private var burst: Double = 1
@@ -708,13 +711,13 @@ private struct LikeButton: View {
         Button(action: action) {
             Image(liked ? "ic_store_like_fill" : "ic_store_like")
                 .resizable()
-                .frame(width: 20, height: 20)
+                .frame(width: icon, height: icon)
                 .foregroundStyle(liked ? MyFisColor.like : MyFisColor.textTertiary)
                 // 색이 차는 건 **즉시**여야 한다. 바깥에서 걸린 애니메이션이 여기까지 흘러오면
                 // 하트가 늦게 채워진다 (그리는 건 빠른데 색만 뒤늦게 번지는 것처럼 보였다)
                 .animation(nil, value: liked)
                 .scaleEffect(bump ? 1.3 : 1)
-                .frame(width: 28, height: 28)
+                .frame(width: box, height: box)
                 // 하트 둘레로 한 번 퍼지는 고리. 눌린 게 손끝 말고 **눈으로도** 보여야 한다
                 .background {
                     Circle()
