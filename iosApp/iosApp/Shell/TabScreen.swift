@@ -5,6 +5,8 @@ enum HeaderRoute: Hashable {
     case notifications
     /// S-08 스토어 마이 — 마이 탭(Y-01)과 다른 화면이다
     case storeMy
+    /// S-02 상품 상세
+    case storeItem(StoreItem)
     // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 여기에 추가한다.
 }
 
@@ -37,6 +39,7 @@ extension Optional where Wrapped == HeaderRoute {
         switch ProcessInfo.processInfo.environment["MYFIS_ROUTE"] {
         case "notifications": .notifications
         case "store_my": .storeMy
+        case "store_item": .storeItem(StorePlaceholder.items[0])
         default: nil
         }
         #else

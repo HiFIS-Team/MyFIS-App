@@ -83,6 +83,11 @@ struct AppShell: View {
                 StoreMyScreen(onBack: { close() })
             }
             .tint(MyFisColor.textPrimary)
+        case .storeItem(let item):
+            NavigationStack {
+                StoreItemScreen(item: item, onBack: { close() })
+            }
+            .tint(MyFisColor.textPrimary)
         }
     }
 
@@ -167,7 +172,12 @@ struct AppShell: View {
                 screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
             case .store:
                 // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
-                TabScreen { StoreScreen(onMy: { open(.storeMy) }) }
+                TabScreen {
+                    StoreScreen(
+                        onMy: { open(.storeMy) },
+                        onItem: { open(.storeItem($0)) }
+                    )
+                }
             case .my:
                 // TODO: Y-01 마이 화면이 붙으면 교체한다.
                 // 그때까지 토큰 확인 화면을 여기 둔다 — 스크롤 콘텐츠가 있어야

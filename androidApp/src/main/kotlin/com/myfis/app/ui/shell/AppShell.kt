@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -21,6 +22,8 @@ import androidx.navigation.compose.rememberNavController
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.screens.StoreMyScreen
+import com.myfis.app.ui.screens.StoreItem
+import com.myfis.app.ui.screens.StoreItemScreen
 import com.myfis.app.ui.screens.StoreScreen
 import com.myfis.app.ui.theme.MyFisColor
 
@@ -36,6 +39,8 @@ import com.myfis.app.ui.theme.MyFisColor
 @Composable
 fun AppShell() {
     val nav = rememberNavController()
+    // 상세로 넘길 상품. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다
+    var storeItem by remember { mutableStateOf<StoreItem?>(null) }
 
     NavHost(
         navController = nav,
@@ -50,6 +55,10 @@ fun AppShell() {
             TabShell(
                 onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) },
                 onStoreMy = { nav.navigateOnce(Route.STORE_MY) },
+                onStoreItem = {
+                    storeItem = it
+                    nav.navigateOnce(Route.STORE_ITEM)
+                },
             )
         }
         composable(Route.NOTIFICATIONS) {
@@ -58,12 +67,20 @@ fun AppShell() {
         composable(Route.STORE_MY) {
             StoreMyScreen(onBack = { nav.popBackStack() })
         }
+        composable(Route.STORE_ITEM) {
+            // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
+            storeItem?.let { StoreItemScreen(item = it, onBack = { nav.popBackStack() }) }
+        }
     }
 }
 
 /** 탭 셸 — 순검정 위에 헤더와 하단 탭 바. */
 @Composable
-private fun TabShell(onNotification: () -> Unit, onStoreMy: () -> Unit) {
+private fun TabShell(
+    onNotification: () -> Unit,
+    onStoreMy: () -> Unit,
+    onStoreItem: (StoreItem) -> Unit,
+) {
     var tabSet by rememberSaveable { mutableStateOf(TabSet.BASE) }
     var baseTab by rememberSaveable { mutableStateOf(BaseTab.HOME) }
     var weightTab by rememberSaveable { mutableStateOf(WeightTab.WEIGHT) }
@@ -77,6 +94,7 @@ private fun TabShell(onNotification: () -> Unit, onStoreMy: () -> Unit) {
                     tab = baseTab,
                     onNotification = onNotification,
                     onStoreMy = onStoreMy,
+                    onStoreItem = onStoreItem,
                     // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                     onCardio = {
                         weightTab = WeightTab.CARDIO
@@ -115,6 +133,7 @@ private fun BaseTabContent(
     tab: BaseTab,
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
+    onStoreItem: (StoreItem) -> Unit,
     onCardio: () -> Unit,
     onWeight: () -> Unit,
     onStore: () -> Unit,
@@ -128,7 +147,7 @@ private fun BaseTabContent(
         )
         BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
-        BaseTab.STORE -> StoreScreen(onMy = onStoreMy)
+        BaseTab.STORE -> StoreScreen(onMy = onStoreMy, onItem = onStoreItem)
         BaseTab.MY -> PlaceholderScreen("Y-01", "마이", "프로필 · 기록 · 설정")
         // 통로라 여기 도달하지 않는다
         BaseTab.WEIGHT -> Unit
