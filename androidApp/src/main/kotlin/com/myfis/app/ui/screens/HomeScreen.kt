@@ -4,12 +4,15 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -29,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -41,6 +45,7 @@ import com.myfis.app.ui.shell.AppHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
+import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.tapWithHaptics
@@ -72,7 +77,15 @@ fun HomeScreen(
     val selected = LocalDate.ofEpochDay(selectedEpochDay)
 
     Column(Modifier.fillMaxSize()) {
+        // 헤더는 고정, 그 아래만 스크롤한다 (스토어와 같은 구조)
         AppHeader(onNotification = onNotification)
+        Column(
+            Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = MyFisSpacing.xxxl),
+        ) {
         HomeCalendar(
             selected = selected,
             month = LocalDate.ofEpochDay(monthEpochDay),
@@ -98,7 +111,12 @@ fun HomeScreen(
             onStart = onWeight,
             modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
         )
-        // TODO: 회원권 카드(②) · 마일리지가 아래에 붙는다 (SPEC H-01).
+        CongestionSection(
+            congestion = congestionPlaceholder,
+            modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
+        )
+        // TODO: 마일리지 + 찜 한 줄, 조건부 줄(회원권 D-7 · 미수령 교환권)이 아래에 붙는다 (SPEC H-01).
+        }
     }
 }
 
@@ -465,4 +483,143 @@ private val todayRoutinePlaceholder = TodayRoutine(
     firstExercise = "벤치프레스",
     doneDays = 2,
     totalDays = 5,
+)
+
+/**
+ * 실시간 혼잡도 (DESIGN.md §6.15).
+ *
+ * 홈이 답해야 하는 질문은 **"지금 갈까?"** 다. 여기에 정면으로 답하는 카드다.
+ * 숫자를 세우고, 색은 시맨틱(상태)으로 낸다 — 라임 예산과 무관하다 (§3.2).
+ */
+@Composable
+private fun CongestionSection(congestion: BranchCongestion, modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal),
+    ) {
+        Text("실시간 혼잡도", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+        Spacer(Modifier.height(MyFisSpacing.md))
+        CongestionCard(congestion)
+    }
+}
+
+@Composable
+private fun CongestionCard(congestion: BranchCongestion) {
+    val level = congestion.level
+
+    // TODO: 시간대별 혼잡도 상세(🔵)가 생기면 카드를 누를 수 있게 한다
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MyFisRadius.md)
+            .background(MyFisColor.Surface1)
+            .padding(MyFisSpacing.cardPadding),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                congestion.branch,
+                style = MyFisTheme.type.titleSm,
+                color = MyFisColor.TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                congestion.updatedLabel,
+                style = MyFisTheme.type.caption,
+                color = MyFisColor.TextTertiary,
+            )
+        }
+
+        Spacer(Modifier.height(MyFisSpacing.sm))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.Bottom) {
+                Text(
+                    congestion.people.toString(),
+                    style = MyFisTheme.type.metricLg.copy(fontFeatureSettings = "tnum"),
+                    color = MyFisColor.TextPrimary,
+                )
+                Text(
+                    "명",
+                    style = MyFisTheme.type.body,
+                    color = MyFisColor.TextSecondary,
+                    modifier = Modifier.padding(start = 2.dp, bottom = 6.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            // 상태는 **색과 글자 둘 다**로 낸다. 색만으로 구분하면 색각 이상에서 읽히지 않는다
+            Text(
+                level.label,
+                style = MyFisTheme.type.label,
+                color = level.color,
+                modifier = Modifier
+                    .background(level.color.copy(alpha = 0.14f), MyFisRadius.full)
+                    .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.xs),
+            )
+        }
+
+        Spacer(Modifier.height(MyFisSpacing.md))
+
+        // 정원 대비 게이지 — 숫자만으로는 38명이 많은 건지 알 수 없다
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(MyFisSize.progressHeight)
+                .clip(MyFisRadius.full)
+                .background(MyFisColor.Surface3),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth(congestion.ratio)
+                    .fillMaxHeight()
+                    .clip(MyFisRadius.full)
+                    .background(level.color),
+            )
+        }
+
+        Spacer(Modifier.height(MyFisSpacing.md))
+
+        Text(
+            congestion.comparison,
+            style = MyFisTheme.type.bodySm,
+            color = MyFisColor.TextSecondary,
+        )
+    }
+}
+
+/** 혼잡 단계. 신호등 순서라 설명 없이 읽힌다 */
+private enum class CongestionLevel(val label: String, val color: Color) {
+    LOW("한산", MyFisColor.Success),
+    MEDIUM("보통", MyFisColor.Warning),
+    HIGH("혼잡", MyFisColor.Danger),
+}
+
+/** TODO(서버): 출입 스캔 기반 실시간 인원 API 가 붙으면 지운다 */
+private data class BranchCongestion(
+    val branch: String,
+    val people: Int,
+    val capacity: Int,
+    val updatedLabel: String,
+    /** 평소 같은 시간대와의 비교 — 숫자를 판단으로 바꿔주는 한 줄 */
+    val comparison: String,
+) {
+    val ratio: Float get() = (people.toFloat() / capacity).coerceIn(0f, 1f)
+
+    val level: CongestionLevel
+        get() = when {
+            ratio < 0.4f -> CongestionLevel.LOW
+            ratio < 0.75f -> CongestionLevel.MEDIUM
+            else -> CongestionLevel.HIGH
+        }
+}
+
+/** TODO(서버): 혼잡도 API 가 붙으면 지운다 */
+private val congestionPlaceholder = BranchCongestion(
+    branch = "강남점",
+    people = 38,
+    capacity = 80,
+    updatedLabel = "방금 업데이트",
+    comparison = "평소 이 시간보다 12명 적어요",
 )

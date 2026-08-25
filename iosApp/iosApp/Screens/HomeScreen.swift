@@ -20,7 +20,10 @@ struct HomeScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // 헤더는 고정, 그 아래만 스크롤한다 (스토어와 같은 구조)
             AppHeader(onNotification: onNotification)
+            ScrollView {
+                VStack(spacing: 0) {
             HomeCalendar(
                 selected: $selected,
                 month: $month,
@@ -40,8 +43,12 @@ struct HomeScreen: View {
                 onStart: onWeight
             )
             .padding(.top, MyFisSpacing.sectionGap)
-            // TODO: 회원권 카드(②) · 마일리지가 아래에 붙는다 (SPEC H-01).
-            Spacer(minLength: 0)
+            CongestionSection(congestion: HomePlaceholder.congestion)
+                .padding(.top, MyFisSpacing.sectionGap)
+            // TODO: 마일리지 + 찜 한 줄, 조건부 줄(회원권 D-7 · 미수령 교환권)이 아래에 붙는다 (SPEC H-01).
+                }
+                .padding(.bottom, MyFisSpacing.xxxl)
+            }
         }
     }
 }
@@ -121,6 +128,15 @@ struct TodayRoutine {
 enum HomePlaceholder {
     /// TODO(서버): 출석 기록이 붙으면 계산한다
     static let attendanceStreak = 12
+
+    /// TODO(서버): 혼잡도 API 가 붙으면 지운다
+    static let congestion = BranchCongestion(
+        branch: "강남점",
+        people: 38,
+        capacity: 80,
+        updatedLabel: "방금 업데이트",
+        comparison: "평소 이 시간보다 12명 적어요"
+    )
 
     /// TODO(서버): 주간 루틴 API 가 붙으면 지운다
     static let todayRoutine = TodayRoutine(
@@ -334,4 +350,128 @@ private struct WeekProgressRing: View {
 private enum RoutineRing {
     static let size: CGFloat = 52
     static let stroke: CGFloat = 4
+}
+
+/// 혼잡 단계. 신호등 순서라 설명 없이 읽힌다
+enum CongestionLevel {
+    case low, medium, high
+
+    var label: String {
+        switch self {
+        case .low: "한산"
+        case .medium: "보통"
+        case .high: "혼잡"
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .low: MyFisColor.success
+        case .medium: MyFisColor.warning
+        case .high: MyFisColor.danger
+        }
+    }
+}
+
+/// TODO(서버): 출입 스캔 기반 실시간 인원 API 가 붙으면 지운다
+struct BranchCongestion {
+    let branch: String
+    let people: Int
+    let capacity: Int
+    let updatedLabel: String
+    /// 평소 같은 시간대와의 비교 — 숫자를 판단으로 바꿔주는 한 줄
+    let comparison: String
+
+    var ratio: Double { min(max(Double(people) / Double(capacity), 0), 1) }
+
+    var level: CongestionLevel {
+        switch ratio {
+        case ..<0.4: .low
+        case ..<0.75: .medium
+        default: .high
+        }
+    }
+}
+
+/// 실시간 혼잡도 (DESIGN.md §6.15).
+///
+/// 홈이 답해야 하는 질문은 **"지금 갈까?"** 다. 여기에 정면으로 답하는 카드다.
+/// 숫자를 세우고, 색은 시맨틱(상태)으로 낸다 — 라임 예산과 무관하다 (§3.2).
+private struct CongestionSection: View {
+    let congestion: BranchCongestion
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: MyFisSpacing.md) {
+            Text("실시간 혼잡도")
+                .font(MyFisFont.titleMd)
+                .foregroundStyle(MyFisColor.textPrimary)
+            CongestionCard(congestion: congestion)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+    }
+}
+
+private struct CongestionCard: View {
+    let congestion: BranchCongestion
+
+    var body: some View {
+        // TODO: 시간대별 혼잡도 상세(🔵)가 생기면 카드를 누를 수 있게 한다
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: MyFisSpacing.sm) {
+                Text(congestion.branch)
+                    .font(MyFisFont.titleSm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Text(congestion.updatedLabel)
+                    .font(MyFisFont.caption)
+                    .foregroundStyle(MyFisColor.textTertiary)
+            }
+            .padding(.bottom, MyFisSpacing.sm)
+
+            HStack(alignment: .center, spacing: MyFisSpacing.sm) {
+                HStack(alignment: .bottom, spacing: 2) {
+                    Text("\(congestion.people)")
+                        .font(MyFisFont.metricLg.monospacedDigit())
+                        .foregroundStyle(MyFisColor.textPrimary)
+                    Text("명")
+                        .font(MyFisFont.body)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                        .padding(.bottom, 6)
+                }
+                Spacer(minLength: 0)
+                // 상태는 **색과 글자 둘 다**로 낸다. 색만으로 구분하면 색각 이상에서 읽히지 않는다
+                Text(congestion.level.label)
+                    .font(MyFisFont.label)
+                    .foregroundStyle(congestion.level.color)
+                    .padding(.horizontal, MyFisSpacing.md)
+                    .padding(.vertical, MyFisSpacing.xs)
+                    .background(congestion.level.color.opacity(0.14), in: Capsule())
+            }
+            .padding(.bottom, MyFisSpacing.md)
+
+            // 정원 대비 게이지 — 숫자만으로는 38명이 많은 건지 알 수 없다
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(MyFisColor.surface3)
+                    Capsule()
+                        .fill(congestion.level.color)
+                        .frame(width: geo.size.width * congestion.ratio)
+                }
+            }
+            .frame(height: MyFisSize.progressHeight)
+            .padding(.bottom, MyFisSpacing.md)
+
+            Text(congestion.comparison)
+                .font(MyFisFont.bodySm)
+                .foregroundStyle(MyFisColor.textSecondary)
+        }
+        .padding(MyFisSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            MyFisColor.surface1,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+        )
+    }
 }
