@@ -87,6 +87,8 @@ private fun TabShell(onNotification: () -> Unit, onStoreMy: () -> Unit) {
                         weightTab = WeightTab.WEIGHT
                         tabSet = TabSet.WEIGHT
                     },
+                    // 홈의 마일리지 상품 — 같은 세트 안이라 탭만 옮긴다
+                    onStore = { baseTab = BaseTab.STORE },
                 )
                 TabSet.WEIGHT -> WeightTabContent(weightTab)
             }
@@ -115,12 +117,14 @@ private fun BaseTabContent(
     onStoreMy: () -> Unit,
     onCardio: () -> Unit,
     onWeight: () -> Unit,
+    onStore: () -> Unit,
 ) {
     when (tab) {
         BaseTab.HOME -> HomeScreen(
             onNotification = onNotification,
             onCardio = onCardio,
             onWeight = onWeight,
+            onStore = onStore,
         )
         BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.

@@ -8,6 +8,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,6 +70,7 @@ fun HomeScreen(
     onDiet: () -> Unit = {},
     onCardio: () -> Unit = {},
     onWeight: () -> Unit = {},
+    onStore: () -> Unit = {},
 ) {
     val today = remember { LocalDate.now() }
 
@@ -118,7 +120,13 @@ fun HomeScreen(
             congestion = congestionPlaceholder,
             modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
         )
-        // TODO: 마일리지 + 찜 한 줄, 조건부 줄(회원권 D-7 · 미수령 교환권)이 아래에 붙는다 (SPEC H-01).
+        MileageShopSection(
+            balance = mileageBalancePlaceholder,
+            items = affordablePlaceholder(mileageBalancePlaceholder),
+            onStore = onStore,
+            modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
+        )
+        // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권 · 휴관 공지)이 아래에 붙는다 (SPEC H-01 ⑦).
         }
     }
 }
@@ -700,3 +708,108 @@ private val congestionPlaceholder = BranchCongestion(
     startHour = 6,
     nowHour = LocalTime.now().hour,
 )
+
+/**
+ * 마일리지로 바꾸기 (DESIGN.md §6.16).
+ *
+ * **추천의 기준은 취향이 아니라 잔액이다.** 구매 이력이 없어서 취향 추천은 광고로 읽히지만,
+ * "지금 바꿀 수 있는 것" 은 계산만 하면 되니 처음부터 정확하다.
+ * 원래 따로 두려던 마일리지 잔액 줄을 이 섹션이 흡수한다 — 홈이 한 칸 짧아진다.
+ */
+@Composable
+private fun MileageShopSection(
+    balance: Int,
+    items: List<StoreItem>,
+    onStore: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("마일리지로 바꾸기", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+            Spacer(Modifier.weight(1f))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_mileage_fill),
+                    contentDescription = null, // 옆 숫자가 이름 역할을 한다
+                    tint = MyFisColor.Accent,
+                    modifier = Modifier.size(20.dp),
+                )
+                Text(
+                    balance.toMileage(),
+                    style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+                    color = MyFisColor.TextPrimary,
+                    modifier = Modifier.padding(start = MyFisSpacing.xs),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(MyFisSpacing.md))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap)) {
+            items.forEach { item ->
+                MileageItemCard(item = item, onClick = onStore, modifier = Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+/**
+ * 홈용 상품 한 장. 스토어 그리드(§6.12)보다 **가볍게** 만든다 —
+ * 카드 배경·찜·조회수 없이 이미지·이름·가격만. 홈은 훑는 자리지 고르는 자리가 아니다.
+ */
+@Composable
+private fun MileageItemCard(item: StoreItem, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Column(
+        // 누름 축소는 **아이콘에만** 준다 (§6.7)
+        modifier = modifier.tapWithHaptics(interaction, onClick),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(MyFisRadius.md)
+                .background(MyFisColor.Surface2),
+            contentAlignment = Alignment.Center,
+        ) {
+            // TODO(서버): 상품 이미지가 오면 교체한다. 지금은 자리만 잡는다.
+            Icon(
+                painter = painterResource(R.drawable.ic_tab_store),
+                contentDescription = null,
+                tint = MyFisColor.Surface3,
+                modifier = Modifier.size(40.dp),
+            )
+        }
+        Text(
+            item.name,
+            style = MyFisTheme.type.bodySm,
+            color = MyFisColor.TextPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = MyFisSpacing.sm),
+        )
+        Text(
+            item.price.toMileage(),
+            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextPrimary,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+    }
+}
+
+/**
+ * TODO(서버): "지금 바꿀 수 있는 상품" 은 서버가 골라준다. 붙으면 이 함수를 지운다.
+ *
+ * 잔액으로 바꿀 수 있고 품절이 아닌 것 중 인기순 3개. **부족한 상품은 넣지 않는다** —
+ * 홈에서 "못 바꿔요" 를 보여줄 이유가 없다.
+ */
+private fun affordablePlaceholder(balance: Int): List<StoreItem> =
+    storeItemPlaceholder
+        .filter { !it.soldOut && it.price <= balance }
+        .sortedByDescending { it.views }
+        .take(3)

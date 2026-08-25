@@ -12,6 +12,7 @@ struct HomeScreen: View {
     var onDiet: () -> Void = {}
     var onCardio: () -> Void = {}
     var onWeight: () -> Void = {}
+    var onStore: () -> Void = {}
 
     @State private var selected = Date()
     @State private var expanded = false
@@ -45,11 +46,34 @@ struct HomeScreen: View {
             .padding(.top, MyFisSpacing.sectionGap)
             CongestionSection(congestion: HomePlaceholder.congestion)
                 .padding(.top, MyFisSpacing.sectionGap)
-            // TODO: 마일리지 + 찜 한 줄, 조건부 줄(회원권 D-7 · 미수령 교환권)이 아래에 붙는다 (SPEC H-01).
+            MileageShopSection(
+                balance: StorePlaceholder.balance,
+                items: HomePlaceholder.affordable(StorePlaceholder.balance),
+                onStore: onStore
+            )
+            .padding(.top, MyFisSpacing.sectionGap)
+            // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권 · 휴관 공지)이 아래에 붙는다 (SPEC H-01 ⑦).
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
+            .defaultScrollAnchor(HomeScroll.initialForDebug)
         }
+    }
+}
+
+/// 시뮬레이터에는 스크롤을 시킬 수단이 없다. 홈 아래쪽을 스크린샷으로 확인할 때
+/// `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom` 으로 앱을 띄운다.
+///
+///     xcrun simctl launch --terminate-running-process booted com.myfis.app
+///
+/// 디버그 빌드에서만 동작한다.
+private enum HomeScroll {
+    static var initialForDebug: UnitPoint {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["MYFIS_HOME_SCROLL"] == "bottom" ? .bottom : .top
+        #else
+        .top
+        #endif
     }
 }
 
@@ -153,6 +177,18 @@ enum HomePlaceholder {
         doneDays: 2,
         totalDays: 5
     )
+
+    /// TODO(서버): "지금 바꿀 수 있는 상품" 은 서버가 골라준다. 붙으면 이 함수를 지운다.
+    ///
+    /// 잔액으로 바꿀 수 있고 품절이 아닌 것 중 인기순 3개. **부족한 상품은 넣지 않는다** —
+    /// 홈에서 "못 바꿔요" 를 보여줄 이유가 없다.
+    static func affordable(_ balance: Int) -> [StoreItem] {
+        StorePlaceholder.items
+            .filter { !$0.soldOut && $0.price <= balance }
+            .sorted { $0.views > $1.views }
+            .prefix(3)
+            .map { $0 }
+    }
 
     /// TODO(서버): 출석 API 가 붙으면 지운다.
     ///
@@ -563,4 +599,81 @@ private struct HourlyChart: View {
     }
 
     private static let height: CGFloat = 64
+}
+
+/// 마일리지로 바꾸기 (DESIGN.md §6.16).
+///
+/// **추천의 기준은 취향이 아니라 잔액이다.** 구매 이력이 없어서 취향 추천은 광고로 읽히지만,
+/// "지금 바꿀 수 있는 것" 은 계산만 하면 되니 처음부터 정확하다.
+/// 원래 따로 두려던 마일리지 잔액 줄을 이 섹션이 흡수한다 — 홈이 한 칸 짧아진다.
+private struct MileageShopSection: View {
+    let balance: Int
+    let items: [StoreItem]
+    let onStore: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: MyFisSpacing.md) {
+            HStack(spacing: MyFisSpacing.sm) {
+                Text("마일리지로 바꾸기")
+                    .font(MyFisFont.titleMd)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                Spacer(minLength: 0)
+                HStack(spacing: MyFisSpacing.xs) {
+                    Image("ic_mileage_fill")
+                        .resizable()
+                        .frame(width: 20, height: 20)
+                        .foregroundStyle(MyFisColor.accent)
+                    Text(balance.mileage)
+                        .font(MyFisFont.titleSm.monospacedDigit())
+                        .foregroundStyle(MyFisColor.textPrimary)
+                }
+            }
+
+            HStack(alignment: .top, spacing: MyFisSpacing.cardGap) {
+                ForEach(items) { item in
+                    MileageItemCard(item: item, action: onStore)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+    }
+}
+
+/// 홈용 상품 한 장. 스토어 그리드(§6.12)보다 **가볍게** 만든다 —
+/// 카드 배경·찜·조회수 없이 이미지·이름·가격만. 홈은 훑는 자리지 고르는 자리가 아니다.
+private struct MileageItemCard: View {
+    let item: StoreItem
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 0) {
+                // TODO(서버): 상품 이미지가 오면 교체한다. 지금은 자리만 잡는다.
+                Color.clear
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+                    .background(MyFisColor.surface2)
+                    .overlay {
+                        Image("ic_tab_store")
+                            .resizable()
+                            .frame(width: 40, height: 40)
+                            .foregroundStyle(MyFisColor.surface3)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+
+                Text(item.name)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .lineLimit(1)
+                    .padding(.top, MyFisSpacing.sm)
+                Text(item.price.mileage)
+                    .font(MyFisFont.titleSm.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .padding(.top, 2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
 }

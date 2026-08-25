@@ -158,7 +158,9 @@ struct AppShell: View {
                         onWeight: {
                             weightSlot = Slot.weight
                             withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
-                        }
+                        },
+                        // 홈의 마일리지 상품 — 같은 세트 안이라 탭만 옮긴다
+                        onStore: { baseSlot = Slot.store }
                     )
                 }
             case .benefit:
