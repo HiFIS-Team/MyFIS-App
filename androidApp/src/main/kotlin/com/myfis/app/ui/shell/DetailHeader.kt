@@ -35,7 +35,8 @@ import com.myfis.app.ui.theme.tapWithHaptics
  */
 @Composable
 fun DetailHeader(
-    title: String,
+    /** 제목을 본문에서 크게 다루는 화면은 `null` 로 비운다 (예: S-08) */
+    title: String?,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     /** 오른쪽 아이콘 버튼. 없으면 자리도 비운다 */
@@ -54,7 +55,9 @@ fun DetailHeader(
             .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
         contentAlignment = Alignment.Center,
     ) {
-        Text(title, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+        if (title != null) {
+            Text(title, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+        }
 
         Box(
             modifier = Modifier
