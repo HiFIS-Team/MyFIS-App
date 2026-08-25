@@ -13,11 +13,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.pressScale
@@ -31,8 +33,16 @@ import com.myfis.app.ui.theme.tapWithHaptics
  * 탭 화면 이야기고, 잎 화면은 자기가 어디인지 밝혀야 한다.
  */
 @Composable
-fun DetailHeader(title: String, onBack: () -> Unit, modifier: Modifier = Modifier) {
+fun DetailHeader(
+    title: String,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** 오른쪽 글자 버튼. 없으면 자리도 비운다 */
+    actionLabel: String? = null,
+    onAction: () -> Unit = {},
+) {
     val interaction = remember { MutableInteractionSource() }
+    val actionInteraction = remember { MutableInteractionSource() }
     val press by interaction.pressScale()
 
     Box(
@@ -62,6 +72,20 @@ fun DetailHeader(title: String, onBack: () -> Unit, modifier: Modifier = Modifie
                         scaleX = press
                         scaleY = press
                     },
+            )
+        }
+
+        if (actionLabel != null) {
+            Text(
+                actionLabel,
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextSecondary,
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .clip(MyFisRadius.full)
+                    .tapWithHaptics(actionInteraction, onAction)
+                    // 글자는 작아도 터치 영역은 44 를 지킨다 (§5.3)
+                    .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.md),
             )
         }
     }

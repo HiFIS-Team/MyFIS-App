@@ -16,19 +16,20 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisGhostButton
+import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
@@ -53,7 +54,8 @@ fun NotificationScreen(
             .background(MyFisColor.BgBase)
             .statusBarsPadding(),
     ) {
-        DetailHeader("알림", onBack)
+        // TODO: Y-03 설정이 붙으면 연결한다
+        DetailHeader("알림", onBack, actionLabel = "알림 설정", onAction = {})
 
         if (items.isEmpty()) EmptyState() else NotificationList(items)
     }
@@ -61,27 +63,51 @@ fun NotificationScreen(
 
 @Composable
 private fun NotificationList(items: List<MyFisNotification>) {
+    val unread = items.filter { it.isUnread }
+    val read = items.filterNot { it.isUnread }
+
     LazyColumn(Modifier.fillMaxSize()) {
-        items(items, key = { it.id }) { item ->
-            NotificationRow(item)
-            if (item != items.last()) {
-                // §6.5 구분선은 좌측 인덴트 없이 전체 너비
-                Box(
+        // 안 읽은 알림은 **한 덩어리로 밝게 깐다.** 점을 하나씩 찍는 것보다
+        // "여기까지가 새 거" 가 한눈에 들어온다 (DESIGN.md §6.19)
+        if (unread.isNotEmpty()) {
+            item {
+                Column(
                     Modifier
                         .fillMaxWidth()
-                        .height(1.dp)
-                        .background(MyFisColor.BorderSubtle),
-                )
+                        .background(MyFisColor.Surface1)
+                        .padding(vertical = MyFisSpacing.sm),
+                ) {
+                    unread.forEach { NotificationRow(it) }
+                }
             }
         }
+
+        if (read.isNotEmpty()) {
+            item {
+                Text(
+                    "지난 알림",
+                    style = MyFisTheme.type.titleMd,
+                    color = MyFisColor.TextPrimary,
+                    modifier = Modifier.padding(
+                        start = MyFisSpacing.screenHorizontal,
+                        end = MyFisSpacing.screenHorizontal,
+                        top = MyFisSpacing.xxl,
+                        bottom = MyFisSpacing.sm,
+                    ),
+                )
+            }
+            items(read, key = { it.id }) { NotificationRow(it) }
+        }
+
+        item { Spacer(Modifier.height(MyFisSpacing.xxxl)) }
     }
 }
 
 /**
- * 알림 한 행.
+ * 알림 한 행 (DESIGN.md §6.19).
  *
- * 미확인 점은 **행 맨 왼쪽**에 둔다 (SPEC H-02). 읽은 행도 같은 폭을 비워 둬야
- * 아이콘 세로줄이 어긋나지 않는다.
+ * 왼쪽 아이콘 타일 · 제목 · 본문 · 오른쪽 위 시각. 구분선은 두지 않는다 —
+ * 행마다 선을 그으면 목록이 표처럼 보이고, 묶음(안 읽음 블록)이 안 읽힌다.
  */
 @Composable
 private fun NotificationRow(item: MyFisNotification) {
@@ -91,7 +117,7 @@ private fun NotificationRow(item: MyFisNotification) {
             .heightIn(min = MyFisSize.listRowMin)
             .padding(
                 horizontal = MyFisSpacing.screenHorizontal,
-                vertical = MyFisSpacing.lg,
+                vertical = MyFisSpacing.md,
             ),
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
         // TODO: kind.destination 화면이 붙으면 행을 눌러 이동한다.
@@ -99,33 +125,68 @@ private fun NotificationRow(item: MyFisNotification) {
     ) {
         Box(
             Modifier
-                .padding(top = 8.dp)
-                .size(6.dp)
-                .background(
-                    color = if (item.isUnread) MyFisColor.Accent else Color.Transparent,
-                    shape = CircleShape,
-                ),
-        )
-
-        Icon(
-            painter = painterResource(item.kind.icon),
-            contentDescription = null,
-            tint = MyFisColor.TextSecondary,
-            modifier = Modifier.size(22.dp),
-        )
-
-        Column(verticalArrangement = Arrangement.spacedBy(MyFisSpacing.xs)) {
-            Text(item.title, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
-            Text(item.body, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
-            Text(
-                item.time,
-                style = MyFisTheme.type.caption,
-                color = MyFisColor.TextTertiary,
-                modifier = Modifier.padding(top = 2.dp),
+                .size(TileSize)
+                .clip(MyFisRadius.md)
+                .background(MyFisColor.Surface2),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(item.kind.icon),
+                contentDescription = null, // 옆 제목이 이름 역할을 한다
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier.size(22.dp),
             )
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Row(verticalAlignment = Alignment.Top) {
+                Text(
+                    item.title,
+                    style = MyFisTheme.type.titleSm,
+                    color = MyFisColor.TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    item.time,
+                    style = MyFisTheme.type.caption,
+                    color = MyFisColor.TextTertiary,
+                    modifier = Modifier.padding(start = MyFisSpacing.sm, top = 2.dp),
+                )
+            }
+            // 건수 배지는 **본문 첫 줄 오른쪽**에 붙인다. 본문은 그 아래로 흘러내린다
+            Row(verticalAlignment = Alignment.Top) {
+                Text(
+                    item.body,
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.weight(1f, fill = false),
+                )
+                item.count?.let { count ->
+                    Spacer(Modifier.weight(1f))
+                    // 같은 종류가 여러 건 묶였을 때만. 액센트는 쓰지 않는다 — 건수는 강조할 값이 아니다
+                    Text(
+                        "${count}건",
+                        style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                        color = MyFisColor.TextSecondary,
+                        modifier = Modifier
+                            .padding(start = MyFisSpacing.sm)
+                            .background(MyFisColor.Surface3, MyFisRadius.sm)
+                            .padding(horizontal = MyFisSpacing.sm, vertical = 2.dp),
+                    )
+                }
+            }
         }
     }
 }
+
+private val TileSize = 44.dp
 
 /** §6.10 빈 상태 — 한 줄 설명 + 액션 1개. 일러스트는 넣지 않는다. */
 @Composable

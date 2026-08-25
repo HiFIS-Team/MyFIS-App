@@ -17,6 +17,8 @@ data class MyFisNotification(
     /** TODO(서버): 서버가 주는 시각으로 상대 시간을 계산한다. 지금은 문자열. */
     val time: String,
     val isUnread: Boolean,
+    /** 같은 종류가 여러 건 묶였을 때만. 한 건이면 `null` */
+    val count: Int? = null,
 ) {
     /** 알림 종류. SPEC.md §5 H-02 "알림 종류" 표와 1:1 이다. */
     enum class Kind(@DrawableRes val icon: Int, val destination: String) {
@@ -24,6 +26,8 @@ data class MyFisNotification(
         MEMBERSHIP(R.drawable.ic_header_membership, "M-06"),
         CARDIO(R.drawable.ic_tab_cardio, "C-04"),
         COUPON(R.drawable.ic_tab_store, "S-04"),
+        MILEAGE(R.drawable.ic_mileage_fill, "P-01"),
+        NOTICE(R.drawable.ic_header_notification, "H-04"),
         GROUP(R.drawable.ic_tab_group, "G-02"),
     }
 }
@@ -42,21 +46,33 @@ val notificationPlaceholder = listOf(
         "1시간 전", isUnread = true,
     ),
     MyFisNotification(
-        3, MyFisNotification.Kind.COUPON,
-        "교환권이 곧 만료돼요",
-        "이온음료 교환권 · 내일 23:59까지",
-        "어제", isUnread = false,
+        3, MyFisNotification.Kind.MILEAGE,
+        "마일리지 50 P 적립",
+        "출석 체크 · 오늘까지 3일 연속",
+        "3시간 전", isUnread = true,
     ),
     MyFisNotification(
-        4, MyFisNotification.Kind.GROUP,
+        4, MyFisNotification.Kind.COUPON,
+        "교환권이 곧 만료돼요",
+        "이온음료 교환권 · 내일 23:59까지",
+        "어제", isUnread = false, count = 3,
+    ),
+    MyFisNotification(
+        5, MyFisNotification.Kind.GROUP,
         "새벽 러닝크루에 새 글이 올라왔어요",
         "내일 비 오면 실내 트랙으로 갈게요",
         "어제", isUnread = false,
     ),
     MyFisNotification(
-        5, MyFisNotification.Kind.MEMBERSHIP,
+        6, MyFisNotification.Kind.MEMBERSHIP,
         "회원권이 7일 남았어요",
         "6개월 회원권 · 9월 3일 만료",
         "3일 전", isUnread = false,
+    ),
+    MyFisNotification(
+        7, MyFisNotification.Kind.NOTICE,
+        "광복절 정상 운영합니다",
+        "8월 15일 · 06:00 ~ 23:00",
+        "5일 전", isUnread = false,
     ),
 )
