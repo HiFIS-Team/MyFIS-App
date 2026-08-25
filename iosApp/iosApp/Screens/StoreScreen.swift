@@ -95,45 +95,20 @@ struct StoreScreen: View {
     }
 }
 
-/// 스토어 헤더의 검색 자리 — 평소에는 **필드처럼 보이는 버튼**이다 (DESIGN.md §6.9).
+/// 스토어 헤더의 검색 자리 (DESIGN.md §6.9).
+///
+/// **평소와 검색 중이 같은 뷰다.** 버튼과 필드를 갈아 끼우면 모양이 같아도 한 번 튄다 —
+/// 껍데기(아이콘·배경·높이)는 그대로 두고 **안쪽 글자만** 바뀌게 해서 폭이 늘어나는 동안
+/// 아무것도 깜빡이지 않는다.
 ///
 /// 누르는 즉시 검색 모드로 들어간다. `@FocusState` 가 켜지기를 기다리지 않는다 —
 /// 내비 바 안의 `TextField` 는 포커스가 셸까지 안 올라와서, 그걸 조건으로 삼으면
-/// **글자를 쳐야** 검색 화면이 나타난다 (실제로 그랬다).
-struct StoreSearchButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: MyFisSpacing.sm) {
-                Image("ic_header_search")
-                    .resizable()
-                    .frame(width: 18, height: 18)
-                    .foregroundStyle(MyFisColor.textTertiary)
-                Text("상품 검색")
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textTertiary)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, MyFisSpacing.md)
-            .frame(height: 40)
-            .frame(maxWidth: .infinity)
-            .background(
-                MyFisColor.surface2,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.myFisTap)
-        .accessibilityLabel("상품 검색")
-    }
-}
-
-/// 검색 모드일 때의 입력 필드 — 버튼이 있던 자리에서 **오른쪽으로 늘어난다**.
-/// 오른쪽 아이콘 자리는 `취소` 로 바뀌고, 하단 탭은 그동안 감춘다 (§6.9)
-struct StoreSearchField: View {
+/// **글자를 쳐야** 검색 모드가 켜졌다 (실제로 그랬다).
+struct StoreSearchBar: View {
     @Binding var query: String
     var focused: FocusState<Bool>.Binding
+    let searching: Bool
+    let onTap: () -> Void
 
     var body: some View {
         HStack(spacing: MyFisSpacing.sm) {
@@ -141,16 +116,24 @@ struct StoreSearchField: View {
                 .resizable()
                 .frame(width: 18, height: 18)
                 .foregroundStyle(MyFisColor.textTertiary)
-            TextField(
-                "",
-                text: $query,
-                prompt: Text("상품 검색").foregroundColor(MyFisColor.textTertiary)
-            )
-            .font(MyFisFont.bodySm)
-            .foregroundStyle(MyFisColor.textPrimary)
-            .focused(focused)
-            .submitLabel(.search)
-            // **지우기(X)를 두지 않는다.** 바로 옆이 `취소` 라 같은 자리에 비슷한 버튼이 둘이 된다
+
+            if searching {
+                // 필드 안에 **지우기(X)를 두지 않는다** — 바로 옆이 `취소` 라 비슷한 버튼이 둘이 된다
+                TextField(
+                    "",
+                    text: $query,
+                    prompt: Text("상품 검색").foregroundColor(MyFisColor.textTertiary)
+                )
+                .font(MyFisFont.bodySm)
+                .foregroundStyle(MyFisColor.textPrimary)
+                .focused(focused)
+                .submitLabel(.search)
+            } else {
+                Text("상품 검색")
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                Spacer(minLength: 0)
+            }
         }
         .padding(.horizontal, MyFisSpacing.md)
         .frame(height: 40)
@@ -160,6 +143,9 @@ struct StoreSearchField: View {
             MyFisColor.surface2,
             in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
         )
+        .contentShape(Rectangle())
+        .onTapGesture { if !searching { onTap() } }
+        .accessibilityLabel("상품 검색")
     }
 }
 

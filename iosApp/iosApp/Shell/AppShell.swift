@@ -111,27 +111,18 @@ struct AppShell: View {
                 // 내비 바는 principal 에 **딱 필요한 만큼만** 자리를 준다.
                 // 검색이 폭을 다 써야 하는 헤더라(§6.9) 오른쪽 자리를 뺀 폭을 직접 잡는다 —
                 // 검색 모드에서는 `취소` **바로 옆까지** 온다
-                Group {
-                    if storeSearching {
-                        StoreSearchField(query: $storeQuery, focused: $storeFocused)
-                    } else {
-                        StoreSearchButton {
-                            storeSearching = true
-                            storeFocused = true
-                        }
-                    }
-                }
+                StoreSearchBar(
+                    query: $storeQuery,
+                    focused: $storeFocused,
+                    searching: storeSearching,
+                    onTap: { enterSearch() }
+                )
                 .frame(width: max(160, UIScreen.main.bounds.width - (storeSearching ? 88 : 160)))
-                .animation(MyFisMotion.base, value: storeSearching)
             }
             if storeSearching {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("취소") {
-                        storeQuery = ""
-                        storeFocused = false
-                        storeSearching = false
-                    }
-                    .font(MyFisFont.bodySm)
+                    Button("취소") { leaveSearch() }
+                        .font(MyFisFont.bodySm)
                 }
             } else {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -155,6 +146,21 @@ struct AppShell: View {
             StoreCartScreen(onStore: { popToStore() })
         case .storeItem(let item):
             StoreItemScreen(item: item, onCart: { open(.storeCart) })
+        }
+    }
+
+    /// 검색 모드로 — 폭이 늘어나고 오른쪽이 `취소` 로 바뀌는 걸 **한 번에** 움직인다.
+    /// 상태를 그냥 바꾸면 헤더가 툭 끊기며 갈아 끼워진다
+    private func enterSearch() {
+        withAnimation(MyFisMotion.base) { storeSearching = true }
+        storeFocused = true
+    }
+
+    private func leaveSearch() {
+        storeFocused = false
+        withAnimation(MyFisMotion.base) {
+            storeSearching = false
+            storeQuery = ""
         }
     }
 
