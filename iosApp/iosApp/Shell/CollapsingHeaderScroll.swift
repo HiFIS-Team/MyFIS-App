@@ -79,12 +79,21 @@ struct CollapsingHeaderScroll<Header: View, Content: View>: View {
         let delta = y - scrolled
         scrolled = y
 
-        if y <= 0 {
-            // 맨 위(고무줄 포함)에서는 항상 다 보인다
+        guard y > 0 else {
+            // 맨 위(고무줄 포함)에서는 항상 다 보이고, 유리가 아니라 원래 헤더다
             headerY = 0
-        } else {
-            headerY = min(0, max(-headerHeight, headerY - delta))
+            glass = false
+            return
         }
-        glass = y > headerHeight
+
+        headerY = min(0, max(-headerHeight, headerY - delta))
+
+        // **올릴 때만 유리다.** 내려 읽는 중에는 원래(검은) 헤더가 그대로 올라가며 흐려진다 —
+        // 유리는 "다시 불러낸 헤더"라는 신호라서, 사라지는 중에 유리로 바뀌면 뜻이 흐려진다
+        if delta < 0 {
+            glass = true
+        } else if delta > 0 {
+            glass = false
+        }
     }
 }
