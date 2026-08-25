@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.components.MileageBand
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisGhostButton
@@ -62,7 +63,8 @@ fun StoreMyScreen(onBack: () -> Unit, onCart: () -> Unit = {}) {
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = MyFisSpacing.xxxl),
         ) {
-            BalanceRow(balance = mileageBalancePlaceholder)
+            // 스토어(§6.12)와 **같은 마일리지 표기**를 쓴다. 화면마다 다르면 같은 값으로 안 읽힌다
+            MileageBand(balance = mileageBalancePlaceholder)
             QuickMenu(modifier = Modifier.padding(top = MyFisSpacing.md))
             RecentRow(count = 3, modifier = Modifier.padding(top = MyFisSpacing.cardGap))
             ExchangeCard(
@@ -73,44 +75,6 @@ fun StoreMyScreen(onBack: () -> Unit, onCart: () -> Unit = {}) {
             SuggestionGrid(
                 items = affordableForMyPlaceholder(mileageBalancePlaceholder),
                 modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
-            )
-        }
-    }
-}
-
-/**
- * 보유 마일리지.
- *
- * 제목은 헤더가 맡고, 본문 맨 위는 **이 화면에서 가장 중요한 숫자**가 차지한다 (§2 원칙 1).
- */
-@Composable
-private fun BalanceRow(balance: Int) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(
-                start = MyFisSpacing.screenHorizontal,
-                end = MyFisSpacing.screenHorizontal,
-                top = MyFisSpacing.sm,
-                bottom = MyFisSpacing.lg,
-            ),
-    ) {
-        Text("보유 마일리지", style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
-        Row(
-            modifier = Modifier.padding(top = MyFisSpacing.xs),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_mileage_fill),
-                contentDescription = null, // 옆 숫자가 이름 역할을 한다
-                tint = MyFisColor.Accent,
-                modifier = Modifier.size(28.dp),
-            )
-            Text(
-                balance.toMileage(),
-                style = MyFisTheme.type.metricMd.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextPrimary,
             )
         }
     }

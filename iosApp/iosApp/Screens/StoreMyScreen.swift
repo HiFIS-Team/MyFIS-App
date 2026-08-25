@@ -16,8 +16,11 @@ struct StoreMyScreen: View {
             MyFisColor.bgBase.ignoresSafeArea()
 
             ScrollView {
+                // 마일리지 띠는 **좌우 여백 밖**이다. 선이 화면 끝까지 가야 스토어와 같아 보인다
+                // 스토어(§6.12)와 같은 마일리지 표기를 쓴다 — 화면마다 다르면 같은 값으로 안 읽힌다
+                MileageBand(balance: StorePlaceholder.balance)
+
                 VStack(spacing: MyFisSpacing.cardGap) {
-                    BalanceRow(balance: StorePlaceholder.balance)
                     QuickMenu()
                     RecentRow(count: 3)
                     ExchangeCard(exchange: StoreMyPlaceholder.exchange)
@@ -51,33 +54,6 @@ struct StoreMyScreen: View {
                 .accessibilityLabel("장바구니")
             }
         }
-    }
-}
-
-/// 보유 마일리지.
-///
-/// 제목은 헤더가 맡고, 본문 맨 위는 **이 화면에서 가장 중요한 숫자**가 차지한다 (§2 원칙 1).
-private struct BalanceRow: View {
-    let balance: Int
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: MyFisSpacing.xs) {
-            Text("보유 마일리지")
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(MyFisColor.textSecondary)
-            HStack(spacing: MyFisSpacing.sm) {
-                Image("ic_mileage_fill")
-                    .resizable()
-                    .frame(width: 28, height: 28)
-                    .foregroundStyle(MyFisColor.accent)
-                Text(balance.mileage)
-                    .font(MyFisFont.metricMd.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.top, MyFisSpacing.sm)
-        .padding(.bottom, MyFisSpacing.xs)
     }
 }
 
