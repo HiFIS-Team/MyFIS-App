@@ -68,28 +68,23 @@ struct AppRoot: View {
             switch route {
             case .notifications:
                 NotificationScreen(onBack: back)
-            default:
-                // TODO: 화면이 하나씩 붙는다 — S-06 장바구니 · S-07 검색 · S-08 스토어 마이
-                VStack(spacing: 0) {
-                    DetailHeader(title: route.title, onBack: back)
-                    PlaceholderScreen(
-                        id: leafSpecID(route),
-                        title: route.title,
-                        description: "화면은 다음 단계에서 붙인다"
-                    )
-                }
+            case .storeItem(let item):
+                StoreItemScreen(
+                    item: item,
+                    onBack: back,
+                    onSearch: { open(.storeSearch) },
+                    onCart: { open(.storeCart) }
+                )
+            case .storeCart:
+                StoreCartScreen(onBack: back, onStore: backToShell)
+            case .storeMy:
+                StoreMyScreen(onBack: back, onCart: { open(.storeCart) })
+            case .storeSearch:
+                StoreSearchScreen(onBack: back, onItem: { open(.storeItem($0)) })
             }
         }
     }
 
-    private func leafSpecID(_ route: Route) -> String {
-        switch route {
-        case .notifications: "H-02"
-        case .storeMy: "S-08"
-        case .storeCart: "S-06"
-        case .storeSearch: "S-07"
-        }
-    }
 }
 
 #Preview {

@@ -13,8 +13,9 @@ enum Route: Hashable {
     case storeCart
     /// S-07 상품 검색
     case storeSearch
-    // TODO: S-02 상품 상세(storeItem) 는 스토어 화면을 만들 때 추가한다.
-    // TODO: 지점 선택(M-01) · 회원권(M-06) 도 그때.
+    /// S-02 상품 상세
+    case storeItem(StoreItem)
+    // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 추가한다.
 
     /// 잎 화면의 제목. 헤더가 이 값을 쓴다 — 화면마다 따로 적지 않는다
     var title: String {
@@ -23,6 +24,7 @@ enum Route: Hashable {
         case .storeMy: "내 교환"
         case .storeCart: "장바구니"
         case .storeSearch: "상품 검색"
+        case .storeItem(let item): item.name
         }
     }
 }

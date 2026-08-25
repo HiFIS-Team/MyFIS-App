@@ -11,6 +11,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_TAB=store                스토어 탭에서 시작
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
+/// SIMCTL_CHILD_MYFIS_SEARCH=음료               검색 화면을 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
@@ -24,6 +25,7 @@ enum MyFisDebug {
         case "store_my": .storeMy
         case "store_cart": .storeCart
         case "store_search": .storeSearch
+        case "store_item": .storeItem(StorePlaceholder.items[0])
         default: nil
         }
     }
@@ -61,6 +63,16 @@ enum MyFisDebug {
         env["MYFIS_HOME_SCROLL"] == "bottom" ? .bottom : .top
         #else
         .top
+        #endif
+    }
+
+    /// 시뮬레이터에는 키보드를 칠 수단이 없다. 검색 결과를 보려면
+    /// `SIMCTL_CHILD_MYFIS_ROUTE=store_search SIMCTL_CHILD_MYFIS_SEARCH=음료`
+    static var initialSearchQuery: String {
+        #if DEBUG
+        env["MYFIS_SEARCH"] ?? ""
+        #else
+        ""
         #endif
     }
 

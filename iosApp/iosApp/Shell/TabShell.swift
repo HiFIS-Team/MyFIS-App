@@ -105,11 +105,13 @@ struct TabShell: View {
                 case .benefit:
                     PlaceholderScreen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
                 case .store:
-                    // TODO: S-01 스토어 홈이 붙는다
-                    VStack(spacing: 0) {
-                        storeHeader
-                        PlaceholderScreen(id: "S-01", title: "스토어", description: "마일리지 상품 교환")
-                    }
+                    // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
+                    StoreScreen(
+                        onSearch: { open(.storeSearch) },
+                        onCart: { open(.storeCart) },
+                        onMy: { open(.storeMy) },
+                        onItem: { open(.storeItem($0)) }
+                    )
                 case .my:
                     PlaceholderScreen(id: "Y-01", title: "마이", description: "프로필 · 기록 · 설정")
                 case .weight:
@@ -130,49 +132,5 @@ struct TabShell: View {
                 }
             }
         }
-    }
-
-    /// 스토어 헤더 (§6.9) — 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이.
-    /// **워드마크를 넣지 않는다** — 검색이 들어오면 가운데 자리가 없다.
-    private var storeHeader: some View {
-        HStack(spacing: 0) {
-            SearchField { open(.storeSearch) }
-                .padding(.trailing, MyFisSpacing.xs)
-            HeaderIcon("ic_header_cart", "장바구니") { open(.storeCart) }
-            HeaderIcon("ic_header_my", "마이") { open(.storeMy) }
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-    }
-}
-
-/// 스토어 헤더의 검색 자리 — 누르면 검색 화면(S-07)이 열린다.
-///
-/// 여기서 바로 입력받지 않는다: 헤더에서 키보드가 올라오면 목록이 반쯤 가린 채로 타이핑하게 된다.
-private struct SearchField: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: MyFisSpacing.sm) {
-                Image("ic_header_search")
-                    .renderingMode(.template)
-                    .resizable()
-                    .frame(width: 20, height: 20)
-                Text("상품 검색")
-                    .font(MyFisFont.bodySm)
-                Spacer(minLength: 0)
-            }
-            .foregroundStyle(MyFisColor.textTertiary)
-            .padding(.horizontal, MyFisSpacing.md)
-            .frame(height: 40)
-            .frame(maxWidth: .infinity)
-            .background(MyFisColor.surface2)
-            .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
-            .contentShape(Rectangle())
-        }
-        // 판을 누르는 것에는 축소를 주지 않는다 — 진동만 (§6.7)
-        .buttonStyle(.myFisTap)
-        .accessibilityLabel("상품 검색")
     }
 }
