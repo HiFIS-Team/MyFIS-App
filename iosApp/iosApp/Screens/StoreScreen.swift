@@ -128,9 +128,13 @@ struct StoreSearchField: View {
             }
         }
         .padding(.horizontal, MyFisSpacing.md)
-        .frame(height: 36)
+        .frame(height: 40)
         .frame(maxWidth: .infinity)
-        .background(MyFisColor.surface2, in: Capsule())
+        // **알약이 아니라 모서리만 둥글다** (§6.9) — 안드로이드와 같은 값을 쓴다
+        .background(
+            MyFisColor.surface2,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+        )
     }
 }
 
