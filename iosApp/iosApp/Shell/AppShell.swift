@@ -38,15 +38,16 @@ struct AppShell: View {
     @State private var baseSlot = Slot.initialBaseForDebug
     @State private var weightSlot = 1
 
-    /// 셸 위에 쌓인 잎 화면들. 비어 있으면 탭만 보인다.
+    /// 잎 화면 경로.
     ///
-    /// **한 칸이 아니라 스택이다.** 상세에서 장바구니로 들어가는 길이 있어서,
-    /// 한 칸이면 상세가 교체돼 사라지고 나갈 때 탭으로 튕겨 나간다
-    /// (안드로이드는 `NavHost` 가 스택을 들고 있어 이 문제가 없었다).
-    @State private var leaves: [HeaderRoute] = HeaderRoute?.initialForDebug.map { [$0] } ?? []
+    /// **직접 만든 덮개를 버리고 `NavigationStack` 에 맡긴다** (2026-08-25 재작성).
+    /// 뒤로 버튼·가장자리 스와이프·스택 관리가 전부 시스템 몫이 된다 —
+    /// 직접 만들었더니 화면 전체 드래그가 탭을 삼키고, 잠금이 안 풀리고,
+    /// 같은 화면이 두 장 쌓였다. 안드로이드가 `NavHost` 로 멀쩡했던 이유이기도 하다.
+    @State private var path: [HeaderRoute] = HeaderRoute?.initialForDebug.map { [$0] } ?? []
 
     var body: some View {
-        ZStack {
+        NavigationStack(path: $path) {
             TabView(selection: selection) {
                 ForEach(0..<Slot.count, id: \.self) { slot in
                     content(for: slot)
@@ -60,68 +61,36 @@ struct AppShell: View {
             // 선택은 **색이 아니라 채움**으로 알린다 (DESIGN.md §6.7).
             // 라임은 화면 콘텐츠 몫으로 남긴다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
             .tint(MyFisColor.textPrimary)
-            // 잎이 덮고 있는 동안 **셸은 아무것도 받지 않는다.** 전환 중(320ms)에 누른 손가락이
-            // 밑의 탭 바에 닿으면 탭이 조용히 바뀌고, 나중에 나갔을 때 엉뚱한 탭이 보인다
-            .allowsHitTesting(leaves.isEmpty)
-
-            // 잎 화면은 **탭 바를 감추지 않고 그 위를 덮는다.**
-            // `.toolbar(.hidden, for: .tabBar)` 로 감추면 돌아올 때 시스템이 유리 바를
-            // 다시 그리면서 한 번 깜빡인다. 셸을 건드리지 않으면 그 일이 아예 없다.
-            ForEach(Array(leaves.enumerated()), id: \.offset) { index, route in
-                leafScreen(route)
-                    // 탭 스택을 안 쓰니 시스템 pop 제스처가 따라오지 않는다. 직접 붙인다.
-                    .modifier(EdgeSwipeBack { pop() })
-                    .transition(.move(edge: .trailing))
-                    .zIndex(Double(index + 1))
-            }
+            // 탭 화면은 자기 헤더를 직접 그린다 (§6.9). 시스템 내비 바는 잎에서만 쓴다
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: HeaderRoute.self) { leafScreen($0) }
         }
+        // 뒤로 화살표 색. 잎 화면들이 모두 이 틴트를 물려받는다
+        .tint(MyFisColor.textPrimary)
     }
 
     @ViewBuilder
     private func leafScreen(_ route: HeaderRoute) -> some View {
         switch route {
         case .notifications:
-            NavigationStack {
-                NotificationScreen(onBack: { pop() })
-            }
-            .tint(MyFisColor.textPrimary)
+            NotificationScreen()
         case .storeMy:
-            NavigationStack {
-                StoreMyScreen(onBack: { pop() }, onCart: { open(.storeCart) })
-            }
-            .tint(MyFisColor.textPrimary)
+            StoreMyScreen(onCart: { open(.storeCart) })
         case .storeCart:
-            NavigationStack {
-                StoreCartScreen(onBack: { pop() }, onStore: { popToStore() })
-            }
-            .tint(MyFisColor.textPrimary)
+            StoreCartScreen(onStore: { popToStore() })
         case .storeItem(let item):
-            NavigationStack {
-                StoreItemScreen(item: item, onBack: { pop() }, onCart: { open(.storeCart) })
-            }
-            .tint(MyFisColor.textPrimary)
+            StoreItemScreen(item: item, onCart: { open(.storeCart) })
         }
     }
 
     private func open(_ route: HeaderRoute) {
-        // **같은 잎을 두 번 쌓지 않는다.** 전환이 320ms 라 그 사이에 한 번 더 누르면
-        // 똑같은 화면이 두 장 겹치고, 나갈 때 두 번 눌러야 한다.
-        // 잎이 한 칸이던 시절엔 덮어써서 안 보이던 문제다 (스택으로 바꾸며 드러났다)
-        guard leaves.last != route else { return }
-        withAnimation(MyFisMotion.slow) { leaves.append(route) }
-    }
-
-    /// 한 장만 걷는다 — 상세에서 장바구니로 갔다면 나갈 때 **상세로 돌아온다**
-    private func pop() {
-        withAnimation(MyFisMotion.slow) { _ = leaves.popLast() }
+        path.append(route)
     }
 
     /// 잎을 전부 걷고 스토어 탭으로. 장바구니 빈 상태의 [상품 보러 가기] 가 쓴다
     private func popToStore() {
-        withAnimation(MyFisMotion.slow) {
-            leaves.removeAll()
-            baseSlot = Slot.store
-        }
+        baseSlot = Slot.store
+        path.removeAll()
     }
 
     // MARK: - 선택
@@ -261,49 +230,3 @@ private extension TabSet {
 ///
 /// 놓아서 닫을 때는 화면 밖까지 직접 밀어낸 뒤 걷어낸다.
 /// `withAnimation` 으로 걷으면 `.transition` 이 같이 돌아 손가락 위치에서 한 번 튄다.
-private struct EdgeSwipeBack: ViewModifier {
-    let onClose: () -> Void
-
-    @State private var width: CGFloat = 0
-    @State private var offset: CGFloat = 0
-
-    /// 이보다 안쪽에서 시작한 드래그는 무시한다
-    private let edge: CGFloat = 24
-    /// 이만큼 끌었거나, 이만큼 갈 기세면 닫는다 (화면 폭 대비)
-    private let closeRatio: CGFloat = 0.3
-    private let flingRatio: CGFloat = 0.5
-
-    func body(content: Content) -> some View {
-        content
-            .offset(x: offset)
-            .background(
-                GeometryReader { geo in
-                    Color.clear.onAppear { width = geo.size.width }
-                }
-            )
-            .simultaneousGesture(drag)
-    }
-
-    private var drag: some Gesture {
-        DragGesture(minimumDistance: 12, coordinateSpace: .global)
-            .onChanged { value in
-                guard value.startLocation.x <= edge else { return }
-                offset = max(0, value.translation.width)
-            }
-            .onEnded { value in
-                guard value.startLocation.x <= edge else { return }
-                let dragged = value.translation.width > width * closeRatio
-                let flung = value.predictedEndTranslation.width > width * flingRatio
-                if dragged || flung {
-                    withAnimation(MyFisMotion.slow, completionCriteria: .removed) {
-                        offset = width
-                    } completion: {
-                        onClose()
-                        offset = 0
-                    }
-                } else {
-                    withAnimation(MyFisMotion.slow) { offset = 0 }
-                }
-            }
-    }
-}

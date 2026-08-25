@@ -5,7 +5,6 @@ import SwiftUI
 /// 여러 상품을 **한 번에 교환**한다. 이 화면이 답해야 하는 건 상세와 같다 —
 /// "지금 바꿀 수 있나". 다만 여기선 **고른 것들의 합계**가 그 답이다.
 struct StoreCartScreen: View {
-    let onBack: () -> Void
     var balance: Int = StorePlaceholder.balance
     var onStore: () -> Void = {}
     var onExchange: () -> Void = {}
@@ -57,12 +56,6 @@ struct StoreCartScreen: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                }
-                .accessibilityLabel("뒤로")
-            }
             ToolbarItem(placement: .principal) {
                 Text("장바구니")
                     .font(MyFisFont.titleSm)

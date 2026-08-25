@@ -8,14 +8,9 @@ import SwiftUI
 ///
 /// 탭 목적지가 아니라 잎 화면이라 **하단 탭 바는 가린다.**
 struct NotificationScreen: View {
-    let onBack: () -> Void
     let items: [MyFisNotification]
 
-    init(
-        onBack: @escaping () -> Void = {},
-        items: [MyFisNotification] = MyFisNotification.initialForDebug
-    ) {
-        self.onBack = onBack
+    init(items: [MyFisNotification] = MyFisNotification.initialForDebug) {
         self.items = items
     }
 
@@ -31,14 +26,6 @@ struct NotificationScreen: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            // 스택의 루트라 시스템 뒤로 버튼이 없다. 직접 넣되 자리는 시스템 툴바를 쓴다 —
-            // iOS 26 이 알아서 유리 원으로 그리고 터치 타겟도 맞춰 준다.
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                }
-                .accessibilityLabel("뒤로")
-            }
             // navigationTitle 은 시스템 서체라 Pretendard 로 바꿀 수 없다.
             // 전역 UINavigationBar.appearance() 를 건드리는 대신 여기서만 교체한다.
             ToolbarItem(placement: .principal) {

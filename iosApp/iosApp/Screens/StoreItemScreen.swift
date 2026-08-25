@@ -7,7 +7,6 @@ import SwiftUI
 struct StoreItemScreen: View {
     let item: StoreItem
     var balance: Int = StorePlaceholder.balance
-    let onBack: () -> Void
     var onSearch: () -> Void = {}
     var onCart: () -> Void = {}
     var onExchange: () -> Void = {}
@@ -49,12 +48,6 @@ struct StoreItemScreen: View {
         .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
         .toolbarBackground(scrolledPastImage ? .visible : .hidden, for: .navigationBar)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                }
-                .accessibilityLabel("뒤로")
-            }
             // TODO: S-07 검색 · S-06 장바구니가 붙으면 연결한다
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onSearch) {

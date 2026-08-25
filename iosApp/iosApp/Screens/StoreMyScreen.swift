@@ -8,7 +8,6 @@ import SwiftUI
 ///
 /// 스토어 헤더에서 **오른쪽에서 왼쪽으로 밀려 들어온다** (잎 화면, DESIGN.md §7.1).
 struct StoreMyScreen: View {
-    let onBack: () -> Void
     var onCart: () -> Void = {}
 
     var body: some View {
@@ -34,13 +33,6 @@ struct StoreMyScreen: View {
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            // 알림함과 같은 규칙 — 스택의 루트라 뒤로 버튼을 직접 넣되 자리는 시스템 툴바를 쓴다.
-            ToolbarItem(placement: .topBarLeading) {
-                Button(action: onBack) {
-                    Image(systemName: "chevron.left")
-                }
-                .accessibilityLabel("뒤로")
-            }
             ToolbarItem(placement: .principal) {
                 Text("내 교환")
                     .font(MyFisFont.titleSm)
