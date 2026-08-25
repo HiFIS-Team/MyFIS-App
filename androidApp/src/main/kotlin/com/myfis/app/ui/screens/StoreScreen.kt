@@ -1,7 +1,11 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -42,6 +46,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -52,8 +57,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.myfis.app.R
-import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.components.MileageBand
+import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
@@ -62,6 +67,7 @@ import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.pressScale
 import com.myfis.app.ui.theme.tapWithHaptics
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * SPEC.md S-01 스토어 홈. (레퍼런스: 토스 쇼핑)
@@ -172,7 +178,6 @@ private fun SearchField(onClick: () -> Unit, modifier: Modifier = Modifier) {
         Text("상품 검색", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
     }
 }
-
 
 /**
  * 배너 — 옆 장이 살짝 보이게 두고 넘긴다. 몇 장 중 몇 번째인지 오른쪽 아래에 적는다.
@@ -498,7 +503,20 @@ private fun MetaRow(item: StoreItem, modifier: Modifier = Modifier) {
 @Composable
 private fun LikeButton(liked: Boolean, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
-    val press by interaction.pressScale()
+    val pop = remember { Animatable(1f) }
+    // 1f = 끝난 상태(안 보임). 찜할 때만 0f 로 되감아 다시 퍼뜨린다
+    val burst = remember { Animatable(1f) }
+
+    // **찜을 켤 때만** 터뜨린다. 해제까지 축하하면 과하다
+    LaunchedEffect(liked) {
+        if (!liked) return@LaunchedEffect
+        launch {
+            pop.animateTo(1.3f, MyFisMotion.fast())
+            pop.animateTo(1f, spring(dampingRatio = 0.42f, stiffness = 340f))
+        }
+        burst.snapTo(0f)
+        burst.animateTo(1f, tween(BurstMillis, easing = LinearOutSlowInEasing))
+    }
 
     Box(
         modifier = Modifier
@@ -507,19 +525,35 @@ private fun LikeButton(liked: Boolean, onClick: () -> Unit) {
             .tapWithHaptics(interaction, onClick),
         contentAlignment = Alignment.Center,
     ) {
+        // 하트 둘레로 한 번 퍼지는 고리. 눌린 게 손끝 말고 **눈으로도** 보여야 한다
+        if (burst.value < 1f) {
+            Canvas(Modifier.matchParentSize()) {
+                val p = burst.value
+                drawCircle(
+                    color = MyFisColor.Like,
+                    radius = size.minDimension / 2 * (0.45f + p * 0.75f),
+                    alpha = 1f - p,
+                    style = Stroke(width = (3.5f * (1f - p) + 0.5f).dp.toPx()),
+                )
+            }
+        }
+
         Icon(
             painter = painterResource(
                 if (liked) R.drawable.ic_store_like_fill else R.drawable.ic_store_like,
             ),
             contentDescription = if (liked) "찜 해제" else "찜하기",
-            tint = if (liked) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+            tint = if (liked) MyFisColor.Like else MyFisColor.TextTertiary,
             modifier = Modifier
                 .size(20.dp)
                 .graphicsLayer {
-                    scaleX = press
-                    scaleY = press
+                    scaleX = pop.value
+                    scaleY = pop.value
                 },
         )
     }
 }
+
+/** 고리가 퍼져 사라지기까지 */
+private const val BurstMillis = 420
 

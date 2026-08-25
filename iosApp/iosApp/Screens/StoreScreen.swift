@@ -631,7 +631,7 @@ private struct ItemCard: View {
                         .font(MyFisFont.titleSm.monospacedDigit())
                         .foregroundStyle(dimmed ? MyFisColor.textTertiary : MyFisColor.textPrimary)
                     Spacer(minLength: 0)
-                    likeButton
+                    LikeButton(liked: liked, action: onLike)
                 }
                 .padding(.top, MyFisSpacing.sm)
             }
@@ -693,17 +693,46 @@ private struct ItemCard: View {
         .foregroundStyle(MyFisColor.textTertiary)
     }
 
-    /// 찜. 카드 전체를 누르면 상세로 가므로 여기만 따로 눌리게 한다
-    private var likeButton: some View {
-        Button(action: onLike) {
+}
+
+/// 찜. 카드 전체를 누르면 상세로 가므로 여기만 따로 눌리게 한다 (DESIGN.md §6.12).
+private struct LikeButton: View {
+    let liked: Bool
+    let action: () -> Void
+
+    /// 1 = 끝난 상태(안 보임). 찜할 때만 0 으로 되감아 다시 퍼뜨린다
+    @State private var burst: Double = 1
+    @State private var bump = false
+
+    var body: some View {
+        Button(action: action) {
             Image(liked ? "ic_store_like_fill" : "ic_store_like")
                 .resizable()
                 .frame(width: 20, height: 20)
-                .foregroundStyle(liked ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                .foregroundStyle(liked ? MyFisColor.like : MyFisColor.textTertiary)
+                // 색이 차는 건 **즉시**여야 한다. 바깥에서 걸린 애니메이션이 여기까지 흘러오면
+                // 하트가 늦게 채워진다 (그리는 건 빠른데 색만 뒤늦게 번지는 것처럼 보였다)
+                .animation(nil, value: liked)
+                .scaleEffect(bump ? 1.3 : 1)
                 .frame(width: 28, height: 28)
+                // 하트 둘레로 한 번 퍼지는 고리. 눌린 게 손끝 말고 **눈으로도** 보여야 한다
+                .background {
+                    Circle()
+                        .stroke(MyFisColor.like, lineWidth: max(0.5, 3.5 * (1 - burst)))
+                        .scaleEffect(0.45 + burst * 0.75)
+                        .opacity(1 - burst)
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(liked ? "찜 해제" : "찜하기")
+        .onChange(of: liked) { _, now in
+            // **찜을 켤 때만** 터뜨린다. 해제까지 축하하면 과하다
+            guard now else { return }
+            burst = 0
+            withAnimation(.easeOut(duration: 0.42)) { burst = 1 }
+            withAnimation(.spring(response: 0.15, dampingFraction: 0.5)) { bump = true }
+            withAnimation(.spring(response: 0.28, dampingFraction: 0.45).delay(0.11)) { bump = false }
+        }
     }
 }
