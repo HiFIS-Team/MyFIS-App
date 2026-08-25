@@ -17,9 +17,7 @@ struct StoreMyScreen: View {
 
             ScrollView {
                 VStack(spacing: MyFisSpacing.cardGap) {
-                    // 제목은 헤더가 아니라 본문 맨 위에 크게 둔다 — 스크롤하면 같이 올라간다
-                    TitleRow(balance: StorePlaceholder.balance)
-                        .padding(.bottom, MyFisSpacing.xs)
+                    BalanceRow(balance: StorePlaceholder.balance)
                     QuickMenu()
                     RecentRow(count: 3)
                     ExchangeCard(exchange: StoreMyPlaceholder.exchange)
@@ -40,6 +38,11 @@ struct StoreMyScreen: View {
                 }
                 .accessibilityLabel("뒤로")
             }
+            ToolbarItem(placement: .principal) {
+                Text("내 교환")
+                    .font(MyFisFont.titleSm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+            }
             // TODO: S-06 장바구니가 붙으면 연결한다
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onCart) {
@@ -51,31 +54,30 @@ struct StoreMyScreen: View {
     }
 }
 
-/// 화면 제목 + 보유 마일리지. 제목 옆이 **이 화면에서 가장 중요한 숫자** 자리다
-private struct TitleRow: View {
+/// 보유 마일리지.
+///
+/// 제목은 헤더가 맡고, 본문 맨 위는 **이 화면에서 가장 중요한 숫자**가 차지한다 (§2 원칙 1).
+private struct BalanceRow: View {
     let balance: Int
 
     var body: some View {
-        HStack(spacing: MyFisSpacing.sm) {
-            Text("내 교환")
-                .font(MyFisFont.titleLg)
-                .foregroundStyle(MyFisColor.textPrimary)
-            Spacer(minLength: 0)
-            HStack(spacing: MyFisSpacing.xs) {
+        VStack(alignment: .leading, spacing: MyFisSpacing.xs) {
+            Text("보유 마일리지")
+                .font(MyFisFont.bodySm)
+                .foregroundStyle(MyFisColor.textSecondary)
+            HStack(spacing: MyFisSpacing.sm) {
                 Image("ic_mileage_fill")
                     .resizable()
-                    .frame(width: 20, height: 20)
+                    .frame(width: 28, height: 28)
                     .foregroundStyle(MyFisColor.accent)
                 Text(balance.mileage)
-                    .font(MyFisFont.titleSm.monospacedDigit())
+                    .font(MyFisFont.metricMd.monospacedDigit())
                     .foregroundStyle(MyFisColor.textPrimary)
             }
-            .padding(.leading, MyFisSpacing.sm)
-            .padding(.trailing, MyFisSpacing.md)
-            .padding(.vertical, 6)
-            .background(MyFisColor.surface2, in: Capsule())
         }
-        .padding(.vertical, MyFisSpacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, MyFisSpacing.sm)
+        .padding(.bottom, MyFisSpacing.xs)
     }
 }
 
@@ -165,7 +167,7 @@ private struct ExchangeCard: View {
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
                 Spacer(minLength: 0)
-                SmallButton(label: "교환권 보기")
+                MyFisSmallButton(title: "교환권 보기")
             }
             .padding(MyFisSpacing.cardPadding)
 
@@ -191,10 +193,11 @@ private struct ExchangeCard: View {
             }
             .padding(MyFisSpacing.cardPadding)
 
-            // TODO: 문의(🔵) · 리뷰(🔵) 화면이 붙으면 연결한다
+            // TODO: 문의(🔵) · 리뷰(🔵) 화면이 붙으면 연결한다.
+            // 리뷰가 우리가 바라는 행동이라 Secondary, 문의는 Ghost (§6.1)
             HStack(spacing: MyFisSpacing.sm) {
-                WideButton(label: "문의하기", accent: false)
-                WideButton(label: "리뷰 쓰기", accent: true)
+                MyFisGhostButton(title: "문의하기")
+                MyFisSecondaryButton(title: "리뷰 쓰기")
             }
             .padding(.horizontal, MyFisSpacing.cardPadding)
             .padding(.bottom, MyFisSpacing.cardPadding)
@@ -318,47 +321,6 @@ private struct Chevron: View {
             .frame(width: 18, height: 18)
             .rotationEffect(.degrees(-90))
             .foregroundStyle(MyFisColor.textTertiary)
-    }
-}
-
-/// 카드 안 작은 보조 버튼
-private struct SmallButton: View {
-    let label: String
-
-    var body: some View {
-        Button {} label: {
-            Text(label)
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(MyFisColor.textSecondary)
-                .padding(.horizontal, MyFisSpacing.md)
-                .padding(.vertical, MyFisSpacing.sm)
-                .background(
-                    MyFisColor.surface2,
-                    in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
-                )
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-/// 카드 아래 나란한 두 버튼. 액센트는 **하나만** 준다 (§2 원칙 5)
-private struct WideButton: View {
-    let label: String
-    let accent: Bool
-
-    var body: some View {
-        Button {} label: {
-            Text(label)
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(accent ? MyFisColor.accent : MyFisColor.textSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, MyFisSpacing.md)
-                .background(
-                    accent ? MyFisColor.accent.opacity(0.14) : MyFisColor.surface2,
-                    in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
-                )
-        }
-        .buttonStyle(.plain)
     }
 }
 

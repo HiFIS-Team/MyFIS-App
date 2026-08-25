@@ -17,6 +17,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -69,6 +70,27 @@ fun MyFisGhostButton(text: String, onClick: () -> Unit, modifier: Modifier = Mod
         onClick = onClick,
         modifier = modifier.fillMaxWidth().height(MyFisSize.buttonSecondary),
         colors = ButtonDefaults.textButtonColors(contentColor = MyFisColor.TextSecondary),
+    ) {
+        Text(text = text, style = MyFisTheme.type.bodySm)
+    }
+}
+
+/**
+ * DESIGN.md §6.1 Small — **카드 안**에서 쓰는 보조 버튼.
+ *
+ * 전체 폭을 먹지 않는다. 카드 머리 줄처럼 다른 글자와 나란히 서는 자리용이다.
+ */
+@Composable
+fun MyFisSmallButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.height(MyFisSize.buttonSmall),
+        shape = MyFisRadius.full,
+        contentPadding = PaddingValues(horizontal = MyFisSpacing.lg),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MyFisColor.Surface2,
+            contentColor = MyFisColor.TextPrimary,
+        ),
     ) {
         Text(text = text, style = MyFisTheme.type.bodySm)
     }

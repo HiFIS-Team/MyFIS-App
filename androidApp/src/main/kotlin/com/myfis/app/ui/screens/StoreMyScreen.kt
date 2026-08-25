@@ -30,7 +30,10 @@ import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisGhostButton
 import com.myfis.app.ui.theme.MyFisRadius
+import com.myfis.app.ui.theme.MyFisSecondaryButton
+import com.myfis.app.ui.theme.MyFisSmallButton
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.tapWithHaptics
@@ -52,15 +55,14 @@ fun StoreMyScreen(onBack: () -> Unit, onCart: () -> Unit = {}) {
             .background(MyFisColor.BgBase)
             .statusBarsPadding(),
     ) {
-        // 제목은 헤더가 아니라 본문 맨 위에 크게 둔다 — 스크롤하면 같이 올라간다
-        DetailHeader(null, onBack, actionIcon = R.drawable.ic_header_cart, onAction = onCart)
+        DetailHeader("내 교환", onBack, actionIcon = R.drawable.ic_header_cart, onAction = onCart)
 
         Column(
             Modifier
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = MyFisSpacing.xxxl),
         ) {
-            TitleRow(balance = mileageBalancePlaceholder)
+            BalanceRow(balance = mileageBalancePlaceholder)
             QuickMenu(modifier = Modifier.padding(top = MyFisSpacing.md))
             RecentRow(count = 3, modifier = Modifier.padding(top = MyFisSpacing.cardGap))
             ExchangeCard(
@@ -76,33 +78,38 @@ fun StoreMyScreen(onBack: () -> Unit, onCart: () -> Unit = {}) {
     }
 }
 
-/** 화면 제목 + 보유 마일리지. 제목 옆이 **이 화면에서 가장 중요한 숫자** 자리다 */
+/**
+ * 보유 마일리지.
+ *
+ * 제목은 헤더가 맡고, 본문 맨 위는 **이 화면에서 가장 중요한 숫자**가 차지한다 (§2 원칙 1).
+ */
 @Composable
-private fun TitleRow(balance: Int) {
-    Row(
-        modifier = Modifier
+private fun BalanceRow(balance: Int) {
+    Column(
+        Modifier
             .fillMaxWidth()
-            .padding(horizontal = MyFisSpacing.screenHorizontal, vertical = MyFisSpacing.md),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(
+                start = MyFisSpacing.screenHorizontal,
+                end = MyFisSpacing.screenHorizontal,
+                top = MyFisSpacing.sm,
+                bottom = MyFisSpacing.lg,
+            ),
     ) {
-        Text("내 교환", style = MyFisTheme.type.titleLg, color = MyFisColor.TextPrimary)
-        Spacer(Modifier.weight(1f))
+        Text("보유 마일리지", style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
         Row(
-            modifier = Modifier
-                .background(MyFisColor.Surface2, MyFisRadius.full)
-                .padding(start = MyFisSpacing.sm, end = MyFisSpacing.md, top = 6.dp, bottom = 6.dp),
+            modifier = Modifier.padding(top = MyFisSpacing.xs),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_mileage_fill),
                 contentDescription = null, // 옆 숫자가 이름 역할을 한다
                 tint = MyFisColor.Accent,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(28.dp),
             )
             Text(
                 balance.toMileage(),
-                style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+                style = MyFisTheme.type.metricMd.copy(fontFeatureSettings = "tnum"),
                 color = MyFisColor.TextPrimary,
             )
         }
@@ -201,7 +208,7 @@ private fun ExchangeCard(exchange: MyExchange, modifier: Modifier = Modifier) {
                 modifier = Modifier.padding(start = MyFisSpacing.sm),
             )
             Spacer(Modifier.weight(1f))
-            SmallButton("교환권 보기", onClick = {})
+            MyFisSmallButton("교환권 보기", onClick = {})
         }
 
         Box(
@@ -249,9 +256,10 @@ private fun ExchangeCard(exchange: MyExchange, modifier: Modifier = Modifier) {
                 ),
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         ) {
-            // TODO: 문의(🔵) · 리뷰(🔵) 화면이 붙으면 연결한다
-            WideButton("문의하기", accent = false, modifier = Modifier.weight(1f))
-            WideButton("리뷰 쓰기", accent = true, modifier = Modifier.weight(1f))
+            // TODO: 문의(🔵) · 리뷰(🔵) 화면이 붙으면 연결한다.
+            // 리뷰가 우리가 바라는 행동이라 Secondary, 문의는 Ghost (§6.1)
+            MyFisGhostButton("문의하기", onClick = {}, modifier = Modifier.weight(1f))
+            MyFisSecondaryButton("리뷰 쓰기", onClick = {}, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -381,46 +389,6 @@ private fun Chevron(modifier: Modifier = Modifier) {
             .size(18.dp)
             .graphicsLayer { rotationZ = -90f },
     )
-}
-
-/** 카드 안 작은 보조 버튼 */
-@Composable
-private fun SmallButton(label: String, onClick: () -> Unit) {
-    val interaction = remember { MutableInteractionSource() }
-
-    Text(
-        label,
-        style = MyFisTheme.type.bodySm,
-        color = MyFisColor.TextSecondary,
-        modifier = Modifier
-            .clip(MyFisRadius.sm)
-            .background(MyFisColor.Surface2)
-            .tapWithHaptics(interaction, onClick)
-            .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.sm),
-    )
-}
-
-/** 카드 아래 나란한 두 버튼. 액센트는 **하나만** 준다 (§2 원칙 5) */
-@Composable
-private fun WideButton(label: String, accent: Boolean, modifier: Modifier = Modifier) {
-    val interaction = remember { MutableInteractionSource() }
-
-    Box(
-        modifier = modifier
-            .clip(MyFisRadius.sm)
-            .background(
-                if (accent) MyFisColor.Accent.copy(alpha = 0.14f) else MyFisColor.Surface2,
-            )
-            .tapWithHaptics(interaction, {})
-            .padding(vertical = MyFisSpacing.md),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            label,
-            style = MyFisTheme.type.bodySm,
-            color = if (accent) MyFisColor.Accent else MyFisColor.TextSecondary,
-        )
-    }
 }
 
 /** TODO(서버): 교환 내역 API 가 붙으면 지운다 (SPEC S-05) */

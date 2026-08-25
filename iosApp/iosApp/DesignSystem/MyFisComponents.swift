@@ -54,6 +54,26 @@ struct MyFisGhostButton: View {
     }
 }
 
+/// Small — **카드 안**에서 쓰는 보조 버튼.
+///
+/// 전체 폭을 먹지 않는다. 카드 머리 줄처럼 다른 글자와 나란히 서는 자리용이다.
+struct MyFisSmallButton: View {
+    let title: String
+    var action: () -> Void = {}
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(MyFisFont.bodySm)
+                .padding(.horizontal, MyFisSpacing.lg)
+                .frame(minHeight: MyFisSize.buttonSmall)
+        }
+        .foregroundStyle(MyFisColor.textPrimary)
+        .background(MyFisColor.surface2)
+        .clipShape(Capsule())
+    }
+}
+
 /// Danger
 struct MyFisDangerButton: View {
     let title: String

@@ -41,6 +41,9 @@ object MyFisSize {
     val minTouchTarget = 48.dp
     val buttonPrimary = 52.dp
     val buttonSecondary = 44.dp
+
+    /** 카드 안 보조 버튼 (§6.1) */
+    val buttonSmall = 36.dp
     val inputHeight = 52.dp
     val listRowMin = 56.dp
     val progressHeight = 8.dp

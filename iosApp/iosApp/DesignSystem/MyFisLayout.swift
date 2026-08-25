@@ -35,6 +35,8 @@ enum MyFisSize {
     static let minTouchTarget: CGFloat = 44
     static let buttonPrimary: CGFloat = 52
     static let buttonSecondary: CGFloat = 44
+    /// 카드 안 보조 버튼 (§6.1)
+    static let buttonSmall: CGFloat = 36
     static let inputHeight: CGFloat = 52
     static let listRowMin: CGFloat = 56
     static let progressHeight: CGFloat = 8
