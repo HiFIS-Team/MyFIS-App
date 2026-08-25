@@ -94,7 +94,7 @@ private struct QuickItem: View {
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 
@@ -122,7 +122,7 @@ private struct RecentRow: View {
                 in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 
@@ -207,7 +207,7 @@ private struct InviteRow: View {
                 in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 
@@ -269,7 +269,7 @@ private struct SuggestionCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 

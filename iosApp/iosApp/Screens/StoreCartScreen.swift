@@ -89,7 +89,7 @@ struct StoreCartScreen: View {
                 .padding(MyFisSpacing.xs)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.myFisTap)
 
             Spacer(minLength: 0)
 
@@ -144,7 +144,7 @@ struct StoreCartScreen: View {
 
     /// 하단 고정 바.
     ///
-    /// **합계와 남는 잔액을 버튼 바로 위에** 둔다 — 누르기 직전이 그 숫자를 볼 마지막 순간이다.
+    /// **합계를 버튼 바로 위에** 둔다 — 누르기 직전이 그 숫자를 볼 마지막 순간이다.
     /// 못 바꾸는 이유는 상세(§6.21)와 같이 버튼 글자가 직접 말한다.
     private var bar: some View {
         let count = picked.reduce(0) { $0 + $1.count }
@@ -152,19 +152,11 @@ struct StoreCartScreen: View {
         return VStack(spacing: 0) {
             divider
             VStack(spacing: 0) {
-                HStack {
-                    Text("쓰는 마일리지")
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                    Spacer(minLength: MyFisSpacing.sm)
-                    Text(
-                        short > 0
-                            ? "\(short.mileage) 부족"
-                            : "교환하면 \((balance - total).mileage) 남아요"
-                    )
-                    .font(MyFisFont.bodySm.monospacedDigit())
-                    .foregroundStyle(short > 0 ? MyFisColor.warning : MyFisColor.textSecondary)
-                }
+                // 남는 잔액은 적지 않는다 — 못 바꿀 때의 이유는 **버튼 글자**가 말한다 (§6.21 과 같은 규칙)
+                Text("쓰는 마일리지")
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
 
                 HStack(spacing: MyFisSpacing.xs) {
                     Image("ic_mileage_fill")
@@ -237,7 +229,7 @@ private struct CartRow: View {
                     .frame(width: 44, height: 44)
                     .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.myFisTap)
             .accessibilityLabel(line.checked ? "선택 해제" : "선택")
 
             // TODO(서버): 상품 이미지가 오면 교체한다
@@ -288,7 +280,7 @@ private struct CartRow: View {
                                 in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
                             )
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.myFisTap)
                     .accessibilityLabel("삭제")
 
                     Stepper(count: line.count, onCount: onCount)
@@ -337,7 +329,7 @@ private struct StepperButton: View {
                 .frame(width: 34, height: 34)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
         .disabled(!enabled)
     }
 }
@@ -371,7 +363,7 @@ private struct CartSuggestionCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 

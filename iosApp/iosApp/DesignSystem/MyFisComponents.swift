@@ -14,6 +14,7 @@ struct MyFisPrimaryButton: View {
                 .font(MyFisFont.titleSm)
                 .frame(maxWidth: .infinity, minHeight: MyFisSize.buttonPrimary)
         }
+        .buttonStyle(.myFisTap)
         .disabled(!isEnabled)
         // 비활성에 opacity 를 쓰지 않는다 (§9 의도된 이탈 #2) — 색 토큰 자체를 바꾼다.
         .foregroundStyle(isEnabled ? MyFisColor.onAccent : MyFisColor.textTertiary)
@@ -33,6 +34,7 @@ struct MyFisSecondaryButton: View {
                 .font(MyFisFont.bodySm)
                 .frame(maxWidth: .infinity, minHeight: MyFisSize.buttonSecondary)
         }
+        .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.textPrimary)
         .background(MyFisColor.surface2)
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
@@ -50,6 +52,7 @@ struct MyFisGhostButton: View {
                 .font(MyFisFont.bodySm)
                 .frame(maxWidth: .infinity, minHeight: MyFisSize.buttonSecondary)
         }
+        .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.textSecondary)
     }
 }
@@ -68,6 +71,7 @@ struct MyFisSmallButton: View {
                 .padding(.horizontal, MyFisSpacing.lg)
                 .frame(minHeight: MyFisSize.buttonSmall)
         }
+        .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.textPrimary)
         .background(MyFisColor.surface2)
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
@@ -85,6 +89,7 @@ struct MyFisDangerButton: View {
                 .font(MyFisFont.bodySm)
                 .frame(maxWidth: .infinity, minHeight: MyFisSize.buttonSecondary)
         }
+        .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.danger)
         .overlay(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous).stroke(MyFisColor.danger, lineWidth: 1))
     }

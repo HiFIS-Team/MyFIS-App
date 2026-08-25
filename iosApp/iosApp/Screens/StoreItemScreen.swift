@@ -213,7 +213,7 @@ struct StoreItemScreen: View {
                     .padding(.vertical, MyFisSpacing.md)
                     .contentShape(Rectangle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.myFisTap)
             }
             .background(
                 MyFisColor.surface1,
@@ -534,7 +534,7 @@ private struct HelpfulButton: View {
                 in: Capsule()
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
         .accessibilityLabel(marked ? "도움 됐어요 취소" : "도움 됐어요")
     }
 }
@@ -590,7 +590,7 @@ private struct SuggestionCard: View {
             }
             .frame(width: Self.width, alignment: .leading)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 
@@ -609,7 +609,7 @@ private struct BarIcon: View {
                 .frame(width: 48, height: 48)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
         .accessibilityLabel(label)
     }
 }

@@ -126,7 +126,6 @@ fun StoreCartScreen(
             count = picked.sumOf { it.count },
             total = total,
             short = short,
-            balance = balance,
             onExchange = onExchange,
         )
     }
@@ -467,7 +466,7 @@ private fun CartSuggestionCard(item: StoreItem, modifier: Modifier = Modifier) {
 /**
  * 하단 고정 바.
  *
- * **합계와 남는 잔액을 버튼 바로 위에** 둔다 — 누르기 직전이 그 숫자를 볼 마지막 순간이다.
+ * **합계를 버튼 바로 위에** 둔다 — 누르기 직전이 그 숫자를 볼 마지막 순간이다.
  * 못 바꾸는 이유는 상세(§6.21)와 같이 버튼 글자가 직접 말한다.
  */
 @Composable
@@ -475,7 +474,6 @@ private fun CartBar(
     count: Int,
     total: Int,
     short: Int,
-    balance: Int,
     onExchange: () -> Unit,
 ) {
     Column {
@@ -490,19 +488,12 @@ private fun CartBar(
                     vertical = MyFisSpacing.md,
                 ),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "쓰는 마일리지",
-                    style = MyFisTheme.type.bodySm,
-                    color = MyFisColor.TextTertiary,
-                )
-                Spacer(Modifier.weight(1f))
-                Text(
-                    if (short > 0) "${short.toMileage()} 부족" else "교환하면 ${(balance - total).toMileage()} 남아요",
-                    style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-                    color = if (short > 0) MyFisColor.Warning else MyFisColor.TextSecondary,
-                )
-            }
+            // 남는 잔액은 적지 않는다 — 못 바꿀 때의 이유는 **버튼 글자**가 말한다 (§6.21 과 같은 규칙)
+            Text(
+                "쓰는 마일리지",
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextTertiary,
+            )
             Row(
                 modifier = Modifier.padding(top = 2.dp, bottom = MyFisSpacing.md),
                 verticalAlignment = Alignment.CenterVertically,

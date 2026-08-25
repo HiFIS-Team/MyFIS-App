@@ -156,7 +156,7 @@ private struct StoreHeader: View {
                         .padding(.horizontal, MyFisSpacing.md)
                         .frame(height: 40)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.myFisTap)
                 .modifier(GlassMorph(id: Self.trailing, namespace: glass, filled: true))
             } else {
                 HStack(spacing: 0) {
@@ -248,7 +248,7 @@ private struct SearchField: View {
                         .frame(width: 18, height: 18)
                         .foregroundStyle(MyFisColor.textTertiary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.myFisTap)
                 .accessibilityLabel("검색어 지우기")
             }
         }
@@ -316,7 +316,7 @@ private struct SearchResults: View {
                         .padding(.vertical, MyFisSpacing.sm)
                         .background(MyFisColor.surface2, in: Capsule())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.myFisTap)
             }
         }
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
@@ -331,7 +331,7 @@ private struct SearchResults: View {
             Button("검색어 지우기") { query = "" }
                 .font(MyFisFont.bodySm)
                 .foregroundStyle(MyFisColor.textPrimary)
-                .buttonStyle(.plain)
+                .buttonStyle(.myFisTap)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
@@ -556,7 +556,7 @@ private struct CategoryFilter: View {
                             .padding(.horizontal, MyFisSpacing.sm)
                             .padding(.vertical, 12)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.myFisTap)
                 }
             }
             .coordinateSpace(.named(Self.space))
@@ -717,7 +717,7 @@ struct LikeButton: View {
                 .burst(active: liked, color: MyFisColor.like)
                 .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
         .accessibilityLabel(liked ? "찜 해제" : "찜하기")
     }
 }

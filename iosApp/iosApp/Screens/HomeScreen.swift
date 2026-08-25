@@ -112,7 +112,7 @@ private struct CalendarBar: View {
                 .padding(.vertical, 6)
                 .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.myFisTap)
 
             Spacer(minLength: 0)
 
@@ -281,7 +281,7 @@ private struct ShortcutCard: View {
                 in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 
@@ -371,7 +371,7 @@ private struct RoutineCard: View {
                 in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 
@@ -692,7 +692,7 @@ private struct MileageItemCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
 
@@ -789,7 +789,7 @@ private struct NewsCarousel: View {
                 in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 
     private static let height: CGFloat = 108
@@ -823,6 +823,6 @@ private struct NoticeRow: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.myFisTap)
     }
 }
