@@ -20,13 +20,10 @@ struct HomeScreen: View {
     @State private var month = Date()
 
     var body: some View {
-        // 헤더가 스크롤에 따라 접히고, 떠 있을 때는 유리로 바뀐다 (§6.17)
-        CollapsingHeaderScroll(
-            scrollAnchor: HomeScroll.initialForDebug,
-            header: { glass in
-                AppHeader(onNotification: onNotification, glass: glass)
-            },
-            content: {
+        VStack(spacing: 0) {
+            // 헤더는 고정, 그 아래만 스크롤한다 (스토어와 같은 구조)
+            AppHeader(onNotification: onNotification)
+            ScrollView {
                 VStack(spacing: 0) {
                 HomeCalendar(
                     selected: $selected,
@@ -59,7 +56,8 @@ struct HomeScreen: View {
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
-        )
+            .defaultScrollAnchor(HomeScroll.initialForDebug)
+        }
     }
 }
 

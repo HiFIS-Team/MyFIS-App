@@ -14,22 +14,21 @@ struct AppHeader: View {
     var onBranch: () -> Void = {}
     var onMembership: () -> Void = {}
     var onNotification: () -> Void = {}
-    /// 콘텐츠 위에 떠 있는 상태. 아이콘이 유리 알약으로 바뀐다 (§6.17)
-    var glass: Bool = false
 
     var body: some View {
         ZStack {
             // 워드마크는 양옆 아이콘 개수와 무관하게 **화면 정중앙**에 둔다.
             // HStack 안에 넣으면 좌우 아이콘 폭에 따라 중심이 밀린다.
-            // 워드마크에는 유리를 입히지 않는다. 로고는 로고로 보여야 한다
+            // 워드마크는 양옆 아이콘 개수와 무관하게 **화면 정중앙**에 둔다.
+            // HStack 안에 넣으면 좌우 아이콘 폭에 따라 중심이 밀린다.
             Wordmark()
 
             HStack(spacing: 0) {
-                HeaderIcon("ic_header_branch", "지점", onBranch, glass: glass)
+                HeaderIcon("ic_header_branch", "지점", onBranch)
                 Spacer()
                 HStack(spacing: MyFisSpacing.xs) {
-                    HeaderIcon("ic_header_membership", "멤버십", onMembership, glass: glass)
-                    HeaderIcon("ic_header_notification", "알림", onNotification, glass: glass)
+                    HeaderIcon("ic_header_membership", "멤버십", onMembership)
+                    HeaderIcon("ic_header_notification", "알림", onNotification)
                 }
             }
         }
@@ -44,14 +43,11 @@ struct HeaderIcon: View {
     let asset: String
     let label: String
     let action: () -> Void
-    /// 콘텐츠 위에 떠 있을 때만 유리 알약을 깐다 (§6.17)
-    var glass: Bool = false
 
-    init(_ asset: String, _ label: String, _ action: @escaping () -> Void, glass: Bool = false) {
+    init(_ asset: String, _ label: String, _ action: @escaping () -> Void) {
         self.asset = asset
         self.label = label
         self.action = action
-        self.glass = glass
     }
 
     var body: some View {
@@ -61,24 +57,8 @@ struct HeaderIcon: View {
                 .frame(width: 44, height: 44)
                 .contentShape(Rectangle())
         }
-        .modifier(HeaderIconStyle(glass: glass))
+        .buttonStyle(.plain)
         .foregroundStyle(MyFisColor.textPrimary)
         .accessibilityLabel(label)
-    }
-}
-
-/// 떠 있는 헤더의 아이콘은 **시스템 유리 버튼**을 그대로 쓴다 (§6.17).
-///
-/// 유리를 직접 그리지 않는다 — 두께·굴절·눌림 반응은 OS 가 만든다.
-/// iOS 25 이하에는 유리 버튼이 없으므로 평소 모양(`plain`)으로 떨어진다.
-private struct HeaderIconStyle: ViewModifier {
-    let glass: Bool
-
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *), glass {
-            content.buttonStyle(.glass)
-        } else {
-            content.buttonStyle(.plain)
-        }
     }
 }
