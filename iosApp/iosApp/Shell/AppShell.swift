@@ -61,11 +61,19 @@ struct AppShell: View {
     private static let searchGap: CGFloat = 16
     /// 오른쪽 아이콘 묶음 폭 — 시스템이 44pt 버튼 두 개를 유리 알약으로 감싼 크기 (재서 확인: 96pt)
     private static let trailingIconsWidth: CGFloat = 96
+    /// 잎 화면이 오가는 데 걸리는 시간 (UIKit 기본 0.35 + 여유)
+    private static let leafTransition: UInt64 = 450_000_000
+
     /// `취소` 유리 버튼 폭 (재서 확인: 52pt)
     private static let cancelWidth: CGFloat = 52
 
     /// 스토어 헤더가 검색 모드인가 (§6.9).
     /// **화면을 옮기지 않는다** — 오른쪽이 `취소` 로 바뀌고 필드가 그 앞까지 늘어나고 본문만 갈린다
+    /// 헤더 검색 자리를 지금 그리는가 (§6.9).
+    ///
+    /// 잎으로 들어갈 때는 **누르는 즉시** 비우고, 돌아올 때는 **전환이 끝난 뒤에** 넣는다.
+    /// 전환 도중에 넣으면 시스템이 뒤로 버튼에서 옆으로 늘어나며 그려 준다.
+    @State private var storeFieldVisible = HeaderRoute.initialStoreForDebug.isEmpty
     @State private var storeSearching = StoreSearch.initialForDebug
     @State private var storeQuery = StoreSearch.initialQueryForDebug
 
@@ -76,11 +84,22 @@ struct AppShell: View {
         return max(0, storeWidth - (Self.barInset * 2 + trailing + Self.searchGap))
     }
 
+    /// 애니메이션 없이 **툭** 바꾼다
+    private func snap(_ change: () -> Void) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction, change)
+    }
+
+    /// 잎으로 들어간다 — 밀기 전에 검색 자리를 비운다
+    private func pushStore(_ route: HeaderRoute) {
+        snap { storeFieldVisible = false }
+        storePath.append(route)
+    }
+
     /// 검색 모드를 켜고 끈다. **애니메이션 없이 툭 바뀐다** — iOS 앱들이 그렇게 한다
     private func setSearching(_ on: Bool) {
-        var snap = Transaction()
-        snap.disablesAnimations = true
-        withTransaction(snap) {
+        snap {
             storeSearching = on
             if !on { storeQuery = "" }
         }
@@ -167,8 +186,8 @@ struct AppShell: View {
                 .foregroundStyle(MyFisColor.textPrimary)
             } else {
                 HStack(spacing: 0) {
-                    HeaderIcon("ic_header_cart", "장바구니") { storePath.append(.storeCart) }
-                    HeaderIcon("ic_header_my", "마이") { storePath.append(.storeMy) }
+                    HeaderIcon("ic_header_cart", "장바구니") { pushStore(.storeCart) }
+                    HeaderIcon("ic_header_my", "마이") { pushStore(.storeMy) }
                 }
             }
         }
@@ -275,21 +294,31 @@ struct AppShell: View {
                         StoreScreen(
                             searching: storeSearching,
                             query: $storeQuery,
-                            onCart: { storePath.append(.storeCart) },
-                            onMy: { storePath.append(.storeMy) },
-                            onItem: { storePath.append(.storeItem($0)) }
+                            onCart: { pushStore(.storeCart) },
+                            onMy: { pushStore(.storeMy) },
+                            onItem: { pushStore(.storeItem($0)) }
                         )
                     }
                     .background(WidthProbe { storeWidth = $0 })
                     // 검색 자리는 따로 얹는다 — 이 아이템만 유리 껍데기를 벗겨야 한다
                     .modifier(SearchFieldBar(
                         width: searchFieldWidth,
+                        visible: storeFieldVisible,
                         searching: storeSearching,
                         query: $storeQuery,
                         onSearch: { setSearching(true) }
                     ))
                     // 검색 중에는 하단 탭을 감춘다 — 검색은 탭을 옮겨 다니는 일이 아니다
                     .toolbar(storeSearching ? .hidden : .visible, for: .tabBar)
+                    // 잎에서 돌아왔다 — **전환이 끝난 뒤** 검색 자리를 되돌린다.
+                    // 도중에 넣으면 시스템이 뒤로 버튼에서 옆으로 늘여 그려 준다 (`onDisappear` 는 전환 시작에 온다)
+                    .onChange(of: storePath.isEmpty) { _, empty in
+                        guard empty else { return }
+                        Task {
+                            try? await Task.sleep(nanoseconds: Self.leafTransition)
+                            snap { storeFieldVisible = true }
+                        }
+                    }
                 }
 
             case .my:
@@ -364,6 +393,7 @@ private struct WidthProbe: View {
 /// 여기서 뷰 단계로 갈라 붙인다.
 private struct SearchFieldBar: ViewModifier {
     let width: CGFloat?
+    let visible: Bool
     let searching: Bool
     @Binding var query: String
     let onSearch: () -> Void
@@ -371,13 +401,20 @@ private struct SearchFieldBar: ViewModifier {
     private var item: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             Group {
-                if searching {
+                if !visible {
+                    // 잎이 오가는 **동안에는 자리를 비운다.** 아이템이 남아 있으면 iOS 26 이
+                    // 뒤로 버튼과 morph 시켜서, 들어갈 땐 그루터기가 남고 나올 땐 옆에서 늘어난다.
+                    // (투명도만 0 으로 해도 틀이 남아 똑같이 morph 된다 — 슬로모션으로 확인)
+                    Color.clear.frame(width: 0, height: 0)
+                } else if searching {
                     StoreSearchInput(text: $query)
                 } else {
                     StoreSearchField(action: onSearch)
                 }
             }
-            .frame(width: width)
+            .frame(width: visible ? width : 0)
+            // 이 자리만 애니메이션을 끊는다 — 늘었다 줄었다 하지 않고 **툭** 나타난다
+            .transaction { $0.disablesAnimations = true }
         }
     }
 
