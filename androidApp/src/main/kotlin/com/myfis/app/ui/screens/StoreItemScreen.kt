@@ -766,8 +766,9 @@ private fun HelpfulButton(count: Int, reviewId: Int, modifier: Modifier = Modifi
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            BurstRing(burst.ring, MyFisColor.Helpful, Modifier.size(HelpfulRing))
+        // 고리 자리를 **미리 잡아 둔다.** 고리가 뜰 때만 자리를 차지하면 캡슐이 커졌다 줄어든다
+        Box(Modifier.size(HelpfulRing), contentAlignment = Alignment.Center) {
+            BurstRing(burst.ring, MyFisColor.Helpful, Modifier.matchParentSize())
             Icon(
                 painter = painterResource(R.drawable.ic_store_helpful),
                 contentDescription = if (marked) "도움 됐어요 취소" else "도움 됐어요",
