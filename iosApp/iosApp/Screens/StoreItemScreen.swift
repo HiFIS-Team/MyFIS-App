@@ -174,6 +174,9 @@ struct StoreItemScreen: View {
     ///
     /// **상품 설명은 두지 않는다.** 파워에이드가 뭔지 설명할 이유가 없다 —
     /// 사람들이 궁금한 건 "이거 받아보니 어땠나" 뿐이라 리뷰만 남긴다.
+    ///
+    /// 요약 · 리뷰 · 모두 보기가 **한 장 안에** 있다. 장을 나누면 같은 이야기가 흩어져 보이고,
+    /// `모두 보기` 는 카드 밖에 떨어져 어디로 가는 링크인지 모호해진다.
     private var reviews: some View {
         VStack(alignment: .leading, spacing: MyFisSpacing.cardGap) {
             HStack(alignment: .bottom, spacing: MyFisSpacing.sm) {
@@ -186,31 +189,45 @@ struct StoreItemScreen: View {
                     .padding(.bottom, 2)
             }
 
-            RatingSummary(item: item)
-
-            ForEach(StorePlaceholder.reviews) { ReviewCard(review: $0) }
-
-            // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
-            Button {} label: {
-                HStack(spacing: 0) {
-                    Text("리뷰 \(item.reviewCount.decimal)개 모두 보기")
-                        .font(MyFisFont.bodySm.monospacedDigit())
-                    Image("ic_chevron_down")
-                        .resizable()
-                        .frame(width: 18, height: 18)
-                        .rotationEffect(.degrees(-90))
+            VStack(spacing: 0) {
+                RatingSummary(item: item)
+                ForEach(StorePlaceholder.reviews) { review in
+                    cardDivider
+                    ReviewRow(review: review)
                 }
-                .foregroundStyle(MyFisColor.textSecondary)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, MyFisSpacing.md)
-                .contentShape(Rectangle())
+                cardDivider
+
+                // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
+                Button {} label: {
+                    HStack(spacing: 0) {
+                        Text("리뷰 \(item.reviewCount.decimal)개 모두 보기")
+                            .font(MyFisFont.bodySm.monospacedDigit())
+                        Image("ic_chevron_down")
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                            .rotationEffect(.degrees(-90))
+                    }
+                    .foregroundStyle(MyFisColor.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, MyFisSpacing.md)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
             }
-            .buttonStyle(.plain)
+            .background(
+                MyFisColor.surface1,
+                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
         .padding(.top, MyFisSpacing.xl)
         .padding(.bottom, MyFisSpacing.md)
+    }
+
+    /// 카드 **안**의 구분선. 배경 위에 긋는 전체 폭 선과 다르다 — 한 장 안에서 항목을 가른다
+    private var cardDivider: some View {
+        Rectangle().fill(MyFisColor.borderSubtle).frame(height: 1)
     }
 
     /// 하단 고정 바 (§6.21).
@@ -382,10 +399,6 @@ private struct RatingSummary: View {
         }
         .padding(MyFisSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            MyFisColor.surface1,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
     }
 }
 
@@ -416,8 +429,8 @@ private struct BreakdownRow: View {
     }
 }
 
-/// 리뷰 한 장. **구분선 대신 카드**로 나눈다 — 선을 그으면 목록이 표처럼 보인다 (§6.19 와 같은 판단)
-private struct ReviewCard: View {
+/// 리뷰 한 건. 한 장 안에서 **구분선으로** 갈린다
+private struct ReviewRow: View {
     let review: StoreReview
 
     var body: some View {
@@ -459,10 +472,6 @@ private struct ReviewCard: View {
         }
         .padding(MyFisSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            MyFisColor.surface1,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
     }
 }
 

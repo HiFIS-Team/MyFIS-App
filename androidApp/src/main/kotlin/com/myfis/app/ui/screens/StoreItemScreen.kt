@@ -454,21 +454,24 @@ private fun BuyBar(
  *
  * **상품 설명은 두지 않는다.** 파워에이드가 뭔지 설명할 이유가 없다 —
  * 사람들이 궁금한 건 "이거 받아보니 어땠나" 뿐이라 리뷰만 남긴다.
+ *
+ * 요약 · 리뷰 · 모두 보기가 **한 장 안에** 있다. 장을 나누면 같은 이야기가 흩어져 보이고,
+ * `모두 보기` 는 카드 밖에 떨어져 어디로 가는 링크인지 모호해진다.
  */
 @Composable
 private fun ItemReviews(item: StoreItem, reviews: List<StoreReview>) {
-    val interaction = remember { MutableInteractionSource() }
+    val moreInteraction = remember { MutableInteractionSource() }
 
     Column(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = MyFisSpacing.screenHorizontal)
             .padding(top = MyFisSpacing.xl, bottom = MyFisSpacing.md),
-        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
     ) {
         Row(
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+            modifier = Modifier.padding(bottom = MyFisSpacing.cardGap),
         ) {
             Text("리뷰", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
             Text(
@@ -479,35 +482,55 @@ private fun ItemReviews(item: StoreItem, reviews: List<StoreReview>) {
             )
         }
 
-        RatingSummary(item)
-
-        reviews.forEach { ReviewCard(it) }
-
-        // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
-        Row(
-            modifier = Modifier
+        Column(
+            Modifier
                 .fillMaxWidth()
                 .clip(MyFisRadius.md)
-                .tapWithHaptics(interaction, {})
-                .padding(vertical = MyFisSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
+                .background(MyFisColor.Surface1),
         ) {
-            Text(
-                "리뷰 %,d개 모두 보기".format(item.reviewCount),
-                style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextSecondary,
-            )
-            Icon(
-                painter = painterResource(R.drawable.ic_chevron_down),
-                contentDescription = null,
-                tint = MyFisColor.TextSecondary,
+            RatingSummary(item)
+            reviews.forEach {
+                CardDivider()
+                ReviewRow(it)
+            }
+            CardDivider()
+
+            // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
+            Row(
                 modifier = Modifier
-                    .size(18.dp)
-                    .graphicsLayer { rotationZ = -90f },
-            )
+                    .fillMaxWidth()
+                    .tapWithHaptics(moreInteraction, {})
+                    .padding(vertical = MyFisSpacing.md),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Text(
+                    "리뷰 %,d개 모두 보기".format(item.reviewCount),
+                    style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+                    color = MyFisColor.TextSecondary,
+                )
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron_down),
+                    contentDescription = null,
+                    tint = MyFisColor.TextSecondary,
+                    modifier = Modifier
+                        .size(18.dp)
+                        .graphicsLayer { rotationZ = -90f },
+                )
+            }
         }
     }
+}
+
+/** 카드 **안**의 구분선. 배경 위에 긋는 전체 폭 선과 다르다 — 한 장 안에서 항목을 가른다 */
+@Composable
+private fun CardDivider() {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .height(1.dp)
+            .background(MyFisColor.BorderSubtle),
+    )
 }
 
 /**
@@ -524,8 +547,6 @@ private fun RatingSummary(item: StoreItem) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
             .padding(MyFisSpacing.cardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -587,16 +608,14 @@ private fun BreakdownRow(star: Int, count: Int, ratio: Float) {
     }
 }
 
-/** 리뷰 한 장. **구분선 대신 카드**로 나눈다 — 선을 그으면 목록이 표처럼 보인다 (§6.19 와 같은 판단) */
+/** 리뷰 한 건. 한 장 안에서 **구분선으로** 갈린다 */
 @Composable
-private fun ReviewCard(review: StoreReview) {
+private fun ReviewRow(review: StoreReview) {
     val interaction = remember { MutableInteractionSource() }
 
     Column(
         Modifier
             .fillMaxWidth()
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
             .padding(MyFisSpacing.cardPadding),
     ) {
         Row(
