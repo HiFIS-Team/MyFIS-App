@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -364,10 +365,11 @@ private fun ItemReviews(item: StoreItem, reviews: List<StoreReview>) {
     Column(
         Modifier
             .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal)
             .padding(top = MyFisSpacing.xl, bottom = MyFisSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = MyFisSpacing.screenHorizontal),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         ) {
@@ -380,38 +382,17 @@ private fun ItemReviews(item: StoreItem, reviews: List<StoreReview>) {
             )
         }
 
-        Row(
-            modifier = Modifier.padding(
-                start = MyFisSpacing.screenHorizontal,
-                top = MyFisSpacing.md,
-                bottom = MyFisSpacing.md,
-            ),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-        ) {
-            Stars(item.rating.toInt(), size = 18.dp)
-            Text(
-                "%.1f".format(item.rating),
-                style = MyFisTheme.type.titleMd.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextPrimary,
-            )
-        }
+        RatingSummary(item)
 
-        reviews.forEach { review ->
-            Divider()
-            ReviewRow(review)
-        }
-        Divider()
+        reviews.forEach { ReviewCard(it) }
 
         // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(MyFisRadius.md)
                 .tapWithHaptics(interaction, {})
-                .padding(
-                    horizontal = MyFisSpacing.screenHorizontal,
-                    vertical = MyFisSpacing.lg,
-                ),
+                .padding(vertical = MyFisSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
@@ -432,17 +413,94 @@ private fun ItemReviews(item: StoreItem, reviews: List<StoreReview>) {
     }
 }
 
+/**
+ * 평균 별점 + 분포.
+ *
+ * **숫자를 주인공으로 세운다** (§2 원칙 1). 분포 막대는 회색으로 둔다 —
+ * 별까지 금색, 막대까지 금색이면 요약이 시끄러워진다.
+ */
 @Composable
-private fun ReviewRow(review: StoreReview) {
+private fun RatingSummary(item: StoreItem) {
+    val breakdown = remember(item.id) { item.ratingBreakdown() }
+    val peak = (breakdown.maxOrNull() ?: 1).coerceAtLeast(1)
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MyFisRadius.md)
+            .background(MyFisColor.Surface1)
+            .padding(MyFisSpacing.cardPadding),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.padding(end = MyFisSpacing.lg),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                "%.1f".format(item.rating),
+                style = MyFisTheme.type.metricLg.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextPrimary,
+            )
+            Stars(item.rating.toInt(), size = 16.dp)
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
+            breakdown.forEachIndexed { index, count ->
+                BreakdownRow(star = 5 - index, count = count, ratio = count.toFloat() / peak)
+            }
+        }
+    }
+}
+
+@Composable
+private fun BreakdownRow(star: Int, count: Int, ratio: Float) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+    ) {
+        Text(
+            "$star",
+            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextTertiary,
+        )
+        Box(
+            Modifier
+                .weight(1f)
+                .height(6.dp)
+                .clip(MyFisRadius.full)
+                .background(MyFisColor.Surface3),
+        ) {
+            Box(
+                Modifier
+                    .fillMaxWidth(ratio.coerceIn(0f, 1f))
+                    .fillMaxHeight()
+                    .clip(MyFisRadius.full)
+                    .background(MyFisColor.TextSecondary),
+            )
+        }
+        Text(
+            "%,d".format(count),
+            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextTertiary,
+            modifier = Modifier.size(width = 34.dp, height = 16.dp),
+        )
+    }
+}
+
+/** 리뷰 한 장. **구분선 대신 카드**로 나눈다 — 선을 그으면 목록이 표처럼 보인다 (§6.19 와 같은 판단) */
+@Composable
+private fun ReviewCard(review: StoreReview) {
     val interaction = remember { MutableInteractionSource() }
 
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(
-                horizontal = MyFisSpacing.screenHorizontal,
-                vertical = MyFisSpacing.lg,
-            ),
+            .clip(MyFisRadius.md)
+            .background(MyFisColor.Surface1)
+            .padding(MyFisSpacing.cardPadding),
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -450,6 +508,7 @@ private fun ReviewRow(review: StoreReview) {
         ) {
             Stars(review.rating, size = 14.dp)
             Text(review.author, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
+            Spacer(Modifier.weight(1f))
             Text(review.date, style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
         }
 
@@ -461,17 +520,29 @@ private fun ReviewRow(review: StoreReview) {
         )
 
         // TODO(서버): 도움 됐어요 집계가 붙으면 실제로 누르게 한다
-        Text(
-            "도움 됐어요 ${review.helpful}",
-            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
-            color = MyFisColor.TextSecondary,
+        Row(
             modifier = Modifier
-                .padding(top = MyFisSpacing.md)
-                .clip(MyFisRadius.sm)
+                .align(Alignment.End)
+                .padding(top = MyFisSpacing.sm)
+                .clip(MyFisRadius.full)
                 .background(MyFisColor.Surface2)
                 .tapWithHaptics(interaction, {})
-                .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.sm),
-        )
+                .padding(horizontal = MyFisSpacing.md, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_store_helpful),
+                contentDescription = "도움 됐어요",
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier.size(15.dp),
+            )
+            Text(
+                "${review.helpful}",
+                style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextSecondary,
+            )
+        }
     }
 }
 

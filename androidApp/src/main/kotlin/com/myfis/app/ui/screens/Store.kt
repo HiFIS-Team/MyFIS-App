@@ -112,3 +112,15 @@ val storeReviewPlaceholder = listOf(
     StoreReview(2, "이*연", "8월 17일", 4, "가볍게 마시기 좋은데 차가운 게 남아 있을 때가 더 좋아요", 1),
     StoreReview(3, "박*수", "8월 11일", 5, "마일리지로 바꾸니까 운동 가는 맛이 있네요", 7),
 )
+
+/**
+ * 별점 분포 (5★ → 1★).
+ *
+ * TODO(서버): 리뷰 집계가 붙으면 지운다. 총 개수에서 갈라 쓰므로 **합이 리뷰 수와 어긋나지 않는다**.
+ */
+fun StoreItem.ratingBreakdown(): List<Int> {
+    val share = listOf(0.78, 0.13, 0.05, 0.02, 0.02)
+    val counts = share.map { (reviewCount * it).toInt() }.toMutableList()
+    counts[0] += reviewCount - counts.sum() // 나머지는 5★ 에 붙인다
+    return counts
+}

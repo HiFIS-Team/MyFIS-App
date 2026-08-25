@@ -118,6 +118,18 @@ enum StorePlaceholder {
     ]
 }
 
+extension StoreItem {
+    /// 별점 분포 (5★ → 1★).
+    ///
+    /// TODO(서버): 리뷰 집계가 붙으면 지운다. 총 개수에서 갈라 쓰므로 **합이 리뷰 수와 어긋나지 않는다**.
+    var ratingBreakdown: [Int] {
+        let share = [0.78, 0.13, 0.05, 0.02, 0.02]
+        var counts = share.map { Int(Double(reviewCount) * $0) }
+        counts[0] += reviewCount - counts.reduce(0, +) // 나머지는 5★ 에 붙인다
+        return counts
+    }
+}
+
 extension Int {
     /// `1,240 P`
     var mileage: String { decimal + " P" }

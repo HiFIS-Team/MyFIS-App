@@ -147,7 +147,7 @@ struct StoreItemScreen: View {
     /// **상품 설명은 두지 않는다.** 파워에이드가 뭔지 설명할 이유가 없다 —
     /// 사람들이 궁금한 건 "이거 받아보니 어땠나" 뿐이라 리뷰만 남긴다.
     private var reviews: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        VStack(alignment: .leading, spacing: MyFisSpacing.cardGap) {
             HStack(alignment: .bottom, spacing: MyFisSpacing.sm) {
                 Text("리뷰")
                     .font(MyFisFont.titleMd)
@@ -157,22 +157,10 @@ struct StoreItemScreen: View {
                     .foregroundStyle(MyFisColor.textTertiary)
                     .padding(.bottom, 2)
             }
-            .padding(.horizontal, MyFisSpacing.screenHorizontal)
 
-            HStack(spacing: MyFisSpacing.sm) {
-                Stars(filled: Int(item.rating), size: 18)
-                Text(String(format: "%.1f", item.rating))
-                    .font(MyFisFont.titleMd.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
-            }
-            .padding(.horizontal, MyFisSpacing.screenHorizontal)
-            .padding(.vertical, MyFisSpacing.md)
+            RatingSummary(item: item)
 
-            ForEach(StorePlaceholder.reviews) { review in
-                divider
-                ReviewRow(review: review)
-            }
-            divider
+            ForEach(StorePlaceholder.reviews) { ReviewCard(review: $0) }
 
             // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
             Button {} label: {
@@ -186,11 +174,13 @@ struct StoreItemScreen: View {
                 }
                 .foregroundStyle(MyFisColor.textSecondary)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, MyFisSpacing.lg)
+                .padding(.vertical, MyFisSpacing.md)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
         .padding(.top, MyFisSpacing.xl)
         .padding(.bottom, MyFisSpacing.md)
     }
@@ -288,7 +278,73 @@ private struct FactRow: View {
     }
 }
 
-private struct ReviewRow: View {
+/// 평균 별점 + 분포.
+///
+/// **숫자를 주인공으로 세운다** (§2 원칙 1). 분포 막대는 회색으로 둔다 —
+/// 별까지 금색, 막대까지 금색이면 요약이 시끄러워진다.
+private struct RatingSummary: View {
+    let item: StoreItem
+
+    var body: some View {
+        let breakdown = item.ratingBreakdown
+        let peak = max(breakdown.max() ?? 1, 1)
+
+        HStack(spacing: MyFisSpacing.lg) {
+            VStack(spacing: 0) {
+                Text(String(format: "%.1f", item.rating))
+                    .font(MyFisFont.metricLg.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textPrimary)
+                Stars(filled: Int(item.rating), size: 16)
+            }
+
+            VStack(spacing: 4) {
+                ForEach(Array(breakdown.enumerated()), id: \.offset) { index, count in
+                    BreakdownRow(
+                        star: 5 - index,
+                        count: count,
+                        ratio: Double(count) / Double(peak)
+                    )
+                }
+            }
+        }
+        .padding(MyFisSpacing.cardPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            MyFisColor.surface1,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+        )
+    }
+}
+
+private struct BreakdownRow: View {
+    let star: Int
+    let count: Int
+    let ratio: Double
+
+    var body: some View {
+        HStack(spacing: MyFisSpacing.sm) {
+            Text("\(star)")
+                .font(MyFisFont.caption.monospacedDigit())
+                .foregroundStyle(MyFisColor.textTertiary)
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(MyFisColor.surface3)
+                    Capsule()
+                        .fill(MyFisColor.textSecondary)
+                        .frame(width: geo.size.width * min(max(ratio, 0), 1))
+                }
+            }
+            .frame(height: 6)
+            Text(count.decimal)
+                .font(MyFisFont.caption.monospacedDigit())
+                .foregroundStyle(MyFisColor.textTertiary)
+                .frame(width: 34, alignment: .trailing)
+        }
+    }
+}
+
+/// 리뷰 한 장. **구분선 대신 카드**로 나눈다 — 선을 그으면 목록이 표처럼 보인다 (§6.19 와 같은 판단)
+private struct ReviewCard: View {
     let review: StoreReview
 
     var body: some View {
@@ -298,6 +354,7 @@ private struct ReviewRow: View {
                 Text(review.author)
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
+                Spacer(minLength: 0)
                 Text(review.date)
                     .font(MyFisFont.caption)
                     .foregroundStyle(MyFisColor.textTertiary)
@@ -311,22 +368,28 @@ private struct ReviewRow: View {
 
             // TODO(서버): 도움 됐어요 집계가 붙으면 실제로 누르게 한다
             Button {} label: {
-                Text("도움 됐어요 \(review.helpful)")
-                    .font(MyFisFont.caption.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textSecondary)
-                    .padding(.horizontal, MyFisSpacing.md)
-                    .padding(.vertical, MyFisSpacing.sm)
-                    .background(
-                        MyFisColor.surface2,
-                        in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
-                    )
+                HStack(spacing: MyFisSpacing.xs) {
+                    Image("ic_store_helpful")
+                        .resizable()
+                        .frame(width: 15, height: 15)
+                    Text("\(review.helpful)")
+                        .font(MyFisFont.caption.monospacedDigit())
+                }
+                .foregroundStyle(MyFisColor.textSecondary)
+                .padding(.horizontal, MyFisSpacing.md)
+                .padding(.vertical, 6)
+                .background(MyFisColor.surface2, in: Capsule())
             }
             .buttonStyle(.plain)
-            .padding(.top, MyFisSpacing.md)
+            .frame(maxWidth: .infinity, alignment: .trailing)
+            .padding(.top, MyFisSpacing.sm)
         }
+        .padding(MyFisSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
-        .padding(.vertical, MyFisSpacing.lg)
+        .background(
+            MyFisColor.surface1,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+        )
     }
 }
 
