@@ -16,6 +16,7 @@ enum MyFisFont {
         static let medium = "PretendardStd-Medium"
         static let semibold = "PretendardStd-SemiBold"
         static let bold = "PretendardStd-Bold"
+        static let wordmark = "Kanit-BoldItalic"
     }
 
     static let metricXl = Font.custom(Face.bold, size: 56).monospacedDigit()
@@ -33,21 +34,30 @@ enum MyFisFont {
 
     /// 워드마크(MyFIS) 전용 — Kanit Bold Italic (OFL-1.1, LICENSES/OFL-Kanit.txt).
     /// 기울어져 있어 움직이는 느낌이 난다. 본문 서체와 별개이며 **로고에만 쓴다.**
-    static let wordmark = Font.custom("Kanit-BoldItalic", size: 22)
+    /// 안드로이드와 같은 값 — 22 / Bold Italic / letterSpacing `-0.01em`
+    static let wordmark = Font.custom(Face.wordmark, size: 22)
+    static let wordmarkTracking: CGFloat = -0.22
 
-    /// 번들에 들어 있는 Pretendard 를 프로세스에 등록한다. 앱 시작 시 한 번 호출한다.
+    /// 번들 폰트를 프로세스에 등록한다. 앱 시작 시 한 번 호출한다.
     ///
-    /// `INFOPLIST_KEY_UIAppFonts` 는 Xcode 가 지원하지 않는 키라 생성된 Info.plist 에 들어가지 않는다.
+    /// `INFOPLIST_KEY_UIAppFonts` 는 Xcode 가 지원하지 않는 키라 생성된 Info.plist 에 안 들어간다.
     /// Info.plist 를 직접 관리하는 대신 여기서 등록한다.
+    ///
+    /// ⚠️ **워드마크(Kanit)를 빠뜨리면 조용히 시스템 폰트로 떨어진다** — 안 죽으니 눈으로만 잡힌다
     static func register() {
-        for face in [Face.regular, Face.medium, Face.semibold, Face.bold] {
-            guard let url = Bundle.main.url(forResource: face, withExtension: "otf") else {
-                assertionFailure("폰트를 번들에서 못 찾음: \(face).otf")
+        let faces: [(name: String, ext: String)] = [
+            (Face.regular, "otf"), (Face.medium, "otf"),
+            (Face.semibold, "otf"), (Face.bold, "otf"),
+            (Face.wordmark, "ttf"),
+        ]
+        for face in faces {
+            guard let url = Bundle.main.url(forResource: face.name, withExtension: face.ext) else {
+                assertionFailure("폰트를 번들에서 못 찾음: \(face.name).\(face.ext)")
                 continue
             }
             var error: Unmanaged<CFError>?
             if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
-                assertionFailure("폰트 등록 실패: \(face) — \(String(describing: error))")
+                assertionFailure("폰트 등록 실패: \(face.name) — \(String(describing: error))")
             }
         }
     }

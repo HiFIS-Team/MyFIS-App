@@ -11,5 +11,7 @@ struct Wordmark: View {
                 + Text("FIS").foregroundStyle(MyFisColor.accent)
         )
         .font(MyFisFont.wordmark)
+        // 안드로이드 `letterSpacing = -0.01em` 과 같은 값
+        .tracking(MyFisFont.wordmarkTracking)
     }
 }
