@@ -26,6 +26,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.myfis.app.R
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisGhostButton
@@ -55,7 +56,7 @@ fun NotificationScreen(
             .statusBarsPadding(),
     ) {
         // TODO: Y-03 설정이 붙으면 연결한다
-        DetailHeader("알림", onBack, actionLabel = "알림 설정", onAction = {})
+        DetailHeader("알림", onBack, actionIcon = R.drawable.ic_header_settings, onAction = {})
 
         if (items.isEmpty()) EmptyState() else NotificationList(items)
     }
@@ -99,9 +100,48 @@ private fun NotificationList(items: List<MyFisNotification>) {
             items(read, key = { it.id }) { NotificationRow(it) }
         }
 
+        item { RetentionNote() }
         item { Spacer(Modifier.height(MyFisSpacing.xxxl)) }
     }
 }
+
+/**
+ * 목록 끝의 보관 기간 안내.
+ *
+ * **선 사이에 글을 앉힌다** — 목록이 여기서 끝났다는 걸 알려 주면서
+ * "왜 옛날 알림이 없지" 라는 질문을 미리 막는다.
+ */
+@Composable
+private fun RetentionNote() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal, vertical = MyFisSpacing.xxl),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(MyFisColor.BorderSubtle),
+        )
+        Text(
+            "${NotificationRetentionDays}일 전 알림까지 확인할 수 있어요",
+            style = MyFisTheme.type.caption,
+            color = MyFisColor.TextTertiary,
+            modifier = Modifier.padding(horizontal = MyFisSpacing.md),
+        )
+        Box(
+            Modifier
+                .weight(1f)
+                .height(1.dp)
+                .background(MyFisColor.BorderSubtle),
+        )
+    }
+}
+
+/** TODO(서버): 보관 기간은 서버 정책을 따른다 (SPEC H-02) */
+private const val NotificationRetentionDays = 7
 
 /**
  * 알림 한 행 (DESIGN.md §6.19).
@@ -123,17 +163,18 @@ private fun NotificationRow(item: MyFisNotification) {
         // TODO: kind.destination 화면이 붙으면 행을 눌러 이동한다.
         // 지금 눌러도 갈 곳이 없어 일부러 반응을 넣지 않았다.
     ) {
+        // 종류마다 색이 다르다. 배경은 같은 색을 옅게 깔아 **타일 자체가 튀지는 않게** 한다
         Box(
             Modifier
                 .size(TileSize)
                 .clip(MyFisRadius.md)
-                .background(MyFisColor.Surface2),
+                .background(item.kind.color.copy(alpha = 0.16f)),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(item.kind.icon),
                 contentDescription = null, // 옆 제목이 이름 역할을 한다
-                tint = MyFisColor.TextSecondary,
+                tint = item.kind.color,
                 modifier = Modifier.size(22.dp),
             )
         }

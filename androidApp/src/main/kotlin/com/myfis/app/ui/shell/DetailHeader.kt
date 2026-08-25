@@ -1,5 +1,6 @@
 package com.myfis.app.ui.shell
 
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,12 +38,13 @@ fun DetailHeader(
     title: String,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
-    /** 오른쪽 글자 버튼. 없으면 자리도 비운다 */
-    actionLabel: String? = null,
+    /** 오른쪽 아이콘 버튼. 없으면 자리도 비운다 */
+    @DrawableRes actionIcon: Int? = null,
     onAction: () -> Unit = {},
 ) {
     val interaction = remember { MutableInteractionSource() }
     val actionInteraction = remember { MutableInteractionSource() }
+    val actionPress by actionInteraction.pressScale()
     val press by interaction.pressScale()
 
     Box(
@@ -75,18 +77,28 @@ fun DetailHeader(
             )
         }
 
-        if (actionLabel != null) {
-            Text(
-                actionLabel,
-                style = MyFisTheme.type.bodySm,
-                color = MyFisColor.TextSecondary,
+        if (actionIcon != null) {
+            Box(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
+                    // 왼쪽 뒤로가기와 같은 터치 타겟 (§5.3)
+                    .size(44.dp)
                     .clip(MyFisRadius.full)
-                    .tapWithHaptics(actionInteraction, onAction)
-                    // 글자는 작아도 터치 영역은 44 를 지킨다 (§5.3)
-                    .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.md),
-            )
+                    .tapWithHaptics(actionInteraction, onAction),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(actionIcon),
+                    contentDescription = "설정",
+                    tint = MyFisColor.TextPrimary,
+                    modifier = Modifier
+                        .size(24.dp)
+                        .graphicsLayer {
+                            scaleX = actionPress
+                            scaleY = actionPress
+                        },
+                )
+            }
         }
     }
 }

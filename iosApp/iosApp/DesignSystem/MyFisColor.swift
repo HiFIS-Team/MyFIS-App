@@ -32,6 +32,16 @@ enum MyFisColor {
     static let weekendSaturday = Color(hex: 0x7DA8FF)
     static let weekendSunday = Color(hex: 0xFF6B6B)
 
+    // 카테고리 — **목록에서 종류를 구분할 때만** 쓴다 (§6.19).
+    // 액션 색이 아니라 분류 표시라 액센트 예산(2곳)에 넣지 않는다.
+    static let categoryLime = Color(hex: 0xC9F531)
+    static let categoryBlue = Color(hex: 0x7DA8FF)
+    static let categoryGold = Color(hex: 0xFBBF24)
+    static let categoryCoral = Color(hex: 0xFF8A6B)
+    static let categoryGreen = Color(hex: 0x4ADE80)
+    static let categoryViolet = Color(hex: 0xA78BFA)
+    static let categoryGray = Color(hex: 0xA3A9B5)
+
     // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.
     static let success = Color(hex: 0x4ADE80)
     static let warning = Color(hex: 0xFBBF24)

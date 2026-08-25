@@ -1,4 +1,4 @@
-import Foundation
+import SwiftUI
 
 /// 알림 한 건. SPEC.md §5 H-02.
 ///
@@ -32,6 +32,19 @@ struct MyFisNotification: Identifiable, Hashable {
             case .group: "ic_tab_group"
             case .mileage: "ic_mileage_fill"
             case .notice: "ic_header_notification"
+            }
+        }
+
+        /// 목록에서 종류를 구분하는 색 (DESIGN.md §6.19)
+        var color: Color {
+            switch self {
+            case .routine: MyFisColor.categoryLime
+            case .membership: MyFisColor.categoryViolet
+            case .cardio: MyFisColor.categoryBlue
+            case .coupon: MyFisColor.categoryCoral
+            case .mileage: MyFisColor.categoryGold
+            case .notice: MyFisColor.categoryGray
+            case .group: MyFisColor.categoryGreen
             }
         }
 

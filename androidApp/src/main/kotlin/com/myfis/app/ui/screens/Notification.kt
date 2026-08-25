@@ -1,7 +1,9 @@
 package com.myfis.app.ui.screens
 
 import androidx.annotation.DrawableRes
+import androidx.compose.ui.graphics.Color
 import com.myfis.app.R
+import com.myfis.app.ui.theme.MyFisColor
 
 /**
  * 알림 한 건. SPEC.md §5 H-02.
@@ -21,14 +23,19 @@ data class MyFisNotification(
     val count: Int? = null,
 ) {
     /** 알림 종류. SPEC.md §5 H-02 "알림 종류" 표와 1:1 이다. */
-    enum class Kind(@DrawableRes val icon: Int, val destination: String) {
-        ROUTINE(R.drawable.ic_tab_weight, "W-01"),
-        MEMBERSHIP(R.drawable.ic_header_membership, "M-06"),
-        CARDIO(R.drawable.ic_tab_cardio, "C-04"),
-        COUPON(R.drawable.ic_tab_store, "S-04"),
-        MILEAGE(R.drawable.ic_mileage_fill, "P-01"),
-        NOTICE(R.drawable.ic_header_notification, "H-04"),
-        GROUP(R.drawable.ic_tab_group, "G-02"),
+    enum class Kind(
+        @DrawableRes val icon: Int,
+        /** 목록에서 종류를 구분하는 색 (DESIGN.md §6.19) */
+        val color: Color,
+        val destination: String,
+    ) {
+        ROUTINE(R.drawable.ic_tab_weight, MyFisColor.CategoryLime, "W-01"),
+        MEMBERSHIP(R.drawable.ic_header_membership, MyFisColor.CategoryViolet, "M-06"),
+        CARDIO(R.drawable.ic_tab_cardio, MyFisColor.CategoryBlue, "C-04"),
+        COUPON(R.drawable.ic_tab_store, MyFisColor.CategoryCoral, "S-04"),
+        MILEAGE(R.drawable.ic_mileage_fill, MyFisColor.CategoryGold, "P-01"),
+        NOTICE(R.drawable.ic_header_notification, MyFisColor.CategoryGray, "H-04"),
+        GROUP(R.drawable.ic_tab_group, MyFisColor.CategoryGreen, "G-02"),
     }
 }
 

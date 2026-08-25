@@ -48,9 +48,10 @@ struct NotificationScreen: View {
             }
             // TODO: Y-03 설정이 붙으면 연결한다
             ToolbarItem(placement: .topBarTrailing) {
-                Button("알림 설정") {}
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textSecondary)
+                Button {} label: {
+                    Image("ic_header_settings")
+                }
+                .accessibilityLabel("설정")
             }
         }
     }
@@ -82,6 +83,8 @@ struct NotificationScreen: View {
 
                     ForEach(read) { NotificationRow(item: $0) }
                 }
+
+                RetentionNote()
             }
             .padding(.bottom, MyFisSpacing.xxxl)
         }
@@ -115,10 +118,11 @@ private struct NotificationRow: View {
             Image(item.kind.icon)
                 .resizable()
                 .frame(width: 22, height: 22)
-                .foregroundStyle(MyFisColor.textSecondary)
+                // 종류마다 색이 다르다. 배경은 같은 색을 옅게 깔아 **타일 자체가 튀지는 않게** 한다
+                .foregroundStyle(item.kind.color)
                 .frame(width: Self.tile, height: Self.tile)
                 .background(
-                    MyFisColor.surface2,
+                    item.kind.color.opacity(0.16),
                     in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
                 )
 
@@ -164,6 +168,34 @@ private struct NotificationRow: View {
         .frame(minHeight: MyFisSize.listRowMin, alignment: .top)
         // TODO: kind.destination 화면이 붙으면 행을 눌러 이동한다.
         // 지금 눌러도 갈 곳이 없어 일부러 반응을 넣지 않았다.
+    }
+}
+
+/// 목록 끝의 보관 기간 안내.
+///
+/// **선 사이에 글을 앉힌다** — 목록이 여기서 끝났다는 걸 알려 주면서
+/// "왜 옛날 알림이 없지" 라는 질문을 미리 막는다.
+private struct RetentionNote: View {
+    /// TODO(서버): 보관 기간은 서버 정책을 따른다 (SPEC H-02)
+    private static let days = 7
+
+    var body: some View {
+        HStack(spacing: MyFisSpacing.md) {
+            line
+            Text("\(Self.days)일 전 알림까지 확인할 수 있어요")
+                .font(MyFisFont.caption)
+                .foregroundStyle(MyFisColor.textTertiary)
+                .fixedSize()
+            line
+        }
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+        .padding(.vertical, MyFisSpacing.xxl)
+    }
+
+    private var line: some View {
+        Rectangle()
+            .fill(MyFisColor.borderSubtle)
+            .frame(height: 1)
     }
 }
 

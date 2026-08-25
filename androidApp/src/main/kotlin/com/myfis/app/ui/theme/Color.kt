@@ -33,6 +33,16 @@ object MyFisColor {
     val WeekendSaturday = Color(0xFF7DA8FF)
     val WeekendSunday = Color(0xFFFF6B6B)
 
+    // 카테고리 — **목록에서 종류를 구분할 때만** 쓴다 (§6.19).
+    // 액션 색이 아니라 분류 표시라 액센트 예산(2곳)에 넣지 않는다.
+    val CategoryLime = Color(0xFFC9F531)
+    val CategoryBlue = Color(0xFF7DA8FF)
+    val CategoryGold = Color(0xFFFBBF24)
+    val CategoryCoral = Color(0xFFFF8A6B)
+    val CategoryGreen = Color(0xFF4ADE80)
+    val CategoryViolet = Color(0xFFA78BFA)
+    val CategoryGray = Color(0xFFA3A9B5)
+
     // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.
     val Success = Color(0xFF4ADE80)
     val Warning = Color(0xFFFBBF24)
