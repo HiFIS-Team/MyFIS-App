@@ -104,6 +104,10 @@ struct AppShell: View {
     }
 
     private func open(_ route: HeaderRoute) {
+        // **같은 잎을 두 번 쌓지 않는다.** 전환이 320ms 라 그 사이에 한 번 더 누르면
+        // 똑같은 화면이 두 장 겹치고, 나갈 때 두 번 눌러야 한다.
+        // 잎이 한 칸이던 시절엔 덮어써서 안 보이던 문제다 (스택으로 바꾸며 드러났다)
+        guard leaves.last != route else { return }
         withAnimation(MyFisMotion.slow) { leaves.append(route) }
     }
 
