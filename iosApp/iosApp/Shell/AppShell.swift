@@ -38,8 +38,12 @@ struct AppShell: View {
     @State private var baseSlot = Slot.initialBaseForDebug
     @State private var weightSlot = 1
 
-    /// 셸 위를 덮고 있는 잎 화면. nil 이면 탭만 보인다.
-    @State private var leaf: HeaderRoute? = .initialForDebug
+    /// 셸 위에 쌓인 잎 화면들. 비어 있으면 탭만 보인다.
+    ///
+    /// **한 칸이 아니라 스택이다.** 상세에서 장바구니로 들어가는 길이 있어서,
+    /// 한 칸이면 상세가 교체돼 사라지고 나갈 때 탭으로 튕겨 나간다
+    /// (안드로이드는 `NavHost` 가 스택을 들고 있어 이 문제가 없었다).
+    @State private var leaves: [HeaderRoute] = HeaderRoute?.initialForDebug.map { [$0] } ?? []
 
     var body: some View {
         ZStack {
@@ -56,16 +60,19 @@ struct AppShell: View {
             // 선택은 **색이 아니라 채움**으로 알린다 (DESIGN.md §6.7).
             // 라임은 화면 콘텐츠 몫으로 남긴다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
             .tint(MyFisColor.textPrimary)
+            // 잎이 덮고 있는 동안 **셸은 아무것도 받지 않는다.** 전환 중(320ms)에 누른 손가락이
+            // 밑의 탭 바에 닿으면 탭이 조용히 바뀌고, 나중에 나갔을 때 엉뚱한 탭이 보인다
+            .allowsHitTesting(leaves.isEmpty)
 
             // 잎 화면은 **탭 바를 감추지 않고 그 위를 덮는다.**
             // `.toolbar(.hidden, for: .tabBar)` 로 감추면 돌아올 때 시스템이 유리 바를
             // 다시 그리면서 한 번 깜빡인다. 셸을 건드리지 않으면 그 일이 아예 없다.
-            if let leaf {
-                leafScreen(leaf)
+            ForEach(Array(leaves.enumerated()), id: \.offset) { index, route in
+                leafScreen(route)
                     // 탭 스택을 안 쓰니 시스템 pop 제스처가 따라오지 않는다. 직접 붙인다.
-                    .modifier(EdgeSwipeBack { self.leaf = nil })
+                    .modifier(EdgeSwipeBack { pop() })
                     .transition(.move(edge: .trailing))
-                    .zIndex(1)
+                    .zIndex(Double(index + 1))
             }
         }
     }
@@ -75,33 +82,42 @@ struct AppShell: View {
         switch route {
         case .notifications:
             NavigationStack {
-                NotificationScreen(onBack: { close() })
+                NotificationScreen(onBack: { pop() })
             }
             .tint(MyFisColor.textPrimary)
         case .storeMy:
             NavigationStack {
-                StoreMyScreen(onBack: { close() }, onCart: { open(.storeCart) })
+                StoreMyScreen(onBack: { pop() }, onCart: { open(.storeCart) })
             }
             .tint(MyFisColor.textPrimary)
         case .storeCart:
             NavigationStack {
-                StoreCartScreen(onBack: { close() }, onStore: { close() })
+                StoreCartScreen(onBack: { pop() }, onStore: { popToStore() })
             }
             .tint(MyFisColor.textPrimary)
         case .storeItem(let item):
             NavigationStack {
-                StoreItemScreen(item: item, onBack: { close() }, onCart: { open(.storeCart) })
+                StoreItemScreen(item: item, onBack: { pop() }, onCart: { open(.storeCart) })
             }
             .tint(MyFisColor.textPrimary)
         }
     }
 
     private func open(_ route: HeaderRoute) {
-        withAnimation(MyFisMotion.slow) { leaf = route }
+        withAnimation(MyFisMotion.slow) { leaves.append(route) }
     }
 
-    private func close() {
-        withAnimation(MyFisMotion.slow) { leaf = nil }
+    /// 한 장만 걷는다 — 상세에서 장바구니로 갔다면 나갈 때 **상세로 돌아온다**
+    private func pop() {
+        withAnimation(MyFisMotion.slow) { _ = leaves.popLast() }
+    }
+
+    /// 잎을 전부 걷고 스토어 탭으로. 장바구니 빈 상태의 [상품 보러 가기] 가 쓴다
+    private func popToStore() {
+        withAnimation(MyFisMotion.slow) {
+            leaves.removeAll()
+            baseSlot = Slot.store
+        }
     }
 
     // MARK: - 선택
