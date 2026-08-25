@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -85,7 +86,7 @@ fun StoreItemScreen(
         Box(Modifier.weight(1f)) {
             Column(Modifier.verticalScroll(scroll)) {
                 ItemImage()
-                ItemHead(item = item, short = short, balance = balance)
+                ItemHead(item = item)
                 ItemFacts(item = item)
                 ItemReviews(item = item, reviews = storeReviewPlaceholder)
             }
@@ -177,13 +178,13 @@ private fun FloatingIcon(icon: Int, label: String, onClick: () -> Unit) {
 }
 
 /**
- * 분류·이름·가격, 그리고 **바꿀 수 있는지**.
+ * 분류·이름·가격.
  *
- * 위에서 아래로 **여섯 조각**이다 — 칩 / 이름 / 얼마나 바꿔 갔나 / 가격 ↔ 내 잔액 / 남는 값.
- * 조각이 적으면 화면이 빈다. 토스 상품 페이지가 빽빽해 보이는 것도 조각 수 때문이다.
+ * 이름과 가격을 **한 줄에 마주 세운다.** 가격을 왼쪽 아래에 따로 두면
+ * 오른쪽이 통째로 비어 화면이 성겨 보인다.
  */
 @Composable
-private fun ItemHead(item: StoreItem, short: Int, balance: Int) {
+private fun ItemHead(item: StoreItem) {
     Column(
         Modifier
             .fillMaxWidth()
@@ -198,65 +199,36 @@ private fun ItemHead(item: StoreItem, short: Int, balance: Int) {
             Chip("인기 ${popularityRank(item)}위", chevron = true)
         }
 
-        Text(
-            item.name,
-            style = MyFisTheme.type.titleLg,
-            color = MyFisColor.TextPrimary,
-            modifier = Modifier.padding(top = MyFisSpacing.md),
-        )
-
-        // 별점보다 **행동한 사람 수**가 먼저 믿긴다. 리뷰는 밑에서 따로 말한다
-        Text(
-            "이번 주 %,d명이 바꿨어요".format(item.weeklyExchanged),
-            style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-            color = MyFisColor.TextTertiary,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-
-        // 가격 옆이 비면 화면이 심심해진다. **비교 대상(내 잔액)** 을 그 자리에 둔다 —
-        // 값이 나란히 놓여야 "바꿀 수 있나"가 계산 없이 읽힌다 (§2 원칙 1)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = MyFisSpacing.lg),
+                .padding(top = MyFisSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            Text(
+                item.name,
+                style = MyFisTheme.type.titleLg,
+                color = MyFisColor.TextPrimary,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f),
+            )
+            Spacer(Modifier.size(MyFisSpacing.md))
             Icon(
                 painter = painterResource(R.drawable.ic_mileage_fill),
                 contentDescription = null, // 옆 숫자가 이름 역할을 한다
                 tint = MyFisColor.Accent,
-                modifier = Modifier.size(28.dp),
+                modifier = Modifier.size(22.dp),
             )
-            Spacer(Modifier.size(MyFisSpacing.sm))
+            Spacer(Modifier.size(MyFisSpacing.xs))
             // 이 화면의 **핵심 숫자**라 액센트를 쓴다 (§3.1). 잔액 띠와 반대인데,
             // 거기선 코인만 라임이라 값이 흰색이어야 무엇이 중요한지 갈렸다. 여기는 가격이 주인공이다
             Text(
                 item.price.toMileage(),
-                style = MyFisTheme.type.metricLg.copy(fontFeatureSettings = "tnum"),
+                style = MyFisTheme.type.metricMd.copy(fontFeatureSettings = "tnum"),
                 color = MyFisColor.Accent,
             )
-            Spacer(Modifier.weight(1f))
-            Column(horizontalAlignment = Alignment.End) {
-                Text("내 마일리지", style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
-                Text(
-                    balance.toMileage(),
-                    style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-                    color = MyFisColor.TextSecondary,
-                )
-            }
         }
-
-        // 가격 바로 밑에서 **바꿀 수 있는지**를 답한다. 하단 버튼까지 내려가서 알 일이 아니다
-        Text(
-            when {
-                item.soldOut -> "지금은 품절이에요"
-                short > 0 -> "${short.toMileage()} 더 모으면 교환할 수 있어요"
-                else -> "교환하면 ${(balance - item.price).toMileage()} 남아요"
-            },
-            style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-            color = if (short > 0 || item.soldOut) MyFisColor.Warning else MyFisColor.TextSecondary,
-            modifier = Modifier.padding(top = MyFisSpacing.sm),
-        )
     }
 }
 
@@ -307,7 +279,7 @@ private fun Chip(label: String, dot: Color? = null, chevron: Boolean = false) {
  * 나머지 사실들.
  *
  * **카드로 담는다.** 위아래 선만 그으면 표처럼 보인다 (§6.19 · 리뷰와 같은 판단).
- * 라벨 폭을 고정해 값이 세로로 정렬된다.
+ * 줄마다 아이콘을 둬 네 줄이 회색 덩어리로 뭉치지 않게 한다.
  */
 @Composable
 private fun ItemFacts(item: StoreItem) {
@@ -320,27 +292,28 @@ private fun ItemFacts(item: StoreItem) {
             .padding(vertical = MyFisSpacing.sm),
     ) {
         FactRow(
+            R.drawable.ic_store_rating,
             "평점 · 리뷰",
             "%.1f".format(item.rating),
             sub = "(%,d)".format(item.reviewCount),
-            icon = R.drawable.ic_store_rating,
+            // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
             iconTint = MyFisColor.Rating,
             chevron = true,
         )
-        FactRow("조회", item.views.toViewCount())
+        FactRow(R.drawable.ic_store_views, "조회", item.views.toViewCount())
         // TODO(서버): 지점은 선택한 지점을 따라간다
-        FactRow("수령", "강남점 데스크", chevron = true)
-        FactRow("교환권", "발급 후 7일 안에 수령")
+        FactRow(R.drawable.ic_header_branch, "수령", "강남점 데스크", chevron = true)
+        FactRow(R.drawable.ic_my_coupon, "교환권", "발급 후 7일 안에 수령")
     }
 }
 
 @Composable
 private fun FactRow(
+    icon: Int,
     label: String,
     value: String,
     sub: String? = null,
-    icon: Int? = null,
-    iconTint: Color = MyFisColor.TextSecondary,
+    iconTint: Color = MyFisColor.TextTertiary,
     chevron: Boolean = false,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -355,23 +328,21 @@ private fun FactRow(
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Icon(
+            painter = painterResource(icon),
+            contentDescription = null, // 옆 라벨이 이름 역할을 한다
+            tint = iconTint,
+            modifier = Modifier.size(18.dp),
+        )
+        Spacer(Modifier.size(MyFisSpacing.sm))
+        // 라벨 폭을 고정해 값이 **세로로 정렬**된다. `평점 · 리뷰` 가 가장 길어 그 폭에 맞춘다
         Text(
             label,
             style = MyFisTheme.type.bodySm,
             color = MyFisColor.TextTertiary,
-            modifier = Modifier.size(width = 80.dp, height = 20.dp),
+            maxLines = 1,
+            modifier = Modifier.width(76.dp),
         )
-        if (icon != null) {
-            Icon(
-                painter = painterResource(icon),
-                contentDescription = null, // 옆 값이 이름 역할을 한다
-                tint = iconTint,
-                modifier = Modifier
-                    .size(16.dp)
-                    .padding(end = 2.dp),
-            )
-            Spacer(Modifier.size(MyFisSpacing.xs))
-        }
         Text(
             value,
             style = MyFisTheme.type.body.copy(fontFeatureSettings = "tnum"),

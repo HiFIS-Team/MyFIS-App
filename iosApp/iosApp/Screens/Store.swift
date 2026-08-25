@@ -50,8 +50,6 @@ struct StoreItem: Identifiable, Hashable {
     let views: Int
     let rating: Double
     let reviewCount: Int
-    /// 이번 주에 이 상품을 바꾼 사람 수. TODO(서버): 교환 집계가 오면 지운다
-    let weeklyExchanged: Int
     var soldOut: Bool = false
 }
 
@@ -98,25 +96,25 @@ enum StorePlaceholder {
 
     static let items: [StoreItem] = [
         .init(id: 1, name: "이온음료 500ml", price: 300, category: .drink,
-              views: 12_400, rating: 4.6, reviewCount: 218, weeklyExchanged: 34),
+              views: 12_400, rating: 4.6, reviewCount: 218),
         .init(id: 2, name: "제로 콜라 250ml", price: 250, category: .drink,
-              views: 8_300, rating: 4.4, reviewCount: 96, weeklyExchanged: 21),
+              views: 8_300, rating: 4.4, reviewCount: 96),
         .init(id: 3, name: "아메리카노", price: 400, category: .caffeine,
-              views: 23_100, rating: 4.8, reviewCount: 512, weeklyExchanged: 88),
+              views: 23_100, rating: 4.8, reviewCount: 512),
         .init(id: 4, name: "콜드브루", price: 500, category: .caffeine,
-              views: 6_400, rating: 4.7, reviewCount: 143, weeklyExchanged: 19),
+              views: 6_400, rating: 4.7, reviewCount: 143),
         .init(id: 5, name: "프로틴 쉐이크", price: 600, category: .protein,
-              views: 31_000, rating: 4.5, reviewCount: 874, weeklyExchanged: 76),
+              views: 31_000, rating: 4.5, reviewCount: 874),
         .init(id: 6, name: "단백질 바", price: 700, category: .protein,
-              views: 15_200, rating: 4.3, reviewCount: 331, weeklyExchanged: 41),
+              views: 15_200, rating: 4.3, reviewCount: 331),
         .init(id: 7, name: "MyFIS 스포츠 타월", price: 1_200, category: .goods,
-              views: 4_100, rating: 4.9, reviewCount: 64, weeklyExchanged: 9),
+              views: 4_100, rating: 4.9, reviewCount: 64),
         .init(id: 8, name: "쉐이커 보틀", price: 1_500, category: .goods,
-              views: 9_800, rating: 4.6, reviewCount: 205, weeklyExchanged: 12),
+              views: 9_800, rating: 4.6, reviewCount: 205),
         .init(id: 9, name: "헬스 장갑", price: 2_400, category: .goods,
-              views: 2_700, rating: 4.2, reviewCount: 38, weeklyExchanged: 3, soldOut: true),
+              views: 2_700, rating: 4.2, reviewCount: 38, soldOut: true),
         .init(id: 10, name: "요가 매트", price: 5_000, category: .goods,
-              views: 5_600, rating: 4.7, reviewCount: 121, weeklyExchanged: 6),
+              views: 5_600, rating: 4.7, reviewCount: 121),
     ]
 }
 

@@ -100,10 +100,10 @@ struct StoreItemScreen: View {
     /// 스크롤 좌표계 이름 — 이미지가 얼마나 올라갔는지 재는 데만 쓴다
     private static let scrollSpace = "storeItemScroll"
 
-    /// 분류·이름·가격, 그리고 **바꿀 수 있는지**.
+    /// 분류·이름·가격.
     ///
-    /// 위에서 아래로 **여섯 조각**이다 — 칩 / 이름 / 얼마나 바꿔 갔나 / 가격 ↔ 내 잔액 / 남는 값.
-    /// 조각이 적으면 화면이 빈다. 토스 상품 페이지가 빽빽해 보이는 것도 조각 수 때문이다.
+    /// 이름과 가격을 **한 줄에 마주 세운다.** 가격을 왼쪽 아래에 따로 두면
+    /// 오른쪽이 통째로 비어 화면이 성겨 보인다.
     private var head: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: MyFisSpacing.sm) {
@@ -112,78 +112,51 @@ struct StoreItemScreen: View {
                 Chip(label: "인기 \(popularityRank)위", chevron: true)
             }
 
-            Text(item.name)
-                .font(MyFisFont.titleLg)
-                .foregroundStyle(MyFisColor.textPrimary)
-                .padding(.top, MyFisSpacing.md)
-
-            // 별점보다 **행동한 사람 수**가 먼저 믿긴다. 리뷰는 밑에서 따로 말한다
-            Text("이번 주 \(item.weeklyExchanged.decimal)명이 바꿨어요")
-                .font(MyFisFont.bodySm.monospacedDigit())
-                .foregroundStyle(MyFisColor.textTertiary)
-                .padding(.top, 2)
-
-            // 가격 옆이 비면 화면이 심심해진다. **비교 대상(내 잔액)** 을 그 자리에 둔다 —
-            // 값이 나란히 놓여야 "바꿀 수 있나"가 계산 없이 읽힌다 (§2 원칙 1)
-            HStack(spacing: MyFisSpacing.sm) {
-                Image("ic_mileage_fill")
-                    .resizable()
-                    .frame(width: 28, height: 28)
-                    .foregroundStyle(MyFisColor.accent)
-                // 이 화면의 **핵심 숫자**라 액센트를 쓴다 (§3.1). 잔액 띠와 반대인데,
-                // 거기선 코인만 라임이라 값이 흰색이어야 무엇이 중요한지 갈렸다. 여기는 가격이 주인공이다
-                Text(item.price.mileage)
-                    .font(MyFisFont.metricLg.monospacedDigit())
-                    .foregroundStyle(MyFisColor.accent)
-                Spacer(minLength: MyFisSpacing.sm)
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text("내 마일리지")
-                        .font(MyFisFont.caption)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                    Text(balance.mileage)
-                        .font(MyFisFont.titleSm.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textSecondary)
+            HStack(spacing: MyFisSpacing.md) {
+                Text(item.name)
+                    .font(MyFisFont.titleLg)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .lineLimit(2)
+                Spacer(minLength: 0)
+                HStack(spacing: MyFisSpacing.xs) {
+                    Image("ic_mileage_fill")
+                        .resizable()
+                        .frame(width: 22, height: 22)
+                        .foregroundStyle(MyFisColor.accent)
+                    // 이 화면의 **핵심 숫자**라 액센트를 쓴다 (§3.1). 잔액 띠와 반대인데,
+                    // 거기선 코인만 라임이라 값이 흰색이어야 무엇이 중요한지 갈렸다. 여기는 가격이 주인공이다
+                    Text(item.price.mileage)
+                        .font(MyFisFont.metricMd.monospacedDigit())
+                        .foregroundStyle(MyFisColor.accent)
                 }
+                .fixedSize()
             }
-            .padding(.top, MyFisSpacing.lg)
-
-            // 가격 바로 밑에서 **바꿀 수 있는지**를 답한다. 하단 버튼까지 내려가서 알 일이 아니다
-            Text(availability)
-                .font(MyFisFont.bodySm.monospacedDigit())
-                .foregroundStyle(
-                    short > 0 || item.soldOut ? MyFisColor.warning : MyFisColor.textSecondary
-                )
-                .padding(.top, MyFisSpacing.sm)
+            .padding(.top, MyFisSpacing.md)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
         .padding(.vertical, MyFisSpacing.lg)
     }
 
-    private var availability: String {
-        if item.soldOut { return "지금은 품절이에요" }
-        if short > 0 { return "\(short.mileage) 더 모으면 교환할 수 있어요" }
-        return "교환하면 \((balance - item.price).mileage) 남아요"
-    }
-
     /// 나머지 사실들.
     ///
     /// **카드로 담는다.** 위아래 선만 그으면 표처럼 보인다 (§6.19 · 리뷰와 같은 판단).
-    /// 라벨 폭을 고정해 값이 세로로 정렬된다.
+    /// 줄마다 아이콘을 둬 네 줄이 회색 덩어리로 뭉치지 않게 한다.
     private var facts: some View {
         VStack(spacing: 0) {
             FactRow(
+                icon: "ic_store_rating",
                 label: "평점 · 리뷰",
                 value: String(format: "%.1f", item.rating),
                 sub: "(\(item.reviewCount.decimal))",
-                icon: "ic_store_rating",
+                // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
                 iconTint: MyFisColor.rating,
                 chevron: true
             )
-            FactRow(label: "조회", value: item.views.viewCount)
+            FactRow(icon: "ic_store_views", label: "조회", value: item.views.viewCount)
             // TODO(서버): 지점은 선택한 지점을 따라간다
-            FactRow(label: "수령", value: "강남점 데스크", chevron: true)
-            FactRow(label: "교환권", value: "발급 후 7일 안에 수령")
+            FactRow(icon: "ic_header_branch", label: "수령", value: "강남점 데스크", chevron: true)
+            FactRow(icon: "ic_my_coupon", label: "교환권", value: "발급 후 7일 안에 수령")
         }
         .padding(.vertical, MyFisSpacing.sm)
         .background(
@@ -333,26 +306,26 @@ extension StoreCategory {
 }
 
 private struct FactRow: View {
+    let icon: String
     let label: String
     let value: String
     var sub: String? = nil
-    var icon: String? = nil
-    var iconTint: Color = MyFisColor.textSecondary
+    var iconTint: Color = MyFisColor.textTertiary
     var chevron: Bool = false
 
     var body: some View {
         HStack(spacing: 0) {
+            Image(icon)
+                .resizable()
+                .frame(width: 18, height: 18)
+                .foregroundStyle(iconTint)
+                .padding(.trailing, MyFisSpacing.sm)
+            // 라벨 폭을 고정해 값이 **세로로 정렬**된다. `평점 · 리뷰` 가 가장 길어 그 폭에 맞춘다
             Text(label)
                 .font(MyFisFont.bodySm)
                 .foregroundStyle(MyFisColor.textTertiary)
-                .frame(width: 80, alignment: .leading)
-            if let icon {
-                Image(icon)
-                    .resizable()
-                    .frame(width: 14, height: 14)
-                    .foregroundStyle(iconTint)
-                    .padding(.trailing, MyFisSpacing.xs)
-            }
+                .lineLimit(1)
+                .frame(width: 76, alignment: .leading)
             Text(value)
                 .font(MyFisFont.body.monospacedDigit())
                 .foregroundStyle(MyFisColor.textPrimary)
