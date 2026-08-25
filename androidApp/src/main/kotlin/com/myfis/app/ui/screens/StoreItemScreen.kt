@@ -1,5 +1,6 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -30,12 +31,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisPrimaryButton
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
@@ -61,13 +66,24 @@ fun StoreItemScreen(
     val short = (item.price - balance).coerceAtLeast(0)
     var liked by rememberSaveable(item.id) { mutableStateOf(false) }
 
+    val scroll = rememberScrollState()
+    // 이미지(정사각)를 지나면 아이콘 밑으로 **글자가 지나간다.** 그때부터 바탕을 깔아 준다
+    val imageHeightPx = with(LocalDensity.current) {
+        LocalConfiguration.current.screenWidthDp.dp.toPx()
+    }
+    val barAlpha by animateFloatAsState(
+        targetValue = if (scroll.value > imageHeightPx - 160f) 1f else 0f,
+        animationSpec = MyFisMotion.base(),
+        label = "barAlpha",
+    )
+
     Column(
         Modifier
             .fillMaxSize()
             .background(MyFisColor.BgBase),
     ) {
         Box(Modifier.weight(1f)) {
-            Column(Modifier.verticalScroll(rememberScrollState())) {
+            Column(Modifier.verticalScroll(scroll)) {
                 ItemImage()
                 ItemHead(item = item, short = short, balance = balance)
                 ItemFacts(item = item)
@@ -75,18 +91,24 @@ fun StoreItemScreen(
             }
 
             // **버튼은 스크롤을 따라가지 않는다.** 내려 읽다가 뒤로가기가 사라지면 안 된다
-            Row(
-                modifier = Modifier
-                    .statusBarsPadding()
+            Column(
+                Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
+                    .background(MyFisColor.BgBase.copy(alpha = barAlpha)),
             ) {
-                FloatingIcon(R.drawable.ic_tab_back, "뒤로", onBack)
-                Spacer(Modifier.weight(1f))
-                // TODO: S-07 검색 · S-06 장바구니가 붙으면 연결한다
-                FloatingIcon(R.drawable.ic_header_search, "검색", onSearch)
-                FloatingIcon(R.drawable.ic_header_cart, "장바구니", onCart)
+                Row(
+                    modifier = Modifier
+                        .statusBarsPadding()
+                        .fillMaxWidth()
+                        .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FloatingIcon(R.drawable.ic_tab_back, "뒤로", onBack)
+                    Spacer(Modifier.weight(1f))
+                    // TODO: S-07 검색 · S-06 장바구니가 붙으면 연결한다
+                    FloatingIcon(R.drawable.ic_header_search, "검색", onSearch)
+                    FloatingIcon(R.drawable.ic_header_cart, "장바구니", onCart)
+                }
             }
         }
 
@@ -154,7 +176,12 @@ private fun FloatingIcon(icon: Int, label: String, onClick: () -> Unit) {
     }
 }
 
-/** 분류·이름·가격, 그리고 **바꿀 수 있는지** */
+/**
+ * 분류·이름·가격, 그리고 **바꿀 수 있는지**.
+ *
+ * 위에서 아래로 **여섯 조각**이다 — 칩 / 이름 / 얼마나 바꿔 갔나 / 가격 ↔ 내 잔액 / 남는 값.
+ * 조각이 적으면 화면이 빈다. 토스 상품 페이지가 빽빽해 보이는 것도 조각 수 때문이다.
+ */
 @Composable
 private fun ItemHead(item: StoreItem, short: Int, balance: Int) {
     Column(
@@ -166,8 +193,9 @@ private fun ItemHead(item: StoreItem, short: Int, balance: Int) {
             ),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm)) {
-            Chip(item.category.label)
-            Chip("인기 ${popularityRank(item)}위")
+            Chip(item.category.label, dot = categoryColor(item.category))
+            // TODO: 분류 랭킹(🔵)이 붙으면 연결한다
+            Chip("인기 ${popularityRank(item)}위", chevron = true)
         }
 
         Text(
@@ -177,22 +205,45 @@ private fun ItemHead(item: StoreItem, short: Int, balance: Int) {
             modifier = Modifier.padding(top = MyFisSpacing.md),
         )
 
+        // 별점보다 **행동한 사람 수**가 먼저 믿긴다. 리뷰는 밑에서 따로 말한다
+        Text(
+            "이번 주 %,d명이 바꿨어요".format(item.weeklyExchanged),
+            style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextTertiary,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+
+        // 가격 옆이 비면 화면이 심심해진다. **비교 대상(내 잔액)** 을 그 자리에 둔다 —
+        // 값이 나란히 놓여야 "바꿀 수 있나"가 계산 없이 읽힌다 (§2 원칙 1)
         Row(
-            modifier = Modifier.padding(top = MyFisSpacing.sm),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = MyFisSpacing.lg),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         ) {
             Icon(
                 painter = painterResource(R.drawable.ic_mileage_fill),
                 contentDescription = null, // 옆 숫자가 이름 역할을 한다
                 tint = MyFisColor.Accent,
-                modifier = Modifier.size(26.dp),
+                modifier = Modifier.size(28.dp),
             )
+            Spacer(Modifier.size(MyFisSpacing.sm))
+            // 이 화면의 **핵심 숫자**라 액센트를 쓴다 (§3.1). 잔액 띠와 반대인데,
+            // 거기선 코인만 라임이라 값이 흰색이어야 무엇이 중요한지 갈렸다. 여기는 가격이 주인공이다
             Text(
                 item.price.toMileage(),
                 style = MyFisTheme.type.metricLg.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextPrimary,
+                color = MyFisColor.Accent,
             )
+            Spacer(Modifier.weight(1f))
+            Column(horizontalAlignment = Alignment.End) {
+                Text("내 마일리지", style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
+                Text(
+                    balance.toMileage(),
+                    style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+                    color = MyFisColor.TextSecondary,
+                )
+            }
         }
 
         // 가격 바로 밑에서 **바꿀 수 있는지**를 답한다. 하단 버튼까지 내려가서 알 일이 아니다
@@ -204,38 +255,94 @@ private fun ItemHead(item: StoreItem, short: Int, balance: Int) {
             },
             style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
             color = if (short > 0 || item.soldOut) MyFisColor.Warning else MyFisColor.TextSecondary,
-            modifier = Modifier.padding(top = MyFisSpacing.xs),
+            modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
     }
 }
 
+/**
+ * 분류 점 색 (§3.1 카테고리 팔레트).
+ *
+ * **점에만 칠한다.** 글자까지 칠하면 액션처럼 보이고, 팔레트 규칙(아이콘 전용)도 깨진다.
+ */
+private fun categoryColor(category: StoreCategory) = when (category) {
+    StoreCategory.DRINK -> MyFisColor.CategoryBlue
+    StoreCategory.CAFFEINE -> MyFisColor.CategoryGold
+    StoreCategory.PROTEIN -> MyFisColor.CategoryViolet
+    StoreCategory.GOODS -> MyFisColor.CategoryCoral
+    StoreCategory.ALL -> MyFisColor.CategoryGray
+}
+
 @Composable
-private fun Chip(label: String) {
-    Text(
-        label,
-        style = MyFisTheme.type.label,
-        color = MyFisColor.TextSecondary,
+private fun Chip(label: String, dot: Color? = null, chevron: Boolean = false) {
+    Row(
         modifier = Modifier
             .background(MyFisColor.Surface2, MyFisRadius.sm)
             .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.xs),
-    )
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+    ) {
+        if (dot != null) {
+            Box(
+                Modifier
+                    .size(6.dp)
+                    .background(dot, CircleShape),
+            )
+        }
+        Text(label, style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+        if (chevron) {
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = null,
+                tint = MyFisColor.TextTertiary,
+                modifier = Modifier
+                    .size(14.dp)
+                    .graphicsLayer { rotationZ = -90f },
+            )
+        }
+    }
 }
 
-/** 나머지 사실들. 한 줄에 하나씩, 라벨은 왼쪽으로 폭을 고정해 값이 세로로 정렬된다 */
+/**
+ * 나머지 사실들.
+ *
+ * **카드로 담는다.** 위아래 선만 그으면 표처럼 보인다 (§6.19 · 리뷰와 같은 판단).
+ * 라벨 폭을 고정해 값이 세로로 정렬된다.
+ */
 @Composable
 private fun ItemFacts(item: StoreItem) {
-    Column(Modifier.fillMaxWidth()) {
-        Divider()
-        FactRow("평점 · 리뷰", "%.1f (%,d)".format(item.rating, item.reviewCount), chevron = true)
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal)
+            .clip(MyFisRadius.md)
+            .background(MyFisColor.Surface1)
+            .padding(vertical = MyFisSpacing.sm),
+    ) {
+        FactRow(
+            "평점 · 리뷰",
+            "%.1f".format(item.rating),
+            sub = "(%,d)".format(item.reviewCount),
+            icon = R.drawable.ic_store_rating,
+            iconTint = MyFisColor.Rating,
+            chevron = true,
+        )
         FactRow("조회", item.views.toViewCount())
-        FactRow("수령", "지점 데스크에서 받아요", chevron = true)
+        // TODO(서버): 지점은 선택한 지점을 따라간다
+        FactRow("수령", "강남점 데스크", chevron = true)
         FactRow("교환권", "발급 후 7일 안에 수령")
-        Divider()
     }
 }
 
 @Composable
-private fun FactRow(label: String, value: String, chevron: Boolean = false) {
+private fun FactRow(
+    label: String,
+    value: String,
+    sub: String? = null,
+    icon: Int? = null,
+    iconTint: Color = MyFisColor.TextSecondary,
+    chevron: Boolean = false,
+) {
     val interaction = remember { MutableInteractionSource() }
 
     Row(
@@ -243,7 +350,7 @@ private fun FactRow(label: String, value: String, chevron: Boolean = false) {
             .fillMaxWidth()
             .then(if (chevron) Modifier.tapWithHaptics(interaction, {}) else Modifier)
             .padding(
-                horizontal = MyFisSpacing.screenHorizontal,
+                horizontal = MyFisSpacing.cardPadding,
                 vertical = MyFisSpacing.md,
             ),
         verticalAlignment = Alignment.CenterVertically,
@@ -252,16 +359,35 @@ private fun FactRow(label: String, value: String, chevron: Boolean = false) {
             label,
             style = MyFisTheme.type.bodySm,
             color = MyFisColor.TextTertiary,
-            modifier = Modifier.size(width = 88.dp, height = 20.dp),
+            modifier = Modifier.size(width = 80.dp, height = 20.dp),
         )
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null, // 옆 값이 이름 역할을 한다
+                tint = iconTint,
+                modifier = Modifier
+                    .size(16.dp)
+                    .padding(end = 2.dp),
+            )
+            Spacer(Modifier.size(MyFisSpacing.xs))
+        }
         Text(
             value,
             style = MyFisTheme.type.body.copy(fontFeatureSettings = "tnum"),
             color = MyFisColor.TextPrimary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.weight(1f),
         )
+        if (sub != null) {
+            Text(
+                sub,
+                style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextTertiary,
+                modifier = Modifier.padding(start = MyFisSpacing.xs),
+            )
+        }
+        Spacer(Modifier.weight(1f))
         if (chevron) {
             Icon(
                 painter = painterResource(R.drawable.ic_chevron_down),

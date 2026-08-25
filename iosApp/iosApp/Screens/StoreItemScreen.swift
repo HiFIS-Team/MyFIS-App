@@ -13,6 +13,8 @@ struct StoreItemScreen: View {
     var onExchange: () -> Void = {}
 
     @State private var liked = false
+    /// 이미지를 지나면 아이콘 밑으로 **글자가 지나간다.** 그때부터 바탕을 깔아 준다
+    @State private var scrolledPastImage = false
 
     private var short: Int { max(item.price - balance, 0) }
 
@@ -32,6 +34,7 @@ struct StoreItemScreen: View {
                 // 시뮬레이터에는 스크롤을 시킬 수단이 없다. 아래쪽(리뷰)을 스크린샷으로 확인할 때
                 // `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom` 으로 띄운다 (홈과 같은 훅을 쓴다)
                 .defaultScrollAnchor(HomeScroll.initialForDebug)
+                .coordinateSpace(.named(Self.scrollSpace))
                 buyBar
             }
             .ignoresSafeArea(edges: .top)
@@ -40,7 +43,10 @@ struct StoreItemScreen: View {
         // 떠 있는 버튼은 **시스템 툴바**에 맡긴다 — iOS 26 이 알아서 유리 원으로 그리고,
         // 스크롤에도 고정되며 터치 타겟까지 맞춰 준다 (직접 그리면 굴절이 없어 유리로 안 보인다)
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(.hidden, for: .navigationBar)
+        // 사진 위에서는 숨기고, 지나가면 켠다 — 안 켜면 글자가 유리 버튼 밑으로 지나간다.
+        // 색을 지정하지 않으면 iOS 26 기본 유리라 **글자가 그대로 비친다**
+        .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
+        .toolbarBackground(scrolledPastImage ? .visible : .hidden, for: .navigationBar)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button(action: onBack) {
@@ -77,14 +83,33 @@ struct StoreItemScreen: View {
                     .frame(width: 96, height: 96)
                     .foregroundStyle(MyFisColor.surface3)
             }
+            // 이미지 밑단이 툴바까지 올라오면 그때부터 바탕을 켠다.
+            // `onScrollGeometryChange` 는 iOS 18 부터라 좌표계로 잰다 (배포 타깃 17)
+            .overlay {
+                GeometryReader { geometry in
+                    Color.clear.onChange(
+                        of: geometry.frame(in: .named(Self.scrollSpace)).maxY < 120,
+                        initial: true
+                    ) { _, past in
+                        scrolledPastImage = past
+                    }
+                }
+            }
     }
 
-    /// 분류·이름·가격, 그리고 **바꿀 수 있는지**
+    /// 스크롤 좌표계 이름 — 이미지가 얼마나 올라갔는지 재는 데만 쓴다
+    private static let scrollSpace = "storeItemScroll"
+
+    /// 분류·이름·가격, 그리고 **바꿀 수 있는지**.
+    ///
+    /// 위에서 아래로 **여섯 조각**이다 — 칩 / 이름 / 얼마나 바꿔 갔나 / 가격 ↔ 내 잔액 / 남는 값.
+    /// 조각이 적으면 화면이 빈다. 토스 상품 페이지가 빽빽해 보이는 것도 조각 수 때문이다.
     private var head: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: MyFisSpacing.sm) {
-                Chip(label: item.category.label)
-                Chip(label: "인기 \(popularityRank)위")
+                Chip(label: item.category.label, dot: item.category.dotColor)
+                // TODO: 분류 랭킹(🔵)이 붙으면 연결한다
+                Chip(label: "인기 \(popularityRank)위", chevron: true)
             }
 
             Text(item.name)
@@ -92,16 +117,35 @@ struct StoreItemScreen: View {
                 .foregroundStyle(MyFisColor.textPrimary)
                 .padding(.top, MyFisSpacing.md)
 
+            // 별점보다 **행동한 사람 수**가 먼저 믿긴다. 리뷰는 밑에서 따로 말한다
+            Text("이번 주 \(item.weeklyExchanged.decimal)명이 바꿨어요")
+                .font(MyFisFont.bodySm.monospacedDigit())
+                .foregroundStyle(MyFisColor.textTertiary)
+                .padding(.top, 2)
+
+            // 가격 옆이 비면 화면이 심심해진다. **비교 대상(내 잔액)** 을 그 자리에 둔다 —
+            // 값이 나란히 놓여야 "바꿀 수 있나"가 계산 없이 읽힌다 (§2 원칙 1)
             HStack(spacing: MyFisSpacing.sm) {
                 Image("ic_mileage_fill")
                     .resizable()
-                    .frame(width: 26, height: 26)
+                    .frame(width: 28, height: 28)
                     .foregroundStyle(MyFisColor.accent)
+                // 이 화면의 **핵심 숫자**라 액센트를 쓴다 (§3.1). 잔액 띠와 반대인데,
+                // 거기선 코인만 라임이라 값이 흰색이어야 무엇이 중요한지 갈렸다. 여기는 가격이 주인공이다
                 Text(item.price.mileage)
                     .font(MyFisFont.metricLg.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
+                    .foregroundStyle(MyFisColor.accent)
+                Spacer(minLength: MyFisSpacing.sm)
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text("내 마일리지")
+                        .font(MyFisFont.caption)
+                        .foregroundStyle(MyFisColor.textTertiary)
+                    Text(balance.mileage)
+                        .font(MyFisFont.titleSm.monospacedDigit())
+                        .foregroundStyle(MyFisColor.textSecondary)
+                }
             }
-            .padding(.top, MyFisSpacing.sm)
+            .padding(.top, MyFisSpacing.lg)
 
             // 가격 바로 밑에서 **바꿀 수 있는지**를 답한다. 하단 버튼까지 내려가서 알 일이 아니다
             Text(availability)
@@ -109,7 +153,7 @@ struct StoreItemScreen: View {
                 .foregroundStyle(
                     short > 0 || item.soldOut ? MyFisColor.warning : MyFisColor.textSecondary
                 )
-                .padding(.top, MyFisSpacing.xs)
+                .padding(.top, MyFisSpacing.sm)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
@@ -122,20 +166,31 @@ struct StoreItemScreen: View {
         return "교환하면 \((balance - item.price).mileage) 남아요"
     }
 
-    /// 나머지 사실들. 한 줄에 하나씩, 라벨 폭을 고정해 값이 세로로 정렬된다
+    /// 나머지 사실들.
+    ///
+    /// **카드로 담는다.** 위아래 선만 그으면 표처럼 보인다 (§6.19 · 리뷰와 같은 판단).
+    /// 라벨 폭을 고정해 값이 세로로 정렬된다.
     private var facts: some View {
         VStack(spacing: 0) {
-            divider
             FactRow(
                 label: "평점 · 리뷰",
-                value: "\(String(format: "%.1f", item.rating)) (\(item.reviewCount.decimal))",
+                value: String(format: "%.1f", item.rating),
+                sub: "(\(item.reviewCount.decimal))",
+                icon: "ic_store_rating",
+                iconTint: MyFisColor.rating,
                 chevron: true
             )
             FactRow(label: "조회", value: item.views.viewCount)
-            FactRow(label: "수령", value: "지점 데스크에서 받아요", chevron: true)
+            // TODO(서버): 지점은 선택한 지점을 따라간다
+            FactRow(label: "수령", value: "강남점 데스크", chevron: true)
             FactRow(label: "교환권", value: "발급 후 7일 안에 수령")
-            divider
         }
+        .padding(.vertical, MyFisSpacing.sm)
+        .background(
+            MyFisColor.surface1,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+        )
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
     }
 
     private var divider: some View {
@@ -234,23 +289,55 @@ struct StoreItemScreen: View {
 
 private struct Chip: View {
     let label: String
+    var dot: Color? = nil
+    var chevron: Bool = false
 
     var body: some View {
-        Text(label)
-            .font(MyFisFont.label)
-            .foregroundStyle(MyFisColor.textSecondary)
-            .padding(.horizontal, MyFisSpacing.sm)
-            .padding(.vertical, MyFisSpacing.xs)
-            .background(
-                MyFisColor.surface2,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
-            )
+        HStack(spacing: MyFisSpacing.xs) {
+            if let dot {
+                Circle().fill(dot).frame(width: 6, height: 6)
+            }
+            Text(label)
+                .font(MyFisFont.label)
+                .foregroundStyle(MyFisColor.textSecondary)
+            if chevron {
+                Image("ic_chevron_down")
+                    .resizable()
+                    .frame(width: 14, height: 14)
+                    .rotationEffect(.degrees(-90))
+                    .foregroundStyle(MyFisColor.textTertiary)
+            }
+        }
+        .padding(.horizontal, MyFisSpacing.sm)
+        .padding(.vertical, MyFisSpacing.xs)
+        .background(
+            MyFisColor.surface2,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
+        )
+    }
+}
+
+extension StoreCategory {
+    /// 분류 점 색 (§3.1 카테고리 팔레트).
+    ///
+    /// **점에만 칠한다.** 글자까지 칠하면 액션처럼 보이고, 팔레트 규칙(아이콘 전용)도 깨진다.
+    var dotColor: Color {
+        switch self {
+        case .drink: MyFisColor.categoryBlue
+        case .caffeine: MyFisColor.categoryGold
+        case .protein: MyFisColor.categoryViolet
+        case .goods: MyFisColor.categoryCoral
+        case .all: MyFisColor.categoryGray
+        }
     }
 }
 
 private struct FactRow: View {
     let label: String
     let value: String
+    var sub: String? = nil
+    var icon: String? = nil
+    var iconTint: Color = MyFisColor.textSecondary
     var chevron: Bool = false
 
     var body: some View {
@@ -258,11 +345,24 @@ private struct FactRow: View {
             Text(label)
                 .font(MyFisFont.bodySm)
                 .foregroundStyle(MyFisColor.textTertiary)
-                .frame(width: 88, alignment: .leading)
+                .frame(width: 80, alignment: .leading)
+            if let icon {
+                Image(icon)
+                    .resizable()
+                    .frame(width: 14, height: 14)
+                    .foregroundStyle(iconTint)
+                    .padding(.trailing, MyFisSpacing.xs)
+            }
             Text(value)
                 .font(MyFisFont.body.monospacedDigit())
                 .foregroundStyle(MyFisColor.textPrimary)
                 .lineLimit(1)
+            if let sub {
+                Text(sub)
+                    .font(MyFisFont.bodySm.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textTertiary)
+                    .padding(.leading, MyFisSpacing.xs)
+            }
             Spacer(minLength: MyFisSpacing.sm)
             if chevron {
                 Image("ic_chevron_down")
@@ -272,7 +372,7 @@ private struct FactRow: View {
                     .foregroundStyle(MyFisColor.textTertiary)
             }
         }
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+        .padding(.horizontal, MyFisSpacing.cardPadding)
         .padding(.vertical, MyFisSpacing.md)
         .contentShape(Rectangle())
     }

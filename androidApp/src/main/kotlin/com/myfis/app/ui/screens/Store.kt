@@ -49,6 +49,8 @@ data class StoreItem(
     val views: Int,
     val rating: Double,
     val reviewCount: Int,
+    /** 이번 주에 이 상품을 바꾼 사람 수. TODO(서버): 교환 집계가 오면 지운다 */
+    val weeklyExchanged: Int,
     val soldOut: Boolean = false,
 )
 
@@ -71,16 +73,16 @@ val storeQuestPlaceholder = listOf(
 )
 
 val storeItemPlaceholder = listOf(
-    StoreItem(1, "이온음료 500ml", 300, StoreCategory.DRINK, 12_400, 4.6, 218),
-    StoreItem(2, "제로 콜라 250ml", 250, StoreCategory.DRINK, 8_300, 4.4, 96),
-    StoreItem(3, "아메리카노", 400, StoreCategory.CAFFEINE, 23_100, 4.8, 512),
-    StoreItem(4, "콜드브루", 500, StoreCategory.CAFFEINE, 6_400, 4.7, 143),
-    StoreItem(5, "프로틴 쉐이크", 600, StoreCategory.PROTEIN, 31_000, 4.5, 874),
-    StoreItem(6, "단백질 바", 700, StoreCategory.PROTEIN, 15_200, 4.3, 331),
-    StoreItem(7, "MyFIS 스포츠 타월", 1_200, StoreCategory.GOODS, 4_100, 4.9, 64),
-    StoreItem(8, "쉐이커 보틀", 1_500, StoreCategory.GOODS, 9_800, 4.6, 205),
-    StoreItem(9, "헬스 장갑", 2_400, StoreCategory.GOODS, 2_700, 4.2, 38, soldOut = true),
-    StoreItem(10, "요가 매트", 5_000, StoreCategory.GOODS, 5_600, 4.7, 121),
+    StoreItem(1, "이온음료 500ml", 300, StoreCategory.DRINK, 12_400, 4.6, 218, 34),
+    StoreItem(2, "제로 콜라 250ml", 250, StoreCategory.DRINK, 8_300, 4.4, 96, 21),
+    StoreItem(3, "아메리카노", 400, StoreCategory.CAFFEINE, 23_100, 4.8, 512, 88),
+    StoreItem(4, "콜드브루", 500, StoreCategory.CAFFEINE, 6_400, 4.7, 143, 19),
+    StoreItem(5, "프로틴 쉐이크", 600, StoreCategory.PROTEIN, 31_000, 4.5, 874, 76),
+    StoreItem(6, "단백질 바", 700, StoreCategory.PROTEIN, 15_200, 4.3, 331, 41),
+    StoreItem(7, "MyFIS 스포츠 타월", 1_200, StoreCategory.GOODS, 4_100, 4.9, 64, 9),
+    StoreItem(8, "쉐이커 보틀", 1_500, StoreCategory.GOODS, 9_800, 4.6, 205, 12),
+    StoreItem(9, "헬스 장갑", 2_400, StoreCategory.GOODS, 2_700, 4.2, 38, 3, soldOut = true),
+    StoreItem(10, "요가 매트", 5_000, StoreCategory.GOODS, 5_600, 4.7, 121, 6),
 )
 
 /** `1,240 P` */
