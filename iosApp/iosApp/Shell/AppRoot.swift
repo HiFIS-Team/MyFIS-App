@@ -65,19 +65,19 @@ struct AppRoot: View {
         ZStack {
             MyFisColor.bgBase.ignoresSafeArea()
 
-            VStack(spacing: 0) {
-                DetailHeader(
-                    title: route.title,
-                    onBack: back,
-                    actionIcon: route == .notifications ? "ic_header_settings" : nil,
-                    actionLabel: "설정"
-                )
-                // TODO: 화면이 하나씩 붙는다 — H-02 알림함 · S-06 장바구니 · S-07 검색 · S-08 스토어 마이
-                PlaceholderScreen(
-                    id: leafSpecID(route),
-                    title: route.title,
-                    description: "화면은 다음 단계에서 붙인다"
-                )
+            switch route {
+            case .notifications:
+                NotificationScreen(onBack: back)
+            default:
+                // TODO: 화면이 하나씩 붙는다 — S-06 장바구니 · S-07 검색 · S-08 스토어 마이
+                VStack(spacing: 0) {
+                    DetailHeader(title: route.title, onBack: back)
+                    PlaceholderScreen(
+                        id: leafSpecID(route),
+                        title: route.title,
+                        description: "화면은 다음 단계에서 붙인다"
+                    )
+                }
             }
         }
     }
