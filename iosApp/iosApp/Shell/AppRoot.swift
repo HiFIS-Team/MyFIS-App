@@ -19,26 +19,75 @@ import SwiftUI
 /// 셸이 같이 움직이면 하단 바가 왕복하는 게 눈에 걸린다.
 struct AppRoot: View {
     @State private var pages: [Route] = MyFisDebug.initialRoutes
+    /// 가장자리 스와이프로 끌고 있는 거리
+    @State private var drag: CGFloat = 0
+
+    /// 여기서 시작한 드래그만 뒤로가기로 본다 (§7.1)
+    private static let edge: CGFloat = 24
+    /// 이만큼 끌었으면 손을 떼도 닫는다
+    private static let closeDistance: CGFloat = 90
 
     var body: some View {
-        ZStack {
-            // 잎이 반투명하면 뒤가 비치므로, 바탕은 여기서 한 번만 깐다
-            MyFisColor.bgBase.ignoresSafeArea()
+        GeometryReader { proxy in
+            ZStack {
+                // 잎이 반투명하면 뒤가 비치므로, 바탕은 여기서 한 번만 깐다
+                MyFisColor.bgBase.ignoresSafeArea()
 
-            TabShell(open: open)
-                // 덮인 셸에는 손이 닿지 않는다
-                .allowsHitTesting(pages.isEmpty)
+                TabShell(open: open)
+                    // 덮인 셸에는 손이 닿지 않는다
+                    .allowsHitTesting(pages.isEmpty)
 
-            ForEach(Array(pages.enumerated()), id: \.offset) { index, route in
-                leaf(route)
-                    .zIndex(Double(index + 1))
-                    .transition(.move(edge: .trailing))
+                ForEach(Array(pages.enumerated()), id: \.offset) { index, route in
+                    let isTop = index == pages.count - 1
+                    leaf(route)
+                        .offset(x: isTop ? drag : 0)
+                        .zIndex(Double(index + 1))
+                        .transition(.move(edge: .trailing))
+                        .gesture(isTop ? edgeBack(width: proxy.size.width) : nil)
+                }
             }
         }
+        .ignoresSafeArea(.keyboard)
         .task {
             MyFisDebug.applySlowMotionIfNeeded()
             MyFisDebug.scheduleAutoNavigation(open: open, back: back)
         }
+    }
+
+    /// 왼쪽 가장자리에서 오른쪽으로 쓸면 잎을 걷는다 — 안드로이드 시스템 뒤로가기에 맞춘다.
+    ///
+    /// ⚠️ 예전에 화면 전체에 `simultaneousGesture(DragGesture())` 를 걸었다가
+    /// **버튼 탭을 삼켜서** "나가기를 연타해야 나가지는" 버그가 났다. 두 가지로 막는다 —
+    /// 1. `minimumDistance` 를 줘서 **움직이지 않는 탭은 제스처가 되지 않는다**
+    /// 2. `simultaneousGesture` 가 아니라 `gesture` 로 걸고, **가장자리에서 시작한 것만** 받는다
+    private func edgeBack(width: CGFloat) -> some Gesture {
+        DragGesture(minimumDistance: 12, coordinateSpace: .local)
+            .onChanged { value in
+                guard value.startLocation.x <= Self.edge else { return }
+                // 세로로 긋는 손짓은 안쪽 스크롤 몫이다
+                guard abs(value.translation.width) > abs(value.translation.height) else { return }
+                drag = max(0, value.translation.width)
+            }
+            .onEnded { value in
+                guard value.startLocation.x <= Self.edge else { return }
+                let flung = value.predictedEndTranslation.width > 240
+                guard drag > Self.closeDistance || flung else {
+                    withAnimation(MyFisMotion.base) { drag = 0 }
+                    return
+                }
+                // **손가락 위치에서 이어서 화면 밖까지 밀어낸 뒤 걷는다.**
+                // 바로 걷으면 `.transition` 이 같이 돌아 화면이 한 번 튄다 (확인함)
+                withAnimation(MyFisMotion.base) {
+                    drag = width
+                } completion: {
+                    var snap = Transaction()
+                    snap.disablesAnimations = true
+                    withTransaction(snap) {
+                        _ = pages.popLast()
+                        drag = 0
+                    }
+                }
+            }
     }
 
     // MARK: - 이동
@@ -52,6 +101,7 @@ struct AppRoot: View {
 
     private func back() {
         withAnimation(MyFisMotion.slow) { _ = pages.popLast() }
+        drag = 0
     }
 
     /// 셸까지 한 번에 돌아간다 (예: 장바구니에서 "상품 보러 가기")
