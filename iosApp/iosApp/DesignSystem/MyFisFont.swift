@@ -31,6 +31,10 @@ enum MyFisFont {
     static let label = Font.custom(Face.medium, size: 13)
     static let caption = Font.custom(Face.regular, size: 12)
 
+    /// 워드마크(MyFIS) 전용 — Kanit Bold Italic (OFL-1.1, LICENSES/OFL-Kanit.txt).
+    /// 기울어져 있어 움직이는 느낌이 난다. 본문 서체와 별개이며 **로고에만 쓴다.**
+    static let wordmark = Font.custom("Kanit-BoldItalic", size: 22)
+
     /// 번들에 들어 있는 Pretendard 를 프로세스에 등록한다. 앱 시작 시 한 번 호출한다.
     ///
     /// `INFOPLIST_KEY_UIAppFonts` 는 Xcode 가 지원하지 않는 키라 생성된 Info.plist 에 들어가지 않는다.

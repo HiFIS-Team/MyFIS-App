@@ -38,4 +38,23 @@ enum MyFisSize {
     static let inputHeight: CGFloat = 52
     static let listRowMin: CGFloat = 56
     static let progressHeight: CGFloat = 8
+    /// 카드 안 보조 버튼 (§6.1)
+    static let buttonSmall: CGFloat = 36
+
+    /// 헤더 높이 (§6.9) — 두 플랫폼 같은 값
+    static let header: CGFloat = 56
+    /// 헤더 아이콘 (§6.9) — Android 24 / iOS 26
+    static let headerIcon: CGFloat = 26
+}
+
+/// DESIGN.md §7 모션 — 이징은 `cubic-bezier(0.2, 0, 0, 1)` (감속 위주).
+///
+/// 화면 전환(`slow`)은 **안드로이드 `pushSpec` 과 같은 값**이다 (320ms).
+enum MyFisMotion {
+    /// 눌림, 토글, 체크
+    static let fast = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.12)
+    /// 카드 확장, 페이드
+    static let base = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.20)
+    /// 바텀시트, 화면 전환
+    static let slow = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.32)
 }
