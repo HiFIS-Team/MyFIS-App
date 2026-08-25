@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +52,7 @@ import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.tapWithHaptics
 import java.time.LocalDate
+import java.time.LocalTime
 
 /**
  * SPEC.md H-01 홈.
@@ -519,8 +522,8 @@ private fun CongestionCard(congestion: BranchCongestion) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 congestion.branch,
-                style = MyFisTheme.type.titleSm,
-                color = MyFisColor.TextPrimary,
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextTertiary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
@@ -532,23 +535,12 @@ private fun CongestionCard(congestion: BranchCongestion) {
             )
         }
 
-        Spacer(Modifier.height(MyFisSpacing.sm))
+        Spacer(Modifier.height(MyFisSpacing.xs))
 
+        // **판단을 먼저 준다.** 숫자는 그 판단의 근거로 밑에 깐다
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text(
-                    congestion.people.toString(),
-                    style = MyFisTheme.type.metricLg.copy(fontFeatureSettings = "tnum"),
-                    color = MyFisColor.TextPrimary,
-                )
-                Text(
-                    "명",
-                    style = MyFisTheme.type.body,
-                    color = MyFisColor.TextSecondary,
-                    modifier = Modifier.padding(start = 2.dp, bottom = 6.dp),
-                )
-            }
-            Spacer(Modifier.weight(1f))
+            Text(level.headline, style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+            Spacer(Modifier.width(MyFisSpacing.sm))
             // 상태는 **색과 글자 둘 다**로 낸다. 색만으로 구분하면 색각 이상에서 읽히지 않는다
             Text(
                 level.label,
@@ -556,55 +548,115 @@ private fun CongestionCard(congestion: BranchCongestion) {
                 color = level.color,
                 modifier = Modifier
                     .background(level.color.copy(alpha = 0.14f), MyFisRadius.full)
-                    .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.xs),
+                    .padding(horizontal = MyFisSpacing.sm, vertical = 2.dp),
             )
         }
 
-        Spacer(Modifier.height(MyFisSpacing.md))
+        Text(
+            "${congestion.people} / ${congestion.capacity}명",
+            style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextTertiary,
+        )
 
-        // 정원 대비 게이지 — 숫자만으로는 38명이 많은 건지 알 수 없다
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(MyFisSize.progressHeight)
-                .clip(MyFisRadius.full)
-                .background(MyFisColor.Surface3),
-        ) {
-            Box(
-                Modifier
-                    .fillMaxWidth(congestion.ratio)
-                    .fillMaxHeight()
-                    .clip(MyFisRadius.full)
-                    .background(level.color),
-            )
-        }
+        Spacer(Modifier.height(MyFisSpacing.lg))
+
+        HourlyChart(congestion = congestion, color = level.color)
 
         Spacer(Modifier.height(MyFisSpacing.md))
 
         Text(
-            congestion.comparison,
+            congestion.hint,
             style = MyFisTheme.type.bodySm,
             color = MyFisColor.TextSecondary,
         )
     }
 }
 
+/**
+ * 오늘 시간대별 혼잡 막대.
+ *
+ * 지금 몇 명인지보다 **"언제 가면 한산한지"** 가 실제로 쓰는 정보다.
+ * 지금 막대만 상태색이고 나머지는 흐린 회색 — 그래야 지금이 어디쯤인지 한눈에 뜬다.
+ */
+@Composable
+private fun HourlyChart(congestion: BranchCongestion, color: Color) {
+    val peak = (congestion.hourly.maxOrNull() ?: 1).coerceAtLeast(1)
+
+    Column {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(ChartHeight),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            congestion.hourly.forEachIndexed { i, people ->
+                Box(
+                    Modifier
+                        .weight(1f)
+                        // 가장 한산한 시간도 막대가 보여야 한다 (0 이면 빈칸으로 읽힌다)
+                        .fillMaxHeight((people.toFloat() / peak).coerceIn(0.12f, 1f))
+                        .clip(MyFisRadius.full)
+                        .background(if (i == congestion.nowIndex) color else MyFisColor.Surface3),
+                )
+            }
+        }
+
+        Spacer(Modifier.height(MyFisSpacing.sm))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(3.dp),
+        ) {
+            congestion.hourly.indices.forEach { i ->
+                val hour = congestion.startHour + i
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                    // 눈금은 3시간마다. 전부 적으면 숫자가 붙어 읽히지 않는다.
+                    // `지금` 은 옆 칸까지 넘어오므로 양옆 눈금은 지운다 (겹쳐 찍힌다)
+                    val tick = hour % 3 == 0 && kotlin.math.abs(i - congestion.nowIndex) > 1
+                    if (tick || i == congestion.nowIndex) {
+                        Text(
+                            if (i == congestion.nowIndex) "지금" else hour.toString(),
+                            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                            color = if (i == congestion.nowIndex) {
+                                MyFisColor.TextPrimary
+                            } else {
+                                MyFisColor.TextTertiary
+                            },
+                            maxLines = 1,
+                            // `지금` 은 한 칸(≈14dp)보다 넓다. 칸을 넘겨서라도 온전히 보이게 한다
+                            modifier = Modifier.wrapContentWidth(unbounded = true),
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private val ChartHeight = 64.dp
+
 /** 혼잡 단계. 신호등 순서라 설명 없이 읽힌다 */
-private enum class CongestionLevel(val label: String, val color: Color) {
-    LOW("한산", MyFisColor.Success),
-    MEDIUM("보통", MyFisColor.Warning),
-    HIGH("혼잡", MyFisColor.Danger),
+private enum class CongestionLevel(val label: String, val headline: String, val color: Color) {
+    LOW("한산", "지금 한산해요", MyFisColor.Success),
+    MEDIUM("보통", "지금 딱 좋아요", MyFisColor.Warning),
+    HIGH("혼잡", "지금 붐벼요", MyFisColor.Danger),
 }
 
 /** TODO(서버): 출입 스캔 기반 실시간 인원 API 가 붙으면 지운다 */
 private data class BranchCongestion(
     val branch: String,
-    val people: Int,
     val capacity: Int,
     val updatedLabel: String,
-    /** 평소 같은 시간대와의 비교 — 숫자를 판단으로 바꿔주는 한 줄 */
-    val comparison: String,
+    /** 오늘 시간대별 인원. `startHour` 부터 1시간 간격 */
+    val hourly: List<Int>,
+    val startHour: Int,
+    val nowHour: Int,
 ) {
+    /** 영업 시간 밖이면 양 끝으로 붙인다 (새벽에 열어도 그래프가 깨지지 않게) */
+    val nowIndex: Int = (nowHour - startHour).coerceIn(0, hourly.lastIndex)
+
+    /** 지금 인원은 그래프와 **같은 값**을 쓴다. 둘이 다르면 어느 쪽도 못 믿는다 */
+    val people: Int get() = hourly[nowIndex]
+
     val ratio: Float get() = (people.toFloat() / capacity).coerceIn(0f, 1f)
 
     val level: CongestionLevel
@@ -613,13 +665,38 @@ private data class BranchCongestion(
             ratio < 0.75f -> CongestionLevel.MEDIUM
             else -> CongestionLevel.HIGH
         }
+
+    /**
+     * 앞으로 몇 시간 안에 가장 한산한 때 — 이 카드가 실제로 하는 일.
+     *
+     * **하루 전체에서 고르지 않는다.** 그러면 늘 문 닫기 직전을 찍는데, 그건 갈 수 있는 시간이 아니다.
+     */
+    val hint: String
+        get() {
+            val window = (nowIndex + 1)..minOf(nowIndex + HINT_HOURS, hourly.lastIndex - 1)
+            val best = window.minByOrNull { hourly[it] } ?: return "오늘은 곧 문을 닫아요"
+            if (hourly[best] >= people) return "지금이 한동안 제일 한산해요"
+            return "${(startHour + best).toClockLabel()}쯤 가장 한산해요"
+        }
+}
+
+/** 몇 시간 앞까지 추천할지. 이보다 멀면 "그때 가야지" 가 아니라 그냥 정보다 */
+private const val HINT_HOURS = 6
+
+/** `14` → `오후 2시` */
+private fun Int.toClockLabel(): String = when {
+    this < 12 -> "오전 ${this}시"
+    this == 12 -> "낮 12시"
+    else -> "오후 ${this - 12}시"
 }
 
 /** TODO(서버): 혼잡도 API 가 붙으면 지운다 */
 private val congestionPlaceholder = BranchCongestion(
     branch = "강남점",
-    people = 38,
     capacity = 80,
     updatedLabel = "방금 업데이트",
-    comparison = "평소 이 시간보다 12명 적어요",
+    // 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+    hourly = listOf(12, 26, 34, 24, 38, 30, 26, 20, 16, 18, 22, 34, 56, 68, 62, 44, 28, 14),
+    startHour = 6,
+    nowHour = LocalTime.now().hour,
 )

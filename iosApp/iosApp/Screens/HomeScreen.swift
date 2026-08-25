@@ -130,13 +130,17 @@ enum HomePlaceholder {
     static let attendanceStreak = 12
 
     /// TODO(서버): 혼잡도 API 가 붙으면 지운다
-    static let congestion = BranchCongestion(
-        branch: "강남점",
-        people: 38,
-        capacity: 80,
-        updatedLabel: "방금 업데이트",
-        comparison: "평소 이 시간보다 12명 적어요"
-    )
+    static var congestion: BranchCongestion {
+        BranchCongestion(
+            branch: "강남점",
+            capacity: 80,
+            updatedLabel: "방금 업데이트",
+            // 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23
+            hourly: [12, 26, 34, 24, 38, 30, 26, 20, 16, 18, 22, 34, 56, 68, 62, 44, 28, 14],
+            startHour: 6,
+            nowHour: MyFisCalendar.calendar.component(.hour, from: Date())
+        )
+    }
 
     /// TODO(서버): 주간 루틴 API 가 붙으면 지운다
     static let todayRoutine = TodayRoutine(
@@ -364,6 +368,15 @@ enum CongestionLevel {
         }
     }
 
+    /// 판단을 먼저 준다 — 숫자보다 이게 먼저 읽혀야 한다
+    var headline: String {
+        switch self {
+        case .low: "지금 한산해요"
+        case .medium: "지금 딱 좋아요"
+        case .high: "지금 붐벼요"
+        }
+    }
+
     var color: Color {
         switch self {
         case .low: MyFisColor.success
@@ -376,11 +389,18 @@ enum CongestionLevel {
 /// TODO(서버): 출입 스캔 기반 실시간 인원 API 가 붙으면 지운다
 struct BranchCongestion {
     let branch: String
-    let people: Int
     let capacity: Int
     let updatedLabel: String
-    /// 평소 같은 시간대와의 비교 — 숫자를 판단으로 바꿔주는 한 줄
-    let comparison: String
+    /// 오늘 시간대별 인원. `startHour` 부터 1시간 간격
+    let hourly: [Int]
+    let startHour: Int
+    let nowHour: Int
+
+    /// 영업 시간 밖이면 양 끝으로 붙인다 (새벽에 열어도 그래프가 깨지지 않게)
+    var nowIndex: Int { min(max(nowHour - startHour, 0), hourly.count - 1) }
+
+    /// 지금 인원은 그래프와 **같은 값**을 쓴다. 둘이 다르면 어느 쪽도 못 믿는다
+    var people: Int { hourly[nowIndex] }
 
     var ratio: Double { min(max(Double(people) / Double(capacity), 0), 1) }
 
@@ -389,6 +409,30 @@ struct BranchCongestion {
         case ..<0.4: .low
         case ..<0.75: .medium
         default: .high
+        }
+    }
+
+    /// 앞으로 몇 시간 안에 가장 한산한 때 — 이 카드가 실제로 하는 일.
+    ///
+    /// **하루 전체에서 고르지 않는다.** 그러면 늘 문 닫기 직전을 찍는데, 그건 갈 수 있는 시간이 아니다.
+    var hint: String {
+        let last = hourly.count - 2
+        guard nowIndex + 1 <= min(nowIndex + Self.hintHours, last) else { return "오늘은 곧 문을 닫아요" }
+        let window = (nowIndex + 1)...min(nowIndex + Self.hintHours, last)
+        guard let best = window.min(by: { hourly[$0] < hourly[$1] }) else { return "오늘은 곧 문을 닫아요" }
+        if hourly[best] >= people { return "지금이 한동안 제일 한산해요" }
+        return "\(Self.clockLabel(startHour + best))쯤 가장 한산해요"
+    }
+
+    /// 몇 시간 앞까지 추천할지. 이보다 멀면 "그때 가야지" 가 아니라 그냥 정보다
+    private static let hintHours = 6
+
+    /// `14` → `오후 2시`
+    private static func clockLabel(_ hour: Int) -> String {
+        switch hour {
+        case ..<12: "오전 \(hour)시"
+        case 12: "낮 12시"
+        default: "오후 \(hour - 12)시"
         }
     }
 }
@@ -420,52 +464,40 @@ private struct CongestionCard: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: MyFisSpacing.sm) {
                 Text(congestion.branch)
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
+                    .font(MyFisFont.bodySm)
                     .lineLimit(1)
                 Spacer(minLength: 0)
                 Text(congestion.updatedLabel)
                     .font(MyFisFont.caption)
-                    .foregroundStyle(MyFisColor.textTertiary)
             }
-            .padding(.bottom, MyFisSpacing.sm)
+            .foregroundStyle(MyFisColor.textTertiary)
+            .padding(.bottom, MyFisSpacing.xs)
 
-            HStack(alignment: .center, spacing: MyFisSpacing.sm) {
-                HStack(alignment: .bottom, spacing: 2) {
-                    Text("\(congestion.people)")
-                        .font(MyFisFont.metricLg.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textPrimary)
-                    Text("명")
-                        .font(MyFisFont.body)
-                        .foregroundStyle(MyFisColor.textSecondary)
-                        .padding(.bottom, 6)
-                }
-                Spacer(minLength: 0)
+            // **판단을 먼저 준다.** 숫자는 그 판단의 근거로 밑에 깐다
+            HStack(spacing: MyFisSpacing.sm) {
+                Text(congestion.level.headline)
+                    .font(MyFisFont.titleMd)
+                    .foregroundStyle(MyFisColor.textPrimary)
                 // 상태는 **색과 글자 둘 다**로 낸다. 색만으로 구분하면 색각 이상에서 읽히지 않는다
                 Text(congestion.level.label)
                     .font(MyFisFont.label)
                     .foregroundStyle(congestion.level.color)
-                    .padding(.horizontal, MyFisSpacing.md)
-                    .padding(.vertical, MyFisSpacing.xs)
+                    .padding(.horizontal, MyFisSpacing.sm)
+                    .padding(.vertical, 2)
                     .background(congestion.level.color.opacity(0.14), in: Capsule())
             }
-            .padding(.bottom, MyFisSpacing.md)
 
-            // 정원 대비 게이지 — 숫자만으로는 38명이 많은 건지 알 수 없다
-            GeometryReader { geo in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(MyFisColor.surface3)
-                    Capsule()
-                        .fill(congestion.level.color)
-                        .frame(width: geo.size.width * congestion.ratio)
-                }
-            }
-            .frame(height: MyFisSize.progressHeight)
-            .padding(.bottom, MyFisSpacing.md)
+            Text("\(congestion.people) / \(congestion.capacity)명")
+                .font(MyFisFont.bodySm.monospacedDigit())
+                .foregroundStyle(MyFisColor.textTertiary)
 
-            Text(congestion.comparison)
+            HourlyChart(congestion: congestion, color: congestion.level.color)
+                .padding(.top, MyFisSpacing.lg)
+
+            Text(congestion.hint)
                 .font(MyFisFont.bodySm)
                 .foregroundStyle(MyFisColor.textSecondary)
+                .padding(.top, MyFisSpacing.md)
         }
         .padding(MyFisSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -474,4 +506,61 @@ private struct CongestionCard: View {
             in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
         )
     }
+}
+
+/// 오늘 시간대별 혼잡 막대.
+///
+/// 지금 몇 명인지보다 **"언제 가면 한산한지"** 가 실제로 쓰는 정보다.
+/// 지금 막대만 상태색이고 나머지는 흐린 회색 — 그래야 지금이 어디쯤인지 한눈에 뜬다.
+private struct HourlyChart: View {
+    let congestion: BranchCongestion
+    let color: Color
+
+    private var peak: Double { Double(max(congestion.hourly.max() ?? 1, 1)) }
+
+    var body: some View {
+        VStack(spacing: MyFisSpacing.sm) {
+            HStack(alignment: .bottom, spacing: 3) {
+                ForEach(Array(congestion.hourly.enumerated()), id: \.offset) { index, people in
+                    Capsule()
+                        .fill(index == congestion.nowIndex ? color : MyFisColor.surface3)
+                        .frame(maxWidth: .infinity)
+                        // 가장 한산한 시간도 막대가 보여야 한다 (0 이면 빈칸으로 읽힌다)
+                        .frame(height: Self.height * min(max(Double(people) / peak, 0.12), 1))
+                }
+            }
+            .frame(height: Self.height, alignment: .bottom)
+
+            HStack(spacing: 3) {
+                ForEach(congestion.hourly.indices, id: \.self) { index in
+                    label(at: index)
+                        // `지금` 은 한 칸(≈14pt)보다 넓다. 칸을 넘겨서라도 온전히 보이게 한다
+                        .fixedSize()
+                        .frame(maxWidth: .infinity)
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func label(at index: Int) -> some View {
+        let hour = congestion.startHour + index
+        // 눈금은 3시간마다. 전부 적으면 숫자가 붙어 읽히지 않는다.
+        // `지금` 은 옆 칸까지 넘어오므로 양옆 눈금은 지운다 (겹쳐 찍힌다)
+        let tick = hour % 3 == 0 && abs(index - congestion.nowIndex) > 1
+
+        if index == congestion.nowIndex {
+            Text("지금")
+                .font(MyFisFont.caption)
+                .foregroundStyle(MyFisColor.textPrimary)
+        } else if tick {
+            Text("\(hour)")
+                .font(MyFisFont.caption.monospacedDigit())
+                .foregroundStyle(MyFisColor.textTertiary)
+        } else {
+            Color.clear.frame(width: 0, height: 0)
+        }
+    }
+
+    private static let height: CGFloat = 64
 }
