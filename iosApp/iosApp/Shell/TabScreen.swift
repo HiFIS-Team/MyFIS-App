@@ -7,6 +7,8 @@ enum HeaderRoute: Hashable {
     case storeMy
     /// S-02 상품 상세
     case storeItem(StoreItem)
+    /// S-06 장바구니
+    case storeCart
     // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 여기에 추가한다.
 }
 
@@ -40,6 +42,7 @@ extension Optional where Wrapped == HeaderRoute {
         case "notifications": .notifications
         case "store_my": .storeMy
         case "store_item": .storeItem(StorePlaceholder.items[0])
+        case "store_cart": .storeCart
         default: nil
         }
         #else

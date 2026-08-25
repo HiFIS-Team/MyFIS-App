@@ -80,12 +80,17 @@ struct AppShell: View {
             .tint(MyFisColor.textPrimary)
         case .storeMy:
             NavigationStack {
-                StoreMyScreen(onBack: { close() })
+                StoreMyScreen(onBack: { close() }, onCart: { open(.storeCart) })
+            }
+            .tint(MyFisColor.textPrimary)
+        case .storeCart:
+            NavigationStack {
+                StoreCartScreen(onBack: { close() }, onStore: { close() })
             }
             .tint(MyFisColor.textPrimary)
         case .storeItem(let item):
             NavigationStack {
-                StoreItemScreen(item: item, onBack: { close() })
+                StoreItemScreen(item: item, onBack: { close() }, onCart: { open(.storeCart) })
             }
             .tint(MyFisColor.textPrimary)
         }
@@ -174,6 +179,7 @@ struct AppShell: View {
                 // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
                 TabScreen {
                     StoreScreen(
+                        onCart: { open(.storeCart) },
                         onMy: { open(.storeMy) },
                         onItem: { open(.storeItem($0)) }
                     )
