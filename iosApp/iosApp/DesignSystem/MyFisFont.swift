@@ -1,5 +1,6 @@
 import CoreText
 import SwiftUI
+import UIKit
 
 /// DESIGN.md §4 타이포그래피.
 ///
@@ -59,6 +60,19 @@ enum MyFisFont {
             if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
                 assertionFailure("폰트 등록 실패: \(face.name) — \(String(describing: error))")
             }
+        }
+
+        verify(faces.map(\.name))
+    }
+
+    /// **등록에 성공해도 이름이 틀리면 조용히 시스템 폰트로 떨어진다.**
+    /// 앱이 죽지 않아 눈으로만 잡히므로(워드마크가 그렇게 한 번 빠졌다) 여기서 확인한다.
+    private static func verify(_ names: [String]) {
+        let missing = names.filter { UIFont(name: $0, size: 16) == nil }
+        if missing.isEmpty {
+            print("[MyFisFont] 서체 \(names.count)벌 적용됨: \(names.joined(separator: ", "))")
+        } else {
+            assertionFailure("[MyFisFont] 이름이 안 맞아 시스템 폰트로 떨어짐: \(missing)")
         }
     }
 }
