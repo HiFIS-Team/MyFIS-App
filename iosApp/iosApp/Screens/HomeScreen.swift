@@ -40,12 +40,8 @@ struct HomeScreen: View {
                 onStart: onWeight
             )
             .padding(.top, MyFisSpacing.sectionGap)
-            // TODO: 회원권 카드 · 마일리지가 붙으면 교체한다 (SPEC H-01).
-            PlaceholderScreen(
-                id: "H-01",
-                title: "홈",
-                description: "회원권 상태 · 마일리지"
-            )
+            // TODO: 회원권 카드(②) · 마일리지가 아래에 붙는다 (SPEC H-01).
+            Spacer(minLength: 0)
         }
     }
 }

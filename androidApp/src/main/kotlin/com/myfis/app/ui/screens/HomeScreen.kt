@@ -38,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.HomeCalendar
 import com.myfis.app.ui.shell.AppHeader
-import com.myfis.app.ui.shell.PlaceholderScreen
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
@@ -99,8 +98,7 @@ fun HomeScreen(
             onStart = onWeight,
             modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
         )
-        // TODO: 회원권 카드 · 마일리지가 붙으면 교체한다 (SPEC H-01).
-        PlaceholderScreen("H-01", "홈", "회원권 상태 · 마일리지")
+        // TODO: 회원권 카드(②) · 마일리지가 아래에 붙는다 (SPEC H-01).
     }
 }
 
