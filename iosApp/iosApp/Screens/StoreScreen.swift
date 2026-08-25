@@ -11,16 +11,14 @@ import SwiftUI
 ///
 /// 헤더 아래(카테고리·마일리지)는 **스크롤해도 남는다** (S 공통 규칙 — 살 수 있는지 매번 계산하게 하지 않는다).
 struct StoreScreen: View {
-    var onSearch: () -> Void = {}
+    /// 검색어. **헤더는 셸의 내비 바가 들고 있다** (§6.9 · §7.1) —
+    /// 화면 안에 직접 그리면 잎이 밀려 들어올 때 헤더가 같이 밀려 흔들린다
+    @Binding var query: String
     var onCart: () -> Void = {}
     var onMy: () -> Void = {}
     var onItem: (StoreItem) -> Void = { _ in }
-
-    /// 검색 모드 — 헤더가 화면을 통째로 가져간다 (검색 화면으로 따로 밀지 않는다)
-    @State private var isSearching = StoreSearch.initialForDebug
-    @State private var query = StoreSearch.initialQueryForDebug
-    @FocusState private var searchFocused: Bool
-    @Namespace private var glass
+    /// 검색 모드인지. 필드가 내비 바에 있으므로 셸이 알려 준다
+    var isSearching = false
 
     @State private var category: StoreCategory = .all
     /// TODO(서버): 찜은 계정에 붙는다. 지금은 화면이 들고 있다
@@ -45,16 +43,6 @@ struct StoreScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            StoreHeader(
-                query: $query,
-                isSearching: $isSearching,
-                focused: $searchFocused,
-                glass: glass,
-                onCart: onCart,
-                onMy: onMy,
-                onSearch: onSearch
-            )
-
             if isSearching {
                 SearchResults(
                     query: $query,
@@ -106,173 +94,46 @@ struct StoreScreen: View {
     }
 }
 
-/// 스토어 헤더 (DESIGN.md §6.9).
+/// 스토어 검색 필드 — **내비 바 안**에 산다 (DESIGN.md §6.9).
 ///
-/// 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이만 둔다.
-/// **워드마크를 넣지 않는다** — 검색이 들어오면 가운데 자리가 없다.
-///
-/// **검색을 누르면 화면을 옮기지 않고 헤더가 검색 모드로 늘어난다** (iOS 만, 2026-08-24).
-/// 오른쪽 아이콘 자리는 **유리 `취소` 버튼**으로 바뀌고, 필드는 그만큼 늘어난다.
-/// 화면을 새로 밀면 유리 탭 바가 다시 그려지며 한 번 깜빡인다 — 셸을 건드리지 않는 편이 낫다 (§7.1).
-private struct StoreHeader: View {
+/// 화면 콘텐츠로 그리면 잎 화면이 밀려 들어올 때 같이 밀려서 헤더가 흔들린다 (§7.1).
+struct StoreSearchField: View {
     @Binding var query: String
-    @Binding var isSearching: Bool
-    @FocusState.Binding var focused: Bool
-    let glass: Namespace.ID
-    let onCart: () -> Void
-    let onMy: () -> Void
-    let onSearch: () -> Void
-
-    var body: some View {
-        // 유리끼리 서로를 인식해야 **모양이 이어지며** 바뀐다 — 그래서 컨테이너로 묶는다.
-        // 컨테이너·유리는 iOS 26 부터라 그 아래에서는 그냥 알약으로 떨어진다.
-        Group {
-            if #available(iOS 26.0, *) {
-                GlassEffectContainer(spacing: MyFisSpacing.sm) { row }
-            } else {
-                row
-            }
-        }
-        .frame(height: 56)
-        // 아이콘의 터치 영역이 화면 여백만큼 튀어나오므로 그만큼 당겨 준다 (§6.9)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-    }
-
-    private var row: some View {
-        HStack(spacing: 0) {
-            SearchField(query: $query, isSearching: $isSearching, focused: $focused, onEnter: onSearch)
-                // 왼쪽은 헤더 여백까지 그대로 쓴다. 여백을 더 주면 필드만 안쪽으로 밀려 짧아 보인다
-                .padding(.trailing, isSearching ? MyFisSpacing.sm : MyFisSpacing.xs)
-
-            if isSearching {
-                Button {
-                    focused = false
-                    query = ""
-                    withAnimation(MyFisMotion.slow) { isSearching = false }
-                } label: {
-                    Text("취소")
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textPrimary)
-                        .padding(.horizontal, MyFisSpacing.md)
-                        .frame(height: 40)
-                }
-                .buttonStyle(.myFisTap)
-                .modifier(GlassMorph(id: Self.trailing, namespace: glass, filled: true))
-            } else {
-                HStack(spacing: 0) {
-                    HeaderIcon("ic_header_cart", "장바구니", onCart)
-                    HeaderIcon("ic_header_my", "마이", onMy)
-                }
-                .modifier(GlassMorph(id: Self.trailing, namespace: glass, filled: false))
-            }
-        }
-    }
-
-    /// 아이콘 묶음과 `취소` 가 **같은 자리**임을 알려 주는 이름. 이게 같아야 서로 바뀐다.
-    private static let trailing = "storeHeaderTrailing"
-}
-
-/// 유리 하나. 같은 `id` 를 단 뷰끼리 **자리를 이어받으며** 바뀐다 (iOS 26+).
-///
-/// `filled` 는 유리 배경까지 입힐지 — `취소` 는 입히고, 아이콘 묶음은 자리만 잡는다.
-/// iOS 25 이하에서는 유리가 없으므로 `surface.3` 알약으로 떨어진다.
-private struct GlassMorph: ViewModifier {
-    let id: String
-    let namespace: Namespace.ID
-    let filled: Bool
-
-    func body(content: Content) -> some View {
-        if #available(iOS 26.0, *) {
-            if filled {
-                content
-                    .glassEffect(.regular.interactive(), in: SearchField.shape)
-                    .glassEffectID(id, in: namespace)
-                    .glassEffectTransition(.matchedGeometry)
-            } else {
-                content
-                    .glassEffectID(id, in: namespace)
-                    .glassEffectTransition(.matchedGeometry)
-            }
-        } else if filled {
-            content.background(MyFisColor.surface3, in: SearchField.shape)
-        } else {
-            content
-        }
-    }
-}
-
-/// 평소에는 버튼처럼 보이지만, 누르면 **그 자리에서** 입력을 받는다.
-///
-/// 검색 모드가 아닐 때는 `disabled` 로 막아 두고 탭 제스처만 받는다 —
-/// 그래야 스크롤 중에 실수로 키보드가 올라오지 않는다.
-private struct SearchField: View {
-    @Binding var query: String
-    @Binding var isSearching: Bool
-    @FocusState.Binding var focused: Bool
-    let onEnter: () -> Void
-
-    static let shape = RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+    var focused: FocusState<Bool>.Binding
 
     var body: some View {
         HStack(spacing: MyFisSpacing.sm) {
             Image("ic_header_search")
                 .resizable()
-                .frame(width: 20, height: 20)
+                .frame(width: 18, height: 18)
                 .foregroundStyle(MyFisColor.textTertiary)
-
-            ZStack(alignment: .leading) {
-                if query.isEmpty {
-                    Text("상품 검색")
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                }
-                TextField("", text: $query)
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                    .focused($focused)
-                    .submitLabel(.search)
-                    .autocorrectionDisabled()
-                    .textInputAutocapitalization(.never)
-                    // 커서는 우리 액센트를 쓴다 — 시스템 파랑이 화면에서 유일한 색이 되면 안 된다
-                    .tint(MyFisColor.accent)
-                    .disabled(!isSearching)
-            }
-
-            if isSearching, !query.isEmpty {
-                Button {
-                    query = ""
-                    focused = true
-                } label: {
+            TextField(
+                "",
+                text: $query,
+                prompt: Text("상품 검색").foregroundColor(MyFisColor.textTertiary)
+            )
+            .font(MyFisFont.bodySm)
+            .foregroundStyle(MyFisColor.textPrimary)
+            .focused(focused)
+            .submitLabel(.search)
+            if !query.isEmpty {
+                Button { query = "" } label: {
                     Image("ic_header_clear")
                         .resizable()
-                        .frame(width: 18, height: 18)
+                        .frame(width: 16, height: 16)
                         .foregroundStyle(MyFisColor.textTertiary)
                 }
                 .buttonStyle(.myFisTap)
-                .accessibilityLabel("검색어 지우기")
+                .accessibilityLabel("지우기")
             }
         }
         .padding(.horizontal, MyFisSpacing.md)
-        .frame(height: 40)
+        .frame(height: 36)
         .frame(maxWidth: .infinity)
-        // 알약이 아니라 **모서리만** 둥글다 (§6.9). 완전 라운드는 헤더에서 과하게 동그래 보인다
-        .background(MyFisColor.surface2, in: Self.shape)
-        .contentShape(Self.shape)
-        .onTapGesture {
-            guard !isSearching else { return }
-            withAnimation(MyFisMotion.slow) { isSearching = true }
-            focused = true
-            onEnter()
-        }
-        .accessibilityLabel("상품 검색")
+        .background(MyFisColor.surface2, in: Capsule())
     }
 }
 
-/// 검색 모드의 본문.
-///
-/// - 아직 안 쳤으면 **추천 검색어**만 보여준다 (최근 검색어는 저장할 곳이 없다 — 🔵)
-/// - 치는 동안 **결과가 바로 걸러진다.** 따로 확인 버튼을 두지 않는다
-/// - 없으면 §6.10 대로 한 줄 + 액션 하나
 private struct SearchResults: View {
     @Binding var query: String
     let results: [StoreItem]
@@ -373,14 +234,7 @@ private struct FlowRow<Item: Hashable, Content: View>: View {
 /// 시뮬레이터에는 키보드를 칠 수단이 마땅치 않다. 검색 모드를 스크린샷으로 확인할 때
 /// `SIMCTL_CHILD_MYFIS_SEARCH=1` (빈 검색) 또는 `=음료` (결과) 로 띄운다.
 enum StoreSearch {
-    static var initialForDebug: Bool {
-        #if DEBUG
-        ProcessInfo.processInfo.environment["MYFIS_SEARCH"] != nil
-        #else
-        false
-        #endif
-    }
-
+    /// 검색 모드는 이제 **시스템 검색 바**가 켠다. 여기서는 검색어만 심어 준다
     static var initialQueryForDebug: String {
         #if DEBUG
         let value = ProcessInfo.processInfo.environment["MYFIS_SEARCH"] ?? ""

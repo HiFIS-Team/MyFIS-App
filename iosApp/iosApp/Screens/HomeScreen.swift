@@ -5,10 +5,9 @@ import SwiftUI
 /// 헤더 바로 밑에 **이번 주 캘린더**가 있고, 그 아래가 고른 날의 내용이다.
 /// 아직 카드가 없어 자리값만 둔다.
 ///
-/// **헤더는 셸이 아니라 화면이 들고 있다.** 지점·멤버십·알림 헤더는 홈에서만 쓴다 —
-/// 스토어는 검색·장바구니·마이를 쓴다 (DESIGN.md §6.9).
+/// **헤더는 시스템 내비 바가 그린다** (DESIGN.md §6.9 · §7.1) — 지점·워드마크·멤버십·알림.
+/// 화면 안에 직접 그리면 밀려 들어오는 잎 화면과 **같이 움직여서 헤더가 흔들린다.**
 struct HomeScreen: View {
-    var onNotification: () -> Void = {}
     var onDiet: () -> Void = {}
     var onCardio: () -> Void = {}
     var onWeight: () -> Void = {}
@@ -23,8 +22,6 @@ struct HomeScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 헤더는 고정, 그 아래만 스크롤한다 (스토어와 같은 구조)
-            AppHeader(onNotification: onNotification)
             ScrollView {
                 VStack(spacing: 0) {
                 HomeCalendar(
