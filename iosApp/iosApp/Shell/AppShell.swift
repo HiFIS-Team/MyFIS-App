@@ -42,12 +42,6 @@ struct AppShell: View {
     @State private var baseSlot = Slot.initialBaseForDebug
     @State private var weightSlot = 1
 
-    /// 잎 화면 경로 — **탭마다 하나씩**.
-    ///
-    /// 직접 만든 덮개를 버리고 `NavigationStack` 에 맡긴다 (2026-08-25) —
-    /// 뒤로 버튼·가장자리 스와이프·스택 관리가 전부 시스템 몫이다.
-    /// 스택은 **탭 안에** 둔다 — 그게 iOS 기본 구조이고, 밖에 하나만 두면
-    /// 탭을 옮겨도 스택이 그대로 남는다.
     /// 스토어 화면 폭 — 검색 필드 폭을 여기서 계산한다 (§6.9).
     ///
     /// 내비 바는 자식에게 남는 폭을 주지 않아 `maxWidth: .infinity` 로는 안 늘어난다.
@@ -73,7 +67,8 @@ struct AppShell: View {
     ///
     /// 잎으로 들어갈 때는 **누르는 즉시** 비우고, 돌아올 때는 **전환이 끝난 뒤에** 넣는다.
     /// 전환 도중에 넣으면 시스템이 뒤로 버튼에서 옆으로 늘어나며 그려 준다.
-    @State private var storeFieldVisible = HeaderRoute.initialStoreForDebug.isEmpty
+    @State private var storeFieldVisible = (HeaderRoute.initialHomeForDebug
+        + HeaderRoute.initialStoreForDebug).isEmpty
     @State private var storeSearching = StoreSearch.initialForDebug
     @State private var storeQuery = StoreSearch.initialQueryForDebug
 
@@ -84,6 +79,14 @@ struct AppShell: View {
         return max(0, storeWidth - (Self.barInset * 2 + trailing + Self.searchGap))
     }
 
+    /// 잎 화면 경로 — **앱 전체에 하나**. Android 의 `NavHost` 백스택과 같은 자리다.
+    ///
+    /// 스택이 `TabView` **바깥**에 있어야 잎이 하단 탭 바까지 **통째로 덮는다**.
+    /// 탭 안에 두면 잎은 탭 콘텐츠 영역에서만 밀리고, 그 위에 떠 있는 유리 탭 바는
+    /// 껐다 켜는 수밖에 없어 **툭 사라지고 툭 생긴다** (프레임으로 확인).
+    @State private var path: [HeaderRoute] = HeaderRoute.initialHomeForDebug
+        + HeaderRoute.initialStoreForDebug
+
     /// 애니메이션 없이 **툭** 바꾼다
     private func snap(_ change: () -> Void) {
         var transaction = Transaction()
@@ -91,10 +94,10 @@ struct AppShell: View {
         withTransaction(transaction, change)
     }
 
-    /// 잎으로 들어간다 — 밀기 전에 검색 자리를 비운다
-    private func pushStore(_ route: HeaderRoute) {
+    /// 잎으로 들어간다 — 밀기 전에 검색 자리를 비운다 (§6.9)
+    private func push(_ route: HeaderRoute) {
         snap { storeFieldVisible = false }
-        storePath.append(route)
+        path.append(route)
     }
 
     /// 검색 모드를 켜고 끈다. **애니메이션 없이 툭 바뀐다** — iOS 앱들이 그렇게 한다
@@ -105,10 +108,46 @@ struct AppShell: View {
         }
     }
 
-    @State private var homePath: [HeaderRoute] = HeaderRoute.initialHomeForDebug
-    @State private var storePath: [HeaderRoute] = HeaderRoute.initialStoreForDebug
 
     var body: some View {
+        // **스택이 탭 바깥이다.** 잎 화면은 셸(탭 바 포함)을 통째로 덮는다 —
+        // Android 의 `NavHost`(SHELL 라우트 + 잎 라우트 형제) 와 같은 구조다.
+        NavigationStack(path: $path) {
+            tabs
+                .toolbar { tabHeader }
+                // **큰 제목 자리를 비워 두지 않는다.** 기본값(.automatic)은 스택 루트에서 큰 제목이라,
+                // 제목이 없어도 그 높이만큼 빈 줄이 생겨 헤더와 본문이 멀어진다
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .navigationDestination(for: HeaderRoute.self) { leafScreen($0) }
+                .background(WidthProbe { storeWidth = $0 })
+                // 검색 자리는 따로 얹는다 — 이 아이템만 유리 껍데기를 벗겨야 한다
+                .modifier(SearchFieldBar(
+                    width: searchFieldWidth,
+                    visible: storeFieldVisible && isStoreTab,
+                    searching: storeSearching,
+                    query: $storeQuery,
+                    onSearch: { setSearching(true) }
+                ))
+                // 검색 중에는 하단 탭을 감춘다 — 검색은 탭을 옮겨 다니는 일이 아니다.
+                // 잎 화면은 여기 관여하지 않는다 (덮으므로 끌 일이 없다)
+                .modifier(HideTabBar(when: storeSearching))
+                // 잎에서 돌아왔다 — **전환이 끝난 뒤** 검색 자리를 되돌린다.
+                // 도중에 넣으면 시스템이 뒤로 버튼에서 옆으로 늘여 그려 준다
+                .onChange(of: path.isEmpty) { _, empty in
+                    guard empty else { return }
+                    Task {
+                        try? await Task.sleep(nanoseconds: Self.leafTransition)
+                        snap { storeFieldVisible = true }
+                    }
+                }
+        }
+        // 뒤로 화살표 색. 잎 화면들이 모두 이 틴트를 물려받는다
+        .tint(MyFisColor.textPrimary)
+    }
+
+    private var tabs: some View {
         TabView(selection: selection) {
             ForEach(0..<Slot.count, id: \.self) { slot in
                 content(for: slot)
@@ -124,93 +163,76 @@ struct AppShell: View {
         .tint(MyFisColor.textPrimary)
     }
 
-    /// 탭 화면 하나를 **자기 내비게이션 스택**에 담는다.
-    ///
-    /// 헤더는 시스템 내비 바가 그리고(§6.9), 잎 화면은 이 스택에서 밀려 들어온다 —
-    /// 밀려 들어오면 하단 탭은 시스템이 알아서 가린다.
-    @ViewBuilder
-    private func stack<Header: ToolbarContent, Content: View>(
-        path: Binding<[HeaderRoute]>,
-        @ToolbarContentBuilder header: () -> Header,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        NavigationStack(path: path) {
-            content()
-                .toolbar(content: header)
-                // **큰 제목 자리를 비워 두지 않는다.** 기본값(.automatic)은 스택 루트에서 큰 제목이라,
-                // 제목이 없어도 그 높이만큼 빈 줄이 생겨 헤더와 본문이 멀어진다
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
-                .toolbarBackground(.visible, for: .navigationBar)
-                .navigationDestination(for: HeaderRoute.self) { leafScreen($0) }
-        }
-        // 뒤로 화살표 색. 잎 화면들이 모두 이 틴트를 물려받는다
-        .tint(MyFisColor.textPrimary)
-    }
+    private var isHomeTab: Bool { tabSet == .base && baseSlot == Slot.home }
+    private var isStoreTab: Bool { tabSet == .base && baseSlot == Slot.store }
 
-    /// 홈 헤더 (DESIGN.md §6.9)
+    /// 탭 헤더 (DESIGN.md §6.9) — 스택 루트가 하나뿐이라 **선택된 탭에 따라 내용을 고른다.**
+    ///
+    /// `ToolbarContentBuilder` 에는 `buildEither` 가 없어 아이템 개수를 조건으로 바꿀 수 없다 —
+    /// 자리는 고정해 두고 **아이템 안의 뷰에서** 가른다.
     @ToolbarContentBuilder
-    private var homeHeader: some ToolbarContent {
+    private var tabHeader: some ToolbarContent {
         // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 연결한다
         ToolbarItem(placement: .topBarLeading) {
-            HeaderIcon("ic_header_branch", "지점") {}
+            if isHomeTab { HeaderIcon("ic_header_branch", "지점") {} }
         }
-        ToolbarItem(placement: .principal) { Wordmark() }
-        ToolbarItem(placement: .topBarTrailing) {
-            HeaderIcon("ic_header_membership", "멤버십") {}
+        ToolbarItem(placement: .principal) {
+            if isHomeTab { Wordmark() }
         }
         ToolbarItem(placement: .topBarTrailing) {
-            HeaderIcon("ic_header_notification", "알림") { homePath.append(.notifications) }
+            if isHomeTab { HeaderIcon("ic_header_membership", "멤버십") {} }
         }
-    }
-
-    /// 스토어 헤더 — 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이 (DESIGN.md §6.9).
-    ///
-    /// **검색 모드면 오른쪽이 `취소` 한 개로 바뀐다.** 유리는 시스템이 그린 그대로 둔다 —
-    /// 우리가 그리는 건 검색 필드뿐이다 (§2 원칙 6).
-    ///
-    /// 두 아이콘을 **한 아이템 안에** 넣는다. `ToolbarContentBuilder` 에는 `buildEither` 가 없어
-    /// 아이템 개수를 모드에 따라 바꿀 수 없다 — 뷰 안에서 갈라야 한다.
-    @ToolbarContentBuilder
-    private var storeHeader: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            if storeSearching {
-                Button { setSearching(false) } label: {
-                    // 유리 알약이 글자에 딱 붙지 않게 숨통을 준다 (기본은 44pt 원이라 빡빡하다)
-                    Text("취소")
-                        .font(MyFisFont.body)
-                        .padding(.horizontal, MyFisSpacing.sm)
-                        .frame(height: MyFisSize.minTouchTarget)
-                }
-                .buttonStyle(.myFisTap)
-                .foregroundStyle(MyFisColor.textPrimary)
-            } else {
-                HStack(spacing: 0) {
-                    HeaderIcon("ic_header_cart", "장바구니") { pushStore(.storeCart) }
-                    HeaderIcon("ic_header_my", "마이") { pushStore(.storeMy) }
+            if isHomeTab {
+                HeaderIcon("ic_header_notification", "알림") { push(.notifications) }
+            }
+        }
+        // 스토어 — 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이.
+        // **검색 모드면 오른쪽이 `취소` 한 개로 바뀐다.** 유리는 시스템이 그린 그대로 둔다 (§2 원칙 6)
+        ToolbarItem(placement: .topBarTrailing) {
+            if isStoreTab {
+                if storeSearching {
+                    Button { setSearching(false) } label: {
+                        // 유리 알약이 글자에 딱 붙지 않게 숨통을 준다 (기본은 44pt 원이라 빡빡하다)
+                        Text("취소")
+                            .font(MyFisFont.body)
+                            .padding(.horizontal, MyFisSpacing.sm)
+                            .frame(height: MyFisSize.minTouchTarget)
+                    }
+                    .buttonStyle(.myFisTap)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                } else {
+                    HStack(spacing: 0) {
+                        HeaderIcon("ic_header_cart", "장바구니") { push(.storeCart) }
+                        HeaderIcon("ic_header_my", "마이") { push(.storeMy) }
+                    }
                 }
             }
         }
     }
 
+    /// 잎 화면 — 셸을 **통째로 덮으며** 옆에서 들어온다 (하단 탭 바까지).
+    ///
+    /// **하단 탭을 껐다 켜지 않는다** 🟢 (2026-08-25). 덮으면 될 일을 상태로 토글하면
+    /// 전환에 끼어들어 **툭 사라지고 툭 생긴다** (프레임으로 확인).
     @ViewBuilder
     private func leafScreen(_ route: HeaderRoute) -> some View {
         switch route {
         case .notifications:
             NotificationScreen()
         case .storeMy:
-            StoreMyScreen(onCart: { storePath.append(.storeCart) })
+            StoreMyScreen(onCart: { path.append(.storeCart) })
         case .storeCart:
-            StoreCartScreen(onStore: { storePath.removeAll() })
+            StoreCartScreen(onStore: { path.removeAll() })
         case .storeItem(let item):
             StoreItemScreen(
                 item: item,
                 // 상세에서 검색을 누르면 **스토어로 돌아가** 검색 모드가 된다
                 onSearch: {
-                    storePath.removeAll()
+                    path.removeAll()
                     setSearching(true)
                 },
-                onCart: { storePath.append(.storeCart) }
+                onCart: { path.append(.storeCart) }
             )
         }
     }
@@ -267,9 +289,8 @@ struct AppShell: View {
         if tabSet == .base {
             switch baseTabs[slot] {
             case .home:
-                stack(path: $homePath, header: { homeHeader }) {
-                    TabScreen {
-                        HomeScreen(
+                TabScreen {
+                    HomeScreen(
                         // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                         onCardio: {
                             weightSlot = Slot.cardio
@@ -282,43 +303,20 @@ struct AppShell: View {
                         },
                         // 홈의 마일리지 상품 — 같은 세트 안이라 탭만 옮긴다
                         onStore: { baseSlot = Slot.store }
-                        )
-                    }
+                    )
                 }
             case .benefit:
                 screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
             case .store:
                 // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
-                stack(path: $storePath, header: { storeHeader }) {
-                    TabScreen {
-                        StoreScreen(
-                            searching: storeSearching,
-                            query: $storeQuery,
-                            onCart: { pushStore(.storeCart) },
-                            onMy: { pushStore(.storeMy) },
-                            onItem: { pushStore(.storeItem($0)) }
-                        )
-                    }
-                    .background(WidthProbe { storeWidth = $0 })
-                    // 검색 자리는 따로 얹는다 — 이 아이템만 유리 껍데기를 벗겨야 한다
-                    .modifier(SearchFieldBar(
-                        width: searchFieldWidth,
-                        visible: storeFieldVisible,
+                TabScreen {
+                    StoreScreen(
                         searching: storeSearching,
                         query: $storeQuery,
-                        onSearch: { setSearching(true) }
-                    ))
-                    // 검색 중에는 하단 탭을 감춘다 — 검색은 탭을 옮겨 다니는 일이 아니다
-                    .toolbar(storeSearching ? .hidden : .visible, for: .tabBar)
-                    // 잎에서 돌아왔다 — **전환이 끝난 뒤** 검색 자리를 되돌린다.
-                    // 도중에 넣으면 시스템이 뒤로 버튼에서 옆으로 늘여 그려 준다 (`onDisappear` 는 전환 시작에 온다)
-                    .onChange(of: storePath.isEmpty) { _, empty in
-                        guard empty else { return }
-                        Task {
-                            try? await Task.sleep(nanoseconds: Self.leafTransition)
-                            snap { storeFieldVisible = true }
-                        }
-                    }
+                        onCart: { push(.storeCart) },
+                        onMy: { push(.storeMy) },
+                        onItem: { push(.storeItem($0)) }
+                    )
                 }
 
             case .my:
@@ -423,6 +421,20 @@ private struct SearchFieldBar: ViewModifier {
             content.toolbar { item.sharedBackgroundVisibility(.hidden) }
         } else {
             content.toolbar { item }
+        }
+    }
+}
+
+/// 하단 탭을 감춘다. **`.visible` 을 명시하지 않는다** — 탭 루트에서 `.visible` 을 걸어 두면
+/// 밀려 들어온 잎 화면의 `.hidden` 을 눌러 버린다 (확인함).
+private struct HideTabBar: ViewModifier {
+    let when: Bool
+
+    func body(content: Content) -> some View {
+        if when {
+            content.toolbar(.hidden, for: .tabBar)
+        } else {
+            content
         }
     }
 }
