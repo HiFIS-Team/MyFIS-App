@@ -13,6 +13,8 @@ import SwiftUI
 struct AppShell: View {
     private enum Slot {
         static let count = 5
+        /// 기본 세트의 홈 자리 (항상 첫 번째)
+        static let home = 0
         /// 기본 세트에서 웨이트 세트로 들어가는 자리
         static let weightPortal = 3
         /// 웨이트 세트에서 기본 세트로 나가는 자리 (항상 첫 번째)
@@ -44,6 +46,13 @@ struct AppShell: View {
     /// 뒤로 버튼·가장자리 스와이프·스택 관리가 전부 시스템 몫이 된다 —
     /// 직접 만들었더니 화면 전체 드래그가 탭을 삼키고, 잠금이 안 풀리고,
     /// 같은 화면이 두 장 쌓였다. 안드로이드가 `NavHost` 로 멀쩡했던 이유이기도 하다.
+    /// 스토어 검색어. 헤더가 내비 바로 올라가면서 셸이 들고 있다
+    @State private var storeQuery = StoreSearch.initialQueryForDebug
+    @FocusState private var storeFocused: Bool
+
+    /// 검색 모드 — 필드에 커서가 있거나 검색어가 남아 있는 동안
+    private var storeSearching: Bool { storeFocused || !storeQuery.isEmpty }
+
     @State private var path: [HeaderRoute] = HeaderRoute?.initialForDebug.map { [$0] } ?? []
 
     var body: some View {
@@ -61,12 +70,66 @@ struct AppShell: View {
             // 선택은 **색이 아니라 채움**으로 알린다 (DESIGN.md §6.7).
             // 라임은 화면 콘텐츠 몫으로 남긴다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
             .tint(MyFisColor.textPrimary)
-            // 탭 화면은 자기 헤더를 직접 그린다 (§6.9). 시스템 내비 바는 잎에서만 쓴다
-            .toolbar(.hidden, for: .navigationBar)
+            // 탭 헤더도 **시스템 내비 바**가 그린다 (§6.9 · §7.1).
+            // 화면 안에 직접 그리면 잎이 밀려 들어올 때 헤더가 같이 밀려 흔들린다
+            .toolbar { tabHeader }
+            // **큰 제목 자리를 비워 두지 않는다.** 기본값(.automatic)은 스택 루트에서 큰 제목이라,
+            // 제목이 없어도 그 높이만큼 빈 줄이 생겨 헤더와 본문이 멀어진다
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .navigationDestination(for: HeaderRoute.self) { leafScreen($0) }
         }
         // 뒤로 화살표 색. 잎 화면들이 모두 이 틴트를 물려받는다
         .tint(MyFisColor.textPrimary)
+    }
+
+    /// 탭 화면의 헤더 (DESIGN.md §6.9).
+    ///
+    /// 화면마다 다르므로 **선택된 탭을 보고 고른다.** 각 탭 뷰에 따로 달면
+    /// 안 보이는 탭의 항목까지 섞여 들어온다.
+    @ToolbarContentBuilder
+    private var tabHeader: some ToolbarContent {
+        if tabSet == .base, baseSlot == Slot.home {
+            // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 연결한다
+            ToolbarItem(placement: .topBarLeading) {
+                HeaderIcon("ic_header_branch", "지점") {}
+            }
+            ToolbarItem(placement: .principal) { Wordmark() }
+            ToolbarItem(placement: .topBarTrailing) {
+                HeaderIcon("ic_header_membership", "멤버십") {}
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                HeaderIcon("ic_header_notification", "알림") { open(.notifications) }
+            }
+        }
+
+        // 스토어 헤더 — 검색 필드가 가운데를 다 쓰고 오른쪽에 장바구니·마이 (§6.9).
+        // 검색 중에는 오른쪽 자리가 `취소` 로 바뀐다
+        if tabSet == .base, baseSlot == Slot.store {
+            ToolbarItem(placement: .principal) {
+                // 내비 바는 principal 에 **딱 필요한 만큼만** 자리를 준다.
+                // 검색이 폭을 다 써야 하는 헤더라(§6.9) 오른쪽 아이콘 자리를 뺀 폭을 직접 잡는다
+                StoreSearchField(query: $storeQuery, focused: $storeFocused)
+                    .frame(width: max(160, UIScreen.main.bounds.width - (storeSearching ? 120 : 160)))
+            }
+            if storeSearching {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("취소") {
+                        storeQuery = ""
+                        storeFocused = false
+                    }
+                    .font(MyFisFont.bodySm)
+                }
+            } else {
+                ToolbarItem(placement: .topBarTrailing) {
+                    HeaderIcon("ic_header_cart", "장바구니") { open(.storeCart) }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    HeaderIcon("ic_header_my", "마이") { open(.storeMy) }
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -147,7 +210,6 @@ struct AppShell: View {
             case .home:
                 TabScreen {
                     HomeScreen(
-                        onNotification: { open(.notifications) },
                         // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                         onCardio: {
                             weightSlot = Slot.cardio
@@ -168,11 +230,14 @@ struct AppShell: View {
                 // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
                 TabScreen {
                     StoreScreen(
+                        query: $storeQuery,
                         onCart: { open(.storeCart) },
                         onMy: { open(.storeMy) },
-                        onItem: { open(.storeItem($0)) }
+                        onItem: { open(.storeItem($0)) },
+                        isSearching: storeSearching
                     )
                 }
+
             case .my:
                 // TODO: Y-01 마이 화면이 붙으면 교체한다.
                 // 그때까지 토큰 확인 화면을 여기 둔다 — 스크롤 콘텐츠가 있어야
