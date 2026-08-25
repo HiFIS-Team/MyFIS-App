@@ -24,15 +24,9 @@ struct NotificationScreen: View {
                 list
             }
         }
+        .navigationTitle("알림")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            // navigationTitle 은 시스템 서체라 Pretendard 로 바꿀 수 없다.
-            // 전역 UINavigationBar.appearance() 를 건드리는 대신 여기서만 교체한다.
-            ToolbarItem(placement: .principal) {
-                Text("알림")
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-            }
             // TODO: Y-03 설정이 붙으면 연결한다
             ToolbarItem(placement: .topBarTrailing) {
                 Button {} label: {

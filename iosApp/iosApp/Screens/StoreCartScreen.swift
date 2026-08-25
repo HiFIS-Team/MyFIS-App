@@ -54,13 +54,9 @@ struct StoreCartScreen: View {
                 }
             }
         }
+        .navigationTitle("장바구니")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("장바구니")
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-            }
         }
     }
 

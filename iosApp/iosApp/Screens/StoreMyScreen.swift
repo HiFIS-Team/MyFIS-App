@@ -31,13 +31,9 @@ struct StoreMyScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
         }
+        .navigationTitle("내 교환")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .principal) {
-                Text("내 교환")
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-            }
             // TODO: S-06 장바구니가 붙으면 연결한다
             ToolbarItem(placement: .topBarTrailing) {
                 Button(action: onCart) {
