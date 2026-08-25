@@ -29,6 +29,7 @@ struct StoreItemScreen: View {
                         head
                         facts
                         reviews
+                        suggestions
                     }
                 }
                 // 시뮬레이터에는 스크롤을 시킬 수단이 없다. 아래쪽(리뷰)을 스크린샷으로 확인할 때
@@ -228,6 +229,43 @@ struct StoreItemScreen: View {
     /// 카드 **안**의 구분선. 배경 위에 긋는 전체 폭 선과 다르다 — 한 장 안에서 항목을 가른다
     private var cardDivider: some View {
         Rectangle().fill(MyFisColor.borderSubtle).frame(height: 1)
+    }
+
+    /// 추천 상품 (§6.21).
+    ///
+    /// **가로 줄로 둔다.** 이미 긴 화면이라 격자로 깔면 리뷰가 저 위로 밀린다.
+    /// 여기서 고르는 기준은 "지금 살 수 있나"가 아니라 **"비슷한 게 뭐 있나"** 라
+    /// 마일리지가 모자란 상품도 가리지 않는다 (SPEC S-01 — 부족한 상품은 목표가 된다).
+    private var suggestions: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("이런 것도 있어요")
+                .font(MyFisFont.titleMd)
+                .foregroundStyle(MyFisColor.textPrimary)
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: MyFisSpacing.cardGap) {
+                    ForEach(recommendations) { SuggestionCard(item: $0) }
+                }
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+            }
+            .padding(.top, MyFisSpacing.md)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, MyFisSpacing.xl)
+        .padding(.bottom, MyFisSpacing.xxxl)
+    }
+
+    /// 추천 목록. **같은 분류를 먼저** 채우고 모자라면 많이 본 순으로 잇는다.
+    ///
+    /// TODO(서버): 추천은 서버가 고른다. 품절은 뺀다 — 추천해 놓고 못 바꾸면 헛걸음이다
+    private var recommendations: [StoreItem] {
+        let pool = StorePlaceholder.items
+            .filter { $0.id != item.id && !$0.soldOut }
+            .sorted { $0.views > $1.views }
+        var ordered = pool.filter { $0.category == item.category }
+        ordered += pool.filter { !ordered.contains($0) }
+        return Array(ordered.prefix(6))
     }
 
     /// 하단 고정 바 (§6.21).
@@ -489,6 +527,44 @@ private struct Stars: View {
                     .foregroundStyle(index < filled ? MyFisColor.rating : MyFisColor.surface3)
             }
         }
+    }
+}
+
+private struct SuggestionCard: View {
+    let item: StoreItem
+
+    /// 카드 폭. **다음 장이 살짝 걸치도록** 잡는다 — 딱 떨어지면 더 있는 줄 모른다
+    private static let width: CGFloat = 108
+
+    var body: some View {
+        // TODO: 상세 → 상세 이동이 붙으면 연결한다
+        Button {} label: {
+            VStack(alignment: .leading, spacing: 0) {
+                Color.clear
+                    .aspectRatio(1, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+                    .background(MyFisColor.surface2)
+                    .overlay {
+                        // TODO(서버): 상품 이미지가 오면 교체한다
+                        Image("ic_tab_store")
+                            .resizable()
+                            .frame(width: 40, height: 40)
+                            .foregroundStyle(MyFisColor.surface3)
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+                Text(item.name)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .lineLimit(1)
+                    .padding(.top, MyFisSpacing.sm)
+                Text(item.price.mileage)
+                    .font(MyFisFont.titleSm.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .padding(.top, 2)
+            }
+            .frame(width: Self.width, alignment: .leading)
+        }
+        .buttonStyle(.plain)
     }
 }
 

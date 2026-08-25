@@ -14,10 +14,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -89,6 +92,7 @@ fun StoreItemScreen(
                 ItemHead(item = item)
                 ItemFacts(item = item)
                 ItemReviews(item = item, reviews = storeReviewPlaceholder)
+                ItemSuggestions(items = recommendations(item))
             }
 
             // **버튼은 스크롤을 따라가지 않는다.** 내려 읽다가 뒤로가기가 사라지면 안 된다
@@ -660,6 +664,97 @@ private fun ReviewRow(review: StoreReview) {
             )
         }
     }
+}
+
+/**
+ * 추천 상품 (§6.21).
+ *
+ * **가로 줄로 둔다.** 이미 긴 화면이라 격자로 깔면 리뷰가 저 위로 밀린다.
+ * 여기서 고르는 기준은 "지금 살 수 있나"가 아니라 **"비슷한 게 뭐 있나"** 라
+ * 마일리지가 모자란 상품도 가린다 (SPEC S-01 — 부족한 상품은 목표가 된다).
+ */
+@Composable
+private fun ItemSuggestions(items: List<StoreItem>) {
+    if (items.isEmpty()) return
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = MyFisSpacing.xl, bottom = MyFisSpacing.xxxl),
+    ) {
+        Text(
+            "이런 것도 있어요",
+            style = MyFisTheme.type.titleMd,
+            color = MyFisColor.TextPrimary,
+            modifier = Modifier.padding(horizontal = MyFisSpacing.screenHorizontal),
+        )
+        LazyRow(
+            modifier = Modifier.padding(top = MyFisSpacing.md),
+            contentPadding = PaddingValues(horizontal = MyFisSpacing.screenHorizontal),
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
+        ) {
+            items(items, key = { it.id }) { SuggestionCard(it) }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionCard(item: StoreItem) {
+    val interaction = remember { MutableInteractionSource() }
+
+    // TODO: 상세 → 상세 이동이 붙으면 연결한다 (지금은 셸이 상품 하나만 들고 있다)
+    Column(
+        Modifier
+            .width(SuggestionWidth)
+            .clip(MyFisRadius.md)
+            .tapWithHaptics(interaction, {}),
+    ) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .clip(MyFisRadius.md)
+                .background(MyFisColor.Surface2),
+            contentAlignment = Alignment.Center,
+        ) {
+            // TODO(서버): 상품 이미지가 오면 교체한다
+            Icon(
+                painter = painterResource(R.drawable.ic_tab_store),
+                contentDescription = null,
+                tint = MyFisColor.Surface3,
+                modifier = Modifier.size(40.dp),
+            )
+        }
+        Text(
+            item.name,
+            style = MyFisTheme.type.bodySm,
+            color = MyFisColor.TextPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(top = MyFisSpacing.sm),
+        )
+        Text(
+            item.price.toMileage(),
+            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextPrimary,
+            modifier = Modifier.padding(top = 2.dp),
+        )
+    }
+}
+
+/** 카드 폭. **다음 장이 살짝 걸치도록** 잡는다 — 딱 떨어지면 더 있는 줄 모른다 */
+private val SuggestionWidth = 108.dp
+
+/**
+ * 추천 목록. **같은 분류를 먼저** 채우고 모자라면 많이 본 순으로 잇는다.
+ *
+ * TODO(서버): 추천은 서버가 고른다. 품절은 뺀다 — 추천해 놓고 못 바꾸면 헛걸음이다
+ */
+private fun recommendations(item: StoreItem): List<StoreItem> {
+    val pool = storeItemPlaceholder
+        .filter { it.id != item.id && !it.soldOut }
+        .sortedByDescending { it.views }
+    return (pool.filter { it.category == item.category } + pool).distinctBy { it.id }.take(6)
 }
 
 /** 별 다섯 개. 채운 별은 `rating`, 나머지는 표면색으로 남긴다 */
