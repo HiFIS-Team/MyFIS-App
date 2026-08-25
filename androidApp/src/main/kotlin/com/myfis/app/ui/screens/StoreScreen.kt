@@ -60,6 +60,8 @@ import androidx.compose.ui.unit.sp
 import com.myfis.app.R
 import com.myfis.app.ui.components.MileageBand
 import com.myfis.app.ui.shell.HeaderIcon
+import com.myfis.app.ui.components.BurstRing
+import com.myfis.app.ui.components.rememberBurst
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
@@ -510,20 +512,8 @@ fun LikeButton(
     icon: Dp = 20.dp,
 ) {
     val interaction = remember { MutableInteractionSource() }
-    val pop = remember { Animatable(1f) }
-    // 1f = 끝난 상태(안 보임). 찜할 때만 0f 로 되감아 다시 퍼뜨린다
-    val burst = remember { Animatable(1f) }
-
-    // **찜을 켤 때만** 터뜨린다. 해제까지 축하하면 과하다
-    LaunchedEffect(liked) {
-        if (!liked) return@LaunchedEffect
-        launch {
-            pop.animateTo(1.3f, MyFisMotion.fast())
-            pop.animateTo(1f, spring(dampingRatio = 0.42f, stiffness = 340f))
-        }
-        burst.snapTo(0f)
-        burst.animateTo(1f, tween(BurstMillis, easing = LinearOutSlowInEasing))
-    }
+    // 튀고 고리가 퍼지는 반응은 리뷰의 `도움 됐어요` 와 **같은 것**을 쓴다 (§6.21)
+    val burst = rememberBurst(liked)
 
     Box(
         modifier = Modifier
@@ -532,18 +522,7 @@ fun LikeButton(
             .tapWithHaptics(interaction, onClick),
         contentAlignment = Alignment.Center,
     ) {
-        // 하트 둘레로 한 번 퍼지는 고리. 눌린 게 손끝 말고 **눈으로도** 보여야 한다
-        if (burst.value < 1f) {
-            Canvas(Modifier.matchParentSize()) {
-                val p = burst.value
-                drawCircle(
-                    color = MyFisColor.Like,
-                    radius = size.minDimension / 2 * (0.45f + p * 0.75f),
-                    alpha = 1f - p,
-                    style = Stroke(width = (3.5f * (1f - p) + 0.5f).dp.toPx()),
-                )
-            }
-        }
+        BurstRing(burst.ring, MyFisColor.Like, Modifier.matchParentSize())
 
         Icon(
             painter = painterResource(
@@ -554,13 +533,11 @@ fun LikeButton(
             modifier = Modifier
                 .size(icon)
                 .graphicsLayer {
-                    scaleX = pop.value
-                    scaleY = pop.value
+                    scaleX = burst.pop
+                    scaleY = burst.pop
                 },
         )
     }
 }
 
-/** 고리가 퍼져 사라지기까지 */
-private const val BurstMillis = 420
 

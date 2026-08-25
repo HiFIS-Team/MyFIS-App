@@ -147,7 +147,7 @@ struct StoreItemScreen: View {
         VStack(spacing: 0) {
             FactRow(
                 icon: "ic_store_rating",
-                label: "평점 · 리뷰",
+                label: "리뷰",
                 value: String(format: "%.1f", item.rating),
                 sub: "(\(item.reviewCount.decimal))",
                 // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
@@ -375,12 +375,12 @@ private struct FactRow: View {
                 .frame(width: 18, height: 18)
                 .foregroundStyle(iconTint)
                 .padding(.trailing, MyFisSpacing.sm)
-            // 라벨 폭을 고정해 값이 **세로로 정렬**된다. `평점 · 리뷰` 가 가장 길어 그 폭에 맞춘다
+            // 라벨 폭을 고정해 값이 **세로로 정렬**된다. `교환권` 이 가장 길어 그 폭에 맞춘다
             Text(label)
                 .font(MyFisFont.bodySm)
                 .foregroundStyle(MyFisColor.textTertiary)
                 .lineLimit(1)
-                .frame(width: 76, alignment: .leading)
+                .frame(width: 56, alignment: .leading)
             Text(value)
                 .font(MyFisFont.body.monospacedDigit())
                 .foregroundStyle(MyFisColor.textPrimary)
@@ -490,26 +490,52 @@ private struct ReviewRow: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.top, MyFisSpacing.sm)
 
-            // TODO(서버): 도움 됐어요 집계가 붙으면 실제로 누르게 한다
-            Button {} label: {
-                HStack(spacing: MyFisSpacing.xs) {
-                    Image("ic_store_helpful")
-                        .resizable()
-                        .frame(width: 15, height: 15)
-                    Text("\(review.helpful)")
-                        .font(MyFisFont.caption.monospacedDigit())
-                }
-                .foregroundStyle(MyFisColor.textSecondary)
-                .padding(.horizontal, MyFisSpacing.md)
-                .padding(.vertical, 6)
-                .background(MyFisColor.surface2, in: Capsule())
-            }
-            .buttonStyle(.plain)
-            .frame(maxWidth: .infinity, alignment: .trailing)
-            .padding(.top, MyFisSpacing.sm)
+            HelpfulButton(count: review.helpful)
+                .frame(maxWidth: .infinity, alignment: .trailing)
+                .padding(.top, MyFisSpacing.sm)
         }
         .padding(MyFisSpacing.cardPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// 도움 됐어요 (§6.21).
+///
+/// 찜 하트와 **같은 반응**을 쓴다 (튀고 고리가 퍼진다) — 같은 종류의 행동이라서다.
+/// 색만 다르다: 하트는 `like`, 여기는 `helpful`.
+private struct HelpfulButton: View {
+    let count: Int
+
+    // TODO(서버): 도움 됐어요 집계가 붙으면 서버 값으로 바꾼다
+    @State private var marked = false
+
+    private var tint: Color { marked ? MyFisColor.helpful : MyFisColor.textSecondary }
+
+    var body: some View {
+        Button { marked.toggle() } label: {
+            HStack(spacing: MyFisSpacing.xs) {
+                Image("ic_store_helpful")
+                    .resizable()
+                    .frame(width: 15, height: 15)
+                    // 고리가 글자에 닿지 않도록 아이콘보다 넉넉한 자리를 준다
+                    .frame(width: 22, height: 22)
+                    .burst(active: marked, color: MyFisColor.helpful)
+                Text("\(count + (marked ? 1 : 0))")
+                    .font(MyFisFont.caption.monospacedDigit())
+            }
+            .foregroundStyle(tint)
+            // 색이 차는 건 **즉시**여야 한다 (하트와 같은 이유)
+            .animation(nil, value: marked)
+            .padding(.horizontal, MyFisSpacing.md)
+            .padding(.vertical, 6)
+            // 켜지면 배경도 같은 색 16% 로 든다 — 아이콘만 바뀌면 눌렀는지 스쳐 지나간다
+            .background(
+                marked ? MyFisColor.helpful.opacity(0.16) : MyFisColor.surface2,
+                in: Capsule()
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(marked ? "도움 됐어요 취소" : "도움 됐어요")
     }
 }
 

@@ -43,6 +43,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.components.BurstRing
+import com.myfis.app.ui.components.rememberBurst
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisPrimaryButton
@@ -297,7 +299,7 @@ private fun ItemFacts(item: StoreItem) {
     ) {
         FactRow(
             R.drawable.ic_store_rating,
-            "평점 · 리뷰",
+            "리뷰",
             "%.1f".format(item.rating),
             sub = "(%,d)".format(item.reviewCount),
             // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
@@ -339,13 +341,13 @@ private fun FactRow(
             modifier = Modifier.size(18.dp),
         )
         Spacer(Modifier.size(MyFisSpacing.sm))
-        // 라벨 폭을 고정해 값이 **세로로 정렬**된다. `평점 · 리뷰` 가 가장 길어 그 폭에 맞춘다
+        // 라벨 폭을 고정해 값이 **세로로 정렬**된다. `교환권` 이 가장 길어 그 폭에 맞춘다
         Text(
             label,
             style = MyFisTheme.type.bodySm,
             color = MyFisColor.TextTertiary,
             maxLines = 1,
-            modifier = Modifier.width(76.dp),
+            modifier = Modifier.width(56.dp),
         )
         Text(
             value,
@@ -615,8 +617,6 @@ private fun BreakdownRow(star: Int, count: Int, ratio: Float) {
 /** 리뷰 한 건. 한 장 안에서 **구분선으로** 갈린다 */
 @Composable
 private fun ReviewRow(review: StoreReview) {
-    val interaction = remember { MutableInteractionSource() }
-
     Column(
         Modifier
             .fillMaxWidth()
@@ -639,30 +639,13 @@ private fun ReviewRow(review: StoreReview) {
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
 
-        // TODO(서버): 도움 됐어요 집계가 붙으면 실제로 누르게 한다
-        Row(
+        HelpfulButton(
+            count = review.helpful,
+            reviewId = review.id,
             modifier = Modifier
                 .align(Alignment.End)
-                .padding(top = MyFisSpacing.sm)
-                .clip(MyFisRadius.full)
-                .background(MyFisColor.Surface2)
-                .tapWithHaptics(interaction, {})
-                .padding(horizontal = MyFisSpacing.md, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_store_helpful),
-                contentDescription = "도움 됐어요",
-                tint = MyFisColor.TextSecondary,
-                modifier = Modifier.size(15.dp),
-            )
-            Text(
-                "${review.helpful}",
-                style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextSecondary,
-            )
-        }
+                .padding(top = MyFisSpacing.sm),
+        )
     }
 }
 
@@ -756,6 +739,57 @@ private fun recommendations(item: StoreItem): List<StoreItem> {
         .sortedByDescending { it.views }
     return (pool.filter { it.category == item.category } + pool).distinctBy { it.id }.take(6)
 }
+
+/**
+ * 도움 됐어요 (§6.21).
+ *
+ * 찜 하트와 **같은 반응**을 쓴다 (튀고 고리가 퍼진다) — 같은 종류의 행동이라서다.
+ * 색만 다르다: 하트는 `like`, 여기는 `helpful`.
+ */
+@Composable
+private fun HelpfulButton(count: Int, reviewId: Int, modifier: Modifier = Modifier) {
+    // TODO(서버): 도움 됐어요 집계가 붙으면 서버 값으로 바꾼다
+    var marked by rememberSaveable(reviewId) { mutableStateOf(false) }
+    val interaction = remember { MutableInteractionSource() }
+    val burst = rememberBurst(marked)
+    val tint = if (marked) MyFisColor.Helpful else MyFisColor.TextSecondary
+
+    Row(
+        modifier = modifier
+            .clip(MyFisRadius.full)
+            // 켜지면 배경도 같은 색 16% 로 든다 — 아이콘만 바뀌면 눌렀는지 스쳐 지나간다
+            .background(
+                if (marked) MyFisColor.Helpful.copy(alpha = 0.16f) else MyFisColor.Surface2,
+            )
+            .tapWithHaptics(interaction) { marked = !marked }
+            .padding(horizontal = MyFisSpacing.md, vertical = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            BurstRing(burst.ring, MyFisColor.Helpful, Modifier.size(HelpfulRing))
+            Icon(
+                painter = painterResource(R.drawable.ic_store_helpful),
+                contentDescription = if (marked) "도움 됐어요 취소" else "도움 됐어요",
+                tint = tint,
+                modifier = Modifier
+                    .size(15.dp)
+                    .graphicsLayer {
+                        scaleX = burst.pop
+                        scaleY = burst.pop
+                    },
+            )
+        }
+        Text(
+            "${count + if (marked) 1 else 0}",
+            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+            color = tint,
+        )
+    }
+}
+
+/** 고리가 퍼지는 범위. 아이콘(15)보다 넉넉해야 고리가 글자에 안 닿는다 */
+private val HelpfulRing = 22.dp
 
 /** 별 다섯 개. 채운 별은 `rating`, 나머지는 표면색으로 남긴다 */
 @Composable

@@ -38,6 +38,9 @@ enum MyFisColor {
     /// 별점 별. 시맨틱 `warning` 과 값은 같지만 상태가 아니라 **평점 표시**다
     static let rating = Color(hex: 0xFBBF24)
 
+    /// `도움 됐어요` 켜진 상태. `info` 와 값은 같지만 **상태가 아니라 표시**다
+    static let helpful = Color(hex: 0x7DA8FF)
+
     // 카테고리 — **목록에서 종류를 구분할 때만** 쓴다 (§6.19).
     // 액션 색이 아니라 분류 표시라 액센트 예산(2곳)에 넣지 않는다.
     static let categoryLime = Color(hex: 0xC9F531)
