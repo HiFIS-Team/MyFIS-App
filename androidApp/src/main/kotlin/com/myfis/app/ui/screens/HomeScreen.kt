@@ -1,15 +1,18 @@
 package com.myfis.app.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -24,6 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -54,6 +61,7 @@ fun HomeScreen(
     onNotification: () -> Unit = {},
     onDiet: () -> Unit = {},
     onCardio: () -> Unit = {},
+    onWeight: () -> Unit = {},
 ) {
     val today = remember { LocalDate.now() }
 
@@ -86,8 +94,13 @@ fun HomeScreen(
             onCardio = onCardio,
             modifier = Modifier.padding(top = MyFisSpacing.lg),
         )
-        // TODO: 회원권 카드 · 오늘 할 운동 · 마일리지가 붙으면 교체한다 (SPEC H-01).
-        PlaceholderScreen("H-01", "홈", "회원권 상태 · 오늘 할 운동 · 마일리지")
+        TodayRoutineSection(
+            routine = todayRoutinePlaceholder,
+            onStart = onWeight,
+            modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
+        )
+        // TODO: 회원권 카드 · 마일리지가 붙으면 교체한다 (SPEC H-01).
+        PlaceholderScreen("H-01", "홈", "회원권 상태 · 마일리지")
     }
 }
 
@@ -269,3 +282,189 @@ private fun attendedPlaceholder(today: LocalDate): Set<LocalDate> {
     val earlier = listOf(16L, 17L, 20L, 21L).map { today.minusDays(it) }
     return (streak + earlier).toSet()
 }
+
+/**
+ * 오늘의 루틴 (DESIGN.md §6.14) — 홈에서 **오늘 뭘 하는지** 한 장으로 보여주고 웨이트로 보낸다.
+ *
+ * 루틴은 AI가 짜서 보낸다. 사용자가 만들거나 고르지 않으므로
+ * 섹션에 `새 루틴` 같은 액션을 두지 않는다 — 목록이 아니라 오늘 한 장이다.
+ */
+@Composable
+private fun TodayRoutineSection(
+    routine: TodayRoutine,
+    onStart: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal),
+    ) {
+        Text("오늘의 루틴", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+        Spacer(Modifier.height(MyFisSpacing.md))
+        RoutineCard(routine = routine, onStart = onStart)
+    }
+}
+
+@Composable
+private fun RoutineCard(routine: TodayRoutine, onStart: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Column(
+        // 카드 전체가 웨이트로 가는 길이다. 아래 [웨이트 하러 가기] 는 그 길을 보여주는 표시다
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MyFisRadius.md)
+            .background(MyFisColor.Surface1)
+            .tapWithHaptics(interaction, onStart)
+            .padding(MyFisSpacing.cardPadding),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                routine.name,
+                style = MyFisTheme.type.titleSm,
+                color = MyFisColor.TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            Spacer(Modifier.weight(1f))
+            Text(routine.week, style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
+        }
+
+        Spacer(Modifier.height(MyFisSpacing.lg))
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+                ) {
+                    Text(
+                        "Day ${routine.day}",
+                        style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
+                        color = MyFisColor.TextPrimary,
+                    )
+                    Text(
+                        routine.focus,
+                        style = MyFisTheme.type.body,
+                        color = MyFisColor.TextSecondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                Spacer(Modifier.height(2.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        "${routine.exerciseCount}개",
+                        style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+                        color = MyFisColor.TextTertiary,
+                    )
+                    // 구분은 점이 아니라 **세로선**이다 (§6.12 상품 메타와 같은 규칙)
+                    Box(
+                        Modifier
+                            .padding(horizontal = MyFisSpacing.sm)
+                            .size(width = 1.dp, height = 10.dp)
+                            .background(MyFisColor.BorderStrong),
+                    )
+                    Text(
+                        "${routine.firstExercise} 외",
+                        style = MyFisTheme.type.bodySm,
+                        color = MyFisColor.TextTertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+            }
+            Spacer(Modifier.size(MyFisSpacing.md))
+            WeekProgressRing(done = routine.doneDays, total = routine.totalDays)
+        }
+
+        Spacer(Modifier.height(MyFisSpacing.lg))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text("웨이트 하러 가기", style = MyFisTheme.type.titleSm, color = MyFisColor.Accent)
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = null, // 옆 글자가 이름 역할을 한다
+                tint = MyFisColor.Accent,
+                // 오른쪽 화살표는 따로 두지 않고 아래 화살표를 돌려 쓴다 (같은 획, 같은 굵기)
+                modifier = Modifier
+                    .size(18.dp)
+                    .graphicsLayer { rotationZ = -90f },
+            )
+        }
+    }
+}
+
+/**
+ * 이번 주 진행률 링.
+ *
+ * 액센트는 이 카드에서 **[웨이트 하러 가기] 하나만** 쓴다 (§2 원칙 3).
+ * 링까지 라임이면 어디를 눌러야 하는지가 흐려진다.
+ */
+@Composable
+private fun WeekProgressRing(done: Int, total: Int) {
+    val ratio = if (total <= 0) 0f else done.toFloat() / total
+
+    Box(Modifier.size(RingSize), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.fillMaxSize()) {
+            val stroke = RingStroke.toPx()
+            val topLeft = Offset(stroke / 2, stroke / 2)
+            val arcSize = Size(size.width - stroke, size.height - stroke)
+            drawArc(
+                color = MyFisColor.BorderSubtle,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(stroke),
+            )
+            drawArc(
+                color = MyFisColor.TextPrimary,
+                startAngle = -90f, // 12시부터 시계방향
+                sweepAngle = 360f * ratio,
+                useCenter = false,
+                topLeft = topLeft,
+                size = arcSize,
+                style = Stroke(stroke, cap = StrokeCap.Round),
+            )
+        }
+        Text(
+            "$done/$total",
+            style = MyFisTheme.type.label.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextPrimary,
+        )
+    }
+}
+
+private val RingSize = 56.dp
+private val RingStroke = 4.dp
+
+/** TODO(서버): `WeeklyRoutine` · `RoutineDay` 가 붙으면 지운다 (SPEC W-01) */
+private data class TodayRoutine(
+    val name: String,
+    val week: String,
+    val day: Int,
+    val focus: String,
+    val exerciseCount: Int,
+    val firstExercise: String,
+    val doneDays: Int,
+    val totalDays: Int,
+)
+
+/** TODO(서버): 주간 루틴 API 가 붙으면 지운다 */
+private val todayRoutinePlaceholder = TodayRoutine(
+    name = "체지방 감량 4주 루틴",
+    week = "8월 4주차",
+    day = 3,
+    focus = "가슴 · 삼두",
+    exerciseCount = 5,
+    firstExercise = "벤치프레스",
+    doneDays = 2,
+    totalDays = 5,
+)

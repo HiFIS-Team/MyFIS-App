@@ -20,6 +20,8 @@ struct AppShell: View {
         static let store = 2
         /// 웨이트 세트의 유산소 자리 — 홈 바로가기가 여기로 보낸다
         static let cardio = 2
+        /// 웨이트 세트의 웨이트 자리 — 홈의 오늘의 루틴 카드가 여기로 보낸다
+        static let weight = 1
 
         /// 시뮬레이터에는 탭을 누를 수단이 없다. 스토어 화면을 스크린샷으로 확인할 때
         /// `SIMCTL_CHILD_MYFIS_TAB=store` 로 띄운다. 디버그 빌드에서만 동작한다.
@@ -150,6 +152,11 @@ struct AppShell: View {
                         // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                         onCardio: {
                             weightSlot = Slot.cardio
+                            withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
+                        },
+                        // 홈의 오늘의 루틴 카드 — 같은 길로 웨이트(W-01)에 들어간다
+                        onWeight: {
+                            weightSlot = Slot.weight
                             withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
                         }
                     )

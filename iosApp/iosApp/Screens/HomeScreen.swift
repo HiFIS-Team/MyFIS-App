@@ -11,6 +11,7 @@ struct HomeScreen: View {
     var onNotification: () -> Void = {}
     var onDiet: () -> Void = {}
     var onCardio: () -> Void = {}
+    var onWeight: () -> Void = {}
 
     @State private var selected = Date()
     @State private var expanded = false
@@ -34,11 +35,16 @@ struct HomeScreen: View {
             .padding(.top, MyFisSpacing.xs)
             ShortcutRow(onDiet: onDiet, onCardio: onCardio)
                 .padding(.top, MyFisSpacing.lg)
-            // TODO: 회원권 카드 · 오늘 할 운동 · 마일리지가 붙으면 교체한다 (SPEC H-01).
+            TodayRoutineSection(
+                routine: HomePlaceholder.todayRoutine,
+                onStart: onWeight
+            )
+            .padding(.top, MyFisSpacing.sectionGap)
+            // TODO: 회원권 카드 · 마일리지가 붙으면 교체한다 (SPEC H-01).
             PlaceholderScreen(
                 id: "H-01",
                 title: "홈",
-                description: "회원권 상태 · 오늘 할 운동 · 마일리지"
+                description: "회원권 상태 · 마일리지"
             )
         }
     }
@@ -104,9 +110,33 @@ private struct CalendarBar: View {
     }
 }
 
+/// TODO(서버): `WeeklyRoutine` · `RoutineDay` 가 붙으면 지운다 (SPEC W-01)
+struct TodayRoutine {
+    let name: String
+    let week: String
+    let day: Int
+    let focus: String
+    let exerciseCount: Int
+    let firstExercise: String
+    let doneDays: Int
+    let totalDays: Int
+}
+
 enum HomePlaceholder {
     /// TODO(서버): 출석 기록이 붙으면 계산한다
     static let attendanceStreak = 12
+
+    /// TODO(서버): 주간 루틴 API 가 붙으면 지운다
+    static let todayRoutine = TodayRoutine(
+        name: "체지방 감량 4주 루틴",
+        week: "8월 4주차",
+        day: 3,
+        focus: "가슴 · 삼두",
+        exerciseCount: 5,
+        firstExercise: "벤치프레스",
+        doneDays: 2,
+        totalDays: 5
+    )
 
     /// TODO(서버): 출석 API 가 붙으면 지운다.
     ///
@@ -183,4 +213,129 @@ private struct ShortcutCard: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+/// 오늘의 루틴 (DESIGN.md §6.14) — 홈에서 **오늘 뭘 하는지** 한 장으로 보여주고 웨이트로 보낸다.
+///
+/// 루틴은 AI가 짜서 보낸다. 사용자가 만들거나 고르지 않으므로
+/// 섹션에 `새 루틴` 같은 액션을 두지 않는다 — 목록이 아니라 오늘 한 장이다.
+private struct TodayRoutineSection: View {
+    let routine: TodayRoutine
+    let onStart: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: MyFisSpacing.md) {
+            Text("오늘의 루틴")
+                .font(MyFisFont.titleMd)
+                .foregroundStyle(MyFisColor.textPrimary)
+            RoutineCard(routine: routine, onStart: onStart)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+    }
+}
+
+private struct RoutineCard: View {
+    let routine: TodayRoutine
+    let onStart: () -> Void
+
+    var body: some View {
+        // 카드 전체가 웨이트로 가는 길이다. 아래 [웨이트 하러 가기] 는 그 길을 보여주는 표시다
+        Button(action: onStart) {
+            VStack(alignment: .leading, spacing: MyFisSpacing.lg) {
+                HStack(spacing: MyFisSpacing.sm) {
+                    Text(routine.name)
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text(routine.week)
+                        .font(MyFisFont.caption)
+                        .foregroundStyle(MyFisColor.textTertiary)
+                }
+
+                HStack(spacing: MyFisSpacing.md) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: MyFisSpacing.sm) {
+                            Text("Day \(routine.day)")
+                                .font(MyFisFont.titleSm.monospacedDigit())
+                                .foregroundStyle(MyFisColor.textPrimary)
+                            Text(routine.focus)
+                                .font(MyFisFont.body)
+                                .foregroundStyle(MyFisColor.textSecondary)
+                                .lineLimit(1)
+                        }
+                        HStack(spacing: 0) {
+                            Text("\(routine.exerciseCount)개")
+                                .font(MyFisFont.bodySm.monospacedDigit())
+                            // 구분은 점이 아니라 **세로선**이다 (§6.12 상품 메타와 같은 규칙)
+                            Rectangle()
+                                .fill(MyFisColor.borderStrong)
+                                .frame(width: 1, height: 10)
+                                .padding(.horizontal, MyFisSpacing.sm)
+                            Text("\(routine.firstExercise) 외")
+                                .font(MyFisFont.bodySm)
+                                .lineLimit(1)
+                        }
+                        .foregroundStyle(MyFisColor.textTertiary)
+                    }
+                    Spacer(minLength: 0)
+                    WeekProgressRing(done: routine.doneDays, total: routine.totalDays)
+                }
+
+                HStack(spacing: 2) {
+                    Text("웨이트 하러 가기")
+                        .font(MyFisFont.titleSm)
+                    // 오른쪽 화살표는 따로 두지 않고 아래 화살표를 돌려 쓴다 (같은 획, 같은 굵기)
+                    Image("ic_chevron_down")
+                        .resizable()
+                        .frame(width: 18, height: 18)
+                        .rotationEffect(.degrees(-90))
+                }
+                .foregroundStyle(MyFisColor.accent)
+            }
+            .padding(MyFisSpacing.cardPadding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                MyFisColor.surface1,
+                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// 이번 주 진행률 링.
+///
+/// 액센트는 이 카드에서 **[웨이트 하러 가기] 하나만** 쓴다 (§2 원칙 3).
+/// 링까지 라임이면 어디를 눌러야 하는지가 흐려진다.
+private struct WeekProgressRing: View {
+    let done: Int
+    let total: Int
+
+    private var ratio: Double { total <= 0 ? 0 : Double(done) / Double(total) }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(MyFisColor.borderSubtle, lineWidth: RoutineRing.stroke)
+            Circle()
+                .trim(from: 0, to: ratio)
+                .stroke(
+                    MyFisColor.textPrimary,
+                    style: StrokeStyle(lineWidth: RoutineRing.stroke, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90)) // 12시부터 시계방향
+            Text("\(done)/\(total)")
+                .font(MyFisFont.label.monospacedDigit())
+                .foregroundStyle(MyFisColor.textPrimary)
+        }
+        .frame(width: RoutineRing.size, height: RoutineRing.size)
+        .padding(RoutineRing.stroke / 2) // 선 굵기만큼 안쪽으로 — 안드로이드와 지름을 맞춘다
+    }
+}
+
+private enum RoutineRing {
+    static let size: CGFloat = 52
+    static let stroke: CGFloat = 4
 }
