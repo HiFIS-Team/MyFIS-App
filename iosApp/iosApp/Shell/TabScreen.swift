@@ -31,6 +31,19 @@ struct TabScreen<Content: View>: View {
     }
 }
 
+extension HeaderRoute {
+    /// 디버그로 띄울 잎 화면을 **탭별 스택**에 나눠 담는다 (스택이 탭 안에 있다)
+    static var initialHomeForDebug: [HeaderRoute] {
+        guard let route = HeaderRoute?.initialForDebug, route == .notifications else { return [] }
+        return [route]
+    }
+
+    static var initialStoreForDebug: [HeaderRoute] {
+        guard let route = HeaderRoute?.initialForDebug, route != .notifications else { return [] }
+        return [route]
+    }
+}
+
 extension Optional where Wrapped == HeaderRoute {
     /// 시뮬레이터에는 탭을 자동화할 수단이 없다. 덮인 화면을 스크린샷으로 확인할 때
     /// `SIMCTL_CHILD_MYFIS_ROUTE=notifications` 로 앱을 띄운다.

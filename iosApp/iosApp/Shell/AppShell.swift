@@ -29,7 +29,9 @@ struct AppShell: View {
         /// `SIMCTL_CHILD_MYFIS_TAB=store` 로 띄운다. 디버그 빌드에서만 동작한다.
         static var initialBaseForDebug: Int {
             #if DEBUG
-            ProcessInfo.processInfo.environment["MYFIS_TAB"] == "store" ? store : 0
+            let env = ProcessInfo.processInfo.environment
+            let storeRoute = (env["MYFIS_ROUTE"] ?? "").hasPrefix("store")
+            return env["MYFIS_TAB"] == "store" || storeRoute ? store : 0
             #else
             0
             #endif
@@ -40,96 +42,133 @@ struct AppShell: View {
     @State private var baseSlot = Slot.initialBaseForDebug
     @State private var weightSlot = 1
 
-    /// 잎 화면 경로.
+    /// 잎 화면 경로 — **탭마다 하나씩**.
     ///
-    /// **직접 만든 덮개를 버리고 `NavigationStack` 에 맡긴다** (2026-08-25 재작성).
-    /// 뒤로 버튼·가장자리 스와이프·스택 관리가 전부 시스템 몫이 된다 —
-    /// 직접 만들었더니 화면 전체 드래그가 탭을 삼키고, 잠금이 안 풀리고,
-    /// 같은 화면이 두 장 쌓였다. 안드로이드가 `NavHost` 로 멀쩡했던 이유이기도 하다.
-    /// 스토어 검색 — 필드가 내비 바에 있으므로 셸이 들고 있다
-    @State private var storeQuery = StoreSearch.initialQueryForDebug
-    @FocusState private var storeFocused: Bool
+    /// 직접 만든 덮개를 버리고 `NavigationStack` 에 맡긴다 (2026-08-25) —
+    /// 뒤로 버튼·가장자리 스와이프·스택 관리가 전부 시스템 몫이다.
+    /// 스택은 **탭 안에** 둔다 — 그게 iOS 기본 구조이고, 밖에 하나만 두면
+    /// 탭을 옮겨도 스택이 그대로 남는다.
+    /// 스토어 화면 폭 — 검색 필드 폭을 여기서 계산한다 (§6.9).
+    ///
+    /// 내비 바는 자식에게 남는 폭을 주지 않아 `maxWidth: .infinity` 로는 안 늘어난다.
+    /// **툴바 안에서 재면 안 된다** — 잰 값으로 필드 폭을 바꾸면 바가 다시 눕고,
+    /// 그러면 또 재게 되어 무한 루프에 빠진다 (CPU 100% 로 확인함).
+    /// 본문 폭은 필드 폭에 영향받지 않으므로 되먹임이 없다.
+    @State private var storeWidth: CGFloat = 0
 
-    /// 검색 모드. **누르는 즉시** 켠다 — 포커스를 조건으로 삼으면 글자를 쳐야 켜졌다
+    /// 내비 바 좌우 기본 여백 · 검색과 오른쪽 것 사이
+    private static let barInset: CGFloat = 20
+    private static let searchGap: CGFloat = 16
+    /// 오른쪽 아이콘 묶음 폭 — 시스템이 44pt 버튼 두 개를 유리 알약으로 감싼 크기 (재서 확인: 96pt)
+    private static let trailingIconsWidth: CGFloat = 96
+    /// `취소` 유리 버튼 폭 (재서 확인: 52pt)
+    private static let cancelWidth: CGFloat = 52
+
+    /// 스토어 헤더가 검색 모드인가 (§6.9).
+    /// **화면을 옮기지 않는다** — 오른쪽이 `취소` 로 바뀌고 필드가 그 앞까지 늘어나고 본문만 갈린다
     @State private var storeSearching = StoreSearch.initialForDebug
+    @State private var storeQuery = StoreSearch.initialQueryForDebug
 
-    @State private var path: [HeaderRoute] = HeaderRoute?.initialForDebug.map { [$0] } ?? []
+    /// 왼쪽 여백부터 오른쪽 것 앞까지
+    private var searchFieldWidth: CGFloat? {
+        guard storeWidth > 0 else { return nil }
+        let trailing = storeSearching ? Self.cancelWidth : Self.trailingIconsWidth
+        return max(0, storeWidth - (Self.barInset * 2 + trailing + Self.searchGap))
+    }
+
+    /// 검색 모드를 켜고 끈다. **애니메이션 없이 툭 바뀐다** — iOS 앱들이 그렇게 한다
+    private func setSearching(_ on: Bool) {
+        var snap = Transaction()
+        snap.disablesAnimations = true
+        withTransaction(snap) {
+            storeSearching = on
+            if !on { storeQuery = "" }
+        }
+    }
+
+    @State private var homePath: [HeaderRoute] = HeaderRoute.initialHomeForDebug
+    @State private var storePath: [HeaderRoute] = HeaderRoute.initialStoreForDebug
 
     var body: some View {
-        NavigationStack(path: $path) {
-            TabView(selection: selection) {
-                ForEach(0..<Slot.count, id: \.self) { slot in
-                    content(for: slot)
-                        .tabItem {
-                            icon(for: slot)
-                                .accessibilityLabel(label(for: slot))
-                        }
-                        .tag(slot)
-                }
+        TabView(selection: selection) {
+            ForEach(0..<Slot.count, id: \.self) { slot in
+                content(for: slot)
+                    .tabItem {
+                        icon(for: slot)
+                            .accessibilityLabel(label(for: slot))
+                    }
+                    .tag(slot)
             }
-            // 선택은 **색이 아니라 채움**으로 알린다 (DESIGN.md §6.7).
-            // 라임은 화면 콘텐츠 몫으로 남긴다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
-            .tint(MyFisColor.textPrimary)
-            // 탭 헤더도 **시스템 내비 바**가 그린다 (§6.9 · §7.1).
-            // 화면 안에 직접 그리면 잎이 밀려 들어올 때 헤더가 같이 밀려 흔들린다
-            .toolbar { tabHeader }
-            // **큰 제목 자리를 비워 두지 않는다.** 기본값(.automatic)은 스택 루트에서 큰 제목이라,
-            // 제목이 없어도 그 높이만큼 빈 줄이 생겨 헤더와 본문이 멀어진다
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .navigationDestination(for: HeaderRoute.self) { leafScreen($0) }
+        }
+        // 선택은 **색이 아니라 채움**으로 알린다 (DESIGN.md §6.7).
+        // 라임은 화면 콘텐츠 몫으로 남긴다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
+        .tint(MyFisColor.textPrimary)
+    }
+
+    /// 탭 화면 하나를 **자기 내비게이션 스택**에 담는다.
+    ///
+    /// 헤더는 시스템 내비 바가 그리고(§6.9), 잎 화면은 이 스택에서 밀려 들어온다 —
+    /// 밀려 들어오면 하단 탭은 시스템이 알아서 가린다.
+    @ViewBuilder
+    private func stack<Header: ToolbarContent, Content: View>(
+        path: Binding<[HeaderRoute]>,
+        @ToolbarContentBuilder header: () -> Header,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        NavigationStack(path: path) {
+            content()
+                .toolbar(content: header)
+                // **큰 제목 자리를 비워 두지 않는다.** 기본값(.automatic)은 스택 루트에서 큰 제목이라,
+                // 제목이 없어도 그 높이만큼 빈 줄이 생겨 헤더와 본문이 멀어진다
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .navigationDestination(for: HeaderRoute.self) { leafScreen($0) }
         }
         // 뒤로 화살표 색. 잎 화면들이 모두 이 틴트를 물려받는다
         .tint(MyFisColor.textPrimary)
     }
 
-    /// 탭 화면의 헤더 (DESIGN.md §6.9).
-    ///
-    /// 화면마다 다르므로 **선택된 탭을 보고 고른다.** 각 탭 뷰에 따로 달면
-    /// 안 보이는 탭의 항목까지 섞여 들어온다.
+    /// 홈 헤더 (DESIGN.md §6.9)
     @ToolbarContentBuilder
-    private var tabHeader: some ToolbarContent {
-        if tabSet == .base, baseSlot == Slot.home {
-            // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 연결한다
-            ToolbarItem(placement: .topBarLeading) {
-                HeaderIcon("ic_header_branch", "지점") {}
-            }
-            ToolbarItem(placement: .principal) { Wordmark() }
-            ToolbarItem(placement: .topBarTrailing) {
-                HeaderIcon("ic_header_membership", "멤버십") {}
-            }
-            ToolbarItem(placement: .topBarTrailing) {
-                HeaderIcon("ic_header_notification", "알림") { open(.notifications) }
-            }
+    private var homeHeader: some ToolbarContent {
+        // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 연결한다
+        ToolbarItem(placement: .topBarLeading) {
+            HeaderIcon("ic_header_branch", "지점") {}
         }
+        ToolbarItem(placement: .principal) { Wordmark() }
+        ToolbarItem(placement: .topBarTrailing) {
+            HeaderIcon("ic_header_membership", "멤버십") {}
+        }
+        ToolbarItem(placement: .topBarTrailing) {
+            HeaderIcon("ic_header_notification", "알림") { homePath.append(.notifications) }
+        }
+    }
 
-        // 스토어 헤더 — 검색 필드가 가운데를 다 쓰고 오른쪽에 장바구니·마이 (§6.9).
-        // 검색 중에는 오른쪽 자리가 `취소` 로 바뀐다
-        if tabSet == .base, baseSlot == Slot.store {
-            ToolbarItem(placement: .principal) {
-                // 내비 바는 principal 에 **딱 필요한 만큼만** 자리를 준다.
-                // 검색이 폭을 다 써야 하는 헤더라(§6.9) 오른쪽 자리를 뺀 폭을 직접 잡는다 —
-                // 검색 모드에서는 `취소` **바로 옆까지** 온다
-                StoreSearchBar(
-                    query: $storeQuery,
-                    focused: $storeFocused,
-                    searching: storeSearching,
-                    onTap: { enterSearch() }
-                )
-                .frame(width: max(160, UIScreen.main.bounds.width - (storeSearching ? 88 : 160)))
-            }
+    /// 스토어 헤더 — 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이 (DESIGN.md §6.9).
+    ///
+    /// **검색 모드면 오른쪽이 `취소` 한 개로 바뀐다.** 유리는 시스템이 그린 그대로 둔다 —
+    /// 우리가 그리는 건 검색 필드뿐이다 (§2 원칙 6).
+    ///
+    /// 두 아이콘을 **한 아이템 안에** 넣는다. `ToolbarContentBuilder` 에는 `buildEither` 가 없어
+    /// 아이템 개수를 모드에 따라 바꿀 수 없다 — 뷰 안에서 갈라야 한다.
+    @ToolbarContentBuilder
+    private var storeHeader: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
             if storeSearching {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("취소") { leaveSearch() }
-                        .font(MyFisFont.bodySm)
+                Button { setSearching(false) } label: {
+                    // 유리 알약이 글자에 딱 붙지 않게 숨통을 준다 (기본은 44pt 원이라 빡빡하다)
+                    Text("취소")
+                        .font(MyFisFont.body)
+                        .padding(.horizontal, MyFisSpacing.sm)
+                        .frame(height: MyFisSize.minTouchTarget)
                 }
+                .buttonStyle(.myFisTap)
+                .foregroundStyle(MyFisColor.textPrimary)
             } else {
-                ToolbarItem(placement: .topBarTrailing) {
-                    HeaderIcon("ic_header_cart", "장바구니") { open(.storeCart) }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    HeaderIcon("ic_header_my", "마이") { open(.storeMy) }
+                HStack(spacing: 0) {
+                    HeaderIcon("ic_header_cart", "장바구니") { storePath.append(.storeCart) }
+                    HeaderIcon("ic_header_my", "마이") { storePath.append(.storeMy) }
                 }
             }
         }
@@ -141,37 +180,20 @@ struct AppShell: View {
         case .notifications:
             NotificationScreen()
         case .storeMy:
-            StoreMyScreen(onCart: { open(.storeCart) })
+            StoreMyScreen(onCart: { storePath.append(.storeCart) })
         case .storeCart:
-            StoreCartScreen(onStore: { popToStore() })
+            StoreCartScreen(onStore: { storePath.removeAll() })
         case .storeItem(let item):
-            StoreItemScreen(item: item, onCart: { open(.storeCart) })
+            StoreItemScreen(
+                item: item,
+                // 상세에서 검색을 누르면 **스토어로 돌아가** 검색 모드가 된다
+                onSearch: {
+                    storePath.removeAll()
+                    setSearching(true)
+                },
+                onCart: { storePath.append(.storeCart) }
+            )
         }
-    }
-
-    /// 검색 모드로 — 폭이 늘어나고 오른쪽이 `취소` 로 바뀌는 걸 **한 번에** 움직인다.
-    /// 상태를 그냥 바꾸면 헤더가 툭 끊기며 갈아 끼워진다
-    private func enterSearch() {
-        withAnimation(MyFisMotion.base) { storeSearching = true }
-        storeFocused = true
-    }
-
-    private func leaveSearch() {
-        storeFocused = false
-        withAnimation(MyFisMotion.base) {
-            storeSearching = false
-            storeQuery = ""
-        }
-    }
-
-    private func open(_ route: HeaderRoute) {
-        path.append(route)
-    }
-
-    /// 잎을 전부 걷고 스토어 탭으로. 장바구니 빈 상태의 [상품 보러 가기] 가 쓴다
-    private func popToStore() {
-        baseSlot = Slot.store
-        path.removeAll()
     }
 
     // MARK: - 선택
@@ -226,8 +248,9 @@ struct AppShell: View {
         if tabSet == .base {
             switch baseTabs[slot] {
             case .home:
-                TabScreen {
-                    HomeScreen(
+                stack(path: $homePath, header: { homeHeader }) {
+                    TabScreen {
+                        HomeScreen(
                         // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                         onCardio: {
                             weightSlot = Slot.cardio
@@ -240,23 +263,34 @@ struct AppShell: View {
                         },
                         // 홈의 마일리지 상품 — 같은 세트 안이라 탭만 옮긴다
                         onStore: { baseSlot = Slot.store }
-                    )
+                        )
+                    }
                 }
             case .benefit:
                 screen(id: "P-01", title: "혜택", description: "보유 마일리지 · 적립 경로")
             case .store:
                 // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
-                TabScreen {
-                    StoreScreen(
+                stack(path: $storePath, header: { storeHeader }) {
+                    TabScreen {
+                        StoreScreen(
+                            searching: storeSearching,
+                            query: $storeQuery,
+                            onCart: { storePath.append(.storeCart) },
+                            onMy: { storePath.append(.storeMy) },
+                            onItem: { storePath.append(.storeItem($0)) }
+                        )
+                    }
+                    .background(WidthProbe { storeWidth = $0 })
+                    // 검색 자리는 따로 얹는다 — 이 아이템만 유리 껍데기를 벗겨야 한다
+                    .modifier(SearchFieldBar(
+                        width: searchFieldWidth,
+                        searching: storeSearching,
                         query: $storeQuery,
-                        isSearching: storeSearching,
-                        onCart: { open(.storeCart) },
-                        onMy: { open(.storeMy) },
-                        onItem: { open(.storeItem($0)) }
-                    )
+                        onSearch: { setSearching(true) }
+                    ))
+                    // 검색 중에는 하단 탭을 감춘다 — 검색은 탭을 옮겨 다니는 일이 아니다
+                    .toolbar(storeSearching ? .hidden : .visible, for: .tabBar)
                 }
-                // 검색 중에는 **하단 탭을 감춘다.** 검색은 탭을 옮겨 다니는 일이 아니다
-                .toolbar(storeSearching ? .hidden : .visible, for: .tabBar)
 
             case .my:
                 // TODO: Y-01 마이 화면이 붙으면 교체한다.
@@ -309,9 +343,49 @@ private extension TabSet {
     AppShell().preferredColorScheme(.dark)
 }
 
-/// 왼쪽 가장자리에서 오른쪽으로 쓸면 덮개를 걷는다 — iOS 기본 pop 제스처를 흉내 낸다.
+/// 화면 폭을 잰다. 배경으로 깔아서 잰다 — `GeometryReader` 를 그대로 쓰면 자리를 다 먹는다.
+private struct WidthProbe: View {
+    let onChange: (CGFloat) -> Void
+
+    var body: some View {
+        GeometryReader { proxy in
+            Color.clear
+                .onAppear { onChange(proxy.size.width) }
+                .onChange(of: proxy.size.width) { _, new in onChange(new) }
+        }
+    }
+}
+
+/// 헤더의 검색 자리를 내비 바에 얹는다 (§6.9).
 ///
-/// 시작점이 **가장자리 24pt 안쪽일 때만** 잡는다. 그래야 안쪽 스크롤·탭을 방해하지 않는다.
-///
-/// 놓아서 닫을 때는 화면 밖까지 직접 밀어낸 뒤 걷어낸다.
-/// `withAnimation` 으로 걷으면 `.transition` 이 같이 돌아 손가락 위치에서 한 번 튄다.
+/// **iOS 26 은 툴바 아이템마다 유리 껍데기를 씌운다.** 우리 필드는 다크 위 회색 판이라
+/// `sharedBackgroundVisibility(.hidden)` 으로 그 껍데기를 벗긴다.
+/// `ToolbarContentBuilder` 안에서는 `if #available` 을 못 쓰므로 (buildEither 가 없다)
+/// 여기서 뷰 단계로 갈라 붙인다.
+private struct SearchFieldBar: ViewModifier {
+    let width: CGFloat?
+    let searching: Bool
+    @Binding var query: String
+    let onSearch: () -> Void
+
+    private var item: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Group {
+                if searching {
+                    StoreSearchInput(text: $query)
+                } else {
+                    StoreSearchField(action: onSearch)
+                }
+            }
+            .frame(width: width)
+        }
+    }
+
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.toolbar { item.sharedBackgroundVisibility(.hidden) }
+        } else {
+            content.toolbar { item }
+        }
+    }
+}

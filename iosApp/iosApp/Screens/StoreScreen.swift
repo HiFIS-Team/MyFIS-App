@@ -11,10 +11,10 @@ import SwiftUI
 ///
 /// 헤더 아래(카테고리·마일리지)는 **스크롤해도 남는다** (S 공통 규칙 — 살 수 있는지 매번 계산하게 하지 않는다).
 struct StoreScreen: View {
-    /// 검색어. 필드는 **셸의 내비 바**가 들고 있다 (§6.9)
+    /// 헤더가 검색 모드인가 (§6.9) — 화면을 옮기지 않고 본문만 갈린다
+    var searching: Bool = false
     @Binding var query: String
-    /// 검색 모드인지 — 필드에 커서가 있는 동안
-    var isSearching = false
+
     var onCart: () -> Void = {}
     var onMy: () -> Void = {}
     var onItem: (StoreItem) -> Void = { _ in }
@@ -36,23 +36,16 @@ struct StoreScreen: View {
         if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
     }
 
-    private var results: [StoreItem] {
-        StorePlaceholder.items.filter { $0.name.localizedCaseInsensitiveContains(query) }
-    }
-
     var body: some View {
-        // **화면을 옮기지 않는다** (§6.9) — 헤더가 검색 모드로 늘어나고 본문만 결과로 바뀐다.
-        // 하단 탭은 셸이 감춘다
-        if isSearching {
-            SearchResults(
+        // **화면을 옮기지 않는다** (§6.9) — 헤더가 검색 모드로 갈리고 본문만 바뀐다
+        if searching {
+            StoreSearchResults(
                 query: $query,
-                results: results,
                 balance: StorePlaceholder.balance,
                 liked: liked,
                 onLike: { toggleLike($0) },
                 onItem: onItem
             )
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .background(MyFisColor.bgBase)
         } else {
             browse
@@ -94,182 +87,6 @@ struct StoreScreen: View {
         }
     }
 }
-
-/// 스토어 헤더의 검색 자리 (DESIGN.md §6.9).
-///
-/// **평소와 검색 중이 같은 뷰다.** 버튼과 필드를 갈아 끼우면 모양이 같아도 한 번 튄다 —
-/// 껍데기(아이콘·배경·높이)는 그대로 두고 **안쪽 글자만** 바뀌게 해서 폭이 늘어나는 동안
-/// 아무것도 깜빡이지 않는다.
-///
-/// 누르는 즉시 검색 모드로 들어간다. `@FocusState` 가 켜지기를 기다리지 않는다 —
-/// 내비 바 안의 `TextField` 는 포커스가 셸까지 안 올라와서, 그걸 조건으로 삼으면
-/// **글자를 쳐야** 검색 모드가 켜졌다 (실제로 그랬다).
-struct StoreSearchBar: View {
-    @Binding var query: String
-    var focused: FocusState<Bool>.Binding
-    let searching: Bool
-    let onTap: () -> Void
-
-    var body: some View {
-        HStack(spacing: MyFisSpacing.sm) {
-            Image("ic_header_search")
-                .resizable()
-                .frame(width: 18, height: 18)
-                .foregroundStyle(MyFisColor.textTertiary)
-
-            if searching {
-                // 필드 안에 **지우기(X)를 두지 않는다** — 바로 옆이 `취소` 라 비슷한 버튼이 둘이 된다
-                TextField(
-                    "",
-                    text: $query,
-                    prompt: Text("상품 검색").foregroundColor(MyFisColor.textTertiary)
-                )
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(MyFisColor.textPrimary)
-                .focused(focused)
-                .submitLabel(.search)
-            } else {
-                Text("상품 검색")
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textTertiary)
-                Spacer(minLength: 0)
-            }
-        }
-        .padding(.horizontal, MyFisSpacing.md)
-        .frame(height: 40)
-        .frame(maxWidth: .infinity)
-        // **알약이 아니라 모서리만 둥글다** (§6.9) — 안드로이드와 같은 값을 쓴다
-        .background(
-            MyFisColor.surface2,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
-        .contentShape(Rectangle())
-        .onTapGesture { if !searching { onTap() } }
-        .accessibilityLabel("상품 검색")
-    }
-}
-
-private struct SearchResults: View {
-    @Binding var query: String
-    let results: [StoreItem]
-    let balance: Int
-    let liked: Set<Int>
-    let onLike: (Int) -> Void
-    let onItem: (StoreItem) -> Void
-
-    private let suggestions = ["음료", "프로틴", "타월", "보틀", "매트"]
-    private let columns = [
-        GridItem(.flexible(), spacing: MyFisSpacing.cardGap),
-        GridItem(.flexible(), spacing: MyFisSpacing.cardGap),
-    ]
-
-    var body: some View {
-        Group {
-            if query.isEmpty {
-                suggestionList
-            } else if results.isEmpty {
-                emptyState
-            } else {
-                grid
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    }
-
-    private var suggestionList: some View {
-        VStack(alignment: .leading, spacing: MyFisSpacing.md) {
-            Text("추천 검색어")
-                .font(MyFisFont.label)
-                .foregroundStyle(MyFisColor.textSecondary)
-            FlowRow(items: suggestions) { word in
-                Button {
-                    query = word
-                } label: {
-                    Text(word)
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textPrimary)
-                        .padding(.horizontal, MyFisSpacing.md)
-                        .padding(.vertical, MyFisSpacing.sm)
-                        .background(MyFisColor.surface2, in: Capsule())
-                }
-                .buttonStyle(.myFisTap)
-            }
-        }
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
-        .padding(.top, MyFisSpacing.lg)
-    }
-
-    private var emptyState: some View {
-        VStack(spacing: MyFisSpacing.md) {
-            Text("\u{2018}\(query)\u{2019} 검색 결과가 없어요")
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(MyFisColor.textSecondary)
-            Button("검색어 지우기") { query = "" }
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(MyFisColor.textPrimary)
-                .buttonStyle(.myFisTap)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-
-    private var grid: some View {
-        ScrollView {
-            LazyVGrid(columns: columns, spacing: MyFisSpacing.lg) {
-                ForEach(results) { item in
-                    ItemCard(
-                        item: item,
-                        balance: balance,
-                        liked: liked.contains(item.id),
-                        onLike: { onLike(item.id) },
-                        onTap: { onItem(item) }
-                    )
-                }
-            }
-            .padding(.horizontal, MyFisSpacing.screenHorizontal)
-            .padding(.top, MyFisSpacing.lg)
-            .padding(.bottom, MyFisSpacing.xxxl)
-        }
-        // 스크롤을 시작하면 키보드를 내린다 — 결과를 보려는 참이다
-        .scrollDismissesKeyboard(.immediately)
-    }
-}
-
-/// 칩을 줄 바꿔 흘려 놓는다. 개수가 적어 `Layout` 까지 만들지 않는다.
-private struct FlowRow<Item: Hashable, Content: View>: View {
-    let items: [Item]
-    @ViewBuilder let content: (Item) -> Content
-
-    var body: some View {
-        HStack(spacing: MyFisSpacing.sm) {
-            ForEach(items, id: \.self) { content($0) }
-        }
-    }
-}
-
-/// 시뮬레이터에는 키보드를 칠 수단이 마땅치 않다. 검색 모드를 스크린샷으로 확인할 때
-/// `SIMCTL_CHILD_MYFIS_SEARCH=1` (빈 검색) 또는 `=음료` (결과) 로 띄운다.
-
-enum StoreSearch {
-    /// 시뮬레이터에는 탭을 자동화할 수단이 없다. 검색 모드를 스크린샷으로 확인할 때
-    /// `SIMCTL_CHILD_MYFIS_SEARCH=1`(빈 검색어) 또는 `=음료`(결과) 로 앱을 띄운다
-    static var initialForDebug: Bool {
-        #if DEBUG
-        ProcessInfo.processInfo.environment["MYFIS_SEARCH"] != nil
-        #else
-        false
-        #endif
-    }
-
-    static var initialQueryForDebug: String {
-        #if DEBUG
-        let value = ProcessInfo.processInfo.environment["MYFIS_SEARCH"] ?? ""
-        return value == "1" ? "" : value
-        #else
-        return ""
-        #endif
-    }
-}
-
 
 /// 배너 — 옆 장이 살짝 보이게 두고 넘긴다. 몇 장 중 몇 번째인지 오른쪽 아래에 적는다.
 ///
