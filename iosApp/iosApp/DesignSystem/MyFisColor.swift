@@ -28,29 +28,6 @@ enum MyFisColor {
     /// 액센트 위 텍스트는 항상 검정. 흰 글자는 1.3:1 이라 안 읽힌다.
     static let onAccent = Color(hex: 0x000000)
 
-    // 달력 주말 — 한국 달력 관행. 시맨틱(상태)과 값은 같아도 쓰임이 달라 따로 둔다.
-    static let weekendSaturday = Color(hex: 0x7DA8FF)
-    static let weekendSunday = Color(hex: 0xFF6B6B)
-
-    // 찜(하트) 전용. 시맨틱도 카테고리도 아니고 **이 한 가지 기능의 색**이다.
-    static let like = Color(hex: 0xFF4D6D)
-
-    /// 별점 별. 시맨틱 `warning` 과 값은 같지만 상태가 아니라 **평점 표시**다
-    static let rating = Color(hex: 0xFBBF24)
-
-    /// `도움 됐어요` 켜진 상태. `info` 와 값은 같지만 **상태가 아니라 표시**다
-    static let helpful = Color(hex: 0x7DA8FF)
-
-    // 카테고리 — **목록에서 종류를 구분할 때만** 쓴다 (§6.19).
-    // 액션 색이 아니라 분류 표시라 액센트 예산(2곳)에 넣지 않는다.
-    static let categoryLime = Color(hex: 0xC9F531)
-    static let categoryBlue = Color(hex: 0x7DA8FF)
-    static let categoryGold = Color(hex: 0xFBBF24)
-    static let categoryCoral = Color(hex: 0xFF8A6B)
-    static let categoryGreen = Color(hex: 0x4ADE80)
-    static let categoryViolet = Color(hex: 0xA78BFA)
-    static let categoryGray = Color(hex: 0xA3A9B5)
-
     // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.
     static let success = Color(hex: 0x4ADE80)
     static let warning = Color(hex: 0xFBBF24)

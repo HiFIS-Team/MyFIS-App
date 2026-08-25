@@ -11,7 +11,7 @@ import SwiftUI
 /// 한글·영문·숫자가 한 가족이라 섞인 문장에서 무게감이 어긋나지 않는다.
 /// 서브셋에 없는 희귀 음절은 시스템 폰트로 폴백된다.
 enum MyFisFont {
-    fileprivate enum Face {
+    private enum Face {
         static let regular = "PretendardStd-Regular"
         static let medium = "PretendardStd-Medium"
         static let semibold = "PretendardStd-SemiBold"
@@ -31,59 +31,20 @@ enum MyFisFont {
     static let label = Font.custom(Face.medium, size: 13)
     static let caption = Font.custom(Face.regular, size: 12)
 
-    /// 워드마크(MyFIS) 전용 — Kanit Bold Italic (OFL-1.1, LICENSES/OFL-Kanit.txt).
-    /// 기울어져 있어 움직이는 느낌이 난다. 본문 서체와 별개이며 **로고에만 쓴다.**
-    static let wordmark = Font.custom("Kanit-BoldItalic", size: 22)
-
     /// 번들에 들어 있는 Pretendard 를 프로세스에 등록한다. 앱 시작 시 한 번 호출한다.
     ///
     /// `INFOPLIST_KEY_UIAppFonts` 는 Xcode 가 지원하지 않는 키라 생성된 Info.plist 에 들어가지 않는다.
     /// Info.plist 를 직접 관리하는 대신 여기서 등록한다.
     static func register() {
-        let faces: [(String, String)] = [
-            (Face.regular, "otf"), (Face.medium, "otf"),
-            (Face.semibold, "otf"), (Face.bold, "otf"),
-            ("Kanit-BoldItalic", "ttf"),
-        ]
-        for (name, ext) in faces {
-            guard let url = Bundle.main.url(forResource: name, withExtension: ext) else {
-                // 폰트가 없다고 앱을 죽이지 않는다. 시스템 폰트로 떨어질 뿐이다.
-                print("[MyFisFont] 번들에서 못 찾음: \(name).\(ext)")
+        for face in [Face.regular, Face.medium, Face.semibold, Face.bold] {
+            guard let url = Bundle.main.url(forResource: face, withExtension: "otf") else {
+                assertionFailure("폰트를 번들에서 못 찾음: \(face).otf")
                 continue
             }
             var error: Unmanaged<CFError>?
             if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
-                print("[MyFisFont] 등록 실패: \(name) — \(String(describing: error?.takeUnretainedValue()))")
+                assertionFailure("폰트 등록 실패: \(face) — \(String(describing: error))")
             }
         }
-    }
-
-    /// 내비게이션 바 제목도 **우리 서체**로 그리게 한다 (DESIGN.md §7.1).
-    ///
-    /// `ToolbarItem(.principal)` 에 우리 `Text` 를 넣으면 서체는 맞지만, 시스템이 그 뷰를
-    /// **좌우 아이템 사이 중앙**에 놓는다 — 밀려 들어오는 동안 뒤로 버튼과 오른쪽 아이콘의 폭이
-    /// 바뀌면서 중앙이 다시 잡히고, 제목이 **좌우로 흔들린다.**
-    /// 서체만 UIKit 에 알려 주고 자리는 시스템에 맡기면 그 흔들림이 없다.
-    static func styleNavigationBar() {
-        guard let title = UIFont(name: Face.semibold, size: 17) else { return }
-        let attributes: [NSAttributedString.Key: Any] = [
-            .font: title,
-            .foregroundColor: UIColor.white,
-        ]
-
-        // 배경은 **건드리지 않는다.** 화면마다 `.toolbarBackground` 로 정하고 있다 (§6.21)
-        let opaque = UINavigationBarAppearance()
-        opaque.configureWithDefaultBackground()
-        opaque.titleTextAttributes = attributes
-
-        let clear = UINavigationBarAppearance()
-        clear.configureWithTransparentBackground()
-        clear.titleTextAttributes = attributes
-
-        let bar = UINavigationBar.appearance()
-        bar.standardAppearance = opaque
-        bar.compactAppearance = opaque
-        bar.scrollEdgeAppearance = clear
-        bar.compactScrollEdgeAppearance = clear
     }
 }
