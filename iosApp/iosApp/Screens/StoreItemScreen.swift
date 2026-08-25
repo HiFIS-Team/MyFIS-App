@@ -26,8 +26,12 @@ struct StoreItemScreen: View {
                         image
                         head
                         facts
+                        reviews
                     }
                 }
+                // 시뮬레이터에는 스크롤을 시킬 수단이 없다. 아래쪽(리뷰)을 스크린샷으로 확인할 때
+                // `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom` 으로 띄운다 (홈과 같은 훅을 쓴다)
+                .defaultScrollAnchor(HomeScroll.initialForDebug)
                 buyBar
             }
             .ignoresSafeArea(edges: .top)
@@ -138,6 +142,59 @@ struct StoreItemScreen: View {
         Rectangle().fill(MyFisColor.borderSubtle).frame(height: 1)
     }
 
+    /// 리뷰 (DESIGN.md §6.21).
+    ///
+    /// **상품 설명은 두지 않는다.** 파워에이드가 뭔지 설명할 이유가 없다 —
+    /// 사람들이 궁금한 건 "이거 받아보니 어땠나" 뿐이라 리뷰만 남긴다.
+    private var reviews: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .bottom, spacing: MyFisSpacing.sm) {
+                Text("리뷰")
+                    .font(MyFisFont.titleMd)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                Text("\(item.reviewCount.decimal)개")
+                    .font(MyFisFont.bodySm.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textTertiary)
+                    .padding(.bottom, 2)
+            }
+            .padding(.horizontal, MyFisSpacing.screenHorizontal)
+
+            HStack(spacing: MyFisSpacing.sm) {
+                Stars(filled: Int(item.rating), size: 18)
+                Text(String(format: "%.1f", item.rating))
+                    .font(MyFisFont.titleMd.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textPrimary)
+            }
+            .padding(.horizontal, MyFisSpacing.screenHorizontal)
+            .padding(.vertical, MyFisSpacing.md)
+
+            ForEach(StorePlaceholder.reviews) { review in
+                divider
+                ReviewRow(review: review)
+            }
+            divider
+
+            // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
+            Button {} label: {
+                HStack(spacing: 0) {
+                    Text("리뷰 \(item.reviewCount.decimal)개 모두 보기")
+                        .font(MyFisFont.bodySm.monospacedDigit())
+                    Image("ic_chevron_down")
+                        .resizable()
+                        .frame(width: 18, height: 18)
+                        .rotationEffect(.degrees(-90))
+                }
+                .foregroundStyle(MyFisColor.textSecondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, MyFisSpacing.lg)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.top, MyFisSpacing.xl)
+        .padding(.bottom, MyFisSpacing.md)
+    }
+
     /// 하단 고정 바 (§6.21).
     ///
     /// **엄지가 닿는 자리**라 이 화면의 유일한 Primary 를 여기 둔다 (§2 원칙 2·5).
@@ -228,6 +285,65 @@ private struct FactRow: View {
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
         .padding(.vertical, MyFisSpacing.md)
         .contentShape(Rectangle())
+    }
+}
+
+private struct ReviewRow: View {
+    let review: StoreReview
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: MyFisSpacing.sm) {
+                Stars(filled: review.rating, size: 14)
+                Text(review.author)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textSecondary)
+                Text(review.date)
+                    .font(MyFisFont.caption)
+                    .foregroundStyle(MyFisColor.textTertiary)
+            }
+
+            Text(review.body)
+                .font(MyFisFont.body)
+                .foregroundStyle(MyFisColor.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, MyFisSpacing.sm)
+
+            // TODO(서버): 도움 됐어요 집계가 붙으면 실제로 누르게 한다
+            Button {} label: {
+                Text("도움 됐어요 \(review.helpful)")
+                    .font(MyFisFont.caption.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textSecondary)
+                    .padding(.horizontal, MyFisSpacing.md)
+                    .padding(.vertical, MyFisSpacing.sm)
+                    .background(
+                        MyFisColor.surface2,
+                        in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
+                    )
+            }
+            .buttonStyle(.plain)
+            .padding(.top, MyFisSpacing.md)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+        .padding(.vertical, MyFisSpacing.lg)
+    }
+}
+
+/// 별 다섯 개. 채운 별은 `rating`, 나머지는 표면색으로 남긴다
+private struct Stars: View {
+    let filled: Int
+    let size: CGFloat
+
+    var body: some View {
+        HStack(spacing: 1) {
+            ForEach(0..<5, id: \.self) { index in
+                Image("ic_store_rating")
+                    .resizable()
+                    .frame(width: size, height: size)
+                    .foregroundStyle(index < filled ? MyFisColor.rating : MyFisColor.surface3)
+            }
+        }
     }
 }
 

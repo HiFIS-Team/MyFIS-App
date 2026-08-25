@@ -69,13 +69,13 @@ struct HomeScreen: View {
     }
 }
 
-/// 시뮬레이터에는 스크롤을 시킬 수단이 없다. 홈 아래쪽을 스크린샷으로 확인할 때
+/// 시뮬레이터에는 스크롤을 시킬 수단이 없다. 화면 아래쪽을 스크린샷으로 확인할 때
 /// `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom` 으로 앱을 띄운다.
 ///
 ///     xcrun simctl launch --terminate-running-process booted com.myfis.app
 ///
 /// 디버그 빌드에서만 동작한다.
-private enum HomeScroll {
+enum HomeScroll {
     static var initialForDebug: UnitPoint {
         #if DEBUG
         ProcessInfo.processInfo.environment["MYFIS_HOME_SCROLL"] == "bottom" ? .bottom : .top

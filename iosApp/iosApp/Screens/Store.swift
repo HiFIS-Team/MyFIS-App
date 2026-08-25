@@ -53,7 +53,29 @@ struct StoreItem: Identifiable, Hashable {
     var soldOut: Bool = false
 }
 
+/// 리뷰 한 건. SPEC.md §5 S-02.
+///
+/// TODO(서버): 리뷰 API 가 붙으면 지운다.
+struct StoreReview: Identifiable, Hashable {
+    let id: Int
+    let author: String
+    let date: String
+    let rating: Int
+    let body: String
+    let helpful: Int
+}
+
 enum StorePlaceholder {
+    /// TODO(서버): 리뷰 API 가 붙으면 지운다
+    static let reviews: [StoreReview] = [
+        .init(id: 1, author: "김*훈", date: "8월 20일", rating: 5,
+              body: "운동 끝나고 바로 마시기 딱 좋아요. 데스크에서 받는 것도 금방이고요", helpful: 3),
+        .init(id: 2, author: "이*연", date: "8월 17일", rating: 4,
+              body: "가볍게 마시기 좋은데 차가운 게 남아 있을 때가 더 좋아요", helpful: 1),
+        .init(id: 3, author: "박*수", date: "8월 11일", rating: 5,
+              body: "마일리지로 바꾸니까 운동 가는 맛이 있네요", helpful: 7),
+    ]
+
     /// TODO(서버): `MileageAccount.balance`
     static let balance = 1_240
 

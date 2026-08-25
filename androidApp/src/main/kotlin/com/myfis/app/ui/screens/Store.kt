@@ -91,3 +91,24 @@ fun Int.toViewCount(): String = when {
     this >= 10_000 -> "%s만 명".format("%.1f".format(this / 10_000.0).removeSuffix(".0"))
     else -> "%,d 명".format(this)
 }
+
+/**
+ * 리뷰 한 건. SPEC.md §5 S-02.
+ *
+ * TODO(서버): 리뷰 API 가 붙으면 지운다.
+ */
+data class StoreReview(
+    val id: Int,
+    val author: String,
+    val date: String,
+    val rating: Int,
+    val body: String,
+    val helpful: Int,
+)
+
+/** TODO(서버): 리뷰 API 가 붙으면 지운다 */
+val storeReviewPlaceholder = listOf(
+    StoreReview(1, "김*훈", "8월 20일", 5, "운동 끝나고 바로 마시기 딱 좋아요. 데스크에서 받는 것도 금방이고요", 3),
+    StoreReview(2, "이*연", "8월 17일", 4, "가볍게 마시기 좋은데 차가운 게 남아 있을 때가 더 좋아요", 1),
+    StoreReview(3, "박*수", "8월 11일", 5, "마일리지로 바꾸니까 운동 가는 맛이 있네요", 7),
+)

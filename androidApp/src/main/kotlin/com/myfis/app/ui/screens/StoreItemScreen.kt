@@ -70,6 +70,7 @@ fun StoreItemScreen(
                 ItemImage()
                 ItemHead(item = item, short = short, balance = balance)
                 ItemFacts(item = item)
+                ItemReviews(item = item, reviews = storeReviewPlaceholder)
             }
 
             // **버튼은 스크롤을 따라가지 않는다.** 내려 읽다가 뒤로가기가 사라지면 안 된다
@@ -345,6 +346,145 @@ private fun BuyBar(
                 onClick = onExchange,
                 enabled = !item.soldOut && short == 0,
                 modifier = Modifier.weight(1f),
+            )
+        }
+    }
+}
+
+/**
+ * 리뷰 (DESIGN.md §6.21).
+ *
+ * **상품 설명은 두지 않는다.** 파워에이드가 뭔지 설명할 이유가 없다 —
+ * 사람들이 궁금한 건 "이거 받아보니 어땠나" 뿐이라 리뷰만 남긴다.
+ */
+@Composable
+private fun ItemReviews(item: StoreItem, reviews: List<StoreReview>) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(top = MyFisSpacing.xl, bottom = MyFisSpacing.md),
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = MyFisSpacing.screenHorizontal),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+        ) {
+            Text("리뷰", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+            Text(
+                "%,d개".format(item.reviewCount),
+                style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextTertiary,
+                modifier = Modifier.padding(bottom = 2.dp),
+            )
+        }
+
+        Row(
+            modifier = Modifier.padding(
+                start = MyFisSpacing.screenHorizontal,
+                top = MyFisSpacing.md,
+                bottom = MyFisSpacing.md,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+        ) {
+            Stars(item.rating.toInt(), size = 18.dp)
+            Text(
+                "%.1f".format(item.rating),
+                style = MyFisTheme.type.titleMd.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextPrimary,
+            )
+        }
+
+        reviews.forEach { review ->
+            Divider()
+            ReviewRow(review)
+        }
+        Divider()
+
+        // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .tapWithHaptics(interaction, {})
+                .padding(
+                    horizontal = MyFisSpacing.screenHorizontal,
+                    vertical = MyFisSpacing.lg,
+                ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                "리뷰 %,d개 모두 보기".format(item.reviewCount),
+                style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextSecondary,
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = null,
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier
+                    .size(18.dp)
+                    .graphicsLayer { rotationZ = -90f },
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReviewRow(review: StoreReview) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(
+                horizontal = MyFisSpacing.screenHorizontal,
+                vertical = MyFisSpacing.lg,
+            ),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+        ) {
+            Stars(review.rating, size = 14.dp)
+            Text(review.author, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
+            Text(review.date, style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary)
+        }
+
+        Text(
+            review.body,
+            style = MyFisTheme.type.body,
+            color = MyFisColor.TextPrimary,
+            modifier = Modifier.padding(top = MyFisSpacing.sm),
+        )
+
+        // TODO(서버): 도움 됐어요 집계가 붙으면 실제로 누르게 한다
+        Text(
+            "도움 됐어요 ${review.helpful}",
+            style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+            color = MyFisColor.TextSecondary,
+            modifier = Modifier
+                .padding(top = MyFisSpacing.md)
+                .clip(MyFisRadius.sm)
+                .background(MyFisColor.Surface2)
+                .tapWithHaptics(interaction, {})
+                .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.sm),
+        )
+    }
+}
+
+/** 별 다섯 개. 채운 별은 `rating`, 나머지는 표면색으로 남긴다 */
+@Composable
+private fun Stars(filled: Int, size: androidx.compose.ui.unit.Dp) {
+    Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+        repeat(5) { index ->
+            Icon(
+                painter = painterResource(R.drawable.ic_store_rating),
+                contentDescription = null, // 옆 숫자가 이름 역할을 한다
+                tint = if (index < filled) MyFisColor.Rating else MyFisColor.Surface3,
+                modifier = Modifier.size(size),
             )
         }
     }
