@@ -13,6 +13,8 @@ struct HomeScreen: View {
     var onCardio: () -> Void = {}
     var onWeight: () -> Void = {}
     var onStore: () -> Void = {}
+    /// TODO: H-04 공지·이벤트 화면이 붙으면 연결한다
+    var onNews: () -> Void = {}
 
     @State private var selected = Date()
     @State private var expanded = false
@@ -52,7 +54,13 @@ struct HomeScreen: View {
                     onStore: onStore
                 )
                 .padding(.top, MyFisSpacing.sectionGap)
-                // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권 · 휴관 공지)이 아래에 붙는다 (SPEC H-01 ⑦).
+                NewsSection(
+                    banners: HomePlaceholder.newsBanners,
+                    notice: HomePlaceholder.notice,
+                    onOpen: onNews
+                )
+                .padding(.top, MyFisSpacing.sectionGap)
+                // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권)이 마일리지 위에 붙는다 (SPEC H-01 ⑦).
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
@@ -152,6 +160,16 @@ struct TodayRoutine {
 enum HomePlaceholder {
     /// TODO(서버): 출석 기록이 붙으면 계산한다
     static let attendanceStreak = 12
+
+    /// TODO(서버): 이벤트 배너 API 가 붙으면 지운다
+    static let newsBanners: [NewsBanner] = [
+        .init(id: 1, title: "8월 신규 회원 2주 무료", body: "이달 등록하면 자동으로 붙어요"),
+        .init(id: 2, title: "친구 초대하고 1,000 P", body: "초대 코드로 등록하면 둘 다 받아요"),
+        .init(id: 3, title: "PT 10회 등록 시 1회 추가", body: "8월 31일까지"),
+    ]
+
+    /// TODO(서버): 공지 API 가 붙으면 지운다
+    static let notice = "8월 15일 광복절 정상 운영합니다"
 
     /// TODO(서버): 혼잡도 API 가 붙으면 지운다
     static var congestion: BranchCongestion {
@@ -673,6 +691,137 @@ private struct MileageItemCard: View {
                     .padding(.top, 2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+/// TODO(서버): 이벤트·공지 API 가 붙으면 지운다 (SPEC H-04)
+struct NewsBanner: Identifiable, Hashable {
+    let id: Int
+    let title: String
+    let body: String
+}
+
+/// 이벤트 · 새소식 (DESIGN.md §6.18).
+///
+/// **홈의 맨 밑이 제 자리다.** 자주 보는 것도, 급한 것도 아니다 —
+/// 그래도 없으면 이벤트를 알릴 데가 없다. 위에 두면 계기판을 가린다.
+private struct NewsSection: View {
+    let banners: [NewsBanner]
+    let notice: String
+    let onOpen: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: MyFisSpacing.md) {
+            Text("이벤트 · 새소식")
+                .font(MyFisFont.titleMd)
+                .foregroundStyle(MyFisColor.textPrimary)
+
+            VStack(spacing: MyFisSpacing.md) {
+                NewsCarousel(banners: banners, onOpen: onOpen)
+
+                Rectangle()
+                    .fill(MyFisColor.borderSubtle)
+                    .frame(height: 1)
+
+                NoticeRow(notice: notice, action: onOpen)
+            }
+            .padding(MyFisSpacing.cardPadding)
+            .background(
+                MyFisColor.surface1,
+                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+    }
+}
+
+/// 이벤트 배너.
+///
+/// 스토어 배너(§6.12)와 달리 **자동으로 넘기지 않는다.** 홈 맨 밑에서 저 혼자 움직이면
+/// 위쪽 계기판에서 시선을 뺏는다. 몇 장인지는 `01 / 03` 으로 알려 준다.
+private struct NewsCarousel: View {
+    let banners: [NewsBanner]
+    let onOpen: () -> Void
+
+    @State private var position: Int?
+
+    private var page: Int { (position ?? banners.first?.id ?? 1) }
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            LazyHStack(spacing: MyFisSpacing.md) {
+                ForEach(banners) { banner in
+                    card(banner)
+                        .containerRelativeFrame(.horizontal, count: 1, span: 1, spacing: MyFisSpacing.md)
+                        .id(banner.id)
+                }
+            }
+            .scrollTargetLayout()
+        }
+        .scrollTargetBehavior(.viewAligned)
+        .scrollPosition(id: $position)
+        .frame(height: Self.height)
+    }
+
+    private func card(_ banner: NewsBanner) -> some View {
+        Button(action: onOpen) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(banner.title)
+                    .font(MyFisFont.titleSm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                Text(banner.body)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                    .padding(.top, MyFisSpacing.xs)
+                Spacer(minLength: MyFisSpacing.sm)
+                // `1 / 3` 보다 자릿수가 고정돼 흔들리지 않는다
+                Text(String(format: "%02d / %02d", page, banners.count))
+                    .font(MyFisFont.caption.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textTertiary)
+            }
+            .padding(MyFisSpacing.lg)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(
+                MyFisColor.surface2,
+                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+
+    private static let height: CGFloat = 108
+}
+
+/// 공지 한 줄. 목록으로 가는 길이자, 이 섹션이 비어 보이지 않게 하는 최소한의 내용이다
+private struct NoticeRow: View {
+    let notice: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 0) {
+                Text("공지")
+                    .font(MyFisFont.label)
+                    .foregroundStyle(MyFisColor.textSecondary)
+                Rectangle()
+                    .fill(MyFisColor.borderStrong)
+                    .frame(width: 1, height: 10)
+                    .padding(.horizontal, MyFisSpacing.sm)
+                Text(notice)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .lineLimit(1)
+                Spacer(minLength: MyFisSpacing.sm)
+                Image("ic_chevron_down")
+                    .resizable()
+                    .frame(width: 18, height: 18)
+                    .rotationEffect(.degrees(-90))
+                    .foregroundStyle(MyFisColor.textTertiary)
+            }
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }

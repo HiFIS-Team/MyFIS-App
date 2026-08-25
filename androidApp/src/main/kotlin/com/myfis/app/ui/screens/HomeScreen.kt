@@ -9,6 +9,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -71,6 +73,7 @@ fun HomeScreen(
     onCardio: () -> Unit = {},
     onWeight: () -> Unit = {},
     onStore: () -> Unit = {},
+    onNews: () -> Unit = {},
 ) {
     val today = remember { LocalDate.now() }
 
@@ -126,7 +129,13 @@ fun HomeScreen(
             onStore = onStore,
             modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
         )
-        // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권 · 휴관 공지)이 아래에 붙는다 (SPEC H-01 ⑦).
+        NewsSection(
+            banners = newsBannerPlaceholder,
+            notice = noticePlaceholder,
+            onOpen = onNews,
+            modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
+        )
+        // TODO: 조건부 줄(회원권 D-7 · 미수령 교환권)이 마일리지 위에 붙는다 (SPEC H-01 ⑦).
         }
     }
 }
@@ -813,3 +822,150 @@ private fun affordablePlaceholder(balance: Int): List<StoreItem> =
         .filter { !it.soldOut && it.price <= balance }
         .sortedByDescending { it.views }
         .take(3)
+
+/**
+ * 이벤트 · 새소식 (DESIGN.md §6.18).
+ *
+ * **홈의 맨 밑이 제 자리다.** 자주 보는 것도, 급한 것도 아니다 —
+ * 그래도 없으면 이벤트를 알릴 데가 없다. 위에 두면 계기판을 가린다.
+ */
+@Composable
+private fun NewsSection(
+    banners: List<NewsBanner>,
+    notice: String,
+    onOpen: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal),
+    ) {
+        Text("이벤트 · 새소식", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+        Spacer(Modifier.height(MyFisSpacing.md))
+
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .clip(MyFisRadius.md)
+                .background(MyFisColor.Surface1)
+                .padding(MyFisSpacing.cardPadding),
+        ) {
+            NewsCarousel(banners = banners, onOpen = onOpen)
+
+            Box(
+                Modifier
+                    .padding(vertical = MyFisSpacing.md)
+                    .fillMaxWidth()
+                    .height(1.dp)
+                    .background(MyFisColor.BorderSubtle),
+            )
+
+            NoticeRow(notice = notice, onClick = onOpen)
+        }
+    }
+}
+
+/**
+ * 이벤트 배너.
+ *
+ * 스토어 배너(§6.12)와 달리 **자동으로 넘기지 않는다.** 홈 맨 밑에서 저 혼자 움직이면
+ * 위쪽 계기판에서 시선을 뺏는다. 몇 장인지는 `01 / 03` 으로 알려 준다.
+ */
+@Composable
+private fun NewsCarousel(banners: List<NewsBanner>, onOpen: () -> Unit) {
+    val pager = rememberPagerState { banners.size }
+    val interaction = remember { MutableInteractionSource() }
+
+    HorizontalPager(
+        state = pager,
+        pageSpacing = MyFisSpacing.md,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(NewsBannerHeight),
+    ) { page ->
+        val banner = banners[page]
+        Box(
+            Modifier
+                .fillMaxSize()
+                .clip(MyFisRadius.md)
+                .background(MyFisColor.Surface2)
+                .tapWithHaptics(interaction, onOpen)
+                .padding(MyFisSpacing.lg),
+        ) {
+            Column {
+                Text(
+                    banner.title,
+                    style = MyFisTheme.type.titleSm,
+                    color = MyFisColor.TextPrimary,
+                )
+                Text(
+                    banner.body,
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextTertiary,
+                    modifier = Modifier.padding(top = MyFisSpacing.xs),
+                )
+            }
+            Text(
+                // `1 / 3` 보다 자릿수가 고정돼 흔들리지 않는다
+                "%02d / %02d".format(page + 1, banners.size),
+                style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
+                color = MyFisColor.TextTertiary,
+                modifier = Modifier.align(Alignment.BottomStart),
+            )
+        }
+    }
+}
+
+/** 공지 한 줄. 목록으로 가는 길이자, 이 섹션이 비어 보이지 않게 하는 최소한의 내용이다 */
+@Composable
+private fun NoticeRow(notice: String, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(MyFisRadius.sm)
+            .tapWithHaptics(interaction, onClick),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text("공지", style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+        Box(
+            Modifier
+                .padding(horizontal = MyFisSpacing.sm)
+                .size(width = 1.dp, height = 10.dp)
+                .background(MyFisColor.BorderStrong),
+        )
+        Text(
+            notice,
+            style = MyFisTheme.type.bodySm,
+            color = MyFisColor.TextPrimary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f),
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_chevron_down),
+            contentDescription = null, // 옆 글자가 이름 역할을 한다
+            tint = MyFisColor.TextTertiary,
+            modifier = Modifier
+                .size(18.dp)
+                .graphicsLayer { rotationZ = -90f },
+        )
+    }
+}
+
+private val NewsBannerHeight = 108.dp
+
+/** TODO(서버): 이벤트·공지 API 가 붙으면 지운다 (SPEC H-04) */
+private data class NewsBanner(val id: Int, val title: String, val body: String)
+
+/** TODO(서버): 이벤트 배너 API 가 붙으면 지운다 */
+private val newsBannerPlaceholder = listOf(
+    NewsBanner(1, "8월 신규 회원 2주 무료", "이달 등록하면 자동으로 붙어요"),
+    NewsBanner(2, "친구 초대하고 1,000 P", "초대 코드로 등록하면 둘 다 받아요"),
+    NewsBanner(3, "PT 10회 등록 시 1회 추가", "8월 31일까지"),
+)
+
+/** TODO(서버): 공지 API 가 붙으면 지운다 */
+private const val noticePlaceholder = "8월 15일 광복절 정상 운영합니다"
