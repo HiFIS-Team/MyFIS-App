@@ -383,7 +383,7 @@ private fun ItemRow(
  * **부족해도 가리지 않는다** (SPEC S-01) — 얼마가 모자란지 적어 목표로 삼게 한다. 품절도 마찬가지다.
  */
 @Composable
-private fun ItemCard(
+fun ItemCard(
     item: StoreItem,
     balance: Int,
     liked: Boolean,

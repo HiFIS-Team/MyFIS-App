@@ -26,6 +26,7 @@ import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
 import com.myfis.app.ui.screens.StoreScreen
+import com.myfis.app.ui.screens.StoreSearchScreen
 import com.myfis.app.ui.theme.MyFisColor
 
 /**
@@ -57,6 +58,7 @@ fun AppShell() {
                 onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) },
                 onStoreMy = { nav.navigateOnce(Route.STORE_MY) },
                 onStoreCart = { nav.navigateOnce(Route.STORE_CART) },
+                onStoreSearch = { nav.navigateOnce(Route.STORE_SEARCH) },
                 onStoreItem = {
                     storeItem = it
                     nav.navigateOnce(Route.STORE_ITEM)
@@ -70,6 +72,15 @@ fun AppShell() {
             StoreMyScreen(
                 onBack = { nav.popBackStack() },
                 onCart = { nav.navigateOnce(Route.STORE_CART) },
+            )
+        }
+        composable(Route.STORE_SEARCH) {
+            StoreSearchScreen(
+                onBack = { nav.popBackStack() },
+                onItem = {
+                    storeItem = it
+                    nav.navigateOnce(Route.STORE_ITEM)
+                },
             )
         }
         composable(Route.STORE_CART) {
@@ -97,6 +108,7 @@ private fun TabShell(
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
+    onStoreSearch: () -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
     var tabSet by rememberSaveable { mutableStateOf(TabSet.BASE) }
@@ -113,6 +125,7 @@ private fun TabShell(
                     onNotification = onNotification,
                     onStoreMy = onStoreMy,
                     onStoreCart = onStoreCart,
+                    onStoreSearch = onStoreSearch,
                     onStoreItem = onStoreItem,
                     // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                     onCardio = {
@@ -153,6 +166,7 @@ private fun BaseTabContent(
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
+    onStoreSearch: () -> Unit,
     onStoreItem: (StoreItem) -> Unit,
     onCardio: () -> Unit,
     onWeight: () -> Unit,
@@ -167,7 +181,12 @@ private fun BaseTabContent(
         )
         BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
-        BaseTab.STORE -> StoreScreen(onMy = onStoreMy, onCart = onStoreCart, onItem = onStoreItem)
+        BaseTab.STORE -> StoreScreen(
+            onSearch = onStoreSearch,
+            onMy = onStoreMy,
+            onCart = onStoreCart,
+            onItem = onStoreItem,
+        )
         BaseTab.MY -> PlaceholderScreen("Y-01", "마이", "프로필 · 기록 · 설정")
         // 통로라 여기 도달하지 않는다
         BaseTab.WEIGHT -> Unit

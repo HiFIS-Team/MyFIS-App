@@ -17,6 +17,7 @@ object Route {
     /** S-08 스토어 마이 — 마이 탭(Y-01)과 다른 화면이다 */
     const val STORE_MY = "store_my"
     const val STORE_CART = "store_cart"
+    const val STORE_SEARCH = "store_search"
 
     /** S-02 상품 상세 */
     const val STORE_ITEM = "store_item"

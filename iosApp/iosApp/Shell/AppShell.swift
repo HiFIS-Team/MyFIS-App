@@ -46,13 +46,6 @@ struct AppShell: View {
     /// 뒤로 버튼·가장자리 스와이프·스택 관리가 전부 시스템 몫이 된다 —
     /// 직접 만들었더니 화면 전체 드래그가 탭을 삼키고, 잠금이 안 풀리고,
     /// 같은 화면이 두 장 쌓였다. 안드로이드가 `NavHost` 로 멀쩡했던 이유이기도 하다.
-    /// 스토어 검색어. 헤더가 내비 바로 올라가면서 셸이 들고 있다
-    @State private var storeQuery = StoreSearch.initialQueryForDebug
-    @FocusState private var storeFocused: Bool
-
-    /// 검색 모드 — 필드에 커서가 있거나 검색어가 남아 있는 동안
-    private var storeSearching: Bool { storeFocused || !storeQuery.isEmpty }
-
     @State private var path: [HeaderRoute] = HeaderRoute?.initialForDebug.map { [$0] } ?? []
 
     var body: some View {
@@ -110,24 +103,14 @@ struct AppShell: View {
             ToolbarItem(placement: .principal) {
                 // 내비 바는 principal 에 **딱 필요한 만큼만** 자리를 준다.
                 // 검색이 폭을 다 써야 하는 헤더라(§6.9) 오른쪽 아이콘 자리를 뺀 폭을 직접 잡는다
-                StoreSearchField(query: $storeQuery, focused: $storeFocused)
-                    .frame(width: max(160, UIScreen.main.bounds.width - (storeSearching ? 120 : 160)))
+                StoreSearchButton { open(.storeSearch) }
+                    .frame(width: max(160, UIScreen.main.bounds.width - 160))
             }
-            if storeSearching {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("취소") {
-                        storeQuery = ""
-                        storeFocused = false
-                    }
-                    .font(MyFisFont.bodySm)
-                }
-            } else {
-                ToolbarItem(placement: .topBarTrailing) {
-                    HeaderIcon("ic_header_cart", "장바구니") { open(.storeCart) }
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    HeaderIcon("ic_header_my", "마이") { open(.storeMy) }
-                }
+            ToolbarItem(placement: .topBarTrailing) {
+                HeaderIcon("ic_header_cart", "장바구니") { open(.storeCart) }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                HeaderIcon("ic_header_my", "마이") { open(.storeMy) }
             }
         }
     }
@@ -141,6 +124,8 @@ struct AppShell: View {
             StoreMyScreen(onCart: { open(.storeCart) })
         case .storeCart:
             StoreCartScreen(onStore: { popToStore() })
+        case .storeSearch:
+            StoreSearchScreen(onItem: { open(.storeItem($0)) })
         case .storeItem(let item):
             StoreItemScreen(item: item, onCart: { open(.storeCart) })
         }
@@ -230,11 +215,9 @@ struct AppShell: View {
                 // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
                 TabScreen {
                     StoreScreen(
-                        query: $storeQuery,
                         onCart: { open(.storeCart) },
                         onMy: { open(.storeMy) },
-                        onItem: { open(.storeItem($0)) },
-                        isSearching: storeSearching
+                        onItem: { open(.storeItem($0)) }
                     )
                 }
 
