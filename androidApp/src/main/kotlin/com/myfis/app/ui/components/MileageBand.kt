@@ -28,7 +28,9 @@ import com.myfis.app.ui.theme.MyFisTheme
  * 값 표기가 `n P` 라 **아이콘도 동전 안에 P** 를 넣어 둘이 같은 말을 하게 했다.
  *
  * P 는 칠하지 않고 **구멍으로 뚫는다** (`evenOdd`) — 그래야 라임 위 글자가 검정이 된다 (§3.2).
- * 값은 흰색이다. 라임이 둘이면 어느 쪽이 중요한지 알 수 없다.
+ *
+ * **라임은 동전 하나뿐이다.** 값은 앱 전체와 같은 표기를 쓴다 (§3.3 `MileageText`) —
+ * 포인트 숫자를 라임으로 칠하면 같은 값이 화면마다 다르게 읽힌다.
  *
  * 스크롤해도 남는다 (SPEC S 공통 규칙).
  */
@@ -64,10 +66,9 @@ fun MileageBand(balance: Int, modifier: Modifier = Modifier) {
                 tint = MyFisColor.Accent,
                 modifier = Modifier.size(22.dp),
             )
-            Text(
-                balance.toMileage(),
-                style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextPrimary,
+            MileageText(
+                balance,
+                style = MyFisTheme.type.titleSm,
                 modifier = Modifier.padding(start = MyFisSpacing.xs),
             )
         }

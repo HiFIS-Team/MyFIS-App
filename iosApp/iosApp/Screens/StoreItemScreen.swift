@@ -116,11 +116,8 @@ struct StoreItemScreen: View {
                         .resizable()
                         .frame(width: 22, height: 22)
                         .foregroundStyle(MyFisColor.accent)
-                    // 이 화면의 **핵심 숫자**라 액센트를 쓴다 (§3.1). 잔액 띠와 반대인데,
-                    // 거기선 코인만 라임이라 값이 흰색이어야 무엇이 중요한지 갈렸다. 여기는 가격이 주인공이다
-                    Text(item.price.mileage)
-                        .font(MyFisFont.metricMd.monospacedDigit())
-                        .foregroundStyle(MyFisColor.accent)
+                    MileageText(item.price)
+                        .font(MyFisFont.metricMd)
                 }
                 .fixedSize()
             }
@@ -575,9 +572,8 @@ private struct SuggestionCard: View {
                     .foregroundStyle(MyFisColor.textPrimary)
                     .lineLimit(1)
                     .padding(.top, MyFisSpacing.sm)
-                Text(item.price.mileage)
-                    .font(MyFisFont.titleSm.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
+                MileageText(item.price)
+                    .font(MyFisFont.titleSm)
                     .padding(.top, 2)
             }
             .frame(width: Self.width, alignment: .leading)

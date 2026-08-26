@@ -4,17 +4,13 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,6 +19,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.HomeCalendar
+import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.shell.AppHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
@@ -747,10 +748,9 @@ private fun MileageShopSection(
                     tint = MyFisColor.Accent,
                     modifier = Modifier.size(20.dp),
                 )
-                Text(
-                    balance.toMileage(),
-                    style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-                    color = MyFisColor.TextPrimary,
+                MileageText(
+                    balance,
+                    style = MyFisTheme.type.titleSm,
                     modifier = Modifier.padding(start = MyFisSpacing.xs),
                 )
             }
@@ -802,10 +802,9 @@ private fun MileageItemCard(item: StoreItem, onClick: () -> Unit, modifier: Modi
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
-        Text(
-            item.price.toMileage(),
-            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-            color = MyFisColor.TextPrimary,
+        MileageText(
+            item.price,
+            style = MyFisTheme.type.titleSm,
             modifier = Modifier.padding(top = 2.dp),
         )
     }

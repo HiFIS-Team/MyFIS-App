@@ -146,9 +146,12 @@ private struct ExchangeCard: View {
                         .font(MyFisFont.body)
                         .foregroundStyle(MyFisColor.textPrimary)
                         .lineLimit(1)
-                    Text("\(exchange.price.mileage) · \(exchange.count)개")
-                        .font(MyFisFont.bodySm.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textSecondary)
+                    (
+                        MileageText.text(exchange.price, tone: .secondary)
+                            + Text(" · \(exchange.count)개")
+                            .foregroundStyle(MyFisColor.textSecondary)
+                    )
+                    .font(MyFisFont.bodySm.monospacedDigit())
                 }
                 Spacer(minLength: 0)
             }
@@ -247,9 +250,8 @@ private struct SuggestionCard: View {
                     .foregroundStyle(MyFisColor.textPrimary)
                     .lineLimit(1)
                     .padding(.top, MyFisSpacing.sm)
-                Text(item.price.mileage)
-                    .font(MyFisFont.titleSm.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
+                MileageText(item.price)
+                    .font(MyFisFont.titleSm)
                     .padding(.top, 2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

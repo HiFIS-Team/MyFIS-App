@@ -318,9 +318,8 @@ struct ItemCard: View {
                     .padding(.top, 2)
 
                 HStack(spacing: 0) {
-                    Text(item.price.mileage)
-                        .font(MyFisFont.titleSm.monospacedDigit())
-                        .foregroundStyle(dimmed ? MyFisColor.textTertiary : MyFisColor.textPrimary)
+                    MileageText(item.price, tone: dimmed ? .dimmed : .primary)
+                        .font(MyFisFont.titleSm)
                     Spacer(minLength: 0)
                     LikeButton(liked: liked, action: onLike)
                 }

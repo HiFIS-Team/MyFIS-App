@@ -6,6 +6,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -14,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -44,6 +44,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.BurstRing
+import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.components.rememberBurst
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
@@ -227,12 +228,9 @@ private fun ItemHead(item: StoreItem) {
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.size(MyFisSpacing.xs))
-            // 이 화면의 **핵심 숫자**라 액센트를 쓴다 (§3.1). 잔액 띠와 반대인데,
-            // 거기선 코인만 라임이라 값이 흰색이어야 무엇이 중요한지 갈렸다. 여기는 가격이 주인공이다
-            Text(
-                item.price.toMileage(),
-                style = MyFisTheme.type.metricMd.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.Accent,
+            MileageText(
+                item.price,
+                style = MyFisTheme.type.metricMd,
             )
         }
     }
@@ -716,10 +714,9 @@ private fun SuggestionCard(item: StoreItem) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
-        Text(
-            item.price.toMileage(),
-            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-            color = MyFisColor.TextPrimary,
+        MileageText(
+            item.price,
+            style = MyFisTheme.type.titleSm,
             modifier = Modifier.padding(top = 2.dp),
         )
     }

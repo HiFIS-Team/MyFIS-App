@@ -25,10 +25,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.MileageBand
+import com.myfis.app.ui.components.MileageText
+import com.myfis.app.ui.components.MileageTone
+import com.myfis.app.ui.components.mileageAnnotated
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisGhostButton
@@ -203,9 +209,13 @@ private fun ExchangeCard(exchange: MyExchange, modifier: Modifier = Modifier) {
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    "${exchange.price.toMileage()} · ${exchange.count}개",
+                    buildAnnotatedString {
+                        append(mileageAnnotated(exchange.price, MileageTone.Secondary))
+                        withStyle(SpanStyle(color = MyFisColor.TextSecondary)) {
+                            append(" · ${exchange.count}개")
+                        }
+                    },
                     style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-                    color = MyFisColor.TextSecondary,
                 )
             }
         }
@@ -315,10 +325,9 @@ private fun SuggestionCard(item: StoreItem, modifier: Modifier = Modifier) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
-        Text(
-            item.price.toMileage(),
-            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-            color = MyFisColor.TextPrimary,
+        MileageText(
+            item.price,
+            style = MyFisTheme.type.titleSm,
             modifier = Modifier.padding(top = 2.dp),
         )
     }

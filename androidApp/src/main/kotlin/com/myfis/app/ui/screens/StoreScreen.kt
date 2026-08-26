@@ -58,10 +58,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.myfis.app.R
-import com.myfis.app.ui.components.MileageBand
-import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.components.BurstRing
+import com.myfis.app.ui.components.MileageBand
+import com.myfis.app.ui.components.MileageText
+import com.myfis.app.ui.components.MileageTone
 import com.myfis.app.ui.components.rememberBurst
+import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
@@ -448,10 +450,10 @@ fun ItemCard(
                     .padding(top = MyFisSpacing.sm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(
-                    item.price.toMileage(),
-                    style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-                    color = if (dimmed) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
+                MileageText(
+                    item.price,
+                    style = MyFisTheme.type.titleSm,
+                    tone = if (dimmed) MileageTone.Dimmed else MileageTone.Primary,
                 )
                 Spacer(Modifier.weight(1f))
                 LikeButton(liked = liked, onClick = onLike)

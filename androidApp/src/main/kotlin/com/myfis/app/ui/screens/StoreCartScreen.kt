@@ -35,6 +35,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisPrimaryButton
@@ -274,10 +275,9 @@ private fun CartRow(
                     tint = MyFisColor.Accent,
                     modifier = Modifier.size(18.dp),
                 )
-                Text(
-                    (line.item.price * line.count).toMileage(),
-                    style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-                    color = MyFisColor.TextPrimary,
+                MileageText(
+                    line.item.price * line.count,
+                    style = MyFisTheme.type.titleSm,
                 )
             }
             // 배송이 아니라 **지점 수령**이다 (SPEC S-01) — 도착 예정일 자리에 수령 방법을 적는다
@@ -454,10 +454,9 @@ private fun CartSuggestionCard(item: StoreItem, modifier: Modifier = Modifier) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
-        Text(
-            item.price.toMileage(),
-            style = MyFisTheme.type.titleSm.copy(fontFeatureSettings = "tnum"),
-            color = MyFisColor.TextPrimary,
+        MileageText(
+            item.price,
+            style = MyFisTheme.type.titleSm,
             modifier = Modifier.padding(top = 2.dp),
         )
     }
@@ -504,10 +503,9 @@ private fun CartBar(
                     tint = MyFisColor.Accent,
                     modifier = Modifier.size(22.dp),
                 )
-                Text(
-                    total.toMileage(),
-                    style = MyFisTheme.type.metricMd.copy(fontFeatureSettings = "tnum"),
-                    color = MyFisColor.Accent,
+                MileageText(
+                    total,
+                    style = MyFisTheme.type.metricMd,
                     modifier = Modifier.padding(start = MyFisSpacing.xs),
                 )
             }

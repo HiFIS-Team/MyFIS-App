@@ -150,9 +150,8 @@ struct StoreCartScreen: View {
                         .resizable()
                         .frame(width: 22, height: 22)
                         .foregroundStyle(MyFisColor.accent)
-                    Text(total.mileage)
-                        .font(MyFisFont.metricMd.monospacedDigit())
-                        .foregroundStyle(MyFisColor.accent)
+                    MileageText(total)
+                        .font(MyFisFont.metricMd)
                     Spacer(minLength: 0)
                 }
                 .padding(.top, 2)
@@ -242,9 +241,8 @@ private struct CartRow: View {
                         .resizable()
                         .frame(width: 18, height: 18)
                         .foregroundStyle(MyFisColor.accent)
-                    Text((line.item.price * line.count).mileage)
-                        .font(MyFisFont.titleSm.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textPrimary)
+                    MileageText(line.item.price * line.count)
+                        .font(MyFisFont.titleSm)
                 }
                 .padding(.top, 2)
 
@@ -343,9 +341,8 @@ private struct CartSuggestionCard: View {
                     .foregroundStyle(MyFisColor.textPrimary)
                     .lineLimit(1)
                     .padding(.top, MyFisSpacing.sm)
-                Text(item.price.mileage)
-                    .font(MyFisFont.titleSm.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
+                MileageText(item.price)
+                    .font(MyFisFont.titleSm)
                     .padding(.top, 2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)

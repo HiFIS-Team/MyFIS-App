@@ -639,9 +639,8 @@ private struct MileageShopSection: View {
                         .resizable()
                         .frame(width: 20, height: 20)
                         .foregroundStyle(MyFisColor.accent)
-                    Text(balance.mileage)
-                        .font(MyFisFont.titleSm.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textPrimary)
+                    MileageText(balance)
+                        .font(MyFisFont.titleSm)
                 }
             }
 
@@ -683,9 +682,8 @@ private struct MileageItemCard: View {
                     .foregroundStyle(MyFisColor.textPrimary)
                     .lineLimit(1)
                     .padding(.top, MyFisSpacing.sm)
-                Text(item.price.mileage)
-                    .font(MyFisFont.titleSm.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textPrimary)
+                MileageText(item.price)
+                    .font(MyFisFont.titleSm)
                     .padding(.top, 2)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
