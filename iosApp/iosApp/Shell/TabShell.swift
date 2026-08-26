@@ -105,7 +105,10 @@ struct TabShell: View {
                         onStore: { baseTab = .store }
                     )
                 case .benefit:
-                    BenefitScreen()
+                    // TODO: 나머지 적립 경로 화면이 붙으면 여기서 같이 연다
+                    BenefitScreen(onAction: { action in
+                        if action.kind == .weight { open(.weightLog) }
+                    })
                 case .store:
                     // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
                     StoreScreen(

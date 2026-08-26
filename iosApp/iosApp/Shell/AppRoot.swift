@@ -128,6 +128,8 @@ struct AppRoot: View {
                     onSearch: { backToShell(); storeSearching = true },
                     onCart: { open(.storeCart) }
                 )
+            case .weightLog:
+                WeightLogScreen(onBack: back)
             case .storeCart:
                 StoreCartScreen(onBack: back, onStore: backToShell)
             case .storeMy:

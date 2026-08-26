@@ -11,6 +11,8 @@ enum Route: Hashable {
     case storeMy
     /// S-06 장바구니
     case storeCart
+    /// P-08 체중 기록
+    case weightLog
     /// S-02 상품 상세
     case storeItem(StoreItem)
     // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 추가한다.
@@ -21,6 +23,7 @@ enum Route: Hashable {
         case .notifications: "알림"
         case .storeMy: "내 교환"
         case .storeCart: "장바구니"
+        case .weightLog: "체중 기록"
         case .storeItem(let item): item.name
         }
     }

@@ -18,6 +18,9 @@ object Route {
     const val STORE_MY = "store_my"
     const val STORE_CART = "store_cart"
 
+    /** P-08 체중 기록 */
+    const val WEIGHT_LOG = "weight_log"
+
     /** S-02 상품 상세 */
     const val STORE_ITEM = "store_item"
 }

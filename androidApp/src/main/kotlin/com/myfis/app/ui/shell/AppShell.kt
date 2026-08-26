@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.myfis.app.ui.screens.BenefitKind
 import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
@@ -27,6 +28,7 @@ import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
 import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreScreen
+import com.myfis.app.ui.screens.WeightLogScreen
 import com.myfis.app.ui.theme.MyFisColor
 
 /**
@@ -62,11 +64,15 @@ fun AppShell() {
                 onStoreCart = { nav.navigateOnce(Route.STORE_CART) },
                 storeSearching = storeSearching,
                 onStoreSearching = { storeSearching = it },
+                onWeightLog = { nav.navigateOnce(Route.WEIGHT_LOG) },
                 onStoreItem = {
                     storeItem = it
                     nav.navigateOnce(Route.STORE_ITEM)
                 },
             )
+        }
+        composable(Route.WEIGHT_LOG) {
+            WeightLogScreen(onBack = { nav.popBackStack() })
         }
         composable(Route.NOTIFICATIONS) {
             NotificationScreen(onBack = { nav.popBackStack() })
@@ -109,6 +115,7 @@ private fun TabShell(
     onStoreCart: () -> Unit,
     storeSearching: Boolean,
     onStoreSearching: (Boolean) -> Unit,
+    onWeightLog: () -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
     var tabSet by rememberSaveable { mutableStateOf(TabSet.BASE) }
@@ -127,6 +134,7 @@ private fun TabShell(
                     onStoreCart = onStoreCart,
                     storeSearching = storeSearching,
                     onStoreSearching = onStoreSearching,
+                    onWeightLog = onWeightLog,
                     onStoreItem = onStoreItem,
                     // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                     onCardio = {
@@ -169,6 +177,7 @@ private fun BaseTabContent(
     onStoreCart: () -> Unit,
     storeSearching: Boolean,
     onStoreSearching: (Boolean) -> Unit,
+    onWeightLog: () -> Unit,
     onStoreItem: (StoreItem) -> Unit,
     onCardio: () -> Unit,
     onWeight: () -> Unit,
@@ -181,7 +190,10 @@ private fun BaseTabContent(
             onWeight = onWeight,
             onStore = onStore,
         )
-        BaseTab.BENEFIT -> BenefitScreen()
+        // TODO: 나머지 적립 경로 화면이 붙으면 여기서 같이 연다
+        BaseTab.BENEFIT -> BenefitScreen(
+            onAction = { if (it.kind == BenefitKind.WEIGHT) onWeightLog() },
+        )
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
         BaseTab.STORE -> StoreScreen(
             searching = storeSearching,

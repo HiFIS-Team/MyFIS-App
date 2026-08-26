@@ -24,6 +24,7 @@ enum MyFisDebug {
         case "notifications": .notifications
         case "store_my": .storeMy
         case "store_cart": .storeCart
+        case "weight_log": .weightLog
         case "store_item": .storeItem(StorePlaceholder.items[0])
         default: nil
         }
