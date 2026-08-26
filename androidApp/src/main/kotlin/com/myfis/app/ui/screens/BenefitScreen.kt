@@ -57,9 +57,6 @@ fun BenefitScreen(
     onHistory: () -> Unit = {},
     onAction: (BenefitAction) -> Unit = {},
 ) {
-    val todo = remember { benefitActionPlaceholder.filter { !it.done } }
-    val done = remember { benefitActionPlaceholder.filter { it.done } }
-
     Column(Modifier.fillMaxSize()) {
         BenefitHeader(onHistory = onHistory)
 
@@ -68,11 +65,7 @@ fun BenefitScreen(
                 InviteBanner(Modifier.padding(horizontal = MyFisSpacing.screenHorizontal))
             }
             item { SectionTitle("바로 받아요") }
-            items(todo) { ActionRow(it) { onAction(it) } }
-            if (done.isNotEmpty()) {
-                item { SectionTitle("오늘 받았어요") }
-                items(done) { ActionRow(it) { onAction(it) } }
-            }
+            items(benefitActionPlaceholder) { ActionRow(it) { onAction(it) } }
         }
     }
 }

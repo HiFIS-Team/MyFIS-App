@@ -14,9 +14,6 @@ struct BenefitScreen: View {
     var onHistory: () -> Void = {}
     var onAction: (BenefitAction) -> Void = { _ in }
 
-    private var todo: [BenefitAction] { BenefitPlaceholder.actions.filter { !$0.done } }
-    private var done: [BenefitAction] { BenefitPlaceholder.actions.filter(\.done) }
-
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -26,13 +23,8 @@ struct BenefitScreen: View {
                     InviteBanner()
                         .padding(.horizontal, MyFisSpacing.screenHorizontal)
 
-                    Section("바로 받아요", rows: todo, onTap: onAction)
+                    Section("바로 받아요", rows: BenefitPlaceholder.actions, onTap: onAction)
                         .padding(.top, MyFisSpacing.sectionGap)
-
-                    if !done.isEmpty {
-                        Section("오늘 받았어요", rows: done, onTap: onAction)
-                            .padding(.top, MyFisSpacing.sectionGap)
-                    }
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
