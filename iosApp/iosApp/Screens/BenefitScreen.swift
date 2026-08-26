@@ -121,13 +121,18 @@ private struct ActionRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: MyFisSpacing.lg) {
+                // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — 아이콘에만 칠하고
+                // 배경은 같은 색 16%. 받은 행은 색을 뺀다 (지난 일이라 갈래를 알 필요가 없다)
                 Image(action.icon)
                     .resizable()
                     .renderingMode(.template)
                     .frame(width: 26, height: 26)
-                    .foregroundStyle(dimmed ? MyFisColor.textTertiary : MyFisColor.textPrimary)
+                    .foregroundStyle(dimmed ? MyFisColor.textTertiary : action.kind.color)
                     .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
-                    .background(MyFisColor.surface2, in: Circle())
+                    .background(
+                        dimmed ? MyFisColor.surface2 : action.kind.color.opacity(0.16),
+                        in: Circle()
+                    )
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: MyFisSpacing.sm) {
@@ -201,9 +206,40 @@ private struct InviteBanner: View {
     }
 }
 
+/// 적립 활동의 **갈래** — 목록에서 색으로 구분한다 (§3.1 카테고리 팔레트).
+///
+/// 행마다 색을 하나씩 새로 고르지 않는다. 갈래가 같으면 색도 같아야
+/// 색이 "종류"를 뜻하는 게 되지, 그냥 알록달록한 목록이 되지 않는다.
+enum BenefitKind {
+    /// 몸 쓰는 것 — 루틴 · 스트레칭
+    case workout
+    /// 유산소
+    case cardio
+    /// 지점에 오는 것 — 출석
+    case visit
+    /// 이벤트 — 도장판
+    case event
+    /// 사람과 엮이는 것 — 옆 사람 터치 · SNS 자랑
+    case social
+    /// 기록 — 체중 · 식단
+    case record
+
+    var color: Color {
+        switch self {
+        case .workout: MyFisColor.categoryLime
+        case .cardio: MyFisColor.categoryBlue
+        case .visit: MyFisColor.categoryGold
+        case .event: MyFisColor.categoryViolet
+        case .social: MyFisColor.categoryGreen
+        case .record: MyFisColor.categoryCoral
+        }
+    }
+}
+
 /// 적립 경로 한 줄 (SPEC P-01).
 struct BenefitAction: Identifiable, Hashable {
     let id: Int
+    let kind: BenefitKind
     let icon: String
     /// 행동 — `출석하고`
     let title: String
@@ -221,12 +257,18 @@ enum BenefitPlaceholder {
     static let earnedThisMonth = 320
 
     static let actions: [BenefitAction] = [
-        .init(id: 1, icon: "ic_quest_attend", title: "출석하고", reward: "+50 P 받기"),
-        .init(id: 2, icon: "ic_tab_weight", title: "루틴 끝내고", reward: "+80 P 받기"),
-        .init(id: 3, icon: "ic_tab_cardio", title: "유산소 하고", reward: "10분마다 +10 P"),
-        .init(id: 4, icon: "ic_quest_board", title: "도장 찍고", reward: "7일 채우면 +200 P", badge: "이벤트"),
-        .init(id: 5, icon: "ic_tab_group", title: "옆 사람 터치하고", reward: "+10 P 받기", badge: "신규"),
-        .init(id: 6, icon: "ic_quest_scale", title: "체중 재고", reward: "+20 P 받기", badge: "인기"),
-        .init(id: 7, icon: "ic_quest_camera", title: "식단 찍고", reward: "+20 P 받기", done: true),
+        .init(id: 1, kind: .visit, icon: "ic_quest_attend", title: "출석하고", reward: "+50 P 받기"),
+        .init(id: 2, kind: .workout, icon: "ic_tab_weight", title: "루틴 끝내고", reward: "+80 P 받기"),
+        .init(id: 3, kind: .cardio, icon: "ic_tab_cardio", title: "유산소 하고", reward: "10분마다 +10 P"),
+        .init(id: 4, kind: .workout, icon: "ic_quest_stretch", title: "스트레칭하고", reward: "+20 P 받기"),
+        .init(id: 5, kind: .event, icon: "ic_quest_board", title: "도장 찍고",
+              reward: "7일 채우면 +200 P", badge: "이벤트"),
+        .init(id: 6, kind: .social, icon: "ic_tab_group", title: "옆 사람 터치하고",
+              reward: "+10 P 받기", badge: "신규"),
+        .init(id: 7, kind: .social, icon: "ic_quest_upload", title: "인스타에 올리고",
+              reward: "+100 P 받기", badge: "인기"),
+        .init(id: 8, kind: .record, icon: "ic_quest_scale", title: "체중 재고", reward: "+20 P 받기"),
+        .init(id: 9, kind: .record, icon: "ic_quest_camera", title: "식단 찍고",
+              reward: "+20 P 받기", done: true),
     ]
 }

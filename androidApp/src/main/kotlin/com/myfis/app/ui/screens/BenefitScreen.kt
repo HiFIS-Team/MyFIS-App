@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
@@ -164,16 +165,21 @@ private fun ActionRow(action: BenefitAction, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
     ) {
+        // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — 아이콘에만 칠하고
+        // 배경은 같은 색 16%. 받은 행은 색을 뺀다 (지난 일이라 갈래를 알 필요가 없다)
         Box(
             modifier = Modifier
                 .size(MyFisSize.listRowMin)
-                .background(MyFisColor.Surface2, CircleShape),
+                .background(
+                    if (dimmed) MyFisColor.Surface2 else action.kind.color.copy(alpha = 0.16f),
+                    CircleShape,
+                ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(action.icon),
                 contentDescription = null, // 옆 글자가 이름 역할을 한다
-                tint = if (dimmed) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
+                tint = if (dimmed) MyFisColor.TextTertiary else action.kind.color,
                 modifier = Modifier.size(26.dp),
             )
         }
@@ -248,9 +254,47 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * 적립 활동의 **갈래** — 목록에서 색으로 구분한다 (§3.1 카테고리 팔레트).
+ *
+ * 행마다 색을 하나씩 새로 고르지 않는다. 갈래가 같으면 색도 같아야
+ * 색이 "종류"를 뜻하는 게 되지, 그냥 알록달록한 목록이 되지 않는다.
+ */
+enum class BenefitKind {
+    /** 몸 쓰는 것 — 루틴 · 스트레칭 */
+    WORKOUT,
+
+    /** 유산소 */
+    CARDIO,
+
+    /** 지점에 오는 것 — 출석 */
+    VISIT,
+
+    /** 이벤트 — 도장판 */
+    EVENT,
+
+    /** 사람과 엮이는 것 — 옆 사람 터치 · SNS 자랑 */
+    SOCIAL,
+
+    /** 기록 — 체중 · 식단 */
+    RECORD,
+    ;
+
+    val color: Color
+        get() = when (this) {
+            WORKOUT -> MyFisColor.CategoryLime
+            CARDIO -> MyFisColor.CategoryBlue
+            VISIT -> MyFisColor.CategoryGold
+            EVENT -> MyFisColor.CategoryViolet
+            SOCIAL -> MyFisColor.CategoryGreen
+            RECORD -> MyFisColor.CategoryCoral
+        }
+}
+
 /** 적립 경로 한 줄 (SPEC P-01) */
 data class BenefitAction(
     val id: Int,
+    val kind: BenefitKind,
     val icon: Int,
     /** 행동 — `출석하고` */
     val title: String,
@@ -267,11 +311,25 @@ const val benefitBalancePlaceholder = 1_240
 const val benefitEarnedThisMonthPlaceholder = 320
 
 val benefitActionPlaceholder = listOf(
-    BenefitAction(1, R.drawable.ic_quest_attend, "출석하고", "+50 P 받기"),
-    BenefitAction(2, R.drawable.ic_tab_weight, "루틴 끝내고", "+80 P 받기"),
-    BenefitAction(3, R.drawable.ic_tab_cardio, "유산소 하고", "10분마다 +10 P"),
-    BenefitAction(4, R.drawable.ic_quest_board, "도장 찍고", "7일 채우면 +200 P", badge = "이벤트"),
-    BenefitAction(5, R.drawable.ic_tab_group, "옆 사람 터치하고", "+10 P 받기", badge = "신규"),
-    BenefitAction(6, R.drawable.ic_quest_scale, "체중 재고", "+20 P 받기", badge = "인기"),
-    BenefitAction(7, R.drawable.ic_quest_camera, "식단 찍고", "+20 P 받기", done = true),
+    BenefitAction(1, BenefitKind.VISIT, R.drawable.ic_quest_attend, "출석하고", "+50 P 받기"),
+    BenefitAction(2, BenefitKind.WORKOUT, R.drawable.ic_tab_weight, "루틴 끝내고", "+80 P 받기"),
+    BenefitAction(3, BenefitKind.CARDIO, R.drawable.ic_tab_cardio, "유산소 하고", "10분마다 +10 P"),
+    BenefitAction(4, BenefitKind.WORKOUT, R.drawable.ic_quest_stretch, "스트레칭하고", "+20 P 받기"),
+    BenefitAction(
+        5, BenefitKind.EVENT, R.drawable.ic_quest_board, "도장 찍고",
+        "7일 채우면 +200 P", badge = "이벤트",
+    ),
+    BenefitAction(
+        6, BenefitKind.SOCIAL, R.drawable.ic_tab_group, "옆 사람 터치하고",
+        "+10 P 받기", badge = "신규",
+    ),
+    BenefitAction(
+        7, BenefitKind.SOCIAL, R.drawable.ic_quest_upload, "인스타에 올리고",
+        "+100 P 받기", badge = "인기",
+    ),
+    BenefitAction(8, BenefitKind.RECORD, R.drawable.ic_quest_scale, "체중 재고", "+20 P 받기"),
+    BenefitAction(
+        9, BenefitKind.RECORD, R.drawable.ic_quest_camera, "식단 찍고",
+        "+20 P 받기", done = true,
+    ),
 )
