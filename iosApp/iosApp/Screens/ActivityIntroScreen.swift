@@ -15,13 +15,13 @@ struct ActivityIntroScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DetailHeader(title: action.introKicker, onBack: onClose,
+            DetailHeader(title: action.kind.intro.kicker, onBack: onClose,
                          backIcon: "ic_header_close", backLabel: "닫기")
 
             ScrollView {
                 VStack(spacing: 0) {
                     // 작은 라벨이 제목 위에 붙어야 머리가 두 단으로 잡힌다 (레퍼런스와 같은 구성)
-                    Text(action.introLabel)
+                    Text(action.kind.intro.label)
                         .font(MyFisFont.bodySm)
                         .foregroundStyle(MyFisColor.textSecondary)
                         .padding(.bottom, MyFisSpacing.sm)
@@ -34,7 +34,7 @@ struct ActivityIntroScreen: View {
                         + Text(action.reward)
                         .foregroundStyle(MyFisColor.textPrimary)
 
-                    Text(action.introPeriod)
+                    Text(action.kind.intro.period)
                         .font(MyFisFont.bodySm)
                         .foregroundStyle(MyFisColor.textTertiary)
                         .padding(.top, MyFisSpacing.md)
@@ -42,7 +42,7 @@ struct ActivityIntroScreen: View {
                     illustration
                         .padding(.top, MyFisSpacing.giant)
 
-                    HintBubble(text: action.introHint, color: action.kind.color)
+                    HintBubble(text: action.kind.intro.hint, color: action.kind.color)
                         .padding(.top, MyFisSpacing.giant)
                 }
                 .font(MyFisFont.display)
@@ -53,7 +53,7 @@ struct ActivityIntroScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
 
-            MyFisPrimaryButton(title: action.introCta, action: onStart)
+            MyFisPrimaryButton(title: action.kind.intro.cta, action: onStart)
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
                 .padding(.bottom, MyFisSpacing.xxxl)
         }
@@ -82,6 +82,8 @@ private struct ActivityArt: View {
 
     private var color: Color { action.kind.color }
 
+    private var style: ActivityArtStyle { action.kind.intro.art }
+
     var body: some View {
         ZStack {
             // 빛 — 검정 위에 글리프만 두면 붕 떠 보인다 (§6.25)
@@ -95,15 +97,13 @@ private struct ActivityArt: View {
                 .frame(width: 320, height: 320)
                 .scaleEffect(floating ? 1.06 : 0.92)
 
-            // 뒤를 흐르는 원판 둘. 서로 **반대로** 움직여야 한 덩어리로 안 보인다
-            Circle()
-                .fill(color.opacity(0.16))
-                .frame(width: 86, height: 86)
-                .offset(x: -96, y: floating ? -52 : -28)
-            Circle()
-                .fill(color.opacity(0.10))
-                .frame(width: 54, height: 54)
-                .offset(x: 92, y: floating ? 56 : 30)
+            // 뒤를 흐르는 원판들. 활동마다 개수·자리·방향이 다르다
+            ForEach(Array(style.discs.enumerated()), id: \.offset) { _, disc in
+                Circle()
+                    .fill(color.opacity(disc.alpha))
+                    .frame(width: disc.size, height: disc.size)
+                    .offset(x: disc.x, y: disc.y + (floating ? disc.dy : 0))
+            }
 
             Image(action.icon)
                 .resizable()
@@ -117,12 +117,13 @@ private struct ActivityArt: View {
                     )
                 )
                 .shadow(color: color.opacity(0.45), radius: 26, y: 14)
-                .rotationEffect(.degrees(floating ? 4 : -4))
-                .offset(y: floating ? -10 : 10)
+                .scaleEffect(floating ? 1 + style.pulse : 1 - style.pulse)
+                .rotationEffect(.degrees(floating ? style.rotation : -style.rotation))
+                .offset(y: floating ? -style.dy : style.dy)
         }
         .onAppear {
             guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true)) {
+            withAnimation(.easeInOut(duration: style.duration).repeatForever(autoreverses: true)) {
                 floating = true
             }
         }
@@ -162,64 +163,133 @@ private struct HintBubble: View {
     }
 }
 
-extension BenefitAction {
-    /// 헤더 가운데 — 활동이 아니라 **갈래**를 적는다 (제목은 본문이 크게 맡는다)
-    var introKicker: String {
-        switch kind {
-        case .stamp, .ladder, .luck, .quiz: "이벤트"
-        case .touch, .sns: "함께 하기"
-        case .attend, .routine, .cardio, .stretch: "운동"
-        case .weight, .diet: "기록"
-        }
-    }
+/// 활동 한 벌의 **말과 움직임**. 활동마다 한 곳에 모아 둔다 —
+/// 흩어 두면 뽑기는 들뜨고 체중은 담담해야 하는 **말투 차이**가 금세 뭉개진다.
+struct ActivityIntro {
+    /// 헤더 가운데 한 단어
+    let kicker: String
+    /// 제목 위 작은 라벨
+    let label: String
+    /// 제목 밑 조건 한 줄
+    let period: String
+    /// 버튼 위 말풍선 — 누르고 싶게 만드는 한마디
+    let hint: String
+    /// 버튼 글자 — **다음에 일어날 일** (§6.1)
+    let cta: String
+    /// 그림이 움직이는 결 (§6.25)
+    let art: ActivityArtStyle
+}
 
-    /// 제목 위 작은 라벨 — 무슨 판에서 벌어지는 일인지
-    var introLabel: String {
-        switch kind {
-        case .stamp, .ladder, .luck, .quiz: "마일리지 미니 이벤트"
-        case .touch, .sns: "같이 하면 더 받는 적립"
-        case .attend, .routine, .cardio, .stretch: "운동하고 받는 마일리지"
-        case .weight, .diet: "매일 남기는 기록"
-        }
-    }
+/// 그림의 결. **활동마다 다르게 움직인다** — 다 같은 박자로 뜨면 색만 바뀐 같은 화면이 된다.
+struct ActivityArtStyle {
+    /// 한 번 왕복하는 시간. 짧을수록 들뜬 느낌
+    var duration: Double = 2.6
+    /// 위아래로 뜨는 폭
+    var dy: CGFloat = 10
+    /// 기울어지는 각도
+    var rotation: Double = 4
+    /// 커졌다 작아지는 폭 (불꽃·통통 튀는 것에 쓴다)
+    var pulse: CGFloat = 0
+    /// 뒤를 흐르는 원판들
+    var discs: [Disc] = [
+        .init(x: -96, y: -28, size: 86, alpha: 0.16, dy: -24),
+        .init(x: 92, y: 30, size: 54, alpha: 0.10, dy: 26),
+    ]
 
-    /// TODO(서버): 기간·조건은 서버가 준다
-    var introPeriod: String {
-        switch kind {
-        case .stamp: "이번 주 7일 채우기"
-        case .ladder, .luck, .quiz: "하루 한 번"
-        case .touch: "같은 지점에 있을 때"
-        default: "오늘 하루"
-        }
+    struct Disc {
+        let x: CGFloat
+        let y: CGFloat
+        let size: CGFloat
+        let alpha: Double
+        /// 움직이는 방향과 폭. **글리프와 반대로** 둬야 두 겹으로 보인다
+        let dy: CGFloat
     }
+}
 
-    var introHint: String {
-        switch kind {
-        case .stamp: "이번 주 4일째 채우는 중"
-        case .ladder: "오늘의 사다리, 최대 200 P"
-        case .luck: "오늘의 행운은 최대 500 P"
-        case .quiz: "AI가 오늘 낸 문제 한 개"
-        case .touch: "지금 강남점에 12명 있어요"
-        case .sns: "#MyFIS 로 올리면 인증돼요"
-        default: "오늘 아직 안 받았어요"
-        }
-    }
-
-    /// 버튼 글자는 **다음에 일어날 일**을 적는다 (§6.1)
-    var introCta: String {
-        switch kind {
-        case .stamp: "도장 찍기"
-        case .ladder: "사다리 타기"
-        case .luck: "뽑기 돌리기"
-        case .quiz: "퀴즈 풀기"
-        case .touch: "옆 사람 찾기"
-        case .sns: "사진 고르기"
-        case .attend: "출석 체크하기"
-        case .routine: "웨이트 하러 가기"
-        case .cardio: "유산소 하러 가기"
-        case .stretch: "스트레칭 시작"
-        case .weight: "체중 기록하기"
-        case .diet: "식단 찍기"
+extension BenefitKind {
+    /// 활동별 말과 움직임. 말투를 일부러 다르게 썼다 —
+    /// 뽑기·사다리는 들뜨게, 출석·체중은 담담하게, 스트레칭은 부드럽게
+    var intro: ActivityIntro {
+        switch self {
+        case .attend:
+            .init(kicker: "출석", label: "매일 첫 걸음",
+                  period: "하루 한 번", hint: "지점에 닿으면 바로 눌러요",
+                  cta: "출석 체크하기",
+                  art: .init(duration: 1.8, dy: 16, rotation: 2,
+                             discs: [.init(x: 0, y: 96, size: 120, alpha: 0.12, dy: 8)]))
+        case .routine:
+            .init(kicker: "루틴", label: "오늘 몫은 오늘",
+                  period: "루틴을 끝까지", hint: "5개 중 2개 남았어요",
+                  cta: "웨이트 하러 가기",
+                  art: .init(duration: 2.2, dy: 8, rotation: 12,
+                             discs: [.init(x: -104, y: 0, size: 72, alpha: 0.14, dy: 18),
+                                     .init(x: 104, y: 0, size: 72, alpha: 0.14, dy: -18)]))
+        case .cardio:
+            .init(kicker: "유산소", label: "태운 만큼 쌓여요",
+                  period: "10분마다", hint: "20분만 뛰어도 +20 P",
+                  cta: "유산소 하러 가기",
+                  art: .init(duration: 1.4, dy: 6, rotation: 2, pulse: 0.1,
+                             discs: [.init(x: -70, y: 70, size: 46, alpha: 0.12, dy: -40),
+                                     .init(x: 78, y: 88, size: 34, alpha: 0.10, dy: -52)]))
+        case .stretch:
+            .init(kicker: "스트레칭", label: "3분이면 끝나요",
+                  period: "하루 한 번", hint: "AI가 오늘 고른 3동작",
+                  cta: "스트레칭 시작",
+                  art: .init(duration: 3.2, dy: 4, rotation: 9,
+                             discs: [.init(x: 0, y: 0, size: 190, alpha: 0.08, dy: 0)]))
+        case .stamp:
+            .init(kicker: "도장판", label: "일곱 칸을 채우면",
+                  period: "이번 주 안에", hint: "네 칸째 채우는 중",
+                  cta: "도장 찍기",
+                  art: .init(duration: 1.6, dy: 18, rotation: 0,
+                             discs: [.init(x: 0, y: 86, size: 150, alpha: 0.12, dy: -6)]))
+        case .ladder:
+            .init(kicker: "사다리", label: "오늘의 사다리",
+                  period: "하루 한 번", hint: "꽝은 없어요. 최소 10 P",
+                  cta: "사다리 타기",
+                  art: .init(duration: 2.4, dy: 20, rotation: 0,
+                             discs: [.init(x: -88, y: -40, size: 60, alpha: 0.14, dy: 34),
+                                     .init(x: 88, y: 40, size: 60, alpha: 0.12, dy: -34)]))
+        case .luck:
+            .init(kicker: "뽑기", label: "오늘의 운을 시험할 시간",
+                  period: "하루 한 번", hint: "오늘의 행운은 최대 500 P",
+                  cta: "뽑기 돌리기",
+                  art: .init(duration: 2.6, dy: 10, rotation: 16))
+        case .quiz:
+            .init(kicker: "퀴즈", label: "AI가 낸 오늘 문제",
+                  period: "하루 한 문제", hint: "어제는 62%가 맞혔어요",
+                  cta: "퀴즈 풀기",
+                  art: .init(duration: 1.9, dy: 14, rotation: 3, pulse: 0.06,
+                             discs: [.init(x: -84, y: -56, size: 40, alpha: 0.14, dy: -14),
+                                     .init(x: 96, y: -20, size: 28, alpha: 0.12, dy: 16),
+                                     .init(x: 60, y: 76, size: 52, alpha: 0.10, dy: 20)]))
+        case .touch:
+            .init(kicker: "함께", label: "같이 운동하는 사람들",
+                  period: "같은 지점에 있을 때", hint: "지금 강남점에 12명 있어요",
+                  cta: "옆 사람 찾기",
+                  art: .init(duration: 2.0, dy: 6, rotation: 3,
+                             discs: [.init(x: -110, y: 10, size: 64, alpha: 0.14, dy: 0),
+                                     .init(x: 110, y: 10, size: 64, alpha: 0.14, dy: 0)]))
+        case .sns:
+            .init(kicker: "자랑", label: "오늘의 한 컷",
+                  period: "하루 한 번", hint: "#MyFIS 를 달면 바로 인증돼요",
+                  cta: "사진 고르기",
+                  art: .init(duration: 2.8, dy: 16, rotation: 2,
+                             discs: [.init(x: -76, y: 84, size: 52, alpha: 0.13, dy: -56),
+                                     .init(x: 82, y: 66, size: 34, alpha: 0.10, dy: -44)]))
+        case .weight:
+            .init(kicker: "기록", label: "매일 남기는 한 줄",
+                  period: "오늘 하루", hint: "어제보다 -0.3 kg",
+                  cta: "체중 기록하기",
+                  art: .init(duration: 3.4, dy: 6, rotation: 2,
+                             discs: [.init(x: 0, y: 92, size: 140, alpha: 0.10, dy: 0)]))
+        case .diet:
+            .init(kicker: "식단", label: "먹은 걸 남기면",
+                  period: "한 끼에 한 번", hint: "AI가 칼로리까지 읽어줘요",
+                  cta: "식단 찍기",
+                  art: .init(duration: 3.0, dy: 8, rotation: 6,
+                             discs: [.init(x: -92, y: 46, size: 58, alpha: 0.12, dy: -18),
+                                     .init(x: 88, y: -46, size: 44, alpha: 0.10, dy: 18)]))
         }
     }
 }

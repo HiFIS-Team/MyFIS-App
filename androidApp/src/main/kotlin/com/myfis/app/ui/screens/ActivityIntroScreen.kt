@@ -70,7 +70,7 @@ fun ActivityIntroScreen(
             .statusBarsPadding(),
     ) {
         DetailHeader(
-            title = action.introKicker,
+            title = action.kind.intro.kicker,
             onBack = onClose,
             backIcon = R.drawable.ic_header_close,
             backDescription = "닫기",
@@ -86,7 +86,7 @@ fun ActivityIntroScreen(
         ) {
             // 작은 라벨이 제목 위에 붙어야 머리가 두 단으로 잡힌다 (레퍼런스와 같은 구성)
             Text(
-                action.introLabel,
+                action.kind.intro.label,
                 style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextSecondary,
                 textAlign = TextAlign.Center,
@@ -103,7 +103,7 @@ fun ActivityIntroScreen(
             )
 
             Text(
-                action.introPeriod,
+                action.kind.intro.period,
                 style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextTertiary,
                 textAlign = TextAlign.Center,
@@ -113,14 +113,14 @@ fun ActivityIntroScreen(
             Illustration(action, Modifier.padding(top = MyFisSpacing.giant))
 
             HintBubble(
-                text = action.introHint,
+                text = action.kind.intro.hint,
                 color = action.kind.color,
                 modifier = Modifier.padding(top = MyFisSpacing.giant),
             )
         }
 
         MyFisPrimaryButton(
-            text = action.introCta,
+            text = action.kind.intro.cta,
             onClick = onStart,
             modifier = Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
@@ -142,12 +142,13 @@ fun ActivityIntroScreen(
 @Composable
 private fun Illustration(action: BenefitAction, modifier: Modifier = Modifier) {
     val color = action.kind.color
+    val style = action.kind.intro.art
     val transition = rememberInfiniteTransition(label = "활동 그림")
     val phase by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2600, easing = FastOutSlowInEasing),
+            animation = tween(style.duration, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse,
         ),
         label = "떠다님",
@@ -171,26 +172,27 @@ private fun Illustration(action: BenefitAction, modifier: Modifier = Modifier) {
                 ),
         )
 
-        // 뒤를 흐르는 원판 둘. 서로 **반대로** 움직여야 한 덩어리로 안 보인다
-        Box(
-            Modifier
-                .offset(x = (-96).dp, y = (-28 - 24 * phase).dp)
-                .size(86.dp)
-                .background(color.copy(alpha = 0.16f), MyFisRadius.full),
-        )
-        Box(
-            Modifier
-                .offset(x = 92.dp, y = (30 + 26 * phase).dp)
-                .size(54.dp)
-                .background(color.copy(alpha = 0.10f), MyFisRadius.full),
-        )
+        // 뒤를 흐르는 원판들. 활동마다 개수·자리·방향이 다르다
+        style.discs.forEach { disc ->
+            Box(
+                Modifier
+                    .offset(x = disc.x.dp, y = (disc.y + disc.dy * phase).dp)
+                    .size(disc.size.dp)
+                    .background(color.copy(alpha = disc.alpha), MyFisRadius.full),
+            )
+        }
 
         Glyph(
             icon = action.icon,
             brush = Brush.verticalGradient(listOf(color, color.copy(alpha = 0.62f))),
             modifier = Modifier
-                .offset(y = (10 - 20 * phase).dp)
-                .graphicsLayer { rotationZ = -4f + 8f * phase },
+                .offset(y = (style.dy - 2 * style.dy * phase).dp)
+                .graphicsLayer {
+                    rotationZ = -style.rotation + 2 * style.rotation * phase
+                    val s = 1f - style.pulse + 2 * style.pulse * phase
+                    scaleX = s
+                    scaleY = s
+                },
             shadow = color.copy(alpha = 0.45f),
         )
     }
@@ -252,59 +254,159 @@ private fun HintBubble(text: String, color: Color, modifier: Modifier = Modifier
     }
 }
 
-/** 헤더 가운데 — 활동이 아니라 **갈래**를 적는다 (제목은 본문이 크게 맡는다) */
-val BenefitAction.introKicker: String
-    get() = when (kind) {
-        BenefitKind.STAMP, BenefitKind.LADDER, BenefitKind.LUCK, BenefitKind.QUIZ -> "이벤트"
-        BenefitKind.TOUCH, BenefitKind.SNS -> "함께 하기"
-        BenefitKind.ATTEND, BenefitKind.ROUTINE, BenefitKind.CARDIO, BenefitKind.STRETCH -> "운동"
-        BenefitKind.WEIGHT, BenefitKind.DIET -> "기록"
-    }
+/**
+ * 활동 한 벌의 **말과 움직임**. 활동마다 한 곳에 모아 둔다 —
+ * 흩어 두면 뽑기는 들뜨고 체중은 담담해야 하는 **말투 차이**가 금세 뭉개진다.
+ */
+data class ActivityIntro(
+    /** 헤더 가운데 한 단어 */
+    val kicker: String,
+    /** 제목 위 작은 라벨 */
+    val label: String,
+    /** 제목 밑 조건 한 줄 */
+    val period: String,
+    /** 버튼 위 말풍선 — 누르고 싶게 만드는 한마디 */
+    val hint: String,
+    /** 버튼 글자 — **다음에 일어날 일** (§6.1) */
+    val cta: String,
+    /** 그림이 움직이는 결 (§6.25) */
+    val art: ActivityArtStyle = ActivityArtStyle(),
+)
 
-/** 제목 위 작은 라벨 — 무슨 판에서 벌어지는 일인지 */
-val BenefitAction.introLabel: String
-    get() = when (kind) {
-        BenefitKind.STAMP, BenefitKind.LADDER, BenefitKind.LUCK, BenefitKind.QUIZ ->
-            "마일리지 미니 이벤트"
-        BenefitKind.TOUCH, BenefitKind.SNS -> "같이 하면 더 받는 적립"
-        BenefitKind.ATTEND, BenefitKind.ROUTINE, BenefitKind.CARDIO, BenefitKind.STRETCH ->
-            "운동하고 받는 마일리지"
-        BenefitKind.WEIGHT, BenefitKind.DIET -> "매일 남기는 기록"
-    }
+/** 그림의 결. **활동마다 다르게 움직인다** — 다 같은 박자로 뜨면 색만 바뀐 같은 화면이 된다 */
+data class ActivityArtStyle(
+    /** 한 번 왕복하는 시간(ms). 짧을수록 들뜬 느낌 */
+    val duration: Int = 2600,
+    /** 위아래로 뜨는 폭 */
+    val dy: Float = 10f,
+    /** 기울어지는 각도 */
+    val rotation: Float = 4f,
+    /** 커졌다 작아지는 폭 (불꽃·통통 튀는 것에 쓴다) */
+    val pulse: Float = 0f,
+    /** 뒤를 흐르는 원판들 */
+    val discs: List<Disc> = listOf(
+        Disc(-96f, -28f, 86f, 0.16f, -24f),
+        Disc(92f, 30f, 54f, 0.10f, 26f),
+    ),
+) {
+    /** 움직이는 방향과 폭은 **글리프와 반대로** 둬야 두 겹으로 보인다 */
+    data class Disc(
+        val x: Float,
+        val y: Float,
+        val size: Float,
+        val alpha: Float,
+        val dy: Float,
+    )
+}
 
-// TODO(서버): 기간·조건은 서버가 준다
-val BenefitAction.introPeriod: String
-    get() = when (kind) {
-        BenefitKind.STAMP -> "이번 주 7일 채우기"
-        BenefitKind.LADDER, BenefitKind.LUCK, BenefitKind.QUIZ -> "하루 한 번"
-        BenefitKind.TOUCH -> "같은 지점에 있을 때"
-        else -> "오늘 하루"
-    }
-
-val BenefitAction.introHint: String
-    get() = when (kind) {
-        BenefitKind.STAMP -> "이번 주 4일째 채우는 중"
-        BenefitKind.LADDER -> "오늘의 사다리, 최대 200 P"
-        BenefitKind.LUCK -> "오늘의 행운은 최대 500 P"
-        BenefitKind.QUIZ -> "AI가 오늘 낸 문제 한 개"
-        BenefitKind.TOUCH -> "지금 강남점에 12명 있어요"
-        BenefitKind.SNS -> "#MyFIS 로 올리면 인증돼요"
-        else -> "오늘 아직 안 받았어요"
-    }
-
-/** 버튼 글자는 **다음에 일어날 일**을 적는다 (§6.1) */
-val BenefitAction.introCta: String
-    get() = when (kind) {
-        BenefitKind.STAMP -> "도장 찍기"
-        BenefitKind.LADDER -> "사다리 타기"
-        BenefitKind.LUCK -> "뽑기 돌리기"
-        BenefitKind.QUIZ -> "퀴즈 풀기"
-        BenefitKind.TOUCH -> "옆 사람 찾기"
-        BenefitKind.SNS -> "사진 고르기"
-        BenefitKind.ATTEND -> "출석 체크하기"
-        BenefitKind.ROUTINE -> "웨이트 하러 가기"
-        BenefitKind.CARDIO -> "유산소 하러 가기"
-        BenefitKind.STRETCH -> "스트레칭 시작"
-        BenefitKind.WEIGHT -> "체중 기록하기"
-        BenefitKind.DIET -> "식단 찍기"
+/**
+ * 활동별 말과 움직임. 말투를 일부러 다르게 썼다 —
+ * 뽑기·사다리는 들뜨게, 출석·체중은 담담하게, 스트레칭은 부드럽게.
+ */
+val BenefitKind.intro: ActivityIntro
+    get() = when (this) {
+        BenefitKind.ATTEND -> ActivityIntro(
+            "출석", "매일 첫 걸음", "하루 한 번", "지점에 닿으면 바로 눌러요", "출석 체크하기",
+            ActivityArtStyle(
+                duration = 1800, dy = 16f, rotation = 2f,
+                discs = listOf(ActivityArtStyle.Disc(0f, 96f, 120f, 0.12f, 8f)),
+            ),
+        )
+        BenefitKind.ROUTINE -> ActivityIntro(
+            "루틴", "오늘 몫은 오늘", "루틴을 끝까지", "5개 중 2개 남았어요", "웨이트 하러 가기",
+            ActivityArtStyle(
+                duration = 2200, dy = 8f, rotation = 12f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-104f, 0f, 72f, 0.14f, 18f),
+                    ActivityArtStyle.Disc(104f, 0f, 72f, 0.14f, -18f),
+                ),
+            ),
+        )
+        BenefitKind.CARDIO -> ActivityIntro(
+            "유산소", "태운 만큼 쌓여요", "10분마다", "20분만 뛰어도 +20 P", "유산소 하러 가기",
+            ActivityArtStyle(
+                duration = 1400, dy = 6f, rotation = 2f, pulse = 0.1f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-70f, 70f, 46f, 0.12f, -40f),
+                    ActivityArtStyle.Disc(78f, 88f, 34f, 0.10f, -52f),
+                ),
+            ),
+        )
+        BenefitKind.STRETCH -> ActivityIntro(
+            "스트레칭", "3분이면 끝나요", "하루 한 번", "AI가 오늘 고른 3동작", "스트레칭 시작",
+            ActivityArtStyle(
+                duration = 3200, dy = 4f, rotation = 9f,
+                discs = listOf(ActivityArtStyle.Disc(0f, 0f, 190f, 0.08f, 0f)),
+            ),
+        )
+        BenefitKind.STAMP -> ActivityIntro(
+            "도장판", "일곱 칸을 채우면", "이번 주 안에", "네 칸째 채우는 중", "도장 찍기",
+            ActivityArtStyle(
+                duration = 1600, dy = 18f, rotation = 0f,
+                discs = listOf(ActivityArtStyle.Disc(0f, 86f, 150f, 0.12f, -6f)),
+            ),
+        )
+        BenefitKind.LADDER -> ActivityIntro(
+            "사다리", "오늘의 사다리", "하루 한 번", "꽝은 없어요. 최소 10 P", "사다리 타기",
+            ActivityArtStyle(
+                duration = 2400, dy = 20f, rotation = 0f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-88f, -40f, 60f, 0.14f, 34f),
+                    ActivityArtStyle.Disc(88f, 40f, 60f, 0.12f, -34f),
+                ),
+            ),
+        )
+        BenefitKind.LUCK -> ActivityIntro(
+            "뽑기", "오늘의 운을 시험할 시간", "하루 한 번", "오늘의 행운은 최대 500 P", "뽑기 돌리기",
+            ActivityArtStyle(duration = 2600, dy = 10f, rotation = 16f),
+        )
+        BenefitKind.QUIZ -> ActivityIntro(
+            "퀴즈", "AI가 낸 오늘 문제", "하루 한 문제", "어제는 62%가 맞혔어요", "퀴즈 풀기",
+            ActivityArtStyle(
+                duration = 1900, dy = 14f, rotation = 3f, pulse = 0.06f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-84f, -56f, 40f, 0.14f, -14f),
+                    ActivityArtStyle.Disc(96f, -20f, 28f, 0.12f, 16f),
+                    ActivityArtStyle.Disc(60f, 76f, 52f, 0.10f, 20f),
+                ),
+            ),
+        )
+        BenefitKind.TOUCH -> ActivityIntro(
+            "함께", "같이 운동하는 사람들", "같은 지점에 있을 때", "지금 강남점에 12명 있어요",
+            "옆 사람 찾기",
+            ActivityArtStyle(
+                duration = 2000, dy = 6f, rotation = 3f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-110f, 10f, 64f, 0.14f, 0f),
+                    ActivityArtStyle.Disc(110f, 10f, 64f, 0.14f, 0f),
+                ),
+            ),
+        )
+        BenefitKind.SNS -> ActivityIntro(
+            "자랑", "오늘의 한 컷", "하루 한 번", "#MyFIS 를 달면 바로 인증돼요", "사진 고르기",
+            ActivityArtStyle(
+                duration = 2800, dy = 16f, rotation = 2f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-76f, 84f, 52f, 0.13f, -56f),
+                    ActivityArtStyle.Disc(82f, 66f, 34f, 0.10f, -44f),
+                ),
+            ),
+        )
+        BenefitKind.WEIGHT -> ActivityIntro(
+            "기록", "매일 남기는 한 줄", "오늘 하루", "어제보다 -0.3 kg", "체중 기록하기",
+            ActivityArtStyle(
+                duration = 3400, dy = 6f, rotation = 2f,
+                discs = listOf(ActivityArtStyle.Disc(0f, 92f, 140f, 0.10f, 0f)),
+            ),
+        )
+        BenefitKind.DIET -> ActivityIntro(
+            "식단", "먹은 걸 남기면", "한 끼에 한 번", "AI가 칼로리까지 읽어줘요", "식단 찍기",
+            ActivityArtStyle(
+                duration = 3000, dy = 8f, rotation = 6f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-92f, 46f, 58f, 0.12f, -18f),
+                    ActivityArtStyle.Disc(88f, -46f, 44f, 0.10f, 18f),
+                ),
+            ),
+        )
     }
