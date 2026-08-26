@@ -19,6 +19,8 @@ import SwiftUI
 /// 셸이 같이 움직이면 하단 바가 왕복하는 게 눈에 걸린다.
 struct AppRoot: View {
     @State private var pages: [Route] = MyFisDebug.initialRoutes
+    /// 스토어 검색 모드. **잎이 아니라 셸의 상태다** — 상품 상세의 검색 버튼도 이걸 켠다 (§6.9)
+    @State private var storeSearching = MyFisDebug.startsInSearch
     /// 가장자리 스와이프로 끌고 있는 거리
     @State private var drag: CGFloat = 0
 
@@ -33,7 +35,7 @@ struct AppRoot: View {
                 // 잎이 반투명하면 뒤가 비치므로, 바탕은 여기서 한 번만 깐다
                 MyFisColor.bgBase.ignoresSafeArea()
 
-                TabShell(open: open)
+                TabShell(open: open, storeSearching: $storeSearching)
                     // 덮인 셸에는 손이 닿지 않는다
                     .allowsHitTesting(pages.isEmpty)
 
@@ -122,15 +124,14 @@ struct AppRoot: View {
                 StoreItemScreen(
                     item: item,
                     onBack: back,
-                    onSearch: { open(.storeSearch) },
+                    // 검색은 스토어의 모드라, 상세에서 누르면 **스토어로 돌아가 검색을 켠다**
+                    onSearch: { backToShell(); storeSearching = true },
                     onCart: { open(.storeCart) }
                 )
             case .storeCart:
                 StoreCartScreen(onBack: back, onStore: backToShell)
             case .storeMy:
                 StoreMyScreen(onBack: back, onCart: { open(.storeCart) })
-            case .storeSearch:
-                StoreSearchScreen(onBack: back, onItem: { open(.storeItem($0)) })
             }
         }
     }

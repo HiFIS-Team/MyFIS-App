@@ -11,6 +11,8 @@ import SwiftUI
 /// 각 슬롯의 아이콘·콘텐츠만 바꾼다 — 그래야 바가 파괴·재생성되지 않는다.
 struct TabShell: View {
     let open: (Route) -> Void
+    /// 스토어 검색 모드 — 상품 상세에서도 켤 수 있어야 해서 **뿌리가 들고 있다** (§6.9)
+    @Binding var storeSearching: Bool
 
     private static let baseTabs = BaseTab.allCases
     private static let weightTabs = WeightTab.allCases
@@ -107,10 +109,10 @@ struct TabShell: View {
                 case .store:
                     // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
                     StoreScreen(
-                        onSearch: { open(.storeSearch) },
                         onCart: { open(.storeCart) },
                         onMy: { open(.storeMy) },
-                        onItem: { open(.storeItem($0)) }
+                        onItem: { open(.storeItem($0)) },
+                        searching: $storeSearching
                     )
                 case .my:
                     PlaceholderScreen(id: "Y-01", title: "마이", description: "프로필 · 기록 · 설정")

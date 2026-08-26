@@ -50,144 +50,100 @@ import com.myfis.app.ui.theme.tapWithHaptics
 /**
  * SPEC.md S-07 상품 검색 (DESIGN.md §6.9).
  *
- * **검색은 화면을 띄운다** — 헤더의 검색 자리를 누르면 여기가 밀려 들어오고
- * **하단 탭까지 덮는다** (§7.1 잎 화면). 검색은 목록을 훑는 일과 다른 일이라 자리를 따로 준다.
+ * **검색은 화면이 아니라 스토어의 모드다** 🟢 (2026-08-26) — 헤더의 검색 자리를 누르면
+ * 그 자리에서 필드가 장바구니 자리까지 늘어나고, 마이가 `X` 로 바뀌고, 본문만 검색으로 바뀐다.
+ * 화면이 옆에서 밀려 들어오지 않는다 — **검색은 다른 데로 가는 일이 아니라 지금 화면을 좁히는 일**이다.
  *
- * 들어오면 **키보드가 바로 올라온다.** 검색하러 들어온 사람에게 한 번 더 누르게 하지 않는다.
+ * 여기에는 필드(`StoreSearchInput`)와 본문(`StoreSearchBody`)만 있다. 헤더는 스토어가 그린다.
+ *
+ * 열면 **키보드가 바로 올라온다.** 검색하러 누른 사람에게 한 번 더 누르게 하지 않는다.
+ *
+ * 본문 — 추천 검색어 · 결과 · 결과 없음.
  */
 @Composable
-fun StoreSearchScreen(
-    onBack: () -> Unit,
-    onItem: (StoreItem) -> Unit = {},
+fun StoreSearchBody(
+    query: String,
+    onQuery: (String) -> Unit,
+    liked: Set<Int>,
+    onLike: (Int) -> Unit,
+    onItem: (StoreItem) -> Unit,
     balance: Int = mileageBalancePlaceholder,
 ) {
-    var query by rememberSaveable { mutableStateOf("") }
-    var liked by rememberSaveable { mutableStateOf(setOf<Int>()) }
-    val focus = remember { FocusRequester() }
-
-    LaunchedEffect(Unit) { focus.requestFocus() }
-
     val results = storeItemPlaceholder.filter { it.name.contains(query, ignoreCase = true) }
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MyFisColor.BgBase)
-            .statusBarsPadding(),
-    ) {
-        SearchBar(
-            query = query,
-            onQuery = { query = it },
-            onBack = onBack,
-            focus = focus,
+    when {
+        query.isBlank() -> Suggestions(onPick = onQuery)
+        results.isEmpty() -> EmptyResult(query = query, onClear = { onQuery("") })
+        else -> Results(
+            results = results,
+            balance = balance,
+            liked = liked,
+            onLike = onLike,
+            onItem = onItem,
         )
-
-        when {
-            query.isBlank() -> Suggestions(onPick = { query = it })
-            results.isEmpty() -> EmptyResult(query = query, onClear = { query = "" })
-            else -> Results(
-                results = results,
-                balance = balance,
-                liked = liked,
-                onLike = { id -> liked = if (id in liked) liked - id else liked + id },
-                onItem = onItem,
-            )
-        }
     }
 }
 
-/** 뒤로 + 입력 필드. 헤더 자리를 필드가 다 쓴다 (§6.9) */
+/** 검색 입력 필드. 헤더에서 **장바구니 자리까지 늘어난다** (§6.9) */
 @Composable
-private fun SearchBar(
+fun StoreSearchInput(
     query: String,
     onQuery: (String) -> Unit,
-    onBack: () -> Unit,
     focus: FocusRequester,
+    modifier: Modifier = Modifier,
 ) {
-    val backInteraction = remember { MutableInteractionSource() }
-    val backPress by backInteraction.pressScale()
     val clearInteraction = remember { MutableInteractionSource() }
 
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(56.dp)
+        modifier = modifier
+            .height(40.dp)
+            .background(MyFisColor.Surface2, MyFisRadius.md)
             .padding(horizontal = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
     ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .tapWithHaptics(backInteraction, onBack),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_tab_back),
-                contentDescription = "뒤로",
-                tint = MyFisColor.TextPrimary,
-                modifier = Modifier
-                    .size(24.dp)
-                    .graphicsLayer {
-                        scaleX = backPress
-                        scaleY = backPress
-                    },
-            )
-        }
-
-        Row(
-            modifier = Modifier
-                .padding(start = MyFisSpacing.sm)
-                .weight(1f)
-                .height(40.dp)
-                .background(MyFisColor.Surface2, MyFisRadius.md)
-                .padding(horizontal = MyFisSpacing.md),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_header_search),
-                contentDescription = null, // 옆 입력칸이 이름 역할을 한다
-                tint = MyFisColor.TextTertiary,
-                modifier = Modifier.size(20.dp),
-            )
-            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                if (query.isEmpty()) {
-                    Text(
-                        "상품 검색",
-                        style = MyFisTheme.type.bodySm,
-                        color = MyFisColor.TextTertiary,
-                    )
-                }
-                BasicTextField(
-                    value = query,
-                    onValueChange = onQuery,
-                    singleLine = true,
-                    textStyle = LocalTextStyle.current.merge(
-                        MyFisTheme.type.bodySm.copy(color = MyFisColor.TextPrimary),
-                    ),
-                    cursorBrush = SolidColor(MyFisColor.Accent),
-                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .focusRequester(focus),
+        Icon(
+            painter = painterResource(R.drawable.ic_header_search),
+            contentDescription = null, // 옆 입력칸이 이름 역할을 한다
+            tint = MyFisColor.TextTertiary,
+            modifier = Modifier.size(20.dp),
+        )
+        Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+            if (query.isEmpty()) {
+                Text(
+                    "상품 검색",
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextTertiary,
                 )
             }
-            if (query.isNotEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .tapWithHaptics(clearInteraction) { onQuery("") },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_header_clear),
-                        contentDescription = "지우기",
-                        tint = MyFisColor.TextTertiary,
-                        modifier = Modifier.size(18.dp),
-                    )
-                }
+            BasicTextField(
+                value = query,
+                onValueChange = onQuery,
+                singleLine = true,
+                textStyle = LocalTextStyle.current.merge(
+                    MyFisTheme.type.bodySm.copy(color = MyFisColor.TextPrimary),
+                ),
+                cursorBrush = SolidColor(MyFisColor.Accent),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focus),
+            )
+        }
+        if (query.isNotEmpty()) {
+            Box(
+                modifier = Modifier
+                    .size(24.dp)
+                    .clip(CircleShape)
+                    .tapWithHaptics(clearInteraction) { onQuery("") },
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_header_clear),
+                    contentDescription = "지우기",
+                    tint = MyFisColor.TextTertiary,
+                    modifier = Modifier.size(18.dp),
+                )
             }
         }
     }

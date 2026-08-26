@@ -11,7 +11,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_TAB=store                스토어 탭에서 시작
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
-/// SIMCTL_CHILD_MYFIS_SEARCH=음료               검색 화면을 이 검색어로 시작
+/// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
@@ -24,7 +24,6 @@ enum MyFisDebug {
         case "notifications": .notifications
         case "store_my": .storeMy
         case "store_cart": .storeCart
-        case "store_search": .storeSearch
         case "store_item": .storeItem(StorePlaceholder.items[0])
         default: nil
         }
@@ -43,7 +42,7 @@ enum MyFisDebug {
     static var initialBaseTab: BaseTab {
         #if DEBUG
         let storeRoute = (env["MYFIS_ROUTE"] ?? "").hasPrefix("store")
-        return env["MYFIS_TAB"] == "store" || storeRoute ? .store : .home
+        return env["MYFIS_TAB"] == "store" || storeRoute || startsInSearch ? .store : .home
         #else
         .home
         #endif
@@ -66,8 +65,17 @@ enum MyFisDebug {
         #endif
     }
 
+    /// 검색 모드로 시작할지 — 검색은 잎이 아니라 **스토어의 모드**라 라우트가 아니다 (§6.9)
+    static var startsInSearch: Bool {
+        #if DEBUG
+        env["MYFIS_SEARCH"] != nil
+        #else
+        false
+        #endif
+    }
+
     /// 시뮬레이터에는 키보드를 칠 수단이 없다. 검색 결과를 보려면
-    /// `SIMCTL_CHILD_MYFIS_ROUTE=store_search SIMCTL_CHILD_MYFIS_SEARCH=음료`
+    /// `SIMCTL_CHILD_MYFIS_SEARCH=음료` (스토어 탭이 검색 모드로 열린다)
     static var initialSearchQuery: String {
         #if DEBUG
         env["MYFIS_SEARCH"] ?? ""

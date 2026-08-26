@@ -2,10 +2,13 @@ import SwiftUI
 
 /// SPEC.md S-07 상품 검색 (DESIGN.md §6.9).
 ///
-/// **검색은 화면을 띄운다** — 헤더의 검색 자리를 누르면 이 화면이 밀려 들어와 셸을 덮는다.
-/// 안드로이드와 같은 방식이다. 검색은 목록을 훑는 일과 다른 일이라 자리를 따로 준다.
+/// **검색은 화면이 아니라 스토어의 모드다** 🟢 (2026-08-26) — 헤더의 검색 자리를 누르면
+/// 그 자리에서 필드가 장바구니 자리까지 늘어나고, 마이가 `X` 로 바뀌고, 본문만 검색으로 바뀐다.
+/// 화면이 옆에서 밀려 들어오지 않는다 — **검색은 다른 데로 가는 일이 아니라 지금 화면을 좁히는 일**이다.
 ///
-/// 들어오면 **키보드가 바로 올라온다.** 검색하러 들어온 사람에게 한 번 더 누르게 하지 않는다.
+/// 여기에는 필드(`StoreSearchInput`)와 본문(`StoreSearchResults`)만 있다. 헤더는 스토어가 그린다.
+///
+/// 열면 **키보드가 바로 올라온다.** 검색하러 누른 사람에게 한 번 더 누르게 하지 않는다.
 
 /// 필드 껍데기 — 누르는 자리(버튼)와 치는 자리(입력)가 **같은 판**이어야 바뀔 때 안 튄다
 private struct SearchPill<Content: View>: View {
@@ -24,41 +27,6 @@ private struct SearchPill<Content: View>: View {
         .frame(height: 40)
         .background(MyFisColor.surface2)
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
-    }
-}
-
-/// 상품 검색 화면 — 뒤로 + 입력 필드 + 결과.
-struct StoreSearchScreen: View {
-    var onBack: () -> Void = {}
-    var onItem: (StoreItem) -> Void = { _ in }
-    var balance: Int = StorePlaceholder.balance
-
-    @State private var query = MyFisDebug.initialSearchQuery
-    /// TODO(서버): 찜은 계정에 붙는다. 지금은 화면이 들고 있다
-    @State private var liked: Set<Int> = []
-
-    var body: some View {
-        VStack(spacing: 0) {
-            // 헤더 자리를 필드가 다 쓴다 (§6.9)
-            HStack(spacing: 0) {
-                HeaderIcon("ic_tab_back", "뒤로", action: onBack)
-                StoreSearchInput(text: $query)
-                    .padding(.leading, MyFisSpacing.sm)
-            }
-            .frame(height: MyFisSize.header)
-            .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-
-            StoreSearchResults(
-                query: $query,
-                balance: balance,
-                liked: liked,
-                onLike: { id in
-                    if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
-                },
-                onItem: onItem
-            )
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }
 

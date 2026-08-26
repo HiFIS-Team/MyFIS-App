@@ -12,11 +12,14 @@ import SwiftUI
 /// 헤더 아래(카테고리·마일리지)는 **스크롤해도 남는다** (S 공통 규칙 — 살 수 있는지 매번 계산하게 하지 않는다).
 struct StoreScreen: View {
     /// 헤더는 **이 화면이 직접 그린다** (§6.9) — 검색 · 장바구니 · 마이
-    var onSearch: () -> Void = {}
     var onCart: () -> Void = {}
     var onMy: () -> Void = {}
     var onItem: (StoreItem) -> Void = { _ in }
 
+    /// 검색 모드. **셸이 들고 있다** — 상품 상세의 검색 버튼도 이 모드를 켠다
+    @Binding var searching: Bool
+
+    @State private var query = MyFisDebug.initialSearchQuery
     @State private var category: StoreCategory = .all
     /// TODO(서버): 찜은 계정에 붙는다. 지금은 화면이 들고 있다
     @State private var liked: Set<Int> = []
@@ -36,20 +39,65 @@ struct StoreScreen: View {
 
     /// 스토어 헤더 (§6.9) — 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이.
     /// **워드마크를 넣지 않는다** — 검색이 들어오면 가운데 자리가 없다.
+    ///
+    /// 검색을 누르면 **이 자리에서 그대로 바뀐다** — 필드가 장바구니 자리까지 늘어나고
+    /// 마이가 `X` 가 된다. 화면이 옆에서 밀려 들어오지 않는다 (§6.9).
     private var header: some View {
         HStack(spacing: 0) {
-            StoreSearchField(action: onSearch)
-                .padding(.trailing, MyFisSpacing.xs)
-            HeaderIcon("ic_header_cart", "장바구니", action: onCart)
-            HeaderIcon("ic_header_my", "마이", action: onMy)
+            if searching {
+                StoreSearchInput(text: $query)
+                    .padding(.trailing, MyFisSpacing.xs)
+                HeaderIcon("ic_header_close", "검색 닫기", action: closeSearch)
+            } else {
+                StoreSearchField(action: openSearch)
+                    .padding(.trailing, MyFisSpacing.xs)
+                HeaderIcon("ic_header_cart", "장바구니", action: onCart)
+                HeaderIcon("ic_header_my", "마이", action: onMy)
+            }
         }
         .frame(height: MyFisSize.header)
         .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
     }
 
+    /// **애니메이션 없이 바꾼다.** 필드가 옆에서 자라 들어오면 칠 준비가 될 때까지 기다리게 된다
+    private func openSearch() {
+        var snap = Transaction()
+        snap.disablesAnimations = true
+        withTransaction(snap) { searching = true }
+    }
+
+    /// 닫으면 검색어도 지운다 — 다음에 열었을 때 지난 검색어가 남아 있으면 그걸 지우는 일부터 하게 된다
+    private func closeSearch() {
+        var snap = Transaction()
+        snap.disablesAnimations = true
+        withTransaction(snap) {
+            searching = false
+            query = ""
+        }
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             header
+
+            if searching {
+                StoreSearchResults(
+                    query: $query,
+                    balance: StorePlaceholder.balance,
+                    liked: liked,
+                    onLike: toggleLike,
+                    onItem: onItem
+                )
+            } else {
+                home
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// 검색이 아닐 때의 본문 — 마일리지 띠 · 배너 · 카테고리 · 그리드
+    private var home: some View {
+        VStack(spacing: 0) {
             MileageBand(balance: StorePlaceholder.balance)
 
             ScrollView {

@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -88,20 +89,51 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun StoreScreen(
-    onSearch: () -> Unit = {},
+    searching: Boolean,
+    onSearching: (Boolean) -> Unit,
     onCart: () -> Unit = {},
     onMy: () -> Unit = {},
     onItem: (StoreItem) -> Unit = {},
 ) {
     var category by rememberSaveable { mutableStateOf(StoreCategory.ALL) }
+    var query by rememberSaveable { mutableStateOf("") }
     // TODO(서버): 찜은 계정에 붙는다. 지금은 화면이 들고 있다
     val liked = remember { mutableStateMapOf<Int, Boolean>() }
     val items = remember(category) {
         storeItemPlaceholder.filter { category == StoreCategory.ALL || it.category == category }
     }
+    val focus = remember { FocusRequester() }
+
+    // 열면 바로 칠 수 있어야 한다 — 검색하러 누른 사람에게 한 번 더 누르게 하지 않는다
+    LaunchedEffect(searching) { if (searching) focus.requestFocus() }
 
     Column(Modifier.fillMaxSize()) {
-        StoreHeader(onSearch = onSearch, onCart = onCart, onMy = onMy)
+        StoreHeader(
+            searching = searching,
+            query = query,
+            onQuery = { query = it },
+            focus = focus,
+            onSearch = { onSearching(true) },
+            // 닫으면 검색어도 지운다 — 다음에 열었을 때 지난 검색어를 지우는 일부터 하게 된다
+            onClose = {
+                query = ""
+                onSearching(false)
+            },
+            onCart = onCart,
+            onMy = onMy,
+        )
+
+        if (searching) {
+            StoreSearchBody(
+                query = query,
+                onQuery = { query = it },
+                liked = liked.filterValues { it }.keys,
+                onLike = { id -> liked[id] = liked[id] != true },
+                onItem = onItem,
+            )
+            return@Column
+        }
+
         MileageBand(balance = mileageBalancePlaceholder)
 
         LazyColumn(contentPadding = PaddingValues(bottom = MyFisSpacing.xxxl)) {
@@ -128,10 +160,18 @@ fun StoreScreen(
  *
  * 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이만 둔다.
  * **워드마크를 넣지 않는다** — 검색이 들어오면 가운데 자리가 없다.
+ *
+ * 검색을 누르면 **이 자리에서 그대로 바뀐다** — 필드가 장바구니 자리까지 늘어나고
+ * 마이가 `X` 가 된다. 화면이 옆에서 밀려 들어오지 않는다.
  */
 @Composable
 private fun StoreHeader(
+    searching: Boolean,
+    query: String,
+    onQuery: (String) -> Unit,
+    focus: FocusRequester,
     onSearch: () -> Unit,
+    onClose: () -> Unit,
     onCart: () -> Unit,
     onMy: () -> Unit,
     modifier: Modifier = Modifier,
@@ -144,22 +184,23 @@ private fun StoreHeader(
             .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SearchField(
-            onClick = onSearch,
-            // 왼쪽은 헤더 여백까지 그대로 쓴다. 여백을 더 주면 필드만 안쪽으로 밀려 짧아 보인다
-            modifier = Modifier
-                .weight(1f)
-                .padding(end = MyFisSpacing.xs),
-        )
-        HeaderIcon(R.drawable.ic_header_cart, "장바구니", onCart)
-        HeaderIcon(R.drawable.ic_header_my, "마이", onMy)
+        // 왼쪽은 헤더 여백까지 그대로 쓴다. 여백을 더 주면 필드만 안쪽으로 밀려 짧아 보인다
+        val field = Modifier
+            .weight(1f)
+            .padding(end = MyFisSpacing.xs)
+
+        if (searching) {
+            StoreSearchInput(query = query, onQuery = onQuery, focus = focus, modifier = field)
+            HeaderIcon(R.drawable.ic_header_close, "검색 닫기", onClose)
+        } else {
+            SearchField(onClick = onSearch, modifier = field)
+            HeaderIcon(R.drawable.ic_header_cart, "장바구니", onCart)
+            HeaderIcon(R.drawable.ic_header_my, "마이", onMy)
+        }
     }
 }
 
-/**
- * 누르면 검색 화면으로 간다. 여기서 바로 입력받지 않는다 —
- * 헤더에서 키보드가 올라오면 목록이 반쯤 가린 채로 타이핑하게 된다.
- */
+/** 누르면 **이 자리가 입력 필드로 바뀐다** (§6.9). 화면이 따로 뜨지 않는다 */
 @Composable
 private fun SearchField(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }

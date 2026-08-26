@@ -26,7 +26,6 @@ import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
 import com.myfis.app.ui.screens.StoreScreen
-import com.myfis.app.ui.screens.StoreSearchScreen
 import com.myfis.app.ui.theme.MyFisColor
 
 /**
@@ -43,6 +42,8 @@ fun AppShell() {
     val nav = rememberNavController()
     // 상세로 넘길 상품. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다
     var storeItem by remember { mutableStateOf<StoreItem?>(null) }
+    // 검색은 잎이 아니라 **스토어의 모드**다 (§6.9). 상품 상세의 검색 버튼도 이걸 켠다
+    var storeSearching by rememberSaveable { mutableStateOf(false) }
 
     NavHost(
         navController = nav,
@@ -58,7 +59,8 @@ fun AppShell() {
                 onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) },
                 onStoreMy = { nav.navigateOnce(Route.STORE_MY) },
                 onStoreCart = { nav.navigateOnce(Route.STORE_CART) },
-                onStoreSearch = { nav.navigateOnce(Route.STORE_SEARCH) },
+                storeSearching = storeSearching,
+                onStoreSearching = { storeSearching = it },
                 onStoreItem = {
                     storeItem = it
                     nav.navigateOnce(Route.STORE_ITEM)
@@ -74,15 +76,6 @@ fun AppShell() {
                 onCart = { nav.navigateOnce(Route.STORE_CART) },
             )
         }
-        composable(Route.STORE_SEARCH) {
-            StoreSearchScreen(
-                onBack = { nav.popBackStack() },
-                onItem = {
-                    storeItem = it
-                    nav.navigateOnce(Route.STORE_ITEM)
-                },
-            )
-        }
         composable(Route.STORE_CART) {
             StoreCartScreen(
                 onBack = { nav.popBackStack() },
@@ -95,7 +88,11 @@ fun AppShell() {
                 StoreItemScreen(
                     item = it,
                     onBack = { nav.popBackStack() },
-                    onSearch = { nav.navigateOnce(Route.STORE_SEARCH) },
+                    // 검색은 스토어의 모드라, 상세에서 누르면 **스토어로 돌아가 검색을 켠다**
+                    onSearch = {
+                        storeSearching = true
+                        nav.popBackStack(Route.SHELL, false)
+                    },
                     onCart = { nav.navigateOnce(Route.STORE_CART) },
                 )
             }
@@ -109,7 +106,8 @@ private fun TabShell(
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
-    onStoreSearch: () -> Unit,
+    storeSearching: Boolean,
+    onStoreSearching: (Boolean) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
     var tabSet by rememberSaveable { mutableStateOf(TabSet.BASE) }
@@ -126,7 +124,8 @@ private fun TabShell(
                     onNotification = onNotification,
                     onStoreMy = onStoreMy,
                     onStoreCart = onStoreCart,
-                    onStoreSearch = onStoreSearch,
+                    storeSearching = storeSearching,
+                    onStoreSearching = onStoreSearching,
                     onStoreItem = onStoreItem,
                     // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                     onCardio = {
@@ -167,7 +166,8 @@ private fun BaseTabContent(
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
-    onStoreSearch: () -> Unit,
+    storeSearching: Boolean,
+    onStoreSearching: (Boolean) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
     onCardio: () -> Unit,
     onWeight: () -> Unit,
@@ -183,7 +183,8 @@ private fun BaseTabContent(
         BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
         BaseTab.STORE -> StoreScreen(
-            onSearch = onStoreSearch,
+            searching = storeSearching,
+            onSearching = onStoreSearching,
             onMy = onStoreMy,
             onCart = onStoreCart,
             onItem = onStoreItem,
