@@ -5,8 +5,9 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:pathData="M9.3,3.8 Q9.3,10.3 15.8,10.3 Q9.3,10.3 9.3,16.8 Q9.3,10.3 2.8,10.3 Q9.3,10.3 9.3,3.8 Z M18.2,2.6 Q18.2,5.6 21.2,5.6 Q18.2,5.6 18.2,8.6 Q18.2,5.6 15.2,5.6 Q18.2,5.6 18.2,2.6 Z M18.4,14.2 Q18.4,17.2 21.4,17.2 Q18.4,17.2 18.4,20.2 Q18.4,17.2 15.4,17.2 Q18.4,17.2 18.4,14.2 Z"
+        android:pathData="M3.2,7.7 H20.8 V11.2 H3.2 Z M4.9,11.2 V20.3 H19.1 V11.2 M12,7.7 V20.3 M12,7.7 C11.6,5.9 10.7,3.4 8.8,3.4 A2.15,2.15 0 0,0 8.8,7.7 Z M12,7.7 C12.4,5.9 13.3,3.4 15.2,3.4 A2.15,2.15 0 0,1 15.2,7.7 Z"
         android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
         android:strokeWidth="1.5"
         android:strokeColor="#FFFFFF"
         android:strokeLineCap="round"
