@@ -27,7 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.components.MileageText
+import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
@@ -72,59 +74,31 @@ fun BenefitScreen(
 }
 
 /**
- * 제목 + 요약 두 개. **탭 화면인데 제목을 다는 유일한 자리다** —
- * 홈·스토어와 달리 헤더에 넣을 아이콘이 없고, 요약 숫자가 제목 역할을 대신하지도 못한다.
+ * **아이콘 줄이다** — 다른 탭 헤더(§6.9)와 같은 골격.
+ *
+ * 글자 제목을 달지 않는다. 탭 화면에 제목을 두는 건 우리 규칙이 아니고,
+ * **마일리지 칩이 이미 "여기는 P를 모으는 곳"이라고 말한다** (스토어 띠 §6.12 와 같은 칩).
  */
 @Composable
 private fun BenefitHeader(onHistory: () -> Unit, modifier: Modifier = Modifier) {
-    val interaction = remember { MutableInteractionSource() }
+    val chipInteraction = remember { MutableInteractionSource() }
 
     Row(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp) // 헤더 높이 (§6.9) — 스토어 헤더와 같은 값
-            .padding(horizontal = MyFisSpacing.screenHorizontal),
+            // 아이콘의 터치 영역이 화면 여백만큼 튀어나오므로 그만큼 당겨 준다 (§6.9)
+            .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("혜택", style = MyFisTheme.type.titleLg, color = MyFisColor.TextPrimary)
+        MileageChip(
+            balance = benefitBalancePlaceholder,
+            modifier = Modifier
+                .padding(start = MyFisSpacing.sm)
+                .tapWithHaptics(chipInteraction, onHistory),
+        )
         Spacer(Modifier.weight(1f))
-
-        Row(
-            modifier = Modifier.tapWithHaptics(interaction, onHistory),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_mileage_fill),
-                    contentDescription = null, // 옆 숫자가 이름 역할을 한다
-                    tint = MyFisColor.Accent,
-                    modifier = Modifier.size(20.dp),
-                )
-                MileageText(
-                    benefitBalancePlaceholder,
-                    style = MyFisTheme.type.titleSm,
-                    modifier = Modifier.padding(start = MyFisSpacing.xs),
-                )
-            }
-
-            // 두 숫자를 가르는 선. 같은 무게로 나란히 두면 어느 쪽이 잔액인지 안 갈린다
-            Box(
-                Modifier
-                    .width(1.dp)
-                    .height(14.dp)
-                    .background(MyFisColor.BorderSubtle),
-            )
-
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("이번 달 ", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
-                Text(
-                    "+%,d P".format(benefitEarnedThisMonthPlaceholder),
-                    style = MyFisTheme.type.bodySm.copy(fontFeatureSettings = "tnum"),
-                    color = MyFisColor.TextSecondary,
-                )
-            }
-        }
+        HeaderIcon(R.drawable.ic_header_history, "적립 내역", onHistory)
     }
 }
 

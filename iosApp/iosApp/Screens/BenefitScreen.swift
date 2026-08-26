@@ -40,44 +40,24 @@ struct BenefitScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// 제목 + 요약 두 개. **탭 화면인데 제목을 다는 유일한 자리다** —
-    /// 홈·스토어와 달리 헤더에 넣을 아이콘이 없고, 요약 숫자가 제목 역할을 대신하지도 못한다
+    /// **아이콘 줄이다** — 다른 탭 헤더(§6.9)와 같은 골격.
+    ///
+    /// 글자 제목을 달지 않는다. 탭 화면에 제목을 두는 건 우리 규칙이 아니고,
+    /// **마일리지 칩이 이미 "여기는 P를 모으는 곳"이라고 말한다** (스토어 띠 §6.12 와 같은 칩).
     private var header: some View {
         HStack(spacing: 0) {
-            Text("혜택")
-                .font(MyFisFont.titleLg)
-                .foregroundStyle(MyFisColor.textPrimary)
-            Spacer(minLength: MyFisSpacing.md)
-
             Button(action: onHistory) {
-                HStack(spacing: MyFisSpacing.sm) {
-                    HStack(spacing: MyFisSpacing.xs) {
-                        Image("ic_mileage_fill")
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(MyFisColor.accent)
-                        MileageText(BenefitPlaceholder.balance)
-                            .font(MyFisFont.titleSm)
-                    }
-
-                    // 두 숫자를 가르는 선. 같은 무게로 나란히 두면 어느 쪽이 잔액인지 안 갈린다
-                    Rectangle()
-                        .fill(MyFisColor.borderSubtle)
-                        .frame(width: 1, height: 14)
-
-                    Text("이번 달 ")
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                        + Text("+\(BenefitPlaceholder.earnedThisMonth.decimal) P")
-                        .font(MyFisFont.bodySm.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textSecondary)
-                }
-                .contentShape(Rectangle())
+                MileageChip(balance: BenefitPlaceholder.balance)
             }
             .buttonStyle(.myFisTap)
+            .padding(.leading, MyFisSpacing.sm)
+
+            Spacer(minLength: MyFisSpacing.md)
+
+            HeaderIcon("ic_header_history", "적립 내역", action: onHistory)
         }
         .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
     }
 }
 

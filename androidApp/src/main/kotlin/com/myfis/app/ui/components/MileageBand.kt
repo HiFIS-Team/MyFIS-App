@@ -49,28 +49,39 @@ fun MileageBand(balance: Int, modifier: Modifier = Modifier) {
                 .background(MyFisColor.BorderSubtle),
         )
         // 칩은 배경이 불투명해서 선 가운데를 덮는다 — 선이 칩을 통과하는 것처럼 보인다
-        Row(
-            modifier = Modifier
-                .background(MyFisColor.Surface2, MyFisRadius.full)
-                .padding(
-                    start = MyFisSpacing.sm,
-                    end = MyFisSpacing.md,
-                    top = 7.dp,
-                    bottom = 7.dp,
-                ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_mileage_fill),
-                contentDescription = null, // 옆 숫자가 이름 역할을 한다
-                tint = MyFisColor.Accent,
-                modifier = Modifier.size(22.dp),
-            )
-            MileageText(
-                balance,
-                style = MyFisTheme.type.titleSm,
-                modifier = Modifier.padding(start = MyFisSpacing.xs),
-            )
-        }
+        MileageChip(balance)
+    }
+}
+
+/**
+ * 마일리지 칩 — **동전 + 값 한 덩어리** (§6.12).
+ *
+ * 스토어 띠(`MileageBand`)와 혜택 헤더(§6.23)가 **같은 것을 쓴다.**
+ * 같은 값을 화면마다 다르게 그리면 같은 값으로 안 읽힌다.
+ */
+@Composable
+fun MileageChip(balance: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier
+            .background(MyFisColor.Surface2, MyFisRadius.full)
+            .padding(
+                start = MyFisSpacing.sm,
+                end = MyFisSpacing.md,
+                top = 7.dp,
+                bottom = 7.dp,
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_mileage_fill),
+            contentDescription = null, // 옆 숫자가 이름 역할을 한다
+            tint = MyFisColor.Accent,
+            modifier = Modifier.size(22.dp),
+        )
+        MileageText(
+            balance,
+            style = MyFisTheme.type.titleSm,
+            modifier = Modifier.padding(start = MyFisSpacing.xs),
+        )
     }
 }

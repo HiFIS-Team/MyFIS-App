@@ -21,20 +21,33 @@ struct MileageBand: View {
                 .frame(height: 1)
 
             // 칩은 배경이 불투명해서 선 가운데를 덮는다 — 선이 칩을 통과하는 것처럼 보인다
-            HStack(spacing: MyFisSpacing.xs) {
-                Image("ic_mileage_fill")
-                    .resizable()
-                    .frame(width: 22, height: 22)
-                    .foregroundStyle(MyFisColor.accent)
-                MileageText(balance)
-                    .font(MyFisFont.titleSm)
-            }
-            .padding(.leading, MyFisSpacing.sm)
-            .padding(.trailing, MyFisSpacing.md)
-            .padding(.vertical, 7)
-            .background(MyFisColor.surface2, in: Capsule())
+            MileageChip(balance: balance)
         }
         .padding(.vertical, MyFisSpacing.md)
+    }
+}
+
+
+/// 마일리지 칩 — **동전 + 값 한 덩어리** (§6.12).
+///
+/// 스토어 띠(`MileageBand`)와 혜택 헤더(§6.23)가 **같은 것을 쓴다.**
+/// 같은 값을 화면마다 다르게 그리면 같은 값으로 안 읽힌다.
+struct MileageChip: View {
+    let balance: Int
+
+    var body: some View {
+        HStack(spacing: MyFisSpacing.xs) {
+            Image("ic_mileage_fill")
+                .resizable()
+                .frame(width: 22, height: 22)
+                .foregroundStyle(MyFisColor.accent)
+            MileageText(balance)
+                .font(MyFisFont.titleSm)
+        }
+        .padding(.leading, MyFisSpacing.sm)
+        .padding(.trailing, MyFisSpacing.md)
+        .padding(.vertical, 7)
+        .background(MyFisColor.surface2, in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("내 마일리지 \(balance.mileage)")
     }
