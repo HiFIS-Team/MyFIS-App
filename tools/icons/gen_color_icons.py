@@ -128,6 +128,52 @@ CARDIO = [
     ("fill", "M15.8,21.2 H21.6 L20.9,22.4 H16.5 Z", C_DARK, None),
 ]
 
+# ── 체중계 ────────────────────────────────────────────────────────────────
+S_BODY = "#8FB8F8"
+S_WINDOW = "#E4F1FB"
+S_NEEDLE = "#6EA8FA"
+S_TICK = "#B8C6D6"
+S_FOOT = "#D6E4F5"
+
+SCALE = [
+    ("fill", rrect(1.5, 2.9, 21, 18.3, 1.9), S_BODY, None),
+    ("fill", rrect(4.9, 4.7, 14.3, 7.6, 0.65), S_WINDOW, None),
+    ("stroke", "M12,5.6 V7.4", S_TICK, 0.6),        # 눈금 다섯 — 부채꼴로 벌린다
+    ("stroke", "M8.7,6.7 L9.2,8.2", S_TICK, 0.6),
+    ("stroke", "M15.3,6.7 L14.8,8.2", S_TICK, 0.6),
+    ("stroke", "M6,9.8 L7.6,10.4", S_TICK, 0.6),
+    ("stroke", "M18,9.8 L16.4,10.4", S_TICK, 0.6),
+    ("fill", "M12,9.3 L11.15,12.3 H12.9 Z", S_NEEDLE, None),   # 바늘
+    ("fill", rrect(10.9, 18.4, 2.3, 1, 0.5), S_FOOT, None),    # 앞쪽 버튼
+]
+
+# ── 물 마시기 (병 + 잔) ───────────────────────────────────────────────────
+W_GLASS = "#BCE2F5"
+W_WATER = "#62B4E3"
+W_BOTTLE = "#DCF0FA"
+W_RIB = "#C6E6F7"
+W_NECK = "#BEE3F6"
+W_CAP = "#4EA8DC"
+
+# 잔이 뒤, 병이 앞이다 — 겹쳐야 두 개가 한 덩어리로 보인다
+GLASS_OUTLINE = ("M12.9,8.1 H21.2 L20.55,22.3 A0.85,0.85 0 0,1 19.7,23.1"
+                 " H14.4 A0.85,0.85 0 0,1 13.55,22.3 Z")
+WATER = [
+    ("fill", GLASS_OUTLINE, W_GLASS, None),
+    ("fill", "M13.12,12.9 H20.98 L20.55,22.3 A0.85,0.85 0 0,1 19.7,23.1"
+             " H14.4 A0.85,0.85 0 0,1 13.55,22.3 Z", W_WATER, None),
+    ("fill", rrect(5.2, 0.8, 4.9, 2.3, 0.5), W_CAP, None),               # 뚜껑
+    ("fill", rrect(5.7, 2.6, 3.9, 2.6, 0.3), W_NECK, None),              # 목
+    # 어깨는 크게, 바닥은 작게 굴린다 — 위아래가 같으면 병이 아니라 통이다
+    ("fill", "M2.9,7.6 a3.2,3.2 0 0,1 3.2,-3.2 h3.8 a3.2,3.2 0 0,1 3.2,3.2"
+             " v13.8 a1.9,1.9 0 0,1 -1.9,1.9 h-6.4 a1.9,1.9 0 0,1 -1.9,-1.9 Z",
+     W_BOTTLE, None),
+    ("fill", rrect(2.8, 8.9, 10.4, 4.2, 0.6), W_WATER, None),            # 라벨
+    ("fill", rrect(2.9, 15, 10.2, 0.55, 0.27), W_RIB, None),             # 골
+    ("fill", rrect(2.9, 17.2, 10.2, 0.55, 0.27), W_RIB, None),
+    ("fill", rrect(2.9, 19.4, 10.2, 0.55, 0.27), W_RIB, None),
+]
+
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
                 '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
                 '{extra}    android:width="24dp"\n'
@@ -220,5 +266,7 @@ def bake(name, parts):
 # 그래서 이름을 덮지 않고 `_color` 로 따로 둔다
 bake("ic_benefit_routine_color", WEIGHT)
 bake("ic_benefit_cardio_color", CARDIO)
+bake("ic_benefit_scale_color", SCALE)
+bake("ic_benefit_water_color", WATER)
 
-print("wrote 4 color icons")
+print("wrote 6 color icons")

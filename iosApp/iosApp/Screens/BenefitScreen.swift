@@ -211,15 +211,15 @@ private struct InviteBanner: View {
 /// **행마다 색이 다르다.** 아홉 줄이 같은 회색이면 목록이 덩어리로 보이고,
 /// 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
 enum BenefitKind {
-    case attend, routine, cardio, stretch, stamp, ladder, luck, quiz, touch, sns, weight, diet
+    case attend, routine, cardio, stretch, water, ladder, luck, quiz, touch, sns, weight, diet
 
     var color: Color {
         switch self {
         case .attend: MyFisColor.categoryGold
         case .routine: MyFisColor.categoryLime
         case .cardio: MyFisColor.categoryBlue
-        case .stretch: MyFisColor.categoryCyan
-        case .stamp: MyFisColor.categoryViolet
+        case .stretch: MyFisColor.categoryViolet
+        case .water: MyFisColor.categoryCyan
         case .ladder: MyFisColor.categoryOrange
         case .luck: MyFisColor.categoryTeal
         case .quiz: MyFisColor.categoryIndigo
@@ -236,7 +236,7 @@ enum BenefitKind {
     /// `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
     var colorIcon: Bool {
         switch self {
-        case .routine, .cardio, .sns, .quiz: true
+        case .routine, .cardio, .water, .sns, .quiz, .weight: true
         default: false
         }
     }
@@ -277,8 +277,8 @@ enum BenefitPlaceholder {
         .init(id: 3, kind: .cardio, icon: "ic_benefit_cardio_color", title: "유산소 하고",
               reward: "10분마다 +10 P", introIcon: "ic_benefit_cardio"),
         .init(id: 4, kind: .stretch, icon: "ic_benefit_stretch", title: "스트레칭하고", reward: "+20 P 받기"),
-        .init(id: 5, kind: .stamp, icon: "ic_benefit_stamp", title: "도장 찍고",
-              reward: "7일 채우면 +200 P", badge: "이벤트"),
+        .init(id: 5, kind: .water, icon: "ic_benefit_water_color", title: "물 마시고",
+              reward: "8잔 채우면 +50 P", introIcon: "ic_benefit_water"),
         .init(id: 6, kind: .ladder, icon: "ic_benefit_ladder", title: "사다리 타고",
               reward: "걸린 만큼 P 받기"),
         .init(id: 7, kind: .luck, icon: "ic_benefit_luck", title: "뽑기 돌리고",
@@ -289,7 +289,8 @@ enum BenefitPlaceholder {
               reward: "+10 P 받기", badge: "신규"),
         .init(id: 10, kind: .sns, icon: "ic_benefit_sns", title: "인스타에 올리고",
               reward: "+100 P 받기", badge: "인기"),
-        .init(id: 11, kind: .weight, icon: "ic_benefit_scale", title: "체중 재고", reward: "+20 P 받기"),
+        .init(id: 11, kind: .weight, icon: "ic_benefit_scale_color", title: "체중 재고",
+              reward: "+20 P 받기", introIcon: "ic_benefit_scale"),
         .init(id: 12, kind: .diet, icon: "ic_benefit_diet", title: "식단 찍고",
               reward: "+20 P 받기", done: true),
     ]

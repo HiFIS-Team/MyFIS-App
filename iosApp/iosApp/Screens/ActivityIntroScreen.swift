@@ -301,10 +301,10 @@ extension BenefitKind {
                   cta: "스트레칭 시작",
                   art: .init(duration: 3.2, dy: 4, rotation: 9,
                              discs: [.init(x: 0, y: 0, size: 190, alpha: 0.08, dy: 0)]))
-        case .stamp:
-            .init(kicker: "도장판", label: "일곱 칸을 채우면",
-                  period: "이번 주 안에", hint: "네 칸째 채우는 중",
-                  cta: "도장 찍기",
+        case .water:
+            .init(kicker: "물 마시기", label: "하루 여덟 잔",
+                  period: "오늘 안에", hint: "지금 세 잔째",
+                  cta: "한 잔 마셨어요",
                   art: .init(duration: 1.6, dy: 18, rotation: 0,
                              discs: [.init(x: 0, y: 86, size: 150, alpha: 0.12, dy: -6)]))
         case .ladder:

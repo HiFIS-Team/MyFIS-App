@@ -403,8 +403,8 @@ val BenefitKind.intro: ActivityIntro
                 discs = listOf(ActivityArtStyle.Disc(0f, 0f, 190f, 0.08f, 0f)),
             ),
         )
-        BenefitKind.STAMP -> ActivityIntro(
-            "도장판", "일곱 칸을 채우면", "이번 주 안에", "네 칸째 채우는 중", "도장 찍기",
+        BenefitKind.WATER -> ActivityIntro(
+            "물 마시기", "하루 여덟 잔", "오늘 안에", "지금 세 잔째", "한 잔 마셨어요",
             ActivityArtStyle(
                 duration = 1600, dy = 18f, rotation = 0f,
                 discs = listOf(ActivityArtStyle.Disc(0f, 86f, 150f, 0.12f, -6f)),

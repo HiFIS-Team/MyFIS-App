@@ -258,7 +258,7 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
  * 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
  */
 enum class BenefitKind {
-    ATTEND, ROUTINE, CARDIO, STRETCH, STAMP, LADDER, LUCK, QUIZ, TOUCH, SNS, WEIGHT, DIET,
+    ATTEND, ROUTINE, CARDIO, STRETCH, WATER, LADDER, LUCK, QUIZ, TOUCH, SNS, WEIGHT, DIET,
     ;
 
     val color: Color
@@ -266,8 +266,8 @@ enum class BenefitKind {
             ATTEND -> MyFisColor.CategoryGold
             ROUTINE -> MyFisColor.CategoryLime
             CARDIO -> MyFisColor.CategoryBlue
-            STRETCH -> MyFisColor.CategoryCyan
-            STAMP -> MyFisColor.CategoryViolet
+            STRETCH -> MyFisColor.CategoryViolet
+            WATER -> MyFisColor.CategoryCyan
             LADDER -> MyFisColor.CategoryOrange
             LUCK -> MyFisColor.CategoryTeal
             QUIZ -> MyFisColor.CategoryIndigo
@@ -284,7 +284,8 @@ enum class BenefitKind {
      * `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
      */
     val colorIcon: Boolean
-        get() = this == ROUTINE || this == CARDIO || this == SNS || this == QUIZ
+        get() = this == ROUTINE || this == CARDIO || this == WATER ||
+            this == SNS || this == QUIZ || this == WEIGHT
 }
 
 /** 적립 경로 한 줄 (SPEC P-01) */
@@ -329,8 +330,8 @@ val benefitActionPlaceholder = listOf(
     ),
     BenefitAction(4, BenefitKind.STRETCH, R.drawable.ic_benefit_stretch, "스트레칭하고", "+20 P 받기"),
     BenefitAction(
-        5, BenefitKind.STAMP, R.drawable.ic_benefit_stamp, "도장 찍고",
-        "7일 채우면 +200 P", badge = "이벤트",
+        5, BenefitKind.WATER, R.drawable.ic_benefit_water_color, "물 마시고",
+        "8잔 채우면 +50 P", introIcon = R.drawable.ic_benefit_water,
     ),
     BenefitAction(6, BenefitKind.LADDER, R.drawable.ic_benefit_ladder, "사다리 타고", "걸린 만큼 P 받기"),
     BenefitAction(
@@ -346,7 +347,10 @@ val benefitActionPlaceholder = listOf(
         10, BenefitKind.SNS, R.drawable.ic_benefit_sns, "인스타에 올리고",
         "+100 P 받기", badge = "인기",
     ),
-    BenefitAction(11, BenefitKind.WEIGHT, R.drawable.ic_benefit_scale, "체중 재고", "+20 P 받기"),
+    BenefitAction(
+        11, BenefitKind.WEIGHT, R.drawable.ic_benefit_scale_color, "체중 재고", "+20 P 받기",
+        introIcon = R.drawable.ic_benefit_scale,
+    ),
     BenefitAction(
         12, BenefitKind.DIET, R.drawable.ic_benefit_diet, "식단 찍고",
         "+20 P 받기", done = true,
