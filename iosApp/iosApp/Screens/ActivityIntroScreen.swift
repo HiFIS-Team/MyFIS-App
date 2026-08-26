@@ -10,8 +10,11 @@ import SwiftUI
 struct ActivityIntroScreen: View {
     let action: BenefitAction
     var onClose: () -> Void = {}
-    /// TODO: 활동 화면이 붙으면 연결한다 (P-05 ~ P-13)
-    var onStart: () -> Void = {}
+
+    /// 연출은 **이 화면 안에서** 끝난다 — 뽑기·사다리는 결과까지 여기서 보여준다 (§6.25)
+    @State private var stage: ActivityStage = .idle
+    /// 연출 진행값 0→1
+    @State private var progress: Double = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -53,16 +56,48 @@ struct ActivityIntroScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
 
-            MyFisPrimaryButton(title: action.kind.intro.cta, action: onStart)
+            MyFisPrimaryButton(title: buttonTitle, isEnabled: stage != .playing, action: tapButton)
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
                 .padding(.bottom, MyFisSpacing.xxxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task { MyFisDebug.scheduleAutoPlay(tapButton) }
     }
 
     private var illustration: some View {
-        ActivityArt(action: action)
+        ActivityArt(action: action, stage: stage, progress: progress)
             .frame(height: 260)
+    }
+
+    private var buttonTitle: String {
+        switch stage {
+        case .idle: action.kind.intro.cta
+        case .playing: action.kind.intro.playing
+        case .result: "\(action.kind.intro.reward) 받기"
+        }
+    }
+
+    /// 대기 → 재생 → 결과. **연출이 끝나야 버튼이 다시 산다**
+    private func tapButton() {
+        switch stage {
+        case .idle:
+            guard action.kind.intro.stagecraft else {
+                // TODO: 연출이 없는 활동은 화면(P-05~P-13)이 붙으면 연결한다
+                onClose()
+                return
+            }
+            stage = .playing
+            withAnimation(.linear(duration: action.kind.intro.duration)) {
+                progress = 1
+            } completion: {
+                stage = .result
+            }
+        case .playing:
+            break
+        case .result:
+            // TODO(서버): 여기서 적립을 올린다
+            onClose()
+        }
     }
 }
 
@@ -75,6 +110,8 @@ struct ActivityIntroScreen: View {
 /// 색 원판 위에 아이콘을 얹는 안은 버렸다 — 뽑기 캡슐처럼 **동그란 아이콘이 구멍처럼** 보인다 (확인함).
 private struct ActivityArt: View {
     let action: BenefitAction
+    var stage: ActivityStage = .idle
+    var progress: Double = 0
 
     /// 동작 줄이기가 켜져 있으면 멈춰 둔다 (§7)
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -105,7 +142,24 @@ private struct ActivityArt: View {
                     .offset(x: disc.x, y: disc.y + (floating ? disc.dy : 0))
             }
 
-            Image(action.icon)
+            if stage != .idle, action.kind == .luck {
+                LuckStage(color: color, progress: progress, reward: action.kind.intro.reward)
+            } else if stage != .idle, action.kind == .ladder {
+                LadderStage(color: color, progress: progress, reward: action.kind.intro.reward)
+            } else {
+                glyph
+            }
+        }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: style.duration).repeatForever(autoreverses: true)) {
+                floating = true
+            }
+        }
+    }
+
+    private var glyph: some View {
+        Image(action.icon)
                 .resizable()
                 .renderingMode(.template)
                 .frame(width: 148, height: 148)
@@ -120,13 +174,6 @@ private struct ActivityArt: View {
                 .scaleEffect(floating ? 1 + style.pulse : 1 - style.pulse)
                 .rotationEffect(.degrees(floating ? style.rotation : -style.rotation))
                 .offset(y: floating ? -style.dy : style.dy)
-        }
-        .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: style.duration).repeatForever(autoreverses: true)) {
-                floating = true
-            }
-        }
     }
 }
 
@@ -178,6 +225,14 @@ struct ActivityIntro {
     let cta: String
     /// 그림이 움직이는 결 (§6.25)
     let art: ActivityArtStyle
+    /// 재생 중 버튼 글자
+    var playing: String = "잠깐만요…"
+    /// TODO(서버): 결과는 서버가 정한다. 지금은 자리값
+    var reward: String = "+20 P"
+    /// 연출이 있는 활동인가 — 없으면 버튼이 그냥 닫는다
+    var stagecraft: Bool = false
+    /// 연출 길이(초)
+    var duration: Double = 2.2
 }
 
 /// 그림의 결. **활동마다 다르게 움직인다** — 다 같은 박자로 뜨면 색만 바뀐 같은 화면이 된다.
@@ -249,12 +304,14 @@ extension BenefitKind {
                   cta: "사다리 타기",
                   art: .init(duration: 2.4, dy: 20, rotation: 0,
                              discs: [.init(x: -88, y: -40, size: 60, alpha: 0.14, dy: 34),
-                                     .init(x: 88, y: 40, size: 60, alpha: 0.12, dy: -34)]))
+                                     .init(x: 88, y: 40, size: 60, alpha: 0.12, dy: -34)]),
+                  playing: "내려가는 중…", reward: "+80 P", stagecraft: true, duration: 2.6)
         case .luck:
             .init(kicker: "뽑기", label: "오늘의 운을 시험할 시간",
                   period: "하루 한 번", hint: "오늘의 행운은 최대 500 P",
                   cta: "뽑기 돌리기",
-                  art: .init(duration: 2.6, dy: 10, rotation: 16))
+                  art: .init(duration: 2.6, dy: 10, rotation: 16),
+                  playing: "돌리는 중…", reward: "+320 P", stagecraft: true, duration: 2.2)
         case .quiz:
             .init(kicker: "퀴즈", label: "AI가 낸 오늘 문제",
                   period: "하루 한 문제", hint: "어제는 62%가 맞혔어요",

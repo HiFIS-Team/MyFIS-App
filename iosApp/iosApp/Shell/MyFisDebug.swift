@@ -16,6 +16,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
 /// SIMCTL_CHILD_MYFIS_ACTIVITY=ladder          활동 랜딩(MYFIS_ROUTE=activity)에 띄울 활동
+/// SIMCTL_CHILD_MYFIS_AUTOPLAY=2               2초 뒤 그 활동의 연출을 스스로 재생한다
 /// ```
 enum MyFisDebug {
     private static var env: [String: String] { ProcessInfo.processInfo.environment }
@@ -79,6 +80,14 @@ enum MyFisDebug {
         let name = env["MYFIS_ACTIVITY"] ?? "luck"
         return BenefitPlaceholder.actions.first { $0.icon == "ic_benefit_\(name)" }
             ?? BenefitPlaceholder.actions[6]
+    }
+
+    /// 시뮬레이터에는 버튼을 누를 수단이 없다. 연출을 보려면 `SIMCTL_CHILD_MYFIS_AUTOPLAY=2`
+    static func scheduleAutoPlay(_ play: @escaping () -> Void) {
+        #if DEBUG
+        guard let delay = env["MYFIS_AUTOPLAY"].flatMap(Double.init) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: play)
+        #endif
     }
 
     /// 검색 모드로 시작할지 — 검색은 잎이 아니라 **스토어의 모드**라 라우트가 아니다 (§6.9)

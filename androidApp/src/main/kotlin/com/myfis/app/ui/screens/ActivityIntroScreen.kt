@@ -1,6 +1,8 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -24,6 +26,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -46,6 +52,7 @@ import com.myfis.app.ui.theme.MyFisPrimaryButton
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
+import kotlinx.coroutines.launch
 
 /**
  * 적립 활동에 들어가기 전 **랜딩** (DESIGN.md §6.25).
@@ -57,12 +64,32 @@ import com.myfis.app.ui.theme.MyFisTheme
  * 그래야 활동이 늘어나도 들어가는 길이 하나로 남는다.
  */
 @Composable
-fun ActivityIntroScreen(
-    action: BenefitAction,
-    onClose: () -> Unit,
-    // TODO: 활동 화면이 붙으면 연결한다 (P-05 ~ P-13)
-    onStart: () -> Unit = onClose,
-) {
+fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
+    val intro = action.kind.intro
+    // 연출은 **이 화면 안에서** 끝난다 — 뽑기·사다리는 결과까지 여기서 보여준다 (§6.25)
+    var stage by remember { mutableStateOf(ActivityStage.IDLE) }
+    val progress = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+
+    // 대기 → 재생 → 결과. **연출이 끝나야 버튼이 다시 산다**
+    val onButton = {
+        when (stage) {
+            ActivityStage.IDLE -> if (!intro.stagecraft) {
+                // TODO: 연출이 없는 활동은 화면(P-05~P-13)이 붙으면 연결한다
+                onClose()
+            } else {
+                stage = ActivityStage.PLAYING
+                scope.launch {
+                    progress.animateTo(1f, tween(intro.durationMs, easing = LinearEasing))
+                    stage = ActivityStage.RESULT
+                }
+                Unit
+            }
+            ActivityStage.PLAYING -> Unit
+            // TODO(서버): 여기서 적립을 올린다
+            ActivityStage.RESULT -> onClose()
+        }
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -113,7 +140,12 @@ fun ActivityIntroScreen(
                 modifier = Modifier.padding(top = MyFisSpacing.md),
             )
 
-            Illustration(action, Modifier.padding(top = MyFisSpacing.giant))
+            Illustration(
+                action = action,
+                stage = stage,
+                progress = progress.value,
+                modifier = Modifier.padding(top = MyFisSpacing.giant),
+            )
 
             HintBubble(
                 text = action.kind.intro.hint,
@@ -123,8 +155,13 @@ fun ActivityIntroScreen(
         }
 
         MyFisPrimaryButton(
-            text = action.kind.intro.cta,
-            onClick = onStart,
+            text = when (stage) {
+                ActivityStage.IDLE -> intro.cta
+                ActivityStage.PLAYING -> intro.playing
+                ActivityStage.RESULT -> "${intro.reward} 받기"
+            },
+            onClick = onButton,
+            enabled = stage != ActivityStage.PLAYING,
             modifier = Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(bottom = MyFisSpacing.xxxl),
@@ -143,7 +180,12 @@ fun ActivityIntroScreen(
  * 움직임은 끊기지 않고 계속이다 (동작 줄이기가 켜져 있으면 시스템이 알아서 멈춘다).
  */
 @Composable
-private fun Illustration(action: BenefitAction, modifier: Modifier = Modifier) {
+private fun Illustration(
+    action: BenefitAction,
+    stage: ActivityStage,
+    progress: Float,
+    modifier: Modifier = Modifier,
+) {
     val color = action.kind.color
     val style = action.kind.intro.art
     val transition = rememberInfiniteTransition(label = "활동 그림")
@@ -185,7 +227,12 @@ private fun Illustration(action: BenefitAction, modifier: Modifier = Modifier) {
             )
         }
 
-        Glyph(
+        when {
+            stage != ActivityStage.IDLE && action.kind == BenefitKind.LUCK ->
+                LuckStage(color, progress, action.kind.intro.reward)
+            stage != ActivityStage.IDLE && action.kind == BenefitKind.LADDER ->
+                LadderStage(color, progress, action.kind.intro.reward)
+            else -> Glyph(
             icon = action.icon,
             brush = Brush.verticalGradient(listOf(color, color.copy(alpha = 0.62f))),
             modifier = Modifier
@@ -197,7 +244,8 @@ private fun Illustration(action: BenefitAction, modifier: Modifier = Modifier) {
                     scaleY = s
                 },
             shadow = color.copy(alpha = 0.45f),
-        )
+            )
+        }
     }
 }
 
@@ -274,6 +322,14 @@ data class ActivityIntro(
     val cta: String,
     /** 그림이 움직이는 결 (§6.25) */
     val art: ActivityArtStyle = ActivityArtStyle(),
+    /** 재생 중 버튼 글자 */
+    val playing: String = "잠깐만요…",
+    // TODO(서버): 결과는 서버가 정한다. 지금은 자리값
+    val reward: String = "+20 P",
+    /** 연출이 있는 활동인가 — 없으면 버튼이 그냥 닫는다 */
+    val stagecraft: Boolean = false,
+    /** 연출 길이(ms) */
+    val durationMs: Int = 2200,
 )
 
 /** 그림의 결. **활동마다 다르게 움직인다** — 다 같은 박자로 뜨면 색만 바뀐 같은 화면이 된다 */
@@ -358,10 +414,12 @@ val BenefitKind.intro: ActivityIntro
                     ActivityArtStyle.Disc(88f, 40f, 60f, 0.12f, -34f),
                 ),
             ),
+            playing = "내려가는 중…", reward = "+80 P", stagecraft = true, durationMs = 2600,
         )
         BenefitKind.LUCK -> ActivityIntro(
             "뽑기", "오늘의 운을 시험할 시간", "하루 한 번", "오늘의 행운은 최대 500 P", "뽑기 돌리기",
             ActivityArtStyle(duration = 2600, dy = 10f, rotation = 16f),
+            playing = "돌리는 중…", reward = "+320 P", stagecraft = true, durationMs = 2200,
         )
         BenefitKind.QUIZ -> ActivityIntro(
             "퀴즈", "AI가 낸 오늘 문제", "하루 한 문제", "어제는 62%가 맞혔어요", "퀴즈 풀기",

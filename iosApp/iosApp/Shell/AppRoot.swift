@@ -129,8 +129,7 @@ struct AppRoot: View {
                     onCart: { open(.storeCart) }
                 )
             case .activity(let action):
-                // TODO: 활동 화면(P-05~P-13)이 붙으면 onStart 를 연결한다
-                ActivityIntroScreen(action: action, onClose: back, onStart: back)
+                ActivityIntroScreen(action: action, onClose: back)
             case .weightLog:
                 WeightLogScreen(onBack: back)
             case .storeCart:
