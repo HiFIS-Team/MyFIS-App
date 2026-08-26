@@ -159,21 +159,30 @@ private struct ActivityArt: View {
     }
 
     private var glyph: some View {
-        Image(action.icon)
-                .resizable()
-                .renderingMode(.template)
-                .frame(width: 148, height: 148)
-                // 위아래 색이 같으면 스티커처럼 납작하다
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [color, color.opacity(0.62)],
-                        startPoint: .top, endPoint: .bottom
+        // 원색 아이콘은 **자기 색 그대로** 띄운다. tint 를 걸면 그림이 실루엣으로 뭉갠다
+        Group {
+            if action.kind.colorIcon {
+                Image(action.icon)
+                    .resizable()
+                    .frame(width: 148, height: 148)
+            } else {
+                Image(action.icon)
+                    .resizable()
+                    .renderingMode(.template)
+                    .frame(width: 148, height: 148)
+                    // 위아래 색이 같으면 스티커처럼 납작하다
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.62)],
+                            startPoint: .top, endPoint: .bottom
+                        )
                     )
-                )
-                .shadow(color: color.opacity(0.45), radius: 26, y: 14)
-                .scaleEffect(floating ? 1 + style.pulse : 1 - style.pulse)
-                .rotationEffect(.degrees(floating ? style.rotation : -style.rotation))
-                .offset(y: floating ? -style.dy : style.dy)
+            }
+        }
+        .shadow(color: color.opacity(0.45), radius: 26, y: 14)
+        .scaleEffect(floating ? 1 + style.pulse : 1 - style.pulse)
+        .rotationEffect(.degrees(floating ? style.rotation : -style.rotation))
+        .offset(y: floating ? -style.dy : style.dy)
     }
 }
 

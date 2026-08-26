@@ -101,25 +101,18 @@ private struct ActionRow: View {
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: MyFisSpacing.lg) {
-                // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — 아이콘에만 칠하고
-                // 배경은 같은 색 16%. 받은 행은 색을 뺀다 (지난 일이라 갈래를 알 필요가 없다)
-                Image(action.icon)
-                    .resizable()
-                    .renderingMode(.template)
-                    .frame(width: 28, height: 28)
-                    .foregroundStyle(dimmed ? MyFisColor.textTertiary : action.kind.color)
+                // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — **아이콘에만** 칠한다.
+                // 판은 색 없는 중립이다 — 열두 줄이 색 판이면 목록이 색 견본집처럼 읽힌다
+                icon
                     .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
                     .background(
-                        dimmed ? MyFisColor.surface2 : action.kind.color.opacity(0.16),
+                        dimmed ? MyFisColor.surface1 : MyFisColor.surface2,
                         in: RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
                     )
-                    // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 색 얼룩처럼 번진다
+                    // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 배경에 녹는다
                     .overlay(
                         RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
-                            .strokeBorder(
-                                dimmed ? MyFisColor.borderSubtle : action.kind.color.opacity(0.3),
-                                lineWidth: 1
-                            )
+                            .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1)
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -143,6 +136,25 @@ private struct ActionRow: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.myFisTap)
+    }
+
+    /// 원색 아이콘(브랜드 마크 · 캐릭터)은 **tint 를 걸지 않는다** — 한 색으로 눌리면 실루엣이 된다.
+    /// 받은 행에서는 색을 빼야 하는데 칠할 수가 없으니 **채도를 0 으로 내린다**
+    @ViewBuilder
+    private var icon: some View {
+        if action.kind.colorIcon {
+            Image(action.icon)
+                .resizable()
+                .frame(width: 28, height: 28)
+                .saturation(dimmed ? 0 : 1)
+                .opacity(dimmed ? 0.5 : 1)
+        } else {
+            Image(action.icon)
+                .resizable()
+                .renderingMode(.template)
+                .frame(width: 28, height: 28)
+                .foregroundStyle(dimmed ? MyFisColor.textTertiary : action.kind.color)
+        }
     }
 }
 
@@ -217,6 +229,15 @@ enum BenefitKind {
         /// 아홉 번째만 무채색이다 — 색을 하나 더 만드는 대신 **이미 받은 자리**에 중립색을 뒀다.
         /// 어차피 받은 행은 톤을 낮춰 회색으로 그린다
         case .diet: MyFisColor.categoryGray
+        }
+    }
+
+    /// **자기 색을 가진 그림**인가. 브랜드 마크(인스타)나 캐릭터(AI 봇)가 여기 해당한다.
+    /// `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
+    var colorIcon: Bool {
+        switch self {
+        case .sns, .quiz: true
+        default: false
         }
     }
 }

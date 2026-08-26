@@ -234,7 +234,12 @@ private fun Illustration(
                 LadderStage(color, progress, action.kind.intro.reward)
             else -> Glyph(
             icon = action.icon,
-            brush = Brush.verticalGradient(listOf(color, color.copy(alpha = 0.62f))),
+            // 원색 아이콘은 **자기 색 그대로** 띄운다 (brush = null). 칠하면 그림이 실루엣으로 뭉갠다
+            brush = if (action.kind.colorIcon) {
+                null
+            } else {
+                Brush.verticalGradient(listOf(color, color.copy(alpha = 0.62f)))
+            },
             modifier = Modifier
                 .offset(y = (style.dy - 2 * style.dy * phase).dp)
                 .graphicsLayer {
@@ -249,9 +254,9 @@ private fun Illustration(
     }
 }
 
-/** 벡터를 **그라디언트로** 칠한다. `tint` 는 한 가지 색밖에 못 넣는다 */
+/** 벡터를 **그라디언트로** 칠한다. `tint` 는 한 가지 색밖에 못 넣는다. `brush = null` 이면 원본 색 그대로 */
 @Composable
-private fun Glyph(icon: Int, brush: Brush, shadow: Color, modifier: Modifier = Modifier) {
+private fun Glyph(icon: Int, brush: Brush?, shadow: Color, modifier: Modifier = Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
         // 그림자 — 같은 글리프를 한 벌 더 깔고 흐린다 (API 31 미만에서는 그냥 안 흐려진다)
         Image(
@@ -272,7 +277,7 @@ private fun Glyph(icon: Int, brush: Brush, shadow: Color, modifier: Modifier = M
                 .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
                 .drawWithContent {
                     drawContent()
-                    drawRect(brush, blendMode = BlendMode.SrcIn)
+                    brush?.let { drawRect(it, blendMode = BlendMode.SrcIn) }
                 },
         )
     }

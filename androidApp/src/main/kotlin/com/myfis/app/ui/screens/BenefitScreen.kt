@@ -1,5 +1,6 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,7 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
@@ -139,29 +143,42 @@ private fun ActionRow(action: BenefitAction, onClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
     ) {
-        // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — 아이콘에만 칠하고
-        // 배경은 같은 색 16%. 받은 행은 색을 뺀다 (지난 일이라 갈래를 알 필요가 없다)
+        // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — **아이콘에만** 칠한다.
+        // 판은 색 없는 중립이다 — 열두 줄이 색 판이면 목록이 색 견본집처럼 읽힌다
         Box(
             modifier = Modifier
                 .size(MyFisSize.listRowMin)
                 .background(
-                    if (dimmed) MyFisColor.Surface2 else action.kind.color.copy(alpha = 0.16f),
+                    if (dimmed) MyFisColor.Surface1 else MyFisColor.Surface2,
                     MyFisRadius.tile,
                 )
-                // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 색 얼룩처럼 번진다
-                .border(
-                    1.dp,
-                    if (dimmed) MyFisColor.BorderSubtle else action.kind.color.copy(alpha = 0.3f),
-                    MyFisRadius.tile,
-                ),
+                // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 배경에 녹는다
+                .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                painter = painterResource(action.icon),
-                contentDescription = null, // 옆 글자가 이름 역할을 한다
-                tint = if (dimmed) MyFisColor.TextTertiary else action.kind.color,
-                modifier = Modifier.size(28.dp),
-            )
+            if (action.kind.colorIcon) {
+                // 원색 아이콘(브랜드 마크 · 캐릭터)은 **tint 를 걸지 않는다** — 한 색으로 눌리면 실루엣이 된다.
+                // 받은 행에서는 색을 빼야 하는데 칠할 수가 없으니 **채도를 0 으로 내린다**
+                Image(
+                    painter = painterResource(action.icon),
+                    contentDescription = null, // 옆 글자가 이름 역할을 한다
+                    modifier = Modifier
+                        .size(28.dp)
+                        .alpha(if (dimmed) 0.5f else 1f),
+                    colorFilter = if (dimmed) {
+                        ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+                    } else {
+                        null
+                    },
+                )
+            } else {
+                Icon(
+                    painter = painterResource(action.icon),
+                    contentDescription = null, // 옆 글자가 이름 역할을 한다
+                    tint = if (dimmed) MyFisColor.TextTertiary else action.kind.color,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
         }
 
         Column {
@@ -261,6 +278,12 @@ enum class BenefitKind {
             // 어차피 받은 행은 톤을 낮춰 회색으로 그린다
             DIET -> MyFisColor.CategoryGray
         }
+
+    /**
+     * **자기 색을 가진 그림**인가. 브랜드 마크(인스타)나 캐릭터(AI 봇)가 여기 해당한다.
+     * `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
+     */
+    val colorIcon: Boolean get() = this == SNS || this == QUIZ
 }
 
 /** 적립 경로 한 줄 (SPEC P-01) */
