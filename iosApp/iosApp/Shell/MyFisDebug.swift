@@ -15,6 +15,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
+/// SIMCTL_CHILD_MYFIS_ACTIVITY=ladder          활동 랜딩(MYFIS_ROUTE=activity)에 띄울 활동
 /// ```
 enum MyFisDebug {
     private static var env: [String: String] { ProcessInfo.processInfo.environment }
@@ -25,7 +26,7 @@ enum MyFisDebug {
         case "store_my": .storeMy
         case "store_cart": .storeCart
         case "weight_log": .weightLog
-        case "activity": .activity(BenefitPlaceholder.actions[6]) // 뽑기 돌리고
+        case "activity": .activity(activityAction)
         case "store_item": .storeItem(StorePlaceholder.items[0])
         default: nil
         }
@@ -71,6 +72,13 @@ enum MyFisDebug {
         #else
         .top
         #endif
+    }
+
+    /// 랜딩에 띄울 활동 — `SIMCTL_CHILD_MYFIS_ACTIVITY=ladder` (기본은 뽑기)
+    private static var activityAction: BenefitAction {
+        let name = env["MYFIS_ACTIVITY"] ?? "luck"
+        return BenefitPlaceholder.actions.first { $0.icon == "ic_benefit_\(name)" }
+            ?? BenefitPlaceholder.actions[6]
     }
 
     /// 검색 모드로 시작할지 — 검색은 잎이 아니라 **스토어의 모드**라 라우트가 아니다 (§6.9)

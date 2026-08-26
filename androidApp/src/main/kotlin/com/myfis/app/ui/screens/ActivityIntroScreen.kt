@@ -1,12 +1,20 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -15,12 +23,19 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -115,27 +130,97 @@ fun ActivityIntroScreen(
 }
 
 /**
- * 그림 — 목록에서 쓰던 그 아이콘을 **크게** 키운다.
- * 뒤에 같은 색 빛을 깔아 검정 위에 떠 있게 한다 (§3.2 예외, §6.25)
+ * 활동 그림 — **큰 글리프 하나와 그 뒤를 떠다니는 원판들.**
+ *
+ * 아이콘을 그냥 크게 키우면 검정 위에 납작하게 붙어 그림처럼 안 보인다 (2026-08-26 지적).
+ * 세 가지로 살린다 — **그라디언트**로 위아래 색을 다르게, **그림자**로 띄우고,
+ * 뒤에 원판을 **다른 박자로** 흘린다.
+ *
+ * 색 원판 위에 아이콘을 얹는 안은 버렸다 — 뽑기 캡슐처럼 **동그란 아이콘이 구멍처럼** 보인다 (확인함).
+ * 움직임은 끊기지 않고 계속이다 (동작 줄이기가 켜져 있으면 시스템이 알아서 멈춘다).
  */
 @Composable
 private fun Illustration(action: BenefitAction, modifier: Modifier = Modifier) {
+    val color = action.kind.color
+    val transition = rememberInfiniteTransition(label = "활동 그림")
+    val phase by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2600, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse,
+        ),
+        label = "떠다님",
+    )
+
     Box(modifier.height(260.dp), contentAlignment = Alignment.Center) {
+        // 빛 — 검정 위에 글리프만 두면 붕 떠 보인다 (§6.25)
         Box(
             Modifier
-                .size(300.dp)
+                .size(320.dp)
+                .graphicsLayer {
+                    val s = 0.92f + 0.14f * phase
+                    scaleX = s
+                    scaleY = s
+                }
                 .background(
                     Brush.radialGradient(
-                        colors = listOf(action.kind.color.copy(alpha = 0.22f), Color.Transparent),
+                        colors = listOf(color.copy(alpha = 0.26f), Color.Transparent),
                     ),
                     MyFisRadius.full,
                 ),
         )
-        Icon(
-            painter = painterResource(action.icon),
+
+        // 뒤를 흐르는 원판 둘. 서로 **반대로** 움직여야 한 덩어리로 안 보인다
+        Box(
+            Modifier
+                .offset(x = (-96).dp, y = (-28 - 24 * phase).dp)
+                .size(86.dp)
+                .background(color.copy(alpha = 0.16f), MyFisRadius.full),
+        )
+        Box(
+            Modifier
+                .offset(x = 92.dp, y = (30 + 26 * phase).dp)
+                .size(54.dp)
+                .background(color.copy(alpha = 0.10f), MyFisRadius.full),
+        )
+
+        Glyph(
+            icon = action.icon,
+            brush = Brush.verticalGradient(listOf(color, color.copy(alpha = 0.62f))),
+            modifier = Modifier
+                .offset(y = (10 - 20 * phase).dp)
+                .graphicsLayer { rotationZ = -4f + 8f * phase },
+            shadow = color.copy(alpha = 0.45f),
+        )
+    }
+}
+
+/** 벡터를 **그라디언트로** 칠한다. `tint` 는 한 가지 색밖에 못 넣는다 */
+@Composable
+private fun Glyph(icon: Int, brush: Brush, shadow: Color, modifier: Modifier = Modifier) {
+    Box(modifier, contentAlignment = Alignment.Center) {
+        // 그림자 — 같은 글리프를 한 벌 더 깔고 흐린다 (API 31 미만에서는 그냥 안 흐려진다)
+        Image(
+            painter = painterResource(icon),
+            contentDescription = null,
+            colorFilter = ColorFilter.tint(shadow),
+            modifier = Modifier
+                .size(148.dp)
+                .offset(y = 14.dp)
+                .blur(22.dp),
+        )
+        Image(
+            painter = painterResource(icon),
             contentDescription = null, // 위 제목이 이름 역할을 한다
-            tint = action.kind.color,
-            modifier = Modifier.size(132.dp),
+            modifier = Modifier
+                .size(148.dp)
+                // 오프스크린으로 그려야 SrcIn 이 글리프 알파에만 걸린다
+                .graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen)
+                .drawWithContent {
+                    drawContent()
+                    drawRect(brush, blendMode = BlendMode.SrcIn)
+                },
         )
     }
 }

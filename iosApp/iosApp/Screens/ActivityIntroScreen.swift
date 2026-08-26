@@ -60,26 +60,72 @@ struct ActivityIntroScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// 그림 — 목록에서 쓰던 그 아이콘을 **크게** 키운다.
-    /// 뒤에 같은 색 빛을 깔아 검정 위에 떠 있게 한다 (§3.2 예외, §6.25)
     private var illustration: some View {
+        ActivityArt(action: action)
+            .frame(height: 260)
+    }
+}
+
+/// 활동 그림 — **큰 글리프 하나와 그 뒤를 떠다니는 원판들.**
+///
+/// 아이콘을 그냥 크게 키우면 검정 위에 납작하게 붙어 그림처럼 안 보인다 (2026-08-26 지적).
+/// 세 가지로 살린다 — **그라디언트**로 위아래 색을 다르게, **그림자**로 띄우고,
+/// 뒤에 원판을 **다른 박자로** 흘린다.
+///
+/// 색 원판 위에 아이콘을 얹는 안은 버렸다 — 뽑기 캡슐처럼 **동그란 아이콘이 구멍처럼** 보인다 (확인함).
+private struct ActivityArt: View {
+    let action: BenefitAction
+
+    /// 동작 줄이기가 켜져 있으면 멈춰 둔다 (§7)
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var floating = false
+
+    private var color: Color { action.kind.color }
+
+    var body: some View {
         ZStack {
+            // 빛 — 검정 위에 글리프만 두면 붕 떠 보인다 (§6.25)
             Circle()
                 .fill(
                     RadialGradient(
-                        colors: [action.kind.color.opacity(0.22), .clear],
-                        center: .center, startRadius: 0, endRadius: 150
+                        colors: [color.opacity(0.26), .clear],
+                        center: .center, startRadius: 0, endRadius: 160
                     )
                 )
-                .frame(width: 300, height: 300)
+                .frame(width: 320, height: 320)
+                .scaleEffect(floating ? 1.06 : 0.92)
+
+            // 뒤를 흐르는 원판 둘. 서로 **반대로** 움직여야 한 덩어리로 안 보인다
+            Circle()
+                .fill(color.opacity(0.16))
+                .frame(width: 86, height: 86)
+                .offset(x: -96, y: floating ? -52 : -28)
+            Circle()
+                .fill(color.opacity(0.10))
+                .frame(width: 54, height: 54)
+                .offset(x: 92, y: floating ? 56 : 30)
 
             Image(action.icon)
                 .resizable()
                 .renderingMode(.template)
-                .frame(width: 132, height: 132)
-                .foregroundStyle(action.kind.color)
+                .frame(width: 148, height: 148)
+                // 위아래 색이 같으면 스티커처럼 납작하다
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [color, color.opacity(0.62)],
+                        startPoint: .top, endPoint: .bottom
+                    )
+                )
+                .shadow(color: color.opacity(0.45), radius: 26, y: 14)
+                .rotationEffect(.degrees(floating ? 4 : -4))
+                .offset(y: floating ? -10 : 10)
         }
-        .frame(height: 260)
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 2.6).repeatForever(autoreverses: true)) {
+                floating = true
+            }
+        }
     }
 }
 
