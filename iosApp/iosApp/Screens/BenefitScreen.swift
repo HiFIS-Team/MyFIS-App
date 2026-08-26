@@ -206,32 +206,26 @@ private struct InviteBanner: View {
     }
 }
 
-/// 적립 활동의 **갈래** — 목록에서 색으로 구분한다 (§3.1 카테고리 팔레트).
+/// 적립 활동 종류 — 목록에서 **색으로 구분한다** (§3.1 카테고리 팔레트).
 ///
-/// 행마다 색을 하나씩 새로 고르지 않는다. 갈래가 같으면 색도 같아야
-/// 색이 "종류"를 뜻하는 게 되지, 그냥 알록달록한 목록이 되지 않는다.
+/// **행마다 색이 다르다.** 아홉 줄이 같은 회색이면 목록이 덩어리로 보이고,
+/// 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
 enum BenefitKind {
-    /// 몸 쓰는 것 — 루틴 · 스트레칭
-    case workout
-    /// 유산소
-    case cardio
-    /// 지점에 오는 것 — 출석
-    case visit
-    /// 이벤트 — 도장판
-    case event
-    /// 사람과 엮이는 것 — 옆 사람 터치 · SNS 자랑
-    case social
-    /// 기록 — 체중 · 식단
-    case record
+    case attend, routine, cardio, stretch, stamp, touch, sns, weight, diet
 
     var color: Color {
         switch self {
-        case .workout: MyFisColor.categoryLime
+        case .attend: MyFisColor.categoryGold
+        case .routine: MyFisColor.categoryLime
         case .cardio: MyFisColor.categoryBlue
-        case .visit: MyFisColor.categoryGold
-        case .event: MyFisColor.categoryViolet
-        case .social: MyFisColor.categoryGreen
-        case .record: MyFisColor.categoryCoral
+        case .stretch: MyFisColor.categoryCyan
+        case .stamp: MyFisColor.categoryViolet
+        case .touch: MyFisColor.categoryGreen
+        case .sns: MyFisColor.categoryPink
+        case .weight: MyFisColor.categoryCoral
+        /// 아홉 번째만 무채색이다 — 색을 하나 더 만드는 대신 **이미 받은 자리**에 중립색을 뒀다.
+        /// 어차피 받은 행은 톤을 낮춰 회색으로 그린다
+        case .diet: MyFisColor.categoryGray
         }
     }
 }
@@ -257,18 +251,18 @@ enum BenefitPlaceholder {
     static let earnedThisMonth = 320
 
     static let actions: [BenefitAction] = [
-        .init(id: 1, kind: .visit, icon: "ic_quest_attend", title: "출석하고", reward: "+50 P 받기"),
-        .init(id: 2, kind: .workout, icon: "ic_tab_weight", title: "루틴 끝내고", reward: "+80 P 받기"),
+        .init(id: 1, kind: .attend, icon: "ic_quest_attend", title: "출석하고", reward: "+50 P 받기"),
+        .init(id: 2, kind: .routine, icon: "ic_tab_weight", title: "루틴 끝내고", reward: "+80 P 받기"),
         .init(id: 3, kind: .cardio, icon: "ic_tab_cardio", title: "유산소 하고", reward: "10분마다 +10 P"),
-        .init(id: 4, kind: .workout, icon: "ic_quest_stretch", title: "스트레칭하고", reward: "+20 P 받기"),
-        .init(id: 5, kind: .event, icon: "ic_quest_board", title: "도장 찍고",
+        .init(id: 4, kind: .stretch, icon: "ic_quest_stretch", title: "스트레칭하고", reward: "+20 P 받기"),
+        .init(id: 5, kind: .stamp, icon: "ic_quest_board", title: "도장 찍고",
               reward: "7일 채우면 +200 P", badge: "이벤트"),
-        .init(id: 6, kind: .social, icon: "ic_tab_group", title: "옆 사람 터치하고",
+        .init(id: 6, kind: .touch, icon: "ic_tab_group", title: "옆 사람 터치하고",
               reward: "+10 P 받기", badge: "신규"),
-        .init(id: 7, kind: .social, icon: "ic_quest_upload", title: "인스타에 올리고",
+        .init(id: 7, kind: .sns, icon: "ic_quest_upload", title: "인스타에 올리고",
               reward: "+100 P 받기", badge: "인기"),
-        .init(id: 8, kind: .record, icon: "ic_quest_scale", title: "체중 재고", reward: "+20 P 받기"),
-        .init(id: 9, kind: .record, icon: "ic_quest_camera", title: "식단 찍고",
+        .init(id: 8, kind: .weight, icon: "ic_quest_scale", title: "체중 재고", reward: "+20 P 받기"),
+        .init(id: 9, kind: .diet, icon: "ic_quest_camera", title: "식단 찍고",
               reward: "+20 P 받기", done: true),
     ]
 }
