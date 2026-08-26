@@ -9,20 +9,20 @@ import androidx.compose.ui.graphics.Color
  * 새 색이 필요하면 DESIGN.md 에 먼저 추가하고 여기에 옮긴다.
  */
 object MyFisColor {
-    // 배경 (surface) — **순검정이 아니다** (2026-08-26). 토스처럼 진회색 바탕에 카드를 얹는다
-    val BgBase = Color(0xFF131316)
-    val Surface1 = Color(0xFF1C1C21)
-    val Surface2 = Color(0xFF24252B)
-    val Surface3 = Color(0xFF2E2F37)
+    // 배경 (surface) — **순검정이 아니다** (2026-08-26). 카카오뱅크처럼 **중립 회색** 바탕에 카드를 얹는다
+    val BgBase = Color(0xFF1B1B1D)
+    val Surface1 = Color(0xFF232327)
+    val Surface2 = Color(0xFF2B2C31)
+    val Surface3 = Color(0xFF35363C)
 
     // 경계
-    val BorderSubtle = Color(0xFF383A43)
+    val BorderSubtle = Color(0xFF41424B)
     val BorderStrong = Color(0xFF6B7383)
 
-    // 텍스트 — TextTertiary 가 AA 하한선(Surface.3 위 4.58:1). 이보다 어둡게 쓰지 않는다.
+    // 텍스트 — TextTertiary 가 AA 하한선(Surface.3 위 4.69:1). 이보다 어둡게 쓰지 않는다.
     val TextPrimary = Color(0xFFFFFFFF)
     val TextSecondary = Color(0xFFA3A9B5)
-    val TextTertiary = Color(0xFF9098A6)
+    val TextTertiary = Color(0xFF9BA2AF)
 
     // 액센트 — 한 화면에 2곳 이하
     val Accent = Color(0xFFC9F531)
