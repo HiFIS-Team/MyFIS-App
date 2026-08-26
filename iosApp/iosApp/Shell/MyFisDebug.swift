@@ -8,7 +8,7 @@ import UIKit
 ///
 /// ```
 /// SIMCTL_CHILD_MYFIS_ROUTE=notifications      잎 화면을 띄운 채로 시작
-/// SIMCTL_CHILD_MYFIS_TAB=store                스토어 탭에서 시작
+/// SIMCTL_CHILD_MYFIS_TAB=benefit              그 탭에서 시작 (home · benefit · store · my)
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
@@ -42,7 +42,13 @@ enum MyFisDebug {
     static var initialBaseTab: BaseTab {
         #if DEBUG
         let storeRoute = (env["MYFIS_ROUTE"] ?? "").hasPrefix("store")
-        return env["MYFIS_TAB"] == "store" || storeRoute || startsInSearch ? .store : .home
+        if storeRoute || startsInSearch { return .store }
+        switch env["MYFIS_TAB"] {
+        case "benefit": return .benefit
+        case "store": return .store
+        case "my": return .my
+        default: return .home
+        }
         #else
         .home
         #endif

@@ -19,12 +19,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.screens.StoreCartScreen
-import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
+import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreScreen
 import com.myfis.app.ui.theme.MyFisColor
 
@@ -180,7 +181,7 @@ private fun BaseTabContent(
             onWeight = onWeight,
             onStore = onStore,
         )
-        BaseTab.BENEFIT -> PlaceholderScreen("P-01", "혜택", "보유 마일리지 · 적립 경로")
+        BaseTab.BENEFIT -> BenefitScreen()
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
         BaseTab.STORE -> StoreScreen(
             searching = storeSearching,
