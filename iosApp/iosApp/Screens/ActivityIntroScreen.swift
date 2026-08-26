@@ -321,6 +321,14 @@ extension BenefitKind {
                   cta: "뽑기 돌리기",
                   art: .init(duration: 2.6, dy: 10, rotation: 16),
                   playing: "돌리는 중…", reward: "+320 P", stagecraft: true, duration: 2.2)
+        case .scratch:
+            .init(kicker: "카드 긁기", label: "은박 아래 뭐가 있을까",
+                  period: "하루 한 번", hint: "최대 300 P",
+                  cta: "카드 긁기",
+                  art: .init(duration: 2.0, dy: 12, rotation: 6,
+                             discs: [.init(x: -74, y: 62, size: 52, alpha: 0.13, dy: -28),
+                                     .init(x: 80, y: -54, size: 44, alpha: 0.11, dy: 30)]),
+                  playing: "긁는 중…", reward: "+150 P")
         case .quiz:
             .init(kicker: "퀴즈", label: "AI가 낸 오늘 문제",
                   period: "하루 한 문제", hint: "어제는 62%가 맞혔어요",

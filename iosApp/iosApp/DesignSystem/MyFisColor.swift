@@ -48,6 +48,8 @@ enum MyFisColor {
     static let categoryGreen = Color(hex: 0x4ADE80)
     static let categoryViolet = Color(hex: 0xA78BFA)
     static let categoryPink = Color(hex: 0xF472B6)
+    /// 보라와 분홍 딱 사이 (292°) — 열두 색이 비워 둔 제일 넓은 구간이다 🟢 (2026-08-26)
+    static let categoryFuchsia = Color(hex: 0xE879F9)
     static let categoryCyan = Color(hex: 0x22D3EE)
     static let categoryOrange = Color(hex: 0xFB923C)
     static let categoryTeal = Color(hex: 0x2DD4BF)

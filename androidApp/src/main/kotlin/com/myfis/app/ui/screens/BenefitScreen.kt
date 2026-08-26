@@ -249,7 +249,7 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
  * 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
  */
 enum class BenefitKind {
-    ATTEND, ROUTINE, CARDIO, STRETCH, WATER, DICE, LUCK, QUIZ, TOUCH, SNS, WEIGHT, DIET,
+    ATTEND, ROUTINE, CARDIO, STRETCH, WATER, DICE, LUCK, SCRATCH, QUIZ, TOUCH, SNS, WEIGHT, DIET,
     ;
 
     val color: Color
@@ -261,6 +261,7 @@ enum class BenefitKind {
             WATER -> MyFisColor.CategoryCyan
             DICE -> MyFisColor.CategoryOrange
             LUCK -> MyFisColor.CategoryTeal
+            SCRATCH -> MyFisColor.CategoryFuchsia
             QUIZ -> MyFisColor.CategoryIndigo
             TOUCH -> MyFisColor.CategoryGreen
             SNS -> MyFisColor.CategoryPink
@@ -330,6 +331,10 @@ val benefitActionPlaceholder = listOf(
     BenefitAction(
         7, BenefitKind.LUCK, R.drawable.ic_benefit_luck_color, "뽑기 돌리고",
         "랜덤 P 받기", badge = "이벤트", introIcon = R.drawable.ic_benefit_luck,
+    ),
+    // 주사위 · 뽑기 바로 뒤에 둔다 — **운으로 받는 셋**이 한 덩어리로 읽힌다
+    BenefitAction(
+        13, BenefitKind.SCRATCH, R.drawable.ic_benefit_scratch_color, "카드 긁고", "숨은 P 받기",
     ),
     BenefitAction(8, BenefitKind.QUIZ, R.drawable.ic_benefit_quiz, "AI 퀴즈 풀고", "+30 P 받기"),
     BenefitAction(

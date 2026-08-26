@@ -51,6 +51,9 @@ object MyFisColor {
     val CategoryGreen = Color(0xFF4ADE80)
     val CategoryViolet = Color(0xFFA78BFA)
     val CategoryPink = Color(0xFFF472B6)
+
+    /** 보라와 분홍 딱 사이 (292°) — 열두 색이 비워 둔 제일 넓은 구간이다 🟢 (2026-08-26) */
+    val CategoryFuchsia = Color(0xFFE879F9)
     val CategoryCyan = Color(0xFF22D3EE)
     val CategoryOrange = Color(0xFFFB923C)
     val CategoryTeal = Color(0xFF2DD4BF)

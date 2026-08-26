@@ -226,17 +226,21 @@ TOUCH = [("stroke", _wave(r), T_WAVE, 0.72) for r in (4, 6, 8, 10)] + [
 ]
 
 # ── 출석 (달력 + 체크) ────────────────────────────────────────────────────
-A_BODY = "#ECEBE9"
-A_RING = "#0E5273"
-A_CHECK = "#28B04A"
+A_BODY = "#EFEDEC"
+A_BAND = "#FC6E5D"
+A_RING = "#FCD947"
+A_CHECK = "#4A9BF0"
 
-# 고리를 먼저 깔고 몸통으로 아랫동을 덮는다 — 그래야 고리가 판에 꽂힌 것처럼 보인다
+# 몸통 → 머리띠 → 고리 순. 고리는 띠 **위로** 지나가야 달력에 꽂힌 것처럼 보인다
 ATTEND = [
-    ("fill", rrect(4.7, 1.4, 2.4, 5.3, 1.2), A_RING, None),
-    ("fill", rrect(10.8, 1.4, 2.4, 5.3, 1.2), A_RING, None),
-    ("fill", rrect(16.9, 1.4, 2.4, 5.3, 1.2), A_RING, None),
-    ("fill", rrect(3.2, 4.5, 17.6, 17.5, 2.9), A_BODY, None),
-    ("stroke", "M7.9,13.6 L11.5,16.5 L16.6,10.9", A_CHECK, 2.15),
+    ("fill", rrect(1.13, 2.9, 21.75, 19.98, 2.06), A_BODY, None),
+    ("fill", "M1.13,4.96 a2.06,2.06 0 0,1 2.06,-2.06 H20.82 a2.06,2.06 0 0,1 2.06,2.06"
+             " V8.72 H1.13 Z", A_BAND, None),
+    ("fill", rrect(5.3, 1.03, 1.5, 4.97, 0.75), A_RING, None),
+    ("fill", rrect(9.38, 1.03, 1.5, 4.97, 0.75), A_RING, None),
+    ("fill", rrect(13.46, 1.03, 1.5, 4.97, 0.75), A_RING, None),
+    ("fill", rrect(17.34, 1.03, 1.5, 4.97, 0.75), A_RING, None),
+    ("stroke", "M8.2,14.9 L11.16,17.25 L15.66,12.56", A_CHECK, 2.06),
 ]
 
 # ── 주사위 굴리기 ─────────────────────────────────────────────────────────
@@ -275,6 +279,26 @@ UTENSIL = [
              " C15.7,9.8 12.57,9.6 12.57,7 Z", U_METAL, None),
     ("fill", rrect(14.31, 13.5, 4.78, 1.75, 0.2), U_BAND, None),
     ("fill", "M14.31,15.25 H19.09 V20.11 a2.39,2.39 0 0,1 -4.78,0 Z", U_GRIP, None),
+]
+
+# ── 카드 긁기 ─────────────────────────────────────────────────────────────
+# 카드는 **좌우가 다른 빨강**이다. 통짜로 칠하면 납작한 판때기로 보인다
+C_LEFT = "#FF6242"
+C_RIGHT = "#FF2D00"
+C_MAG_L = "#75757E"
+C_MAG_R = "#5A5A63"
+C_LINE = "#EFEAE1"
+C_CHIP = "#FF9500"
+
+SCRATCH = [
+    ("fill", rrect(0.4, 3.85, 23.2, 16.4, 1.5), C_LEFT, None),
+    ("fill", "M12,3.85 H22.1 a1.5,1.5 0 0,1 1.5,1.5 V18.75 a1.5,1.5 0 0,1 -1.5,1.5 H12 Z",
+     C_RIGHT, None),
+    ("fill", "M0.4,6.85 H12 V9.95 H0.4 Z", C_MAG_L, None),      # 자기 띠
+    ("fill", "M12,6.85 H23.6 V9.95 H12 Z", C_MAG_R, None),
+    ("fill", rrect(2.58, 13.65, 3.38, 1.22, 0.61), C_LINE, None),
+    ("fill", rrect(2.58, 16.32, 4.92, 1.22, 0.61), C_LINE, None),
+    ("fill", rrect(15.48, 13.27, 6, 4.41, 0.75), C_CHIP, None),  # 칩
 ]
 
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
@@ -423,5 +447,6 @@ bake("ic_benefit_touch_color", TOUCH)
 bake("ic_benefit_attend_color", ATTEND)
 bake("ic_benefit_dice_color", DICE)
 bake("ic_benefit_diet_color", UTENSIL)
+bake("ic_benefit_scratch_color", SCRATCH)
 
-print("wrote 12 color icons")
+print("wrote 13 color icons")

@@ -202,7 +202,7 @@ private struct InviteBanner: View {
 /// **행마다 색이 다르다.** 아홉 줄이 같은 회색이면 목록이 덩어리로 보이고,
 /// 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
 enum BenefitKind {
-    case attend, routine, cardio, stretch, water, dice, luck, quiz, touch, sns, weight, diet
+    case attend, routine, cardio, stretch, water, dice, luck, scratch, quiz, touch, sns, weight, diet
 
     var color: Color {
         switch self {
@@ -213,6 +213,7 @@ enum BenefitKind {
         case .water: MyFisColor.categoryCyan
         case .dice: MyFisColor.categoryOrange
         case .luck: MyFisColor.categoryTeal
+        case .scratch: MyFisColor.categoryFuchsia
         case .quiz: MyFisColor.categoryIndigo
         case .touch: MyFisColor.categoryGreen
         case .sns: MyFisColor.categoryPink
@@ -269,6 +270,9 @@ enum BenefitPlaceholder {
               reward: "나온 눈만큼 P 받기"),
         .init(id: 7, kind: .luck, icon: "ic_benefit_luck_color", title: "뽑기 돌리고",
               reward: "랜덤 P 받기", badge: "이벤트", introIcon: "ic_benefit_luck"),
+        // 주사위 · 뽑기 바로 뒤에 둔다 — **운으로 받는 셋**이 한 덩어리로 읽힌다
+        .init(id: 13, kind: .scratch, icon: "ic_benefit_scratch_color", title: "카드 긁고",
+              reward: "숨은 P 받기"),
         .init(id: 8, kind: .quiz, icon: "ic_benefit_quiz", title: "AI 퀴즈 풀고",
               reward: "+30 P 받기"),
         .init(id: 9, kind: .touch, icon: "ic_benefit_touch_color", title: "옆 사람 터치하고",

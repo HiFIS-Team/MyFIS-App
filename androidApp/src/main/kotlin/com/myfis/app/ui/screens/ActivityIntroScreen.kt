@@ -426,6 +426,17 @@ val BenefitKind.intro: ActivityIntro
             ActivityArtStyle(duration = 2600, dy = 10f, rotation = 16f),
             playing = "돌리는 중…", reward = "+320 P", stagecraft = true, durationMs = 2200,
         )
+        BenefitKind.SCRATCH -> ActivityIntro(
+            "카드 긁기", "은박 아래 뭐가 있을까", "하루 한 번", "최대 300 P", "카드 긁기",
+            ActivityArtStyle(
+                duration = 2000, dy = 12f, rotation = 6f,
+                discs = listOf(
+                    ActivityArtStyle.Disc(-74f, 62f, 52f, 0.13f, -28f),
+                    ActivityArtStyle.Disc(80f, -54f, 44f, 0.11f, 30f),
+                ),
+            ),
+            playing = "긁는 중…", reward = "+150 P",
+        )
         BenefitKind.QUIZ -> ActivityIntro(
             "퀴즈", "AI가 낸 오늘 문제", "하루 한 문제", "어제는 62%가 맞혔어요", "퀴즈 풀기",
             ActivityArtStyle(
