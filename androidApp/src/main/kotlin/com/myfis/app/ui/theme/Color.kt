@@ -52,6 +52,9 @@ object MyFisColor {
     val CategoryViolet = Color(0xFFA78BFA)
     val CategoryPink = Color(0xFFF472B6)
     val CategoryCyan = Color(0xFF22D3EE)
+    val CategoryOrange = Color(0xFFFB923C)
+    val CategoryTeal = Color(0xFF2DD4BF)
+    val CategoryIndigo = Color(0xFF818CF8)
     val CategoryGray = Color(0xFFA3A9B5)
 
     // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.

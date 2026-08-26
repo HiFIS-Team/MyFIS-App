@@ -49,6 +49,9 @@ enum MyFisColor {
     static let categoryViolet = Color(hex: 0xA78BFA)
     static let categoryPink = Color(hex: 0xF472B6)
     static let categoryCyan = Color(hex: 0x22D3EE)
+    static let categoryOrange = Color(hex: 0xFB923C)
+    static let categoryTeal = Color(hex: 0x2DD4BF)
+    static let categoryIndigo = Color(hex: 0x818CF8)
     static let categoryGray = Color(hex: 0xA3A9B5)
 
     // 시맨틱 — 상태 표시 전용. 브랜드 색으로 쓰지 않는다.

@@ -261,7 +261,7 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
  * 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
  */
 enum class BenefitKind {
-    ATTEND, ROUTINE, CARDIO, STRETCH, STAMP, TOUCH, SNS, WEIGHT, DIET,
+    ATTEND, ROUTINE, CARDIO, STRETCH, STAMP, LADDER, LUCK, QUIZ, TOUCH, SNS, WEIGHT, DIET,
     ;
 
     val color: Color
@@ -271,6 +271,9 @@ enum class BenefitKind {
             CARDIO -> MyFisColor.CategoryBlue
             STRETCH -> MyFisColor.CategoryCyan
             STAMP -> MyFisColor.CategoryViolet
+            LADDER -> MyFisColor.CategoryOrange
+            LUCK -> MyFisColor.CategoryTeal
+            QUIZ -> MyFisColor.CategoryIndigo
             TOUCH -> MyFisColor.CategoryGreen
             SNS -> MyFisColor.CategoryPink
             WEIGHT -> MyFisColor.CategoryCoral
@@ -308,17 +311,23 @@ val benefitActionPlaceholder = listOf(
         5, BenefitKind.STAMP, R.drawable.ic_quest_board, "도장 찍고",
         "7일 채우면 +200 P", badge = "이벤트",
     ),
+    BenefitAction(6, BenefitKind.LADDER, R.drawable.ic_quest_ladder, "사다리 타고", "걸린 만큼 P 받기"),
     BenefitAction(
-        6, BenefitKind.TOUCH, R.drawable.ic_tab_group, "옆 사람 터치하고",
+        7, BenefitKind.LUCK, R.drawable.ic_quest_luck, "뽑기 돌리고",
+        "랜덤 P 받기", badge = "이벤트",
+    ),
+    BenefitAction(8, BenefitKind.QUIZ, R.drawable.ic_quest_quiz, "AI 퀴즈 풀고", "+30 P 받기"),
+    BenefitAction(
+        9, BenefitKind.TOUCH, R.drawable.ic_tab_group, "옆 사람 터치하고",
         "+10 P 받기", badge = "신규",
     ),
     BenefitAction(
-        7, BenefitKind.SNS, R.drawable.ic_quest_upload, "인스타에 올리고",
+        10, BenefitKind.SNS, R.drawable.ic_quest_upload, "인스타에 올리고",
         "+100 P 받기", badge = "인기",
     ),
-    BenefitAction(8, BenefitKind.WEIGHT, R.drawable.ic_quest_scale, "체중 재고", "+20 P 받기"),
+    BenefitAction(11, BenefitKind.WEIGHT, R.drawable.ic_quest_scale, "체중 재고", "+20 P 받기"),
     BenefitAction(
-        9, BenefitKind.DIET, R.drawable.ic_quest_camera, "식단 찍고",
+        12, BenefitKind.DIET, R.drawable.ic_quest_camera, "식단 찍고",
         "+20 P 받기", done = true,
     ),
 )

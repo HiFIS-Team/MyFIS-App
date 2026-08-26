@@ -211,7 +211,7 @@ private struct InviteBanner: View {
 /// **행마다 색이 다르다.** 아홉 줄이 같은 회색이면 목록이 덩어리로 보이고,
 /// 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
 enum BenefitKind {
-    case attend, routine, cardio, stretch, stamp, touch, sns, weight, diet
+    case attend, routine, cardio, stretch, stamp, ladder, luck, quiz, touch, sns, weight, diet
 
     var color: Color {
         switch self {
@@ -220,6 +220,9 @@ enum BenefitKind {
         case .cardio: MyFisColor.categoryBlue
         case .stretch: MyFisColor.categoryCyan
         case .stamp: MyFisColor.categoryViolet
+        case .ladder: MyFisColor.categoryOrange
+        case .luck: MyFisColor.categoryTeal
+        case .quiz: MyFisColor.categoryIndigo
         case .touch: MyFisColor.categoryGreen
         case .sns: MyFisColor.categoryPink
         case .weight: MyFisColor.categoryCoral
@@ -257,12 +260,18 @@ enum BenefitPlaceholder {
         .init(id: 4, kind: .stretch, icon: "ic_quest_stretch", title: "스트레칭하고", reward: "+20 P 받기"),
         .init(id: 5, kind: .stamp, icon: "ic_quest_board", title: "도장 찍고",
               reward: "7일 채우면 +200 P", badge: "이벤트"),
-        .init(id: 6, kind: .touch, icon: "ic_tab_group", title: "옆 사람 터치하고",
+        .init(id: 6, kind: .ladder, icon: "ic_quest_ladder", title: "사다리 타고",
+              reward: "걸린 만큼 P 받기"),
+        .init(id: 7, kind: .luck, icon: "ic_quest_luck", title: "뽑기 돌리고",
+              reward: "랜덤 P 받기", badge: "이벤트"),
+        .init(id: 8, kind: .quiz, icon: "ic_quest_quiz", title: "AI 퀴즈 풀고",
+              reward: "+30 P 받기"),
+        .init(id: 9, kind: .touch, icon: "ic_tab_group", title: "옆 사람 터치하고",
               reward: "+10 P 받기", badge: "신규"),
-        .init(id: 7, kind: .sns, icon: "ic_quest_upload", title: "인스타에 올리고",
+        .init(id: 10, kind: .sns, icon: "ic_quest_upload", title: "인스타에 올리고",
               reward: "+100 P 받기", badge: "인기"),
-        .init(id: 8, kind: .weight, icon: "ic_quest_scale", title: "체중 재고", reward: "+20 P 받기"),
-        .init(id: 9, kind: .diet, icon: "ic_quest_camera", title: "식단 찍고",
+        .init(id: 11, kind: .weight, icon: "ic_quest_scale", title: "체중 재고", reward: "+20 P 받기"),
+        .init(id: 12, kind: .diet, icon: "ic_quest_camera", title: "식단 찍고",
               reward: "+20 P 받기", done: true),
     ]
 }
