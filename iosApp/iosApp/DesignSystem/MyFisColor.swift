@@ -7,20 +7,20 @@ import SwiftUI
 ///
 /// 다크 전용이라 Asset Catalog 대신 상수로 둔다 (라이트/다크 변형이 필요 없다).
 enum MyFisColor {
-    // 배경 (surface)
-    static let bgBase = Color(hex: 0x000000)
-    static let surface1 = Color(hex: 0x0E0F12)
-    static let surface2 = Color(hex: 0x16181D)
-    static let surface3 = Color(hex: 0x1F2229)
+    // 배경 (surface) — **순검정이 아니다** (2026-08-26). 토스처럼 진회색 바탕에 카드를 얹는다
+    static let bgBase = Color(hex: 0x131316)
+    static let surface1 = Color(hex: 0x1C1C21)
+    static let surface2 = Color(hex: 0x24252B)
+    static let surface3 = Color(hex: 0x2E2F37)
 
     // 경계
-    static let borderSubtle = Color(hex: 0x2C3038)
+    static let borderSubtle = Color(hex: 0x383A43)
     static let borderStrong = Color(hex: 0x6B7383)
 
-    // 텍스트 — textTertiary 가 AA 하한선(4.5:1). 이보다 어둡게 쓰지 않는다.
+    // 텍스트 — textTertiary 가 AA 하한선(surface.3 위 4.58:1). 이보다 어둡게 쓰지 않는다.
     static let textPrimary = Color(hex: 0xFFFFFF)
     static let textSecondary = Color(hex: 0xA3A9B5)
-    static let textTertiary = Color(hex: 0x828997)
+    static let textTertiary = Color(hex: 0x9098A6)
 
     // 액센트 — 한 화면에 2곳 이하
     static let accent = Color(hex: 0xC9F531)

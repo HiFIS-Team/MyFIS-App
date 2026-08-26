@@ -3,5 +3,5 @@
     <!-- 로고 원본 배경과 같은 순검정 (DESIGN §3.1 bg.base) -->
     <color name="ic_launcher_background">#000000</color>
     <!-- DESIGN.md §3 bg.base — 시작 화면 배경용 -->
-    <color name="bg_base">#000000</color>
+    <color name="bg_base">#131316</color>
 </resources>
