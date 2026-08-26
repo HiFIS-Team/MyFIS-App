@@ -1,6 +1,7 @@
 package com.myfis.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +41,7 @@ import com.myfis.app.ui.theme.tapWithHaptics
  * SPEC.md P-01 혜택 홈 (DESIGN.md §6.24).
  *
  * 레퍼런스는 **카카오뱅크 혜택 탭**이다 — 제목 + 요약이 한 줄, 배너 하나,
- * 그 아래 **동그란 아이콘 + `~하고` / `~받기`** 두 줄짜리 행 목록.
+ * 그 아래 **둥근 네모 아이콘 판 + `~하고` / `~받기`** 두 줄짜리 행 목록.
  * **구조만 가져오고 색은 우리 것을 쓴다** (§3.2) — 원본은 뱃지마다 색이 다르지만
  * 우리는 다크 + 라임 하나다.
  *
@@ -118,7 +118,7 @@ private fun SectionTitle(title: String) {
 }
 
 /**
- * 적립 경로 한 줄 — 동그란 아이콘 + `~하고` / `~받기`.
+ * 적립 경로 한 줄 — 둥근 네모 아이콘 판 + `~하고` / `~받기`.
  *
  * **제목이 행동, 부제가 보상이다.** 반대로 두면 다 똑같이 "P 받기"로 시작해 구분이 안 된다.
  */
@@ -146,7 +146,13 @@ private fun ActionRow(action: BenefitAction, onClick: () -> Unit) {
                 .size(MyFisSize.listRowMin)
                 .background(
                     if (dimmed) MyFisColor.Surface2 else action.kind.color.copy(alpha = 0.16f),
-                    CircleShape,
+                    MyFisRadius.tile,
+                )
+                // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 색 얼룩처럼 번진다
+                .border(
+                    1.dp,
+                    if (dimmed) MyFisColor.BorderSubtle else action.kind.color.copy(alpha = 0.3f),
+                    MyFisRadius.tile,
                 ),
             contentAlignment = Alignment.Center,
         ) {
@@ -154,7 +160,7 @@ private fun ActionRow(action: BenefitAction, onClick: () -> Unit) {
                 painter = painterResource(action.icon),
                 contentDescription = null, // 옆 글자가 이름 역할을 한다
                 tint = if (dimmed) MyFisColor.TextTertiary else action.kind.color,
-                modifier = Modifier.size(26.dp),
+                modifier = Modifier.size(28.dp),
             )
         }
 

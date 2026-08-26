@@ -101,9 +101,12 @@ struct LadderStage: View {
     let progress: Double
     let reward: String
 
-    // 대기 글리프(사다리 아이콘)와 같은 크기여야 재생 순간 안 튄다
-    private static let railGap: CGFloat = 54
-    private static let height: CGFloat = 106
+    // 대기 글리프(사다리 아이콘)와 같은 크기여야 재생 순간 안 튄다.
+    // 아이콘을 다시 그려 폭이 넓어져서 같이 올렸다 (24 기준 기둥 간격 12.8 · 높이 18.8 → 148 기준)
+    private static let railGap: CGFloat = 79
+    private static let height: CGFloat = 116
+    /// 가로대 간격 — 아이콘 기준 4.3 (24) → 26.5 (148)
+    private static let rung: CGFloat = 26.5
 
     private var walk: Double { Stagecraft.slice(progress, 0.1, 0.68) }
     private var tear: Double { Stagecraft.ease(Stagecraft.slice(progress, 0.68, 0.84)) }
@@ -114,8 +117,8 @@ struct LadderStage: View {
     private var dot: CGPoint {
         let legs: [(CGPoint, CGPoint)] = {
             let left = -Self.railGap / 2, right = Self.railGap / 2
-            let top = -Self.height / 2, mid1 = -Self.height / 6
-            let mid2 = Self.height / 6, bottom = Self.height / 2
+            let top = -Self.height / 2, mid1 = -Self.rung
+            let mid2 = Self.rung, bottom = Self.height / 2
             return [
                 (CGPoint(x: left, y: top), CGPoint(x: left, y: mid1)),
                 (CGPoint(x: left, y: mid1), CGPoint(x: right, y: mid1)),
@@ -173,18 +176,18 @@ struct LadderStage: View {
 
         var body: some View {
             ZStack {
-                // 굵기도 아이콘에서 가져왔다 (24 기준 2.6 → 148 기준 16)
+                // 굵기도 아이콘에서 가져왔다 (24 기준 3.2 → 148 기준 20)
                 ForEach([-1.0, 1.0], id: \.self) { side in
                     Capsule()
                         .fill(color.opacity(0.9))
-                        .frame(width: 15, height: LadderStage.height)
+                        .frame(width: 20, height: LadderStage.height)
                         .offset(x: LadderStage.railGap / 2 * side)
                 }
                 ForEach([-1.0, 0.0, 1.0], id: \.self) { row in
                     Capsule()
                         .fill(color.opacity(0.6))
-                        .frame(width: LadderStage.railGap, height: 13)
-                        .offset(y: LadderStage.height / 6 * row * 2)
+                        .frame(width: LadderStage.railGap, height: 16)
+                        .offset(y: LadderStage.rung * row)
                 }
             }
         }

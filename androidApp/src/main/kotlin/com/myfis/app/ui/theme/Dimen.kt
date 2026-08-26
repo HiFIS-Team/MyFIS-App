@@ -33,6 +33,9 @@ object MyFisRadius {
     val sm = RoundedCornerShape(8.dp)
     val md = RoundedCornerShape(12.dp)
     val lg = RoundedCornerShape(20.dp)
+
+    /** 아이콘 판 (§6.23 혜택 행) — `56` 판에 맞춘 값이다. 다른 크기에 그대로 쓰지 않는다 */
+    val tile = RoundedCornerShape(18.dp)
     val full = RoundedCornerShape(percent = 50)
 }
 

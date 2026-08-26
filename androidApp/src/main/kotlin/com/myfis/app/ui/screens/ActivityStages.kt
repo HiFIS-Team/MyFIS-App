@@ -175,8 +175,8 @@ private fun ladderDot(walk: Float): Offset {
     val left = -LADDER_GAP / 2
     val right = LADDER_GAP / 2
     val top = -LADDER_HEIGHT / 2
-    val mid1 = -LADDER_HEIGHT / 6
-    val mid2 = LADDER_HEIGHT / 6
+    val mid1 = -LADDER_RUNG
+    val mid2 = LADDER_RUNG
     val bottom = LADDER_HEIGHT / 2
     val legs = listOf(
         Offset(left, top) to Offset(left, mid1),
@@ -192,7 +192,7 @@ private fun ladderDot(walk: Float): Offset {
     return Offset(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t)
 }
 
-/** 기둥 둘 + 가로대 셋. 굵기도 아이콘에서 가져왔다 (24 기준 2.6 → 148 기준 16) */
+/** 기둥 둘 + 가로대 셋. 굵기도 아이콘에서 가져왔다 (24 기준 3.2 → 148 기준 20) */
 @Composable
 private fun Ladder(color: Color) {
     Box(contentAlignment = Alignment.Center) {
@@ -200,15 +200,15 @@ private fun Ladder(color: Color) {
             Box(
                 Modifier
                     .offset(x = (LADDER_GAP / 2 * side).dp)
-                    .size(width = 15.dp, height = LADDER_HEIGHT.dp)
+                    .size(width = 20.dp, height = LADDER_HEIGHT.dp)
                     .background(color.copy(alpha = 0.9f), MyFisRadius.full),
             )
         }
         listOf(-1f, 0f, 1f).forEach { row ->
             Box(
                 Modifier
-                    .offset(y = (LADDER_HEIGHT / 6 * row * 2).dp)
-                    .size(width = LADDER_GAP.dp, height = 13.dp)
+                    .offset(y = (LADDER_RUNG * row).dp)
+                    .size(width = LADDER_GAP.dp, height = 16.dp)
                     .background(color.copy(alpha = 0.6f), MyFisRadius.full),
             )
         }
@@ -231,6 +231,10 @@ private fun RewardText(text: String, color: Color, reveal: Float, settle: Float)
     )
 }
 
-// 대기 글리프(사다리 아이콘)와 같은 크기여야 재생 순간 안 튄다
-private const val LADDER_GAP = 54f
-private const val LADDER_HEIGHT = 106f
+// 대기 글리프(사다리 아이콘)와 같은 크기여야 재생 순간 안 튄다.
+// 아이콘을 다시 그려 폭이 넓어져서 같이 올렸다 (24 기준 기둥 간격 12.8 · 높이 18.8 → 148 기준)
+private const val LADDER_GAP = 79f
+private const val LADDER_HEIGHT = 116f
+
+/** 가로대 간격 — 아이콘 기준 4.3 (24) → 26.5 (148) */
+private const val LADDER_RUNG = 26.5f

@@ -3,7 +3,7 @@ import SwiftUI
 /// SPEC.md P-01 혜택 홈 (DESIGN.md §6.24).
 ///
 /// 레퍼런스는 **카카오뱅크 혜택 탭**이다 — 제목 + 요약이 한 줄, 배너 하나,
-/// 그 아래 **동그란 아이콘 + `~하고` / `~받기`** 두 줄짜리 행 목록.
+/// 그 아래 **둥근 네모 아이콘 판 + `~하고` / `~받기`** 두 줄짜리 행 목록.
 /// **구조만 가져오고 색은 우리 것을 쓴다** (§3.2) — 원본은 뱃지마다 색이 다르지만
 /// 우리는 다크 + 라임 하나다.
 ///
@@ -89,7 +89,7 @@ private struct Section: View {
     }
 }
 
-/// 적립 경로 한 줄 — 동그란 아이콘 + `~하고` / `~받기`.
+/// 적립 경로 한 줄 — 둥근 네모 아이콘 판 + `~하고` / `~받기`.
 ///
 /// **제목이 행동, 부제가 보상이다.** 반대로 두면 다 똑같이 "P 받기"로 시작해 구분이 안 된다.
 private struct ActionRow: View {
@@ -106,12 +106,20 @@ private struct ActionRow: View {
                 Image(action.icon)
                     .resizable()
                     .renderingMode(.template)
-                    .frame(width: 26, height: 26)
+                    .frame(width: 28, height: 28)
                     .foregroundStyle(dimmed ? MyFisColor.textTertiary : action.kind.color)
                     .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
                     .background(
                         dimmed ? MyFisColor.surface2 : action.kind.color.opacity(0.16),
-                        in: Circle()
+                        in: RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
+                    )
+                    // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 색 얼룩처럼 번진다
+                    .overlay(
+                        RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
+                            .strokeBorder(
+                                dimmed ? MyFisColor.borderSubtle : action.kind.color.opacity(0.3),
+                                lineWidth: 1
+                            )
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
