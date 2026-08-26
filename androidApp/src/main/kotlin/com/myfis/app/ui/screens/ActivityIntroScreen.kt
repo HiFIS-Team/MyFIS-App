@@ -79,6 +79,9 @@ fun ActivityIntroScreen(
         Column(
             Modifier
                 .weight(1f)
+                // **폭을 꽉 채워야 가운데 정렬이 화면 기준이 된다.**
+                // 없으면 내용 폭만큼만 잡혀 통째로 왼쪽에 붙는다 (2026-08-26 확인)
+                .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(top = MyFisSpacing.xxxl, bottom = MyFisSpacing.xxxl),
