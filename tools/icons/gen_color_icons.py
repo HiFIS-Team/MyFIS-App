@@ -190,25 +190,53 @@ CLOVER += [
 ]
 
 # ── 스트레칭 (요가 매트) ──────────────────────────────────────────────────
-M_MAT = "#F5BE60"
-M_ROLL = "#F7C878"
-M_CORE = "#F0B44E"
-M_LINE = "#000000"
+M_MAT = "#BC9BE0"
+M_ROLL = "#8E63D0"
+M_CORE = "#6D4A9E"
+M_CURL = "#5A3D86"
+M_DASH = "#7C51C0"
 
-MAT_BODY = rrect(8.7, 3.9, 14.7, 19, 0.7)
-MAT_ROLL = "M0.4,5.2 a4.15,4.15 0 0,1 8.3,0 V17.5 a4.15,4.15 0 0,1 -8.3,0 Z"
-MAT_CORE = circ(4.5, 19.2, 3.3)
-
-# 원본이 **검은 윤곽선** 그림이다. 어두운 판 위에서 바깥 선은 묻히지만
-# 말린 부분과 매트를 가르는 **안쪽 선**은 그대로 일한다 — 그래서 선을 살렸다
 MAT = [
-    ("fill", MAT_BODY, M_MAT, None),
-    ("stroke", MAT_BODY, M_LINE, 0.75),
-    ("fill", MAT_ROLL, M_ROLL, None),
-    ("stroke", MAT_ROLL, M_LINE, 0.75),
-    ("fill", MAT_CORE, M_CORE, None),
-    ("stroke", MAT_CORE, M_LINE, 0.8),
-    ("stroke", "M5.7,17.2 A2.05,2.05 0 1,1 3.3,16.9", M_LINE, 0.8),  # 말린 속
+    ("fill", rrect(8.2, 3.8, 15.2, 19.2, 0.5), M_MAT, None),
+    ("fill", "M0.4,4.84 a3.9,3.9 0 0,1 7.8,0 V17.4 a3.9,3.9 0 0,1 -7.8,0 Z", M_ROLL, None),
+    ("stroke", "M6.35,3.7 V11.7", M_DASH, 0.47),     # 말린 결 — 끊어야 '말려 있다'가 된다
+    ("stroke", "M6.35,12.9 V14", M_DASH, 0.47),
+    ("fill", circ(4.3, 18.75, 4), M_CORE, None),     # 말린 끝
+    ("stroke", "M6.3,18.4 A2.05,2.05 0 1,1 4.15,16.7 A1.15,1.15 0 1,0 3.2,19", M_CURL, 0.62),
+]
+
+# ── 옆 사람 터치 (전파 탑) ────────────────────────────────────────────────
+T_WAVE = "#D6D7DA"
+T_BALL = "#2ECC8F"
+T_BALL_DARK = "#24B27C"
+T_TOWER = "#5C6079"
+
+# 전파는 공을 중심으로 한 동심원 넷. 안쪽부터 2씩 벌린다
+def _wave(r):
+    dy, dx = 0.62 * r, (r * r - (0.62 * r) ** 2) ** 0.5
+    return (f"M{n(12-dx)},{n(10.6+dy)} A{n(r)},{n(r)} 0 1,1 {n(12+dx)},{n(10.6+dy)}")
+
+TOUCH = [("stroke", _wave(r), T_WAVE, 0.72) for r in (4, 6, 8, 10)] + [
+    ("fill", circ(12, 10.6, 2.45), T_BALL, None),
+    ("fill", "M12,8.15 a2.45,2.45 0 0,1 0,4.9 Z", T_BALL_DARK, None),
+    ("stroke", "M12,12.75 L7.74,23.3 M12,12.75 L16.26,23.3 M7.74,23.3 H16.26",
+     T_TOWER, 0.85),                                             # 다리 둘 + 바닥
+    ("stroke", "M10.85,15.6 L14.76,19.6 M13.15,15.6 L9.24,19.6", T_TOWER, 0.72),
+    ("stroke", "M9.24,19.6 L16.26,23.3 M14.76,19.6 L7.74,23.3", T_TOWER, 0.72),
+]
+
+# ── 출석 (달력 + 체크) ────────────────────────────────────────────────────
+A_BODY = "#ECEBE9"
+A_RING = "#0E5273"
+A_CHECK = "#28B04A"
+
+# 고리를 먼저 깔고 몸통으로 아랫동을 덮는다 — 그래야 고리가 판에 꽂힌 것처럼 보인다
+ATTEND = [
+    ("fill", rrect(4.7, 1.4, 2.4, 5.3, 1.2), A_RING, None),
+    ("fill", rrect(10.8, 1.4, 2.4, 5.3, 1.2), A_RING, None),
+    ("fill", rrect(16.9, 1.4, 2.4, 5.3, 1.2), A_RING, None),
+    ("fill", rrect(3.2, 4.5, 17.6, 17.5, 2.9), A_BODY, None),
+    ("stroke", "M7.9,13.6 L11.5,16.5 L16.6,10.9", A_CHECK, 2.15),
 ]
 
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
@@ -323,5 +351,7 @@ bake("ic_benefit_scale_color", SCALE)
 bake("ic_benefit_water_color", WATER)
 bake("ic_benefit_luck_color", CLOVER)
 bake("ic_benefit_stretch_color", MAT)
+bake("ic_benefit_touch_color", TOUCH)
+bake("ic_benefit_attend_color", ATTEND)
 
-print("wrote 8 color icons")
+print("wrote 10 color icons")

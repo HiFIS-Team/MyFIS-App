@@ -284,8 +284,8 @@ enum class BenefitKind {
      * `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
      */
     val colorIcon: Boolean
-        get() = this == ROUTINE || this == CARDIO || this == STRETCH || this == WATER ||
-            this == LUCK || this == SNS || this == QUIZ || this == WEIGHT
+        // 이제 두 톤으로 남은 건 사다리 · 식단 둘뿐이라 **없는 쪽**을 적는다
+        get() = this != LADDER && this != DIET
 }
 
 /** 적립 경로 한 줄 (SPEC P-01) */
@@ -319,7 +319,10 @@ const val benefitBalancePlaceholder = 1_240
 const val benefitEarnedThisMonthPlaceholder = 320
 
 val benefitActionPlaceholder = listOf(
-    BenefitAction(1, BenefitKind.ATTEND, R.drawable.ic_benefit_attend, "출석하고", "+50 P 받기"),
+    BenefitAction(
+        1, BenefitKind.ATTEND, R.drawable.ic_benefit_attend_color, "출석하고", "+50 P 받기",
+        introIcon = R.drawable.ic_benefit_attend,
+    ),
     BenefitAction(
         2, BenefitKind.ROUTINE, R.drawable.ic_benefit_routine_color, "루틴 끝내고", "+80 P 받기",
         introIcon = R.drawable.ic_benefit_routine,
@@ -343,8 +346,8 @@ val benefitActionPlaceholder = listOf(
     ),
     BenefitAction(8, BenefitKind.QUIZ, R.drawable.ic_benefit_quiz, "AI 퀴즈 풀고", "+30 P 받기"),
     BenefitAction(
-        9, BenefitKind.TOUCH, R.drawable.ic_benefit_touch, "옆 사람 터치하고",
-        "+10 P 받기", badge = "신규",
+        9, BenefitKind.TOUCH, R.drawable.ic_benefit_touch_color, "옆 사람 터치하고",
+        "+10 P 받기", badge = "신규", introIcon = R.drawable.ic_benefit_touch,
     ),
     BenefitAction(
         10, BenefitKind.SNS, R.drawable.ic_benefit_sns, "인스타에 올리고",

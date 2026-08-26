@@ -236,8 +236,9 @@ enum BenefitKind {
     /// `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
     var colorIcon: Bool {
         switch self {
-        case .routine, .cardio, .stretch, .water, .luck, .sns, .quiz, .weight: true
-        default: false
+        // 이제 두 톤으로 남은 건 사다리 · 식단 둘뿐이라 **없는 쪽**을 적는다
+        case .ladder, .diet: false
+        default: true
         }
     }
 }
@@ -271,7 +272,8 @@ enum BenefitPlaceholder {
     static let earnedThisMonth = 320
 
     static let actions: [BenefitAction] = [
-        .init(id: 1, kind: .attend, icon: "ic_benefit_attend", title: "출석하고", reward: "+50 P 받기"),
+        .init(id: 1, kind: .attend, icon: "ic_benefit_attend_color", title: "출석하고",
+              reward: "+50 P 받기", introIcon: "ic_benefit_attend"),
         .init(id: 2, kind: .routine, icon: "ic_benefit_routine_color", title: "루틴 끝내고",
               reward: "+80 P 받기", introIcon: "ic_benefit_routine"),
         .init(id: 3, kind: .cardio, icon: "ic_benefit_cardio_color", title: "유산소 하고",
@@ -286,8 +288,8 @@ enum BenefitPlaceholder {
               reward: "랜덤 P 받기", badge: "이벤트", introIcon: "ic_benefit_luck"),
         .init(id: 8, kind: .quiz, icon: "ic_benefit_quiz", title: "AI 퀴즈 풀고",
               reward: "+30 P 받기"),
-        .init(id: 9, kind: .touch, icon: "ic_benefit_touch", title: "옆 사람 터치하고",
-              reward: "+10 P 받기", badge: "신규"),
+        .init(id: 9, kind: .touch, icon: "ic_benefit_touch_color", title: "옆 사람 터치하고",
+              reward: "+10 P 받기", badge: "신규", introIcon: "ic_benefit_touch"),
         .init(id: 10, kind: .sns, icon: "ic_benefit_sns", title: "인스타에 올리고",
               reward: "+100 P 받기", badge: "인기"),
         .init(id: 11, kind: .weight, icon: "ic_benefit_scale_color", title: "체중 재고",
