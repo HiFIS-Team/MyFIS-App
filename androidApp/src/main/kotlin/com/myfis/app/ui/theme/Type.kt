@@ -107,13 +107,13 @@ internal val myFisTypography = MyFisTypography(
         fontFamily = MyFisFontFamily,
         fontSize = 16.sp,
         lineHeight = 24.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
     ),
     bodySm = TextStyle(
         fontFamily = MyFisFontFamily,
         fontSize = 14.sp,
         lineHeight = 20.sp,
-        fontWeight = FontWeight.Normal,
+        fontWeight = FontWeight.Medium,
     ),
     label = TextStyle(
         fontFamily = MyFisFontFamily,

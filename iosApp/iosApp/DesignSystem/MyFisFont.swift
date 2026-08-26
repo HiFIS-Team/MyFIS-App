@@ -31,8 +31,9 @@ enum MyFisFont {
     static let titleMd = Font.custom(Face.semibold, size: 20)
     static let titleSm = Font.custom(Face.semibold, size: 17)
 
-    static let body = Font.custom(Face.regular, size: 16)
-    static let bodySm = Font.custom(Face.regular, size: 14)
+    // 본문은 **Medium(500)** 이다 (2026-08-26) — 한글은 400 으로 두면 검정 위에서 흐려 보인다
+    static let body = Font.custom(Face.medium, size: 16)
+    static let bodySm = Font.custom(Face.medium, size: 14)
     static let label = Font.custom(Face.medium, size: 13)
     static let caption = Font.custom(Face.regular, size: 12)
 
