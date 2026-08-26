@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.myfis.app.ui.screens.ActivityIntroScreen
+import com.myfis.app.ui.screens.BenefitAction
 import com.myfis.app.ui.screens.BenefitKind
 import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.HomeScreen
@@ -47,6 +49,8 @@ fun AppShell() {
     var storeItem by remember { mutableStateOf<StoreItem?>(null) }
     // 검색은 잎이 아니라 **스토어의 모드**다 (§6.9). 상품 상세의 검색 버튼도 이걸 켠다
     var storeSearching by rememberSaveable { mutableStateOf(false) }
+    // 랜딩에 띄울 활동. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다 (상품 상세와 같다)
+    var benefitAction by remember { mutableStateOf<BenefitAction?>(null) }
 
     NavHost(
         navController = nav,
@@ -65,11 +69,21 @@ fun AppShell() {
                 storeSearching = storeSearching,
                 onStoreSearching = { storeSearching = it },
                 onWeightLog = { nav.navigateOnce(Route.WEIGHT_LOG) },
+                onActivity = {
+                    benefitAction = it
+                    nav.navigateOnce(Route.ACTIVITY_INTRO)
+                },
                 onStoreItem = {
                     storeItem = it
                     nav.navigateOnce(Route.STORE_ITEM)
                 },
             )
+        }
+        composable(Route.ACTIVITY_INTRO) {
+            // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
+            benefitAction?.let {
+                ActivityIntroScreen(action = it, onClose = { nav.popBackStack() })
+            }
         }
         composable(Route.WEIGHT_LOG) {
             WeightLogScreen(onBack = { nav.popBackStack() })
@@ -116,6 +130,7 @@ private fun TabShell(
     storeSearching: Boolean,
     onStoreSearching: (Boolean) -> Unit,
     onWeightLog: () -> Unit,
+    onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
     var tabSet by rememberSaveable { mutableStateOf(TabSet.BASE) }
@@ -135,6 +150,7 @@ private fun TabShell(
                     storeSearching = storeSearching,
                     onStoreSearching = onStoreSearching,
                     onWeightLog = onWeightLog,
+                    onActivity = onActivity,
                     onStoreItem = onStoreItem,
                     // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
                     onCardio = {
@@ -178,6 +194,7 @@ private fun BaseTabContent(
     storeSearching: Boolean,
     onStoreSearching: (Boolean) -> Unit,
     onWeightLog: () -> Unit,
+    onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
     onCardio: () -> Unit,
     onWeight: () -> Unit,
@@ -190,9 +207,9 @@ private fun BaseTabContent(
             onWeight = onWeight,
             onStore = onStore,
         )
-        // TODO: 나머지 적립 경로 화면이 붙으면 여기서 같이 연다
         BaseTab.BENEFIT -> BenefitScreen(
-            onAction = { if (it.kind == BenefitKind.WEIGHT) onWeightLog() },
+            // 체중은 매일 하는 기록이라 랜딩을 거치지 않는다 (§6.25)
+            onAction = { if (it.kind == BenefitKind.WEIGHT) onWeightLog() else onActivity(it) },
         )
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
         BaseTab.STORE -> StoreScreen(

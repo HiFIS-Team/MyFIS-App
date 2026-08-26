@@ -25,6 +25,7 @@ enum MyFisDebug {
         case "store_my": .storeMy
         case "store_cart": .storeCart
         case "weight_log": .weightLog
+        case "activity": .activity(BenefitPlaceholder.actions[6]) // 뽑기 돌리고
         case "store_item": .storeItem(StorePlaceholder.items[0])
         default: nil
         }

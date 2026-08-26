@@ -21,6 +21,9 @@ object Route {
     /** P-08 체중 기록 */
     const val WEIGHT_LOG = "weight_log"
 
+    /** 적립 활동 랜딩 (DESIGN §6.25) */
+    const val ACTIVITY_INTRO = "activity_intro"
+
     /** S-02 상품 상세 */
     const val STORE_ITEM = "store_item"
 }

@@ -68,13 +68,16 @@ struct DetailHeader: View {
     /// 제목을 본문에서 크게 다루는 화면은 `nil` 로 비운다
     var title: String?
     let onBack: () -> Void
+    /// 되돌아가는 게 아니라 **닫는** 화면은 `X` 를 쓴다 (활동 랜딩 §6.25)
+    var backIcon: String = "ic_tab_back"
+    var backLabel: String = "뒤로"
     var actionIcon: String?
     var actionLabel: String = ""
     var onAction: () -> Void = {}
 
     var body: some View {
         HeaderBar {
-            HeaderIcon("ic_tab_back", "뒤로", action: onBack)
+            HeaderIcon(backIcon, backLabel, action: onBack)
         } center: {
             if let title {
                 Text(title)

@@ -40,6 +40,8 @@ data class MyFisTypography(
     val metricXl: TextStyle,
     val metricLg: TextStyle,
     val metricMd: TextStyle,
+    /** 활동 랜딩(§6.25) 제목 전용 — 두 줄짜리 큰 문장 */
+    val display: TextStyle,
     val titleLg: TextStyle,
     val titleMd: TextStyle,
     val titleSm: TextStyle,
@@ -75,6 +77,13 @@ internal val myFisTypography = MyFisTypography(
         fontWeight = FontWeight.SemiBold,
         letterSpacing = (-0.02).em,
         fontFeatureSettings = TABULAR,
+    ),
+    display = TextStyle(
+        fontFamily = MyFisFontFamily,
+        fontSize = 32.sp,
+        lineHeight = 42.sp,
+        fontWeight = FontWeight.Bold,
+        letterSpacing = (-0.02).em,
     ),
     titleLg = TextStyle(
         fontFamily = MyFisFontFamily,

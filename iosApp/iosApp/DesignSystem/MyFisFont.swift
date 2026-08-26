@@ -24,6 +24,9 @@ enum MyFisFont {
     static let metricLg = Font.custom(Face.bold, size: 40).monospacedDigit()
     static let metricMd = Font.custom(Face.semibold, size: 28).monospacedDigit()
 
+    /// 활동 랜딩(§6.25) 제목 전용 — 두 줄짜리 큰 문장. 숫자 스케일(`metric.*`)을 글에 쓰지 않으려고 따로 둔다
+    static let display = Font.custom(Face.bold, size: 32)
+
     static let titleLg = Font.custom(Face.bold, size: 24)
     static let titleMd = Font.custom(Face.semibold, size: 20)
     static let titleSm = Font.custom(Face.semibold, size: 17)

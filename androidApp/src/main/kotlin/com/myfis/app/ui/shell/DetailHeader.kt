@@ -39,6 +39,9 @@ fun DetailHeader(
     title: String?,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    /** 되돌아가는 게 아니라 **닫는** 화면은 `X` 를 쓴다 (활동 랜딩 §6.25) */
+    @DrawableRes backIcon: Int = R.drawable.ic_tab_back,
+    backDescription: String = "뒤로",
     /** 오른쪽 아이콘 버튼. 없으면 자리도 비운다 */
     @DrawableRes actionIcon: Int? = null,
     onAction: () -> Unit = {},
@@ -68,8 +71,8 @@ fun DetailHeader(
             contentAlignment = Alignment.Center,
         ) {
             Icon(
-                painter = painterResource(R.drawable.ic_tab_back),
-                contentDescription = "뒤로",
+                painter = painterResource(backIcon),
+                contentDescription = backDescription,
                 tint = MyFisColor.TextPrimary,
                 modifier = Modifier
                     .size(24.dp)
