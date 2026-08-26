@@ -156,29 +156,20 @@ private fun ActionRow(action: BenefitAction, onClick: () -> Unit) {
                 .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
             contentAlignment = Alignment.Center,
         ) {
-            if (action.kind.colorIcon) {
-                // 원색 아이콘(브랜드 마크 · 캐릭터)은 **tint 를 걸지 않는다** — 한 색으로 눌리면 실루엣이 된다.
-                // 받은 행에서는 색을 빼야 하는데 칠할 수가 없으니 **채도를 0 으로 내린다**
-                Image(
-                    painter = painterResource(action.icon),
-                    contentDescription = null, // 옆 글자가 이름 역할을 한다
-                    modifier = Modifier
-                        .size(28.dp)
-                        .alpha(if (dimmed) 0.5f else 1f),
-                    colorFilter = if (dimmed) {
-                        ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
-                    } else {
-                        null
-                    },
-                )
-            } else {
-                Icon(
-                    painter = painterResource(action.icon),
-                    contentDescription = null, // 옆 글자가 이름 역할을 한다
-                    tint = if (dimmed) MyFisColor.TextTertiary else action.kind.color,
-                    modifier = Modifier.size(28.dp),
-                )
-            }
+            // 행 아이콘은 **전부 원색 그림**이라 tint 를 걸지 않는다 — 한 색으로 누르면 실루엣이 된다.
+            // 받은 행에서는 색을 빼야 하는데 칠할 수가 없으니 **채도를 0 으로 내린다**
+            Image(
+                painter = painterResource(action.icon),
+                contentDescription = null, // 옆 글자가 이름 역할을 한다
+                modifier = Modifier
+                    .size(28.dp)
+                    .alpha(if (dimmed) 0.5f else 1f),
+                colorFilter = if (dimmed) {
+                    ColorFilter.colorMatrix(ColorMatrix().apply { setToSaturation(0f) })
+                } else {
+                    null
+                },
+            )
         }
 
         Column {
@@ -258,7 +249,7 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
  * 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
  */
 enum class BenefitKind {
-    ATTEND, ROUTINE, CARDIO, STRETCH, WATER, LADDER, LUCK, QUIZ, TOUCH, SNS, WEIGHT, DIET,
+    ATTEND, ROUTINE, CARDIO, STRETCH, WATER, DICE, LUCK, QUIZ, TOUCH, SNS, WEIGHT, DIET,
     ;
 
     val color: Color
@@ -268,7 +259,7 @@ enum class BenefitKind {
             CARDIO -> MyFisColor.CategoryBlue
             STRETCH -> MyFisColor.CategoryViolet
             WATER -> MyFisColor.CategoryCyan
-            LADDER -> MyFisColor.CategoryOrange
+            DICE -> MyFisColor.CategoryOrange
             LUCK -> MyFisColor.CategoryTeal
             QUIZ -> MyFisColor.CategoryIndigo
             TOUCH -> MyFisColor.CategoryGreen
@@ -279,13 +270,6 @@ enum class BenefitKind {
             DIET -> MyFisColor.CategoryGray
         }
 
-    /**
-     * **자기 색을 가진 그림**인가. 브랜드 마크(인스타)나 캐릭터(AI 봇)가 여기 해당한다.
-     * `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
-     */
-    val colorIcon: Boolean
-        // 이제 두 톤으로 남은 건 사다리 · 식단 둘뿐이라 **없는 쪽**을 적는다
-        get() = this != LADDER && this != DIET
 }
 
 /** 적립 경로 한 줄 (SPEC P-01) */
@@ -311,7 +295,7 @@ data class BenefitAction(
     val glyph: Int get() = introIcon ?: icon
 
     /** 그 글리프를 **자기 색 그대로** 그릴지. 두 톤 벌로 되돌린 자리는 다시 칠해야 한다 */
-    val glyphKeepsColor: Boolean get() = introIcon == null && kind.colorIcon
+    val glyphKeepsColor: Boolean get() = introIcon == null
 }
 
 // TODO(서버): 적립 단가·상태는 서버가 준다 (SPEC §8). 하드코딩하지 않는다
@@ -339,7 +323,10 @@ val benefitActionPlaceholder = listOf(
         5, BenefitKind.WATER, R.drawable.ic_benefit_water_color, "물 마시고",
         "8잔 채우면 +50 P", introIcon = R.drawable.ic_benefit_water,
     ),
-    BenefitAction(6, BenefitKind.LADDER, R.drawable.ic_benefit_ladder, "사다리 타고", "걸린 만큼 P 받기"),
+    // 랜딩에도 이 그림을 그대로 쓴다 — 주사위는 두 톤 벌이 아예 없다
+    BenefitAction(
+        6, BenefitKind.DICE, R.drawable.ic_benefit_dice_color, "주사위 굴리고", "나온 눈만큼 P 받기",
+    ),
     BenefitAction(
         7, BenefitKind.LUCK, R.drawable.ic_benefit_luck_color, "뽑기 돌리고",
         "랜덤 P 받기", badge = "이벤트", introIcon = R.drawable.ic_benefit_luck,
@@ -358,7 +345,7 @@ val benefitActionPlaceholder = listOf(
         introIcon = R.drawable.ic_benefit_scale,
     ),
     BenefitAction(
-        12, BenefitKind.DIET, R.drawable.ic_benefit_diet, "식단 찍고",
-        "+20 P 받기", done = true,
+        12, BenefitKind.DIET, R.drawable.ic_benefit_diet_color, "식단 찍고",
+        "+20 P 받기", done = true, introIcon = R.drawable.ic_benefit_diet,
     ),
 )

@@ -138,23 +138,14 @@ private struct ActionRow: View {
         .buttonStyle(.myFisTap)
     }
 
-    /// 원색 아이콘(브랜드 마크 · 캐릭터)은 **tint 를 걸지 않는다** — 한 색으로 눌리면 실루엣이 된다.
+    /// 행 아이콘은 **전부 원색 그림**이라 tint 를 걸지 않는다 — 한 색으로 누르면 실루엣이 된다.
     /// 받은 행에서는 색을 빼야 하는데 칠할 수가 없으니 **채도를 0 으로 내린다**
-    @ViewBuilder
     private var icon: some View {
-        if action.kind.colorIcon {
-            Image(action.icon)
-                .resizable()
-                .frame(width: 28, height: 28)
-                .saturation(dimmed ? 0 : 1)
-                .opacity(dimmed ? 0.5 : 1)
-        } else {
-            Image(action.icon)
-                .resizable()
-                .renderingMode(.template)
-                .frame(width: 28, height: 28)
-                .foregroundStyle(dimmed ? MyFisColor.textTertiary : action.kind.color)
-        }
+        Image(action.icon)
+            .resizable()
+            .frame(width: 28, height: 28)
+            .saturation(dimmed ? 0 : 1)
+            .opacity(dimmed ? 0.5 : 1)
     }
 }
 
@@ -211,7 +202,7 @@ private struct InviteBanner: View {
 /// **행마다 색이 다르다.** 아홉 줄이 같은 회색이면 목록이 덩어리로 보이고,
 /// 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
 enum BenefitKind {
-    case attend, routine, cardio, stretch, water, ladder, luck, quiz, touch, sns, weight, diet
+    case attend, routine, cardio, stretch, water, dice, luck, quiz, touch, sns, weight, diet
 
     var color: Color {
         switch self {
@@ -220,7 +211,7 @@ enum BenefitKind {
         case .cardio: MyFisColor.categoryBlue
         case .stretch: MyFisColor.categoryViolet
         case .water: MyFisColor.categoryCyan
-        case .ladder: MyFisColor.categoryOrange
+        case .dice: MyFisColor.categoryOrange
         case .luck: MyFisColor.categoryTeal
         case .quiz: MyFisColor.categoryIndigo
         case .touch: MyFisColor.categoryGreen
@@ -232,15 +223,6 @@ enum BenefitKind {
         }
     }
 
-    /// **자기 색을 가진 그림**인가. 브랜드 마크(인스타)나 캐릭터(AI 봇)가 여기 해당한다.
-    /// `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
-    var colorIcon: Bool {
-        switch self {
-        // 이제 두 톤으로 남은 건 사다리 · 식단 둘뿐이라 **없는 쪽**을 적는다
-        case .ladder, .diet: false
-        default: true
-        }
-    }
 }
 
 /// 적립 경로 한 줄 (SPEC P-01).
@@ -263,7 +245,7 @@ struct BenefitAction: Identifiable, Hashable {
     /// 랜딩에 띄울 글리프
     var glyph: String { introIcon ?? icon }
     /// 그 글리프를 **자기 색 그대로** 그릴지. 두 톤 벌로 되돌린 자리는 다시 칠해야 한다
-    var glyphKeepsColor: Bool { introIcon == nil && kind.colorIcon }
+    var glyphKeepsColor: Bool { introIcon == nil }
 }
 
 /// TODO(서버): 적립 단가·상태는 서버가 준다 (SPEC §8). 하드코딩하지 않는다
@@ -282,8 +264,9 @@ enum BenefitPlaceholder {
               reward: "+20 P 받기", introIcon: "ic_benefit_stretch"),
         .init(id: 5, kind: .water, icon: "ic_benefit_water_color", title: "물 마시고",
               reward: "8잔 채우면 +50 P", introIcon: "ic_benefit_water"),
-        .init(id: 6, kind: .ladder, icon: "ic_benefit_ladder", title: "사다리 타고",
-              reward: "걸린 만큼 P 받기"),
+        // 랜딩에도 이 그림을 그대로 쓴다 — 주사위는 두 톤 벌이 아예 없다
+        .init(id: 6, kind: .dice, icon: "ic_benefit_dice_color", title: "주사위 굴리고",
+              reward: "나온 눈만큼 P 받기"),
         .init(id: 7, kind: .luck, icon: "ic_benefit_luck_color", title: "뽑기 돌리고",
               reward: "랜덤 P 받기", badge: "이벤트", introIcon: "ic_benefit_luck"),
         .init(id: 8, kind: .quiz, icon: "ic_benefit_quiz", title: "AI 퀴즈 풀고",
@@ -294,7 +277,7 @@ enum BenefitPlaceholder {
               reward: "+100 P 받기", badge: "인기"),
         .init(id: 11, kind: .weight, icon: "ic_benefit_scale_color", title: "체중 재고",
               reward: "+20 P 받기", introIcon: "ic_benefit_scale"),
-        .init(id: 12, kind: .diet, icon: "ic_benefit_diet", title: "식단 찍고",
-              reward: "+20 P 받기", done: true),
+        .init(id: 12, kind: .diet, icon: "ic_benefit_diet_color", title: "식단 찍고",
+              reward: "+20 P 받기", done: true, introIcon: "ic_benefit_diet"),
     ]
 }

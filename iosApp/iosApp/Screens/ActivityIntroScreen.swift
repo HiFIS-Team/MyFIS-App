@@ -144,8 +144,6 @@ private struct ActivityArt: View {
 
             if stage != .idle, action.kind == .luck {
                 LuckStage(color: color, progress: progress, reward: action.kind.intro.reward)
-            } else if stage != .idle, action.kind == .ladder {
-                LadderStage(color: color, progress: progress, reward: action.kind.intro.reward)
             } else {
                 glyph
             }
@@ -307,14 +305,16 @@ extension BenefitKind {
                   cta: "한 잔 마셨어요",
                   art: .init(duration: 1.6, dy: 18, rotation: 0,
                              discs: [.init(x: 0, y: 86, size: 150, alpha: 0.12, dy: -6)]))
-        case .ladder:
-            .init(kicker: "사다리", label: "오늘의 사다리",
+        // TODO(연출): 사다리에는 종이 뜯는 연출이 있었다. 주사위 굴리는 연출을 붙이면
+        // `stagecraft: true` 로 되돌린다 (`LadderStage` 골격 참고)
+        case .dice:
+            .init(kicker: "주사위", label: "오늘의 주사위",
                   period: "하루 한 번", hint: "꽝은 없어요. 최소 10 P",
-                  cta: "사다리 타기",
-                  art: .init(duration: 2.4, dy: 20, rotation: 0,
+                  cta: "주사위 굴리기",
+                  art: .init(duration: 2.4, dy: 20, rotation: 8,
                              discs: [.init(x: -88, y: -40, size: 60, alpha: 0.14, dy: 34),
                                      .init(x: 88, y: 40, size: 60, alpha: 0.12, dy: -34)]),
-                  playing: "내려가는 중…", reward: "+80 P", stagecraft: true, duration: 2.6)
+                  playing: "굴리는 중…", reward: "+80 P")
         case .luck:
             .init(kicker: "뽑기", label: "오늘의 운을 시험할 시간",
                   period: "하루 한 번", hint: "오늘의 행운은 최대 500 P",

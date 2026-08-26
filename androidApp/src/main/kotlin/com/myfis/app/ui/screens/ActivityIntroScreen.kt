@@ -230,8 +230,6 @@ private fun Illustration(
         when {
             stage != ActivityStage.IDLE && action.kind == BenefitKind.LUCK ->
                 LuckStage(color, progress, action.kind.intro.reward)
-            stage != ActivityStage.IDLE && action.kind == BenefitKind.LADDER ->
-                LadderStage(color, progress, action.kind.intro.reward)
             else -> Glyph(
             icon = action.glyph,
             // 원색 아이콘은 **자기 색 그대로** 띄운다 (brush = null). 칠하면 그림이 실루엣으로 뭉갠다
@@ -410,16 +408,18 @@ val BenefitKind.intro: ActivityIntro
                 discs = listOf(ActivityArtStyle.Disc(0f, 86f, 150f, 0.12f, -6f)),
             ),
         )
-        BenefitKind.LADDER -> ActivityIntro(
-            "사다리", "오늘의 사다리", "하루 한 번", "꽝은 없어요. 최소 10 P", "사다리 타기",
+        // TODO(연출): 사다리에는 종이 뜯는 연출이 있었다. 주사위 굴리는 연출을 붙이면
+        // `stagecraft = true` 로 되돌린다 (`LadderStage` 골격 참고)
+        BenefitKind.DICE -> ActivityIntro(
+            "주사위", "오늘의 주사위", "하루 한 번", "꽝은 없어요. 최소 10 P", "주사위 굴리기",
             ActivityArtStyle(
-                duration = 2400, dy = 20f, rotation = 0f,
+                duration = 2400, dy = 20f, rotation = 8f,
                 discs = listOf(
                     ActivityArtStyle.Disc(-88f, -40f, 60f, 0.14f, 34f),
                     ActivityArtStyle.Disc(88f, 40f, 60f, 0.12f, -34f),
                 ),
             ),
-            playing = "내려가는 중…", reward = "+80 P", stagecraft = true, durationMs = 2600,
+            playing = "굴리는 중…", reward = "+80 P",
         )
         BenefitKind.LUCK -> ActivityIntro(
             "뽑기", "오늘의 운을 시험할 시간", "하루 한 번", "오늘의 행운은 최대 500 P", "뽑기 돌리기",

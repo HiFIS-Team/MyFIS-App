@@ -239,6 +239,44 @@ ATTEND = [
     ("stroke", "M7.9,13.6 L11.5,16.5 L16.6,10.9", A_CHECK, 2.15),
 ]
 
+# ── 주사위 굴리기 ─────────────────────────────────────────────────────────
+# 앞뒤 주사위가 **다른 결**을 쓴다 — 같은 결이면 겹친 자리에서 두 개가 한 덩어리로 붙는다
+DICE_BACK_G = {"x1": 1.8, "y1": 2.9, "x2": 13.1, "y2": 14.1,
+               "stops": [(0, "#F9C800"), (1, "#F0A000")]}
+DICE_FRONT_G = {"x1": 11.25, "y1": 9.6, "x2": 22.15, "y2": 20.8,
+                "stops": [(0, "#F5B300"), (1, "#E88600")]}
+DICE_PIP = "#FFFFFF"
+
+DICE = [
+    ("fill", rrect(1.8, 2.9, 11.3, 11.2, 2.25), DICE_BACK_G, None),
+    ("fill", circ(9.6, 6.6, 1.03), DICE_PIP, None),
+    ("fill", circ(5.2, 10.5, 1.03), DICE_PIP, None),
+    ("fill", rrect(11.25, 9.6, 10.9, 11.2, 2.25), DICE_FRONT_G, None),
+] + [("fill", circ(cx, cy, 0.89), DICE_PIP, None)
+     for cx in (13.7, 19.3) for cy in (12.7, 15.2, 17.8)]
+
+# ── 식단 (수저) ───────────────────────────────────────────────────────────
+U_METAL = "#CBD5DE"
+U_BAND = "#F0AC63"
+U_GRIP = "#E4636F"
+
+UTENSIL = [
+    # 숟가락 — 볼 + 잘록한 목
+    ("fill", ellipse(6.6, 6.1, 3.66, 4.69), U_METAL, None),
+    ("fill", "M5.6,9.5 C5.6,11.4 5.2,12.2 5.2,13.6 H7.9 C7.9,12.2 7.5,11.4 7.5,9.5 Z",
+     U_METAL, None),
+    ("fill", rrect(4.13, 13.5, 4.78, 1.75, 0.2), U_BAND, None),
+    ("fill", "M4.13,15.25 H8.91 V20.11 a2.39,2.39 0 0,1 -4.78,0 Z", U_GRIP, None),
+    # 포크 — 살 셋이 밑에서 모여 목이 된다
+    ("fill", rrect(12.57, 1.5, 1.5, 7.2, 0.75), U_METAL, None),
+    ("fill", rrect(15.95, 1.5, 1.5, 7.2, 0.75), U_METAL, None),
+    ("fill", rrect(19.33, 1.5, 1.5, 7.2, 0.75), U_METAL, None),
+    ("fill", "M12.57,7 H20.83 C20.83,9.6 17.7,9.8 17.7,11.4 V13.6 H15.7 V11.4"
+             " C15.7,9.8 12.57,9.6 12.57,7 Z", U_METAL, None),
+    ("fill", rrect(14.31, 13.5, 4.78, 1.75, 0.2), U_BAND, None),
+    ("fill", "M14.31,15.25 H19.09 V20.11 a2.39,2.39 0 0,1 -4.78,0 Z", U_GRIP, None),
+]
+
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
                 '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
                 '{extra}    android:width="24dp"\n'
@@ -314,10 +352,38 @@ def bake(name, parts):
 
     회전은 **그룹으로 감싼다** — 호가 섞인 path 를 좌표로 돌려 쓰려면 명령을 전부 다시 써야 한다.
     """
-    android, svg = "", ""
-    for part in parts:
+    android, svg, defs, aapt = "", "", "", False
+    for idx, part in enumerate(parts):
         kind, d, color, w = part[:4]
         rot = part[4] if len(part) > 4 else 0
+        if isinstance(color, dict):
+            # 결(그라디언트) — Android 는 aapt 속성, SVG 는 defs. 좌표계는 둘 다 24 기준이다
+            aapt = True
+            gid = f"g{idx}"
+            items = "".join(
+                f'                <item android:offset="{o}" android:color="{c}" />\n'
+                for o, c in color["stops"])
+            body_a = (f'    <path\n        android:pathData="{d}">\n'
+                      f'        <aapt:attr name="android:fillColor">\n'
+                      f'            <gradient\n'
+                      f'                android:type="linear"\n'
+                      f'                android:startX="{color["x1"]}"\n'
+                      f'                android:startY="{color["y1"]}"\n'
+                      f'                android:endX="{color["x2"]}"\n'
+                      f'                android:endY="{color["y2"]}">\n'
+                      f'{items}'
+                      f'            </gradient>\n'
+                      f'        </aapt:attr>\n'
+                      f'    </path>\n')
+            stops = "".join(f'      <stop offset="{o}" stop-color="{c}"/>\n'
+                            for o, c in color["stops"])
+            defs += (f'    <linearGradient id="{gid}" x1="{color["x1"]}" y1="{color["y1"]}"'
+                     f' x2="{color["x2"]}" y2="{color["y2"]}" gradientUnits="userSpaceOnUse">\n'
+                     f'{stops}    </linearGradient>\n')
+            body_s = f'  <path d="{d}" fill="url(#{gid})"'
+            android += body_a
+            svg += body_s + '/>\n'
+            continue
         if kind == "fill":
             body_a = (f'    <path\n        android:pathData="{d}"\n'
                       f'        android:fillColor="{color}" />\n')
@@ -340,7 +406,9 @@ def bake(name, parts):
         else:
             android += body_a
             svg += body_s + '/>\n'
-    write(name, android, svg)
+    if defs:
+        svg = f'  <defs>\n{defs}  </defs>\n' + svg
+    write(name, android, svg, aapt=aapt)
 
 
 # 웨이트 · 유산소는 **행에서만** 원색이다 — 활동 랜딩은 아직 두 톤 벌(`ic_benefit_*`)을 쓴다.
@@ -353,5 +421,7 @@ bake("ic_benefit_luck_color", CLOVER)
 bake("ic_benefit_stretch_color", MAT)
 bake("ic_benefit_touch_color", TOUCH)
 bake("ic_benefit_attend_color", ATTEND)
+bake("ic_benefit_dice_color", DICE)
+bake("ic_benefit_diet_color", UTENSIL)
 
-print("wrote 10 color icons")
+print("wrote 12 color icons")

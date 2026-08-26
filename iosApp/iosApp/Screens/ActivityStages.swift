@@ -96,6 +96,9 @@ struct LuckStage: View {
 }
 
 /// 사다리 — **점이 길을 타고 내려가고, 당첨 칸 종이가 뜯긴다.**
+///
+/// ⚠️ 사다리 행은 **주사위로 갈렸다** (2026-08-26). 지금 이걸 부르는 곳은 없다 —
+/// 주사위 굴리는 연출을 붙일 때 이 골격(진행값 하나로 walk → tear → reveal)을 그대로 쓴다.
 struct LadderStage: View {
     let color: Color
     let progress: Double
