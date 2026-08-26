@@ -236,7 +236,7 @@ enum BenefitKind {
     /// `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
     var colorIcon: Bool {
         switch self {
-        case .routine, .cardio, .water, .sns, .quiz, .weight: true
+        case .routine, .cardio, .stretch, .water, .luck, .sns, .quiz, .weight: true
         default: false
         }
     }
@@ -276,13 +276,14 @@ enum BenefitPlaceholder {
               reward: "+80 P 받기", introIcon: "ic_benefit_routine"),
         .init(id: 3, kind: .cardio, icon: "ic_benefit_cardio_color", title: "유산소 하고",
               reward: "10분마다 +10 P", introIcon: "ic_benefit_cardio"),
-        .init(id: 4, kind: .stretch, icon: "ic_benefit_stretch", title: "스트레칭하고", reward: "+20 P 받기"),
+        .init(id: 4, kind: .stretch, icon: "ic_benefit_stretch_color", title: "스트레칭하고",
+              reward: "+20 P 받기", introIcon: "ic_benefit_stretch"),
         .init(id: 5, kind: .water, icon: "ic_benefit_water_color", title: "물 마시고",
               reward: "8잔 채우면 +50 P", introIcon: "ic_benefit_water"),
         .init(id: 6, kind: .ladder, icon: "ic_benefit_ladder", title: "사다리 타고",
               reward: "걸린 만큼 P 받기"),
-        .init(id: 7, kind: .luck, icon: "ic_benefit_luck", title: "뽑기 돌리고",
-              reward: "랜덤 P 받기", badge: "이벤트"),
+        .init(id: 7, kind: .luck, icon: "ic_benefit_luck_color", title: "뽑기 돌리고",
+              reward: "랜덤 P 받기", badge: "이벤트", introIcon: "ic_benefit_luck"),
         .init(id: 8, kind: .quiz, icon: "ic_benefit_quiz", title: "AI 퀴즈 풀고",
               reward: "+30 P 받기"),
         .init(id: 9, kind: .touch, icon: "ic_benefit_touch", title: "옆 사람 터치하고",

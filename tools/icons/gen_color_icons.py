@@ -174,6 +174,43 @@ WATER = [
     ("fill", rrect(2.9, 19.4, 10.2, 0.55, 0.27), W_RIB, None),
 ]
 
+# ── 뽑기 (네잎클로버) ─────────────────────────────────────────────────────
+CL_LEAF = "#4CB81F"
+CL_STEM = "#348F12"
+
+# 잎 하나 = 끝이 가운데를 향한 하트. 이걸 90°씩 돌려 넷을 만든다
+CLOVER_LEAF = ("M12,11.7 C12,11.7 6.1,7.3 6.1,4.6 a2.95,2.95 0 0,1 5.9,0"
+               " a2.95,2.95 0 0,1 5.9,0 c0,2.7 -5.9,7.1 -5.9,7.1 Z")
+# 원본의 명암은 **안 옮겼다.** 볼마다 밝기를 주면 잎 넷이 아니라
+# **꽃잎 여덟**으로 읽힌다 (그려서 확인). 28px 에서 그 명암은 어차피 안 보인다
+CLOVER = [("fill", CLOVER_LEAF, CL_LEAF, None, _rot) for _rot in (0, 90, 180, 270)]
+CLOVER += [
+    ("fill", rrect(11.5, 6.9, 1, 10.2, 0.1), CL_STEM, None),   # 잎맥 — 십자로 긋는다
+    ("fill", rrect(6.9, 11.5, 10.1, 1, 0.1), CL_STEM, None),
+]
+
+# ── 스트레칭 (요가 매트) ──────────────────────────────────────────────────
+M_MAT = "#F5BE60"
+M_ROLL = "#F7C878"
+M_CORE = "#F0B44E"
+M_LINE = "#000000"
+
+MAT_BODY = rrect(8.7, 3.9, 14.7, 19, 0.7)
+MAT_ROLL = "M0.4,5.2 a4.15,4.15 0 0,1 8.3,0 V17.5 a4.15,4.15 0 0,1 -8.3,0 Z"
+MAT_CORE = circ(4.5, 19.2, 3.3)
+
+# 원본이 **검은 윤곽선** 그림이다. 어두운 판 위에서 바깥 선은 묻히지만
+# 말린 부분과 매트를 가르는 **안쪽 선**은 그대로 일한다 — 그래서 선을 살렸다
+MAT = [
+    ("fill", MAT_BODY, M_MAT, None),
+    ("stroke", MAT_BODY, M_LINE, 0.75),
+    ("fill", MAT_ROLL, M_ROLL, None),
+    ("stroke", MAT_ROLL, M_LINE, 0.75),
+    ("fill", MAT_CORE, M_CORE, None),
+    ("stroke", MAT_CORE, M_LINE, 0.8),
+    ("stroke", "M5.7,17.2 A2.05,2.05 0 1,1 3.3,16.9", M_LINE, 0.8),  # 말린 속
+]
+
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
                 '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
                 '{extra}    android:width="24dp"\n'
@@ -245,20 +282,36 @@ write("ic_benefit_quiz", android, svg)
 
 
 def bake(name, parts):
+    """조각은 `(kind, path, color, width)` 또는 회전을 붙인 `(..., degrees)` 다.
+
+    회전은 **그룹으로 감싼다** — 호가 섞인 path 를 좌표로 돌려 쓰려면 명령을 전부 다시 써야 한다.
+    """
     android, svg = "", ""
-    for kind, d, color, w in parts:
+    for part in parts:
+        kind, d, color, w = part[:4]
+        rot = part[4] if len(part) > 4 else 0
         if kind == "fill":
-            android += (f'    <path\n        android:pathData="{d}"\n'
-                        f'        android:fillColor="{color}" />\n')
-            svg += f'  <path d="{d}" fill="{color}"/>\n'
+            body_a = (f'    <path\n        android:pathData="{d}"\n'
+                      f'        android:fillColor="{color}" />\n')
+            body_s = f'  <path d="{d}" fill="{color}"'
         else:
-            android += (f'    <path\n        android:pathData="{d}"\n'
-                        f'        android:strokeWidth="{w}"\n'
-                        f'        android:strokeColor="{color}"\n'
-                        f'        android:strokeLineCap="round"\n'
-                        f'        android:strokeLineJoin="round" />\n')
-            svg += (f'  <path d="{d}" fill="none" stroke="{color}" stroke-width="{w}"'
-                    ' stroke-linecap="round" stroke-linejoin="round"/>\n')
+            body_a = (f'    <path\n        android:pathData="{d}"\n'
+                      f'        android:strokeWidth="{w}"\n'
+                      f'        android:strokeColor="{color}"\n'
+                      f'        android:strokeLineCap="round"\n'
+                      f'        android:strokeLineJoin="round" />\n')
+            body_s = (f'  <path d="{d}" fill="none" stroke="{color}" stroke-width="{w}"'
+                      ' stroke-linecap="round" stroke-linejoin="round"')
+        if rot:
+            android += (f'    <group android:rotation="{rot}"'
+                        f' android:pivotX="12" android:pivotY="12">\n'
+                        + body_a.replace("    <path", "        <path")
+                                .replace("        android:", "            android:")
+                        + '    </group>\n')
+            svg += body_s + f' transform="rotate({rot} 12 12)"/>\n'
+        else:
+            android += body_a
+            svg += body_s + '/>\n'
     write(name, android, svg)
 
 
@@ -268,5 +321,7 @@ bake("ic_benefit_routine_color", WEIGHT)
 bake("ic_benefit_cardio_color", CARDIO)
 bake("ic_benefit_scale_color", SCALE)
 bake("ic_benefit_water_color", WATER)
+bake("ic_benefit_luck_color", CLOVER)
+bake("ic_benefit_stretch_color", MAT)
 
-print("wrote 6 color icons")
+print("wrote 8 color icons")

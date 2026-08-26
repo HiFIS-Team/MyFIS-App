@@ -284,8 +284,8 @@ enum class BenefitKind {
      * `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
      */
     val colorIcon: Boolean
-        get() = this == ROUTINE || this == CARDIO || this == WATER ||
-            this == SNS || this == QUIZ || this == WEIGHT
+        get() = this == ROUTINE || this == CARDIO || this == STRETCH || this == WATER ||
+            this == LUCK || this == SNS || this == QUIZ || this == WEIGHT
 }
 
 /** 적립 경로 한 줄 (SPEC P-01) */
@@ -328,15 +328,18 @@ val benefitActionPlaceholder = listOf(
         3, BenefitKind.CARDIO, R.drawable.ic_benefit_cardio_color, "유산소 하고", "10분마다 +10 P",
         introIcon = R.drawable.ic_benefit_cardio,
     ),
-    BenefitAction(4, BenefitKind.STRETCH, R.drawable.ic_benefit_stretch, "스트레칭하고", "+20 P 받기"),
+    BenefitAction(
+        4, BenefitKind.STRETCH, R.drawable.ic_benefit_stretch_color, "스트레칭하고", "+20 P 받기",
+        introIcon = R.drawable.ic_benefit_stretch,
+    ),
     BenefitAction(
         5, BenefitKind.WATER, R.drawable.ic_benefit_water_color, "물 마시고",
         "8잔 채우면 +50 P", introIcon = R.drawable.ic_benefit_water,
     ),
     BenefitAction(6, BenefitKind.LADDER, R.drawable.ic_benefit_ladder, "사다리 타고", "걸린 만큼 P 받기"),
     BenefitAction(
-        7, BenefitKind.LUCK, R.drawable.ic_benefit_luck, "뽑기 돌리고",
-        "랜덤 P 받기", badge = "이벤트",
+        7, BenefitKind.LUCK, R.drawable.ic_benefit_luck_color, "뽑기 돌리고",
+        "랜덤 P 받기", badge = "이벤트", introIcon = R.drawable.ic_benefit_luck,
     ),
     BenefitAction(8, BenefitKind.QUIZ, R.drawable.ic_benefit_quiz, "AI 퀴즈 풀고", "+30 P 받기"),
     BenefitAction(
