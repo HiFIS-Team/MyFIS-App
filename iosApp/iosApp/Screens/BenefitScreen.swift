@@ -236,7 +236,7 @@ enum BenefitKind {
     /// `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
     var colorIcon: Bool {
         switch self {
-        case .sns, .quiz: true
+        case .routine, .cardio, .sns, .quiz: true
         default: false
         }
     }
@@ -255,6 +255,14 @@ struct BenefitAction: Identifiable, Hashable {
     var badge: String?
     /// 오늘 이미 받았다
     var done: Bool = false
+    /// 활동 랜딩(§6.25)에서 쓸 글리프. `nil` 이면 행과 같은 것을 쓴다.
+    /// 행만 원색으로 갈아 끼울 때 쓴다 — 랜딩은 아직 두 톤 벌이다
+    var introIcon: String?
+
+    /// 랜딩에 띄울 글리프
+    var glyph: String { introIcon ?? icon }
+    /// 그 글리프를 **자기 색 그대로** 그릴지. 두 톤 벌로 되돌린 자리는 다시 칠해야 한다
+    var glyphKeepsColor: Bool { introIcon == nil && kind.colorIcon }
 }
 
 /// TODO(서버): 적립 단가·상태는 서버가 준다 (SPEC §8). 하드코딩하지 않는다
@@ -264,8 +272,10 @@ enum BenefitPlaceholder {
 
     static let actions: [BenefitAction] = [
         .init(id: 1, kind: .attend, icon: "ic_benefit_attend", title: "출석하고", reward: "+50 P 받기"),
-        .init(id: 2, kind: .routine, icon: "ic_benefit_routine", title: "루틴 끝내고", reward: "+80 P 받기"),
-        .init(id: 3, kind: .cardio, icon: "ic_benefit_cardio", title: "유산소 하고", reward: "10분마다 +10 P"),
+        .init(id: 2, kind: .routine, icon: "ic_benefit_routine_color", title: "루틴 끝내고",
+              reward: "+80 P 받기", introIcon: "ic_benefit_routine"),
+        .init(id: 3, kind: .cardio, icon: "ic_benefit_cardio_color", title: "유산소 하고",
+              reward: "10분마다 +10 P", introIcon: "ic_benefit_cardio"),
         .init(id: 4, kind: .stretch, icon: "ic_benefit_stretch", title: "스트레칭하고", reward: "+20 P 받기"),
         .init(id: 5, kind: .stamp, icon: "ic_benefit_stamp", title: "도장 찍고",
               reward: "7일 채우면 +200 P", badge: "이벤트"),

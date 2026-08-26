@@ -161,12 +161,12 @@ private struct ActivityArt: View {
     private var glyph: some View {
         // 원색 아이콘은 **자기 색 그대로** 띄운다. tint 를 걸면 그림이 실루엣으로 뭉갠다
         Group {
-            if action.kind.colorIcon {
-                Image(action.icon)
+            if action.glyphKeepsColor {
+                Image(action.glyph)
                     .resizable()
                     .frame(width: 148, height: 148)
             } else {
-                Image(action.icon)
+                Image(action.glyph)
                     .resizable()
                     .renderingMode(.template)
                     .frame(width: 148, height: 148)

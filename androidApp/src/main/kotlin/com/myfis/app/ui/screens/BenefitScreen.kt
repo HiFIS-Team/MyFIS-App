@@ -283,7 +283,8 @@ enum class BenefitKind {
      * **자기 색을 가진 그림**인가. 브랜드 마크(인스타)나 캐릭터(AI 봇)가 여기 해당한다.
      * `true` 면 행도 랜딩도 tint 를 걸지 않는다 (→ `tools/icons/gen_color_icons.py`)
      */
-    val colorIcon: Boolean get() = this == SNS || this == QUIZ
+    val colorIcon: Boolean
+        get() = this == ROUTINE || this == CARDIO || this == SNS || this == QUIZ
 }
 
 /** 적립 경로 한 줄 (SPEC P-01) */
@@ -299,7 +300,18 @@ data class BenefitAction(
     val badge: String? = null,
     /** 오늘 이미 받았다 */
     val done: Boolean = false,
-)
+    /**
+     * 활동 랜딩(§6.25)에서 쓸 글리프. `null` 이면 행과 같은 것을 쓴다.
+     * 행만 원색으로 갈아 끼울 때 쓴다 — 랜딩은 아직 두 톤 벌이다
+     */
+    val introIcon: Int? = null,
+) {
+    /** 랜딩에 띄울 글리프 */
+    val glyph: Int get() = introIcon ?: icon
+
+    /** 그 글리프를 **자기 색 그대로** 그릴지. 두 톤 벌로 되돌린 자리는 다시 칠해야 한다 */
+    val glyphKeepsColor: Boolean get() = introIcon == null && kind.colorIcon
+}
 
 // TODO(서버): 적립 단가·상태는 서버가 준다 (SPEC §8). 하드코딩하지 않는다
 const val benefitBalancePlaceholder = 1_240
@@ -307,8 +319,14 @@ const val benefitEarnedThisMonthPlaceholder = 320
 
 val benefitActionPlaceholder = listOf(
     BenefitAction(1, BenefitKind.ATTEND, R.drawable.ic_benefit_attend, "출석하고", "+50 P 받기"),
-    BenefitAction(2, BenefitKind.ROUTINE, R.drawable.ic_benefit_routine, "루틴 끝내고", "+80 P 받기"),
-    BenefitAction(3, BenefitKind.CARDIO, R.drawable.ic_benefit_cardio, "유산소 하고", "10분마다 +10 P"),
+    BenefitAction(
+        2, BenefitKind.ROUTINE, R.drawable.ic_benefit_routine_color, "루틴 끝내고", "+80 P 받기",
+        introIcon = R.drawable.ic_benefit_routine,
+    ),
+    BenefitAction(
+        3, BenefitKind.CARDIO, R.drawable.ic_benefit_cardio_color, "유산소 하고", "10분마다 +10 P",
+        introIcon = R.drawable.ic_benefit_cardio,
+    ),
     BenefitAction(4, BenefitKind.STRETCH, R.drawable.ic_benefit_stretch, "스트레칭하고", "+20 P 받기"),
     BenefitAction(
         5, BenefitKind.STAMP, R.drawable.ic_benefit_stamp, "도장 찍고",

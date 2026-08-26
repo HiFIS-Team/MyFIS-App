@@ -78,6 +78,56 @@ BOT = [
     ("stroke", "M10.95,16.3 Q12,17.5 13.05,16.3", BOT_EYE, 0.8),         # 입
 ]
 
+# ── 웨이트 (벤치프레스 랙) ────────────────────────────────────────────────
+W_PLATE_OUT = "#3D566E"
+W_PLATE_IN = "#2C4054"
+W_BAR = "#E2E6E9"
+W_POST = "#C6CDD3"
+W_HOOK = "#8B99A3"
+W_SEAT = "#8CADFF"
+W_STEM = "#6E8090"
+W_STEM_TOP = "#5B6E7C"
+W_FOOT = "#77878F"
+
+# 뒤에서 앞으로 쌓는다 — 발 → 기둥 → 걸이 → 바 → 원판 → 벤치
+WEIGHT = [
+    ("fill", rrect(5.5, 17.6, 3.5, 0.75, 0.37), W_FOOT, None),
+    ("fill", rrect(10.9, 17.6, 2.2, 0.75, 0.37), W_FOOT, None),
+    ("fill", rrect(14.9, 17.6, 3.5, 0.75, 0.37), W_FOOT, None),
+    ("fill", rrect(11.25, 15.4, 1.45, 2.5, 0.1), W_STEM, None),
+    ("fill", rrect(11.25, 15.4, 1.45, 0.9, 0.1), W_STEM_TOP, None),
+    ("fill", rrect(6.8, 5.7, 1.6, 12.4, 0.8), W_POST, None),
+    ("fill", rrect(15.9, 5.7, 1.6, 12.4, 0.8), W_POST, None),
+    ("fill", rrect(8.3, 11.15, 1.5, 0.62, 0.31), W_HOOK, None),
+    ("fill", rrect(14.2, 11.15, 1.5, 0.62, 0.31), W_HOOK, None),
+    ("fill", rrect(4.6, 7.6, 15.2, 1.7, 0.1), W_BAR, None),
+    ("fill", rrect(1.9, 6.3, 1.8, 3.8, 0.7), W_PLATE_OUT, None),
+    ("fill", rrect(20.3, 6.3, 1.8, 3.8, 0.7), W_PLATE_OUT, None),
+    ("fill", rrect(3.4, 5.5, 2.5, 5.4, 0.8), W_PLATE_IN, None),
+    ("fill", rrect(18.1, 5.5, 2.5, 5.4, 0.8), W_PLATE_IN, None),
+    ("fill", rrect(9.5, 13.2, 5, 2.4, 0.8), W_SEAT, None),
+]
+
+# ── 유산소 (러닝머신) ─────────────────────────────────────────────────────
+C_LINE = "#B9CCFB"
+C_BODY = "#4A6285"
+C_DARK = "#3B5170"
+C_MINT = "#5CDCC0"
+
+CARDIO = [
+    ("fill", rrect(5.6, 10.1, 7.5, 0.8, 0.4), C_LINE, None),      # 속도선 — 어긋나게 놓는다
+    ("fill", rrect(3.5, 11.7, 7.5, 0.8, 0.4), C_LINE, None),
+    ("fill", rrect(6.9, 13.3, 6.9, 0.8, 0.4), C_LINE, None),
+    ("fill", "M16.7,6.6 L18,2.9 h1.9 L18.6,6.6 Z", C_MINT, None),  # 계기판
+    ("fill", rrect(12.4, 6.1, 8, 1.6, 0.8), C_BODY, None),         # 손잡이
+    ("fill", "M18.5,6.9 H20.3 L22.1,16.6 H20.2 Z", C_BODY, None),  # 기둥
+    ("fill", rrect(0.4, 17.2, 23.2, 4, 1.2), C_BODY, None),        # 바닥
+    ("fill", "M15.2,18.6 L19.5,16.2 H20.8 L23.4,18.6 Z", C_MINT, None),  # 기둥 밑동
+    ("fill", rrect(0.4, 16.2, 4.4, 3, 1), C_DARK, None),           # 왼쪽 단
+    ("fill", "M1.7,21.2 H5.4 L4.7,22.4 H2.4 Z", C_DARK, None),     # 발
+    ("fill", "M15.8,21.2 H21.6 L20.9,22.4 H16.5 Z", C_DARK, None),
+]
+
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
                 '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
                 '{extra}    android:width="24dp"\n'
@@ -147,4 +197,28 @@ for kind, d, color, w in BOT:
                 ' stroke-linecap="round" stroke-linejoin="round"/>\n')
 write("ic_benefit_quiz", android, svg)
 
-print("wrote 2 color icons")
+
+def bake(name, parts):
+    android, svg = "", ""
+    for kind, d, color, w in parts:
+        if kind == "fill":
+            android += (f'    <path\n        android:pathData="{d}"\n'
+                        f'        android:fillColor="{color}" />\n')
+            svg += f'  <path d="{d}" fill="{color}"/>\n'
+        else:
+            android += (f'    <path\n        android:pathData="{d}"\n'
+                        f'        android:strokeWidth="{w}"\n'
+                        f'        android:strokeColor="{color}"\n'
+                        f'        android:strokeLineCap="round"\n'
+                        f'        android:strokeLineJoin="round" />\n')
+            svg += (f'  <path d="{d}" fill="none" stroke="{color}" stroke-width="{w}"'
+                    ' stroke-linecap="round" stroke-linejoin="round"/>\n')
+    write(name, android, svg)
+
+
+# 웨이트 · 유산소는 **행에서만** 원색이다 — 활동 랜딩은 아직 두 톤 벌(`ic_benefit_*`)을 쓴다.
+# 그래서 이름을 덮지 않고 `_color` 로 따로 둔다
+bake("ic_benefit_routine_color", WEIGHT)
+bake("ic_benefit_cardio_color", CARDIO)
+
+print("wrote 4 color icons")

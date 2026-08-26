@@ -77,8 +77,9 @@ enum MyFisDebug {
 
     /// 랜딩에 띄울 활동 — `SIMCTL_CHILD_MYFIS_ACTIVITY=ladder` (기본은 뽑기)
     private static var activityAction: BenefitAction {
+        // 아이콘 이름이 아니라 **갈래 이름**으로 찾는다 — 행 아이콘은 원색 벌로 갈릴 수 있다
         let name = env["MYFIS_ACTIVITY"] ?? "luck"
-        return BenefitPlaceholder.actions.first { $0.icon == "ic_benefit_\(name)" }
+        return BenefitPlaceholder.actions.first { "\($0.kind)" == name }
             ?? BenefitPlaceholder.actions[6]
     }
 

@@ -233,9 +233,9 @@ private fun Illustration(
             stage != ActivityStage.IDLE && action.kind == BenefitKind.LADDER ->
                 LadderStage(color, progress, action.kind.intro.reward)
             else -> Glyph(
-            icon = action.icon,
+            icon = action.glyph,
             // 원색 아이콘은 **자기 색 그대로** 띄운다 (brush = null). 칠하면 그림이 실루엣으로 뭉갠다
-            brush = if (action.kind.colorIcon) {
+            brush = if (action.glyphKeepsColor) {
                 null
             } else {
                 Brush.verticalGradient(listOf(color, color.copy(alpha = 0.62f)))
