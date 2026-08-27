@@ -11,6 +11,7 @@ import UIKit
 ///   (notifications · store_my · store_cart · weight_log · activity · store_item · branch)
 /// SIMCTL_CHILD_MYFIS_TAB=benefit              그 탭에서 시작 (home · benefit · store · my)
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
+/// SIMCTL_CHILD_MYFIS_WEIGHTTAB=cardio         웨이트 세트의 어느 탭에서 시작할지
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
@@ -58,6 +59,20 @@ enum MyFisDebug {
         }
         #else
         .home
+        #endif
+    }
+
+    /// 웨이트 세트의 시작 탭 — `SIMCTL_CHILD_MYFIS_WEIGHTTAB=cardio`
+    static var initialWeightTab: WeightTab {
+        #if DEBUG
+        switch env["MYFIS_WEIGHTTAB"] {
+        case "cardio": .cardio
+        case "ranking": .ranking
+        case "group": .group
+        default: .weight
+        }
+        #else
+        .weight
         #endif
     }
 

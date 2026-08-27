@@ -55,5 +55,8 @@ object MyFisSize {
     /** 큰 찾기 줄 (M-08) — 입력 필드보다 크다. **화면에서 제일 먼저 눈에 들어와야** 한다 */
     val searchBar = 64.dp
     val listRowMin = 56.dp
+
+    /** 헤더 높이 (§6.9) — 셸 헤더와 잎 헤더가 같은 값이다 */
+    val header = 56.dp
     val progressHeight = 8.dp
 }
