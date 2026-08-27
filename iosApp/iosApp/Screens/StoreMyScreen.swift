@@ -90,22 +90,18 @@ private struct RecentRow: View {
     var body: some View {
         // TODO: 최근 본 상품 목록이 붙으면 연결한다
         Button {} label: {
-            HStack(spacing: MyFisSpacing.sm) {
-                Text("최근 본 상품")
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                Spacer(minLength: 0)
-                HStack(spacing: MyFisSpacing.xs) {
-                    ForEach(0..<count, id: \.self) { _ in Thumbnail(size: 36) }
+            MyFisCard {
+                HStack(spacing: MyFisSpacing.sm) {
+                    Text("최근 본 상품")
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                    Spacer(minLength: 0)
+                    HStack(spacing: MyFisSpacing.xs) {
+                        ForEach(0..<count, id: \.self) { _ in Thumbnail(size: 36) }
+                    }
+                    Chevron()
                 }
-                Chevron()
             }
-            .padding(MyFisSpacing.cardPadding)
-            .frame(maxWidth: .infinity)
-            .background(
-                MyFisColor.surface1,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-            )
         }
         .buttonStyle(.myFisTap)
     }
@@ -178,22 +174,18 @@ private struct InviteRow: View {
     var body: some View {
         // TODO: 초대 링크 공유가 붙으면 연결한다
         Button {} label: {
-            HStack(spacing: MyFisSpacing.sm) {
-                Text("친구 초대")
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                Spacer(minLength: 0)
-                Text("1,000 P 받는 링크 보내기")
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textTertiary)
-                Chevron()
+            MyFisCard {
+                HStack(spacing: MyFisSpacing.sm) {
+                    Text("친구 초대")
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                    Spacer(minLength: 0)
+                    Text("1,000 P 받는 링크 보내기")
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textTertiary)
+                    Chevron()
+                }
             }
-            .padding(MyFisSpacing.cardPadding)
-            .frame(maxWidth: .infinity)
-            .background(
-                MyFisColor.surface1,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-            )
         }
         .buttonStyle(.myFisTap)
     }

@@ -65,6 +65,7 @@ import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.components.MileageTone
 import com.myfis.app.ui.components.rememberBurst
 import com.myfis.app.ui.shell.HeaderIcon
+import com.myfis.app.ui.components.StoreSearchShell
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
@@ -203,24 +204,8 @@ private fun StoreHeader(
 /** 누르면 **이 자리가 입력 필드로 바뀐다** (§6.9). 화면이 따로 뜨지 않는다 */
 @Composable
 private fun SearchField(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val interaction = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = modifier
-            .height(40.dp)
-            // 누름 축소는 **아이콘에만** 준다 (§6.7). 판이 통째로 움찔거리면 화면이 흔들려 보인다
-            .background(MyFisColor.Surface2, MyFisRadius.md)
-            .tapWithHaptics(interaction, onClick)
-            .padding(horizontal = MyFisSpacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_header_search),
-            contentDescription = null, // 옆 문구가 이름 역할을 한다
-            tint = MyFisColor.TextTertiary,
-            modifier = Modifier.size(20.dp),
-        )
+    // 판은 검색 모드와 **같은 것**을 쓴다 (§6.9). 전에는 여기서 따로 그렸다 (2026-08-27 이관)
+    StoreSearchShell(modifier = modifier, onClick = onClick) {
         Text("상품 검색", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
     }
 }

@@ -10,26 +10,6 @@ import SwiftUI
 ///
 /// 열면 **키보드가 바로 올라온다.** 검색하러 누른 사람에게 한 번 더 누르게 하지 않는다.
 
-/// 필드 껍데기 — 누르는 자리(버튼)와 치는 자리(입력)가 **같은 판**이어야 바뀔 때 안 튄다
-private struct SearchPill<Content: View>: View {
-    @ViewBuilder var content: Content
-
-    var body: some View {
-        HStack(spacing: MyFisSpacing.sm) {
-            Image("ic_header_search")
-                .renderingMode(.template)
-                .resizable()
-                .frame(width: 20, height: 20)
-                .foregroundStyle(MyFisColor.textTertiary)
-            content
-        }
-        .padding(.horizontal, MyFisSpacing.md)
-        .frame(height: 40)
-        .background(MyFisColor.surface2)
-        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
-    }
-}
-
 /// 검색 필드. 들어오면 **키보드가 바로 올라온다.**
 ///
 /// 포커스는 **자기가 잡는다** — 셸에 `@FocusState` 를 두면 내비 바 안까지 닿지 않는다 (확인함).
@@ -38,7 +18,7 @@ struct StoreSearchInput: View {
     @FocusState private var focused: Bool
 
     var body: some View {
-        SearchPill {
+        StoreSearchShell {
             ZStack(alignment: .leading) {
                 if text.isEmpty {
                     Text("상품 검색")

@@ -36,6 +36,7 @@ import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.components.MileageTone
 import com.myfis.app.ui.components.mileageAnnotated
 import com.myfis.app.ui.shell.DetailHeader
+import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisGhostButton
 import com.myfis.app.ui.theme.MyFisRadius
@@ -129,23 +130,21 @@ private fun QuickItem(icon: Int, label: String, modifier: Modifier = Modifier) {
 private fun RecentRow(count: Int, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
 
-    Row(
+    MyFisCard(
         modifier = modifier
-            .fillMaxWidth()
             .padding(horizontal = MyFisSpacing.screenHorizontal)
             .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
             // TODO: 최근 본 상품 목록이 붙으면 연결한다
-            .tapWithHaptics(interaction, {})
-            .padding(MyFisSpacing.cardPadding),
-        verticalAlignment = Alignment.CenterVertically,
+            .tapWithHaptics(interaction, {}),
     ) {
-        Text("최근 본 상품", style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
-        Spacer(Modifier.weight(1f))
-        Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs)) {
-            repeat(count) { Thumbnail(size = 36.dp) }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("최근 본 상품", style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+            Spacer(Modifier.weight(1f))
+            Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs)) {
+                repeat(count) { Thumbnail(size = 36.dp) }
+            }
+            Chevron(Modifier.padding(start = MyFisSpacing.sm))
         }
-        Chevron(Modifier.padding(start = MyFisSpacing.sm))
     }
 }
 
@@ -243,25 +242,23 @@ private fun ExchangeCard(exchange: MyExchange, modifier: Modifier = Modifier) {
 private fun InviteRow(modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
 
-    Row(
+    MyFisCard(
         modifier = modifier
-            .fillMaxWidth()
             .padding(horizontal = MyFisSpacing.screenHorizontal)
             .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
             // TODO: 초대 링크 공유가 붙으면 연결한다
-            .tapWithHaptics(interaction, {})
-            .padding(MyFisSpacing.cardPadding),
-        verticalAlignment = Alignment.CenterVertically,
+            .tapWithHaptics(interaction, {}),
     ) {
-        Text("친구 초대", style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
-        Spacer(Modifier.weight(1f))
-        Text(
-            "1,000 P 받는 링크 보내기",
-            style = MyFisTheme.type.bodySm,
-            color = MyFisColor.TextTertiary,
-        )
-        Chevron(Modifier.padding(start = MyFisSpacing.xs))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("친구 초대", style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+            Spacer(Modifier.weight(1f))
+            Text(
+                "1,000 P 받는 링크 보내기",
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextTertiary,
+            )
+            Chevron(Modifier.padding(start = MyFisSpacing.xs))
+        }
     }
 }
 

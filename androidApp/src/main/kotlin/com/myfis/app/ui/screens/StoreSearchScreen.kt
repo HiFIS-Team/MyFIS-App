@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -40,6 +39,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.components.StoreSearchShell
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSpacing
@@ -94,20 +94,7 @@ fun StoreSearchInput(
 ) {
     val clearInteraction = remember { MutableInteractionSource() }
 
-    Row(
-        modifier = modifier
-            .height(40.dp)
-            .background(MyFisColor.Surface2, MyFisRadius.md)
-            .padding(horizontal = MyFisSpacing.md),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_header_search),
-            contentDescription = null, // 옆 입력칸이 이름 역할을 한다
-            tint = MyFisColor.TextTertiary,
-            modifier = Modifier.size(20.dp),
-        )
+    StoreSearchShell(modifier = modifier) {
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
             if (query.isEmpty()) {
                 Text(

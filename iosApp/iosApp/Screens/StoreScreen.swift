@@ -469,21 +469,13 @@ struct StoreSearchField: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: MyFisSpacing.sm) {
-                Image("ic_header_search")
-                    .renderingMode(.template)
-                    .resizable()
-                    .frame(width: 20, height: 20)
+            // 판은 검색 모드와 **같은 것**을 쓴다 (§6.9). 전에는 여기서 따로 그렸다 (2026-08-27 이관)
+            StoreSearchShell {
                 Text("상품 검색")
                     .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textTertiary)
                 Spacer(minLength: 0)
             }
-            .foregroundStyle(MyFisColor.textTertiary)
-            .padding(.horizontal, MyFisSpacing.md)
-            .frame(height: 40)
-            .frame(maxWidth: .infinity)
-            .background(MyFisColor.surface2)
-            .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
             .contentShape(Rectangle())
         }
         // 판을 누르는 것에는 축소를 주지 않는다 — 진동만 (§6.7)
