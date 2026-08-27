@@ -320,21 +320,20 @@ private fun BranchMap(bottomInset: Dp) {
                 MyFisColor.TextSecondary)
         }
 
-        // ⑦ 출입구 — 벽이 끊긴 자리. 이 화면의 **두 번째 라임**이다 (§3.2)
+        // ⑦ 출입구 — **이름만 둔다.** 벽이 끊긴 자리가 이미 문이라 핀까지 세우면
+        // 바로 위 `내 위치` 와 표시가 둘이 되어 어느 쪽이 나인지 헷갈린다
         val ex = BranchFloorPlan.ENTRANCE_X
         val ey = BranchFloorPlan.ENTRANCE_Y
-        val (pinAt, pinSize) = box(ex - 5, ey - 12, 10f, 10f)
-        drawRoundRect(MyFisColor.Accent, pinAt, pinSize, CornerRadius(5 * s, 5 * s))
-        drawPath(
-            Path().apply {
-                val a = px(ex - 3.4f, ey - 4)
-                val b = px(ex, ey + 1)
-                val c = px(ex + 3.4f, ey - 4)
-                moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); close()
-            },
-            MyFisColor.Accent,
-        )
-        planLabel(measurer, density, "출입구", px(ex, ey + 6), 8 * s, MyFisColor.Accent)
+        planLabel(measurer, density, "출입구", px(ex, ey + 6), 8 * s, MyFisColor.TextSecondary)
+
+        // ⑧ 내 자리 — **화면에서 제일 먼저 찾아야 하는 점**이라 라임은 여기 쓴다 (§3.2).
+        // 지도 앱의 파란 점과 같은 짜임 — 번짐 · 테두리 · 알맹이 세 겹이라야 배경에서 뜬다
+        val mx = BranchFloorPlan.MY_X
+        val my = BranchFloorPlan.MY_Y
+        drawCircle(MyFisColor.Accent.copy(alpha = 0.18f), 12 * s, px(mx, my))
+        drawCircle(MyFisColor.BgBase, 6 * s, px(mx, my))
+        drawCircle(MyFisColor.Accent, 4.6f * s, px(mx, my))
+        planLabel(measurer, density, "내 위치", px(mx, my - 20), 8 * s, MyFisColor.Accent)
     }
 
     // 꽉 채우면 헬스장 **전체가 안 보인다.** 한 번에 되돌아올 길을 둔다 —

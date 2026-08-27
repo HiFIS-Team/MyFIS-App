@@ -48,6 +48,9 @@ enum BranchFloorPlan {
     /// 출입구 — 벽이 끊긴 자리에 서는 핀
     static let entrance = CGPoint(x: 155, y: 205)
 
+    /// 내가 선 자리. **재서 얻은 값이 아니라 마지막으로 아는 자리**다 (SPEC M-08)
+    static let mySpot = CGPoint(x: 155, y: 196)
+
     static let zones: [PlanZone] = [
         PlanZone(title: "카디오존", rect: CGRect(x: 10, y: 10, width: 190, height: 54), tint: .green),
         PlanZone(title: "스트레칭존", rect: CGRect(x: 208, y: 10, width: 84, height: 54), tint: .teal),

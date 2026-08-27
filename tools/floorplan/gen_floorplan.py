@@ -45,8 +45,13 @@ ROOMS = [
     ("남자\\n탈의실", 266, 182, 34, 42, "blue"),
 ]
 
-# 출입구 — 벽이 끊긴 자리. 라임은 이 화면에서 **찾기 줄 다음 두 번째**다 (§3.2)
+# 출입구 — 벽이 끊긴 자리
 ENTRANCE = (155.0, 205.0)
+
+# 내가 선 자리. **재서 얻은 값이 아니라 마지막으로 아는 자리**다 —
+# 들어온 직후엔 출입구 안쪽이고, 세트를 끝내면 그 기구 자리로 옮겨 간다 (SPEC M-08).
+# ⚠️ 라임은 여기에 쓴다. 출입구는 **가만히 있는 이름표**고, 이건 **나**다 (§3.2)
+MY_SPOT = (155.0, 196.0)
 
 BODY, CAP, PILLAR, PLANT = 0, 1, 2, 3
 
@@ -157,6 +162,9 @@ enum BranchFloorPlan {{
     /// 출입구 — 벽이 끊긴 자리에 서는 핀
     static let entrance = CGPoint(x: {ex}, y: {ey})
 
+    /// 내가 선 자리. **재서 얻은 값이 아니라 마지막으로 아는 자리**다 (SPEC M-08)
+    static let mySpot = CGPoint(x: {mx}, y: {my})
+
     static let zones: [PlanZone] = [
 {zones}
     ]
@@ -221,6 +229,10 @@ object BranchFloorPlan {{
     const val ENTRANCE_X = {ex}f
     const val ENTRANCE_Y = {ey}f
 
+    /** 내가 선 자리. **재서 얻은 값이 아니라 마지막으로 아는 자리**다 (SPEC M-08) */
+    const val MY_X = {mx}f
+    const val MY_Y = {my}f
+
     val zones = listOf(
 {zones}
     )
@@ -247,6 +259,7 @@ def g(v):
 
 swift = SWIFT.format(
     w=g(W), h=g(H), ex=g(ENTRANCE[0]), ey=g(ENTRANCE[1]),
+    mx=g(MY_SPOT[0]), my=g(MY_SPOT[1]),
     outline="\n".join(f"        CGPoint(x: {g(x)}, y: {g(y)})," for x, y in OUTLINE),
     zones="\n".join(
         f'        PlanZone(title: "{t}", rect: CGRect(x: {g(x)}, y: {g(y)},'
@@ -261,6 +274,7 @@ swift = SWIFT.format(
 
 kotlin = KOTLIN.format(
     w=g(W), h=g(H), ex=g(ENTRANCE[0]), ey=g(ENTRANCE[1]),
+    mx=g(MY_SPOT[0]), my=g(MY_SPOT[1]),
     outline="\n".join(f"        {g(x)}f to {g(y)}f," for x, y in OUTLINE),
     zones="\n".join(
         f'        PlanZone("{t}", {g(x)}f, {g(y)}f, {g(w)}f, {g(h)}f,'

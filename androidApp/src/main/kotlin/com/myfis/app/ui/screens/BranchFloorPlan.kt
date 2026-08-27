@@ -54,6 +54,10 @@ object BranchFloorPlan {
     const val ENTRANCE_X = 155f
     const val ENTRANCE_Y = 205f
 
+    /** 내가 선 자리. **재서 얻은 값이 아니라 마지막으로 아는 자리**다 (SPEC M-08) */
+    const val MY_X = 155f
+    const val MY_Y = 196f
+
     val zones = listOf(
         PlanZone("카디오존", 10f, 10f, 190f, 54f, PlanTint.GREEN),
         PlanZone("스트레칭존", 208f, 10f, 84f, 54f, PlanTint.TEAL),

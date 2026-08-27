@@ -235,16 +235,28 @@ private struct BranchMap: View {
                   size: 8 * s, color: MyFisColor.textSecondary, point: point)
         }
 
-        // ⑦ 출입구 — 벽이 끊긴 자리. 이 화면의 **두 번째 라임**이다 (§3.2)
+        // ⑦ 출입구 — **이름만 둔다.** 벽이 끊긴 자리가 이미 문이라 핀까지 세우면
+        // 바로 위 `내 위치` 와 표시가 둘이 되어 어느 쪽이 나인지 헷갈린다
         let e = BranchFloorPlan.entrance
-        let pin = CGRect(x: e.x - 5, y: e.y - 12, width: 10, height: 10)
-        context.fill(rounded(pin, 5), with: .color(MyFisColor.accent))
-        var tip = Path()
-        tip.move(to: point(e.x - 3.4, e.y - 4))
-        tip.addLine(to: point(e.x, e.y + 1))
-        tip.addLine(to: point(e.x + 3.4, e.y - 4))
-        context.fill(tip, with: .color(MyFisColor.accent))
-        label(context, "출입구", at: CGPoint(x: e.x, y: e.y + 12),
+        label(context, "출입구", at: CGPoint(x: e.x, y: e.y + 11),
+              size: 8 * s, color: MyFisColor.textSecondary, point: point)
+
+        // ⑧ 내 자리 — **화면에서 제일 먼저 찾아야 하는 점**이라 라임은 여기 쓴다 (§3.2).
+        // 지도 앱의 파란 점과 같은 짜임 — 번짐 · 테두리 · 알맹이 세 겹이라야 배경에서 뜬다
+        let me = BranchFloorPlan.mySpot
+        context.fill(
+            rounded(CGRect(x: me.x - 12, y: me.y - 12, width: 24, height: 24), 12),
+            with: .color(MyFisColor.accent.opacity(0.18))
+        )
+        context.fill(
+            rounded(CGRect(x: me.x - 6, y: me.y - 6, width: 12, height: 12), 6),
+            with: .color(MyFisColor.bgBase)
+        )
+        context.fill(
+            rounded(CGRect(x: me.x - 4.6, y: me.y - 4.6, width: 9.2, height: 9.2), 4.6),
+            with: .color(MyFisColor.accent)
+        )
+        label(context, "내 위치", at: CGPoint(x: me.x, y: me.y - 15),
               size: 8 * s, color: MyFisColor.accent, point: point)
     }
 
