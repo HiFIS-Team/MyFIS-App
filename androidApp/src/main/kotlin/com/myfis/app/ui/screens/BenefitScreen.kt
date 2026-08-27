@@ -35,6 +35,8 @@ import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisCard
+import com.myfis.app.ui.theme.MyFisIconTile
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
@@ -138,17 +140,7 @@ private fun ActionRow(action: BenefitAction, onClick: () -> Unit) {
     ) {
         // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — **아이콘에만** 칠한다.
         // 판은 색 없는 중립이다 — 열두 줄이 색 판이면 목록이 색 견본집처럼 읽힌다
-        Box(
-            modifier = Modifier
-                .size(MyFisSize.listRowMin)
-                .background(
-                    if (dimmed) MyFisColor.Surface1 else MyFisColor.Surface2,
-                    MyFisRadius.tile,
-                )
-                // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 배경에 녹는다
-                .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
-            contentAlignment = Alignment.Center,
-        ) {
+        MyFisIconTile(dimmed = dimmed) {
             // 행 아이콘은 **전부 원색 그림**이라 tint 를 걸지 않는다 — 한 색으로 누르면 실루엣이 된다.
             // 받은 행에서는 색을 빼야 하는데 칠할 수가 없으니 **채도를 0 으로 내린다**
             Image(
@@ -209,29 +201,32 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
 
     // TODO: 초대 링크 공유가 붙으면 연결한다
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MyFisColor.Surface1, MyFisRadius.lg)
-            .tapWithHaptics(interaction) {}
-            .padding(MyFisSpacing.cardPadding),
-        verticalAlignment = Alignment.CenterVertically,
+    // 배너는 화면 폭을 다 쓰므로 카드 라운딩이 `lg` 다 (§6.2 · 스토어 캐러셀과 같다)
+    MyFisCard(
+        modifier = modifier.tapWithHaptics(interaction) {},
+        shape = MyFisRadius.lg,
     ) {
-        Column(Modifier.weight(1f)) {
-            Text("친구를 부르면", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
-            Text(
-                "둘 다 1,000 P",
-                style = MyFisTheme.type.titleMd,
-                color = MyFisColor.TextPrimary,
-                modifier = Modifier.padding(top = 2.dp),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(
+                    "친구를 부르면",
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextTertiary,
+                )
+                Text(
+                    "둘 다 1,000 P",
+                    style = MyFisTheme.type.titleMd,
+                    color = MyFisColor.TextPrimary,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
+            Icon(
+                painter = painterResource(R.drawable.ic_mileage_fill),
+                contentDescription = null,
+                tint = MyFisColor.Surface3,
+                modifier = Modifier.size(44.dp),
             )
         }
-        Icon(
-            painter = painterResource(R.drawable.ic_mileage_fill),
-            contentDescription = null,
-            tint = MyFisColor.Surface3,
-            modifier = Modifier.size(44.dp),
-        )
     }
 }
 

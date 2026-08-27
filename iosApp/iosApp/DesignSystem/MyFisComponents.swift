@@ -99,6 +99,9 @@ struct MyFisDangerButton: View {
 
 /// DESIGN.md §6.2 카드
 struct MyFisCard<Content: View>: View {
+    /// 기본은 `radius.md`. **화면 폭을 다 쓰는 배너만 `radius.lg`** 다 (§6.2) —
+    /// 스토어 캐러셀·혜택 초대 배너가 둘 다 `lg` 로 그려져 있어 그 관행을 그대로 받는다
+    var radius: CGFloat = MyFisRadius.md
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -108,7 +111,34 @@ struct MyFisCard<Content: View>: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(MyFisSpacing.cardPadding)
         .background(MyFisColor.surface1)
-        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+    }
+}
+
+/// DESIGN.md §6.23 · §6.26 **아이콘 타일** — `56` 판 + `radius.tile` + `border.subtle` 1.
+///
+/// 혜택 행 · 기구 찾기 빠른 고르기 · 자주 쓰는 기구가 **같은 판을 세 곳에서 따로 그리고 있었다**
+/// (2026-08-27 실측). 판을 여기 한 벌로 모은다.
+///
+/// - 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 배경에 녹는다
+/// - ⚠️ `radius.tile` 은 **`56` 판에 맞춘 값**이다 (§5.2). 다른 크기가 필요하면
+///   여기에 크기를 받도록 고치고 라운딩을 비율(32%)로 다시 잡는다
+struct MyFisIconTile<Content: View>: View {
+    /// 이미 받은 줄처럼 한 단계 물러난 자리 — 판을 `surface.1` 로 내린다
+    var dimmed = false
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        content
+            .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
+            .background(
+                dimmed ? MyFisColor.surface1 : MyFisColor.surface2,
+                in: RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
+                    .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1)
+            )
     }
 }
 

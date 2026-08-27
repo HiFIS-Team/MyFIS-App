@@ -95,17 +95,7 @@ private struct ActionRow: View {
             HStack(spacing: MyFisSpacing.lg) {
                 // 색은 **갈래**를 말한다 (§3.1 카테고리 팔레트) — **아이콘에만** 칠한다.
                 // 판은 색 없는 중립이다 — 열두 줄이 색 판이면 목록이 색 견본집처럼 읽힌다
-                icon
-                    .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
-                    .background(
-                        dimmed ? MyFisColor.surface1 : MyFisColor.surface2,
-                        in: RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
-                    )
-                    // 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 배경에 녹는다
-                    .overlay(
-                        RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
-                            .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1)
-                    )
+                MyFisIconTile(dimmed: dimmed) { icon }
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: MyFisSpacing.sm) {
@@ -163,27 +153,24 @@ private struct InviteBanner: View {
     var body: some View {
         // TODO: 초대 링크 공유가 붙으면 연결한다
         Button {} label: {
-            HStack(spacing: MyFisSpacing.md) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("친구를 부르면")
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                    Text("둘 다 1,000 P")
-                        .font(MyFisFont.titleMd)
-                        .foregroundStyle(MyFisColor.textPrimary)
+            // 배너는 화면 폭을 다 쓰므로 카드 라운딩이 `lg` 다 (§6.2 · 스토어 캐러셀과 같다)
+            MyFisCard(radius: MyFisRadius.lg) {
+                HStack(spacing: MyFisSpacing.md) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("친구를 부르면")
+                            .font(MyFisFont.bodySm)
+                            .foregroundStyle(MyFisColor.textTertiary)
+                        Text("둘 다 1,000 P")
+                            .font(MyFisFont.titleMd)
+                            .foregroundStyle(MyFisColor.textPrimary)
+                    }
+                    Spacer(minLength: 0)
+                    Image("ic_mileage_fill")
+                        .resizable()
+                        .frame(width: 44, height: 44)
+                        .foregroundStyle(MyFisColor.surface3)
                 }
-                Spacer(minLength: 0)
-                Image("ic_mileage_fill")
-                    .resizable()
-                    .frame(width: 44, height: 44)
-                    .foregroundStyle(MyFisColor.surface3)
             }
-            .padding(MyFisSpacing.cardPadding)
-            .frame(maxWidth: .infinity)
-            .background(
-                MyFisColor.surface1,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.lg, style: .continuous)
-            )
         }
         .buttonStyle(.myFisTap)
     }

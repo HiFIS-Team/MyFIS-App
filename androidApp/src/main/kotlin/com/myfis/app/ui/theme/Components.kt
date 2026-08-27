@@ -1,6 +1,8 @@
 package com.myfis.app.ui.theme
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -109,17 +111,53 @@ fun MyFisDangerButton(text: String, onClick: () -> Unit, modifier: Modifier = Mo
     }
 }
 
-/** DESIGN.md §6.2 카드 */
+/**
+ * DESIGN.md §6.2 카드
+ *
+ * 기본은 `radius.md`. **화면 폭을 다 쓰는 배너만 `radius.lg`** 다 (§6.2) —
+ * 스토어 캐러셀·혜택 초대 배너가 둘 다 `lg` 로 그려져 있어 그 관행을 그대로 받는다.
+ */
 @Composable
 fun MyFisCard(
     modifier: Modifier = Modifier,
+    shape: androidx.compose.ui.graphics.Shape = MyFisRadius.md,
     content: @Composable ColumnScopeAlias.() -> Unit,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MyFisColor.Surface1, MyFisRadius.md)
+            .background(MyFisColor.Surface1, shape)
             .padding(MyFisSpacing.cardPadding),
+        content = content,
+    )
+}
+
+/**
+ * DESIGN.md §6.23 · §6.26 **아이콘 타일** — `56` 판 + `radius.tile` + `border.subtle` 1.
+ *
+ * 혜택 행 · 기구 찾기 빠른 고르기 · 자주 쓰는 기구가 **같은 판을 세 곳에서 따로 그리고 있었다**
+ * (2026-08-27 실측). 판을 여기 한 벌로 모은다.
+ *
+ * - 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 배경에 녹는다
+ * - ⚠️ `radius.tile` 은 **`56` 판에 맞춘 값**이다 (§5.2). 다른 크기가 필요하면
+ *   여기에 크기를 받도록 고치고 라운딩을 비율(32%)로 다시 잡는다
+ */
+@Composable
+fun MyFisIconTile(
+    modifier: Modifier = Modifier,
+    /** 이미 받은 줄처럼 한 단계 물러난 자리 — 판을 `surface.1` 로 내린다 */
+    dimmed: Boolean = false,
+    content: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .size(MyFisSize.listRowMin)
+            .background(
+                if (dimmed) MyFisColor.Surface1 else MyFisColor.Surface2,
+                MyFisRadius.tile,
+            )
+            .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
+        contentAlignment = androidx.compose.ui.Alignment.Center,
         content = content,
     )
 }
