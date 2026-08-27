@@ -91,21 +91,26 @@ fun WeightLogScreen(
         Spacer(Modifier.weight(1f))
 
         // 체중계 창 — 숫자가 주인공이라 metric.xl. 자릿수가 바뀌어도 안 흔들리게 tnum
+        // 단위는 **글자 기준선**에 맞춘다 (iOS `.lastTextBaseline` 과 같은 방식).
+        // 전에는 `Alignment.Bottom` + `bottom = 10.dp` 로 흉내 냈는데,
+        // 그 `10` 은 스케일 밖 값(§5.1)이었고 글꼴이 바뀌면 다시 틀어진다 (2026-08-27)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.Bottom,
         ) {
             Text(
                 "%.1f".format(value),
                 style = MyFisTheme.type.metricXl.copy(fontFeatureSettings = "tnum"),
                 color = MyFisColor.TextPrimary,
+                modifier = Modifier.alignByBaseline(),
             )
             Text(
                 "kg",
                 style = MyFisTheme.type.titleMd,
                 color = MyFisColor.TextTertiary,
-                modifier = Modifier.padding(start = MyFisSpacing.sm, bottom = 10.dp),
+                modifier = Modifier
+                    .alignByBaseline()
+                    .padding(start = MyFisSpacing.sm),
             )
         }
 
