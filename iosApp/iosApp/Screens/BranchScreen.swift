@@ -22,10 +22,15 @@ struct BranchScreen: View {
 
     var body: some View {
         GeometryReader { geo in
-            // 접힘은 **빠른 고르기 두 줄이 다 보이는 높이**다 (778 기준 186 + 바닥 여백).
-            // 한 줄만 보이게 하면 나머지 넷이 있는 줄 모르고, 더 올리면 지도가 반으로 줄어든다
-            let peek = geo.size.height * 0.24
-            let full = geo.size.height * 0.56
+            // 접힘은 **빠른 고르기 두 줄이 딱 다 보이는 높이**다 —
+            // 손잡이 32 + 두 줄 178 + 홈 인디케이터 자리 34, 그리고 그 다음 칸은 안 보인다.
+            //
+            // ⚠️ **화면 높이의 몇 %가 아니라 고정값**이다. 안에 든 것이 고정 크기라
+            // 비율로 잡으면 기기마다 둘째 줄 글자가 잘린다 (실제로 잘렸다).
+            // ⚠️ 더 키우면 `자주 쓰는 기구` 제목이 **반만 걸쳐** 고장 난 것처럼 보인다 —
+            // 다음 칸을 보여 주려면 **글자 없는 빈 자리**만 내민다
+            let peek: CGFloat = 248
+            let full = max(geo.size.height * 0.56, peek + 160)
 
             ZStack {
                 VStack(spacing: 0) {
