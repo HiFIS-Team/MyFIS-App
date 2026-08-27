@@ -48,6 +48,9 @@ object MyFisSize {
     /** 카드 안 보조 버튼 (§6.1) */
     val buttonSmall = 36.dp
     val inputHeight = 52.dp
+
+    /** 큰 찾기 줄 (M-08) — 입력 필드보다 크다. **화면에서 제일 먼저 눈에 들어와야** 한다 */
+    val searchBar = 64.dp
     val listRowMin = 56.dp
     val progressHeight = 8.dp
 }

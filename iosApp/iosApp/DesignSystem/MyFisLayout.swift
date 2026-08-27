@@ -38,6 +38,8 @@ enum MyFisSize {
     static let buttonPrimary: CGFloat = 52
     static let buttonSecondary: CGFloat = 44
     static let inputHeight: CGFloat = 52
+    /// 큰 찾기 줄 (M-08) — 입력 필드보다 크다. **화면에서 제일 먼저 눈에 들어와야** 한다
+    static let searchBar: CGFloat = 64
     static let listRowMin: CGFloat = 56
     static let progressHeight: CGFloat = 8
     /// 카드 안 보조 버튼 (§6.1)
