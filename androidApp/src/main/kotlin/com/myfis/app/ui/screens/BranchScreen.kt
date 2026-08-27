@@ -41,7 +41,7 @@ fun BranchScreen(onBack: () -> Unit = {}) {
             .background(MyFisColor.BgBase)
             .statusBarsPadding(),
     ) {
-        DetailHeader(title = null, onBack = onBack)
+        DetailHeader(title = "기구 찾기", onBack = onBack)
 
         BranchSearchBar(
             Modifier

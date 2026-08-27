@@ -11,7 +11,7 @@ struct BranchScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DetailHeader(title: nil, onBack: onBack)
+            DetailHeader(title: "기구 찾기", onBack: onBack)
 
             BranchSearchBar()
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
