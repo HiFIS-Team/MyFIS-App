@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -34,7 +35,7 @@ import com.myfis.app.ui.theme.tapWithHaptics
 /**
  * 홈 헤더의 **핀으로 들어오는 잎 화면** (SPEC M-08 지점 내부 지도).
  *
- * 지금은 **찾기 줄 + 빠른 고르기**까지다. 밑에 들어갈 평면도 · 기구 핀은 아직 미정이다.
+ * 지금은 **찾기 줄 + 빠른 고르기 + 자주 쓰는 기구**까지다. 밑에 들어갈 평면도는 아직 미정이다.
  *
  * 줄의 짜임은 **카카오 T 홈**에서 가져왔다 (사용자 지정) —
  * 큰 알약 하나에 **물음 한 줄**. 색은 우리 것을 쓴다.
@@ -62,6 +63,12 @@ fun BranchScreen(onBack: () -> Unit = {}) {
             Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(top = MyFisSpacing.xl),
+        )
+
+        FavoriteMachines(
+            Modifier
+                .padding(horizontal = MyFisSpacing.screenHorizontal)
+                .padding(top = MyFisSpacing.xxl),
         )
     }
 }
@@ -127,7 +134,7 @@ private fun PlaceQuickPick(modifier: Modifier = Modifier) {
     ) {
         BranchPlace.entries.chunked(4).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap)) {
-                row.forEach { PlaceCell(it, Modifier.weight(1f)) }
+                row.forEach { PlaceCell(it.icon, it.title, Modifier.weight(1f)) }
             }
         }
     }
@@ -140,7 +147,7 @@ private fun PlaceQuickPick(modifier: Modifier = Modifier) {
  * 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
  */
 @Composable
-private fun PlaceCell(place: BranchPlace, modifier: Modifier = Modifier) {
+private fun PlaceCell(icon: Int, title: String, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
 
     Column(
@@ -158,18 +165,112 @@ private fun PlaceCell(place: BranchPlace, modifier: Modifier = Modifier) {
         ) {
             // ⚠️ 원색 벌은 **`Image`** 로 그린다 — `Icon` 은 tint 로 한 색을 덮어씌운다
             Image(
-                painter = painterResource(place.icon),
+                painter = painterResource(icon),
                 contentDescription = null, // 밑의 라벨이 이름 역할을 한다
                 modifier = Modifier.size(28.dp),
             )
         }
 
         Text(
-            place.title,
+            title,
             style = MyFisTheme.type.label,
             color = MyFisColor.TextSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
         )
+    }
+}
+
+/**
+ * 자주 쓰는 기구 — **꽂아 둔 기구로 바로 가는 자리** (DESIGN §6.27).
+ *
+ * 짜임은 **카카오 T `자주 쓰는 서비스`** 에서 가져왔다 (사용자 지정) —
+ * 카드 하나에 제목 + `편집`, 그 밑에 칸 넷. 빈 칸은 **압정**으로 자리를 보여 준다.
+ *
+ * ⚠️ 레퍼런스는 칸이 다섯인데 **넷으로 줄였다.** 위 빠른 고르기가 4열이라 다섯을 두면
+ * 판이 어긋나 두 묶음이 따로 노는 것처럼 보인다.
+ */
+@Composable
+private fun FavoriteMachines(modifier: Modifier = Modifier) {
+    // ⚠️ 여기 이름은 **기구**다. 위 빠른 고르기는 구역(`프리웨이트`)인데
+    // 여기까지 구역 이름을 쓰면 "자주 쓰는 기구"라는 제목과 어긋난다
+    // TODO: 꽂아 둔 기구를 서버에서 받는다 (M-08). 지금은 보여 주기용이다
+    val pinned = listOf(
+        R.drawable.ic_place_free to "벤치프레스",
+        R.drawable.ic_place_cardio to "러닝머신",
+    )
+    val interaction = remember { MutableInteractionSource() }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(MyFisColor.Surface1, MyFisRadius.md)
+            .padding(MyFisSpacing.cardPadding),
+        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
+    ) {
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+        ) {
+            Text(
+                "자주 쓰는 기구",
+                style = MyFisTheme.type.titleSm,
+                color = MyFisColor.TextPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            // TODO: 꽂기/빼기 편집으로 (M-08)
+            Text(
+                "편집",
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextSecondary,
+                modifier = Modifier.tapWithHaptics(interaction) {},
+            )
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap)) {
+            repeat(4) { index ->
+                if (index < pinned.size) {
+                    val (icon, title) = pinned[index]
+                    PlaceCell(icon, title, Modifier.weight(1f))
+                } else {
+                    EmptyPinSlot(Modifier.weight(1f))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 빈 칸. **자리를 비워 두지 않고 압정을 놓는다** — 비워 두면 칸이 몇 개인지 안 보이고,
+ * 꽂을 수 있다는 것도 안 보인다.
+ */
+@Composable
+private fun EmptyPinSlot(modifier: Modifier = Modifier) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Column(
+        // TODO: 누르면 기구 고르기로 (M-08)
+        modifier = modifier.tapWithHaptics(interaction) {},
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+    ) {
+        Box(
+            Modifier
+                .size(MyFisSize.listRowMin)
+                .background(MyFisColor.Surface2, MyFisRadius.tile)
+                .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_place_pin),
+                contentDescription = null, // 밑의 라벨이 이름 역할을 한다
+                // 찬 칸(28 원색)보다 작고 흐리다. 같은 무게로 두면 빈 칸이 먼저 읽힌다
+                tint = MyFisColor.TextTertiary,
+                modifier = Modifier.size(24.dp),
+            )
+        }
+
+        Text("추가", style = MyFisTheme.type.label, color = MyFisColor.TextTertiary, maxLines = 1)
     }
 }

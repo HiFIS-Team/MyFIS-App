@@ -2,7 +2,7 @@ import SwiftUI
 
 /// 홈 헤더의 **핀으로 들어오는 잎 화면** (SPEC M-08 지점 내부 지도).
 ///
-/// 지금은 **찾기 줄 + 빠른 고르기**까지다. 밑에 들어갈 평면도 · 기구 핀은 아직 미정이다.
+/// 지금은 **찾기 줄 + 빠른 고르기 + 자주 쓰는 기구**까지다. 밑에 들어갈 평면도는 아직 미정이다.
 ///
 /// 줄의 짜임은 **카카오 T 홈**에서 가져왔다 (사용자 지정) —
 /// 큰 알약 하나에 **물음 한 줄**. 색은 우리 것을 쓴다.
@@ -20,6 +20,10 @@ struct BranchScreen: View {
             PlaceQuickPick()
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
                 .padding(.top, MyFisSpacing.xl)
+
+            FavoriteMachines()
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                .padding(.top, MyFisSpacing.xxl)
 
             Spacer(minLength: 0)
         }
@@ -94,7 +98,7 @@ private struct PlaceQuickPick: View {
             spacing: MyFisSpacing.lg
         ) {
             ForEach(BranchPlace.allCases) { place in
-                PlaceCell(place: place)
+                PlaceCell(icon: place.icon, title: place.title)
             }
         }
     }
@@ -105,13 +109,14 @@ private struct PlaceQuickPick: View {
 /// 아이콘은 **여덟이 전부 원색**이라 tint 를 걸지 않는다.
 /// 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
 private struct PlaceCell: View {
-    let place: BranchPlace
+    let icon: String
+    let title: String
 
     var body: some View {
         // TODO: 누르면 그 갈래를 지도에서 집는다 (M-08)
         Button {} label: {
             VStack(spacing: MyFisSpacing.sm) {
-                Image(place.icon)
+                Image(icon)
                     .resizable()
                     .renderingMode(.original)
                     .frame(width: 28, height: 28)
@@ -125,12 +130,100 @@ private struct PlaceCell: View {
                             .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1)
                     )
 
-                Text(place.title)
+                Text(title)
                     .font(MyFisFont.label)
                     .foregroundStyle(MyFisColor.textSecondary)
                     .lineLimit(1)
                     // `프리웨이트` 가 좁은 기기에서 잘리는 것보다 조금 줄어드는 편이 낫다
                     .minimumScaleFactor(0.85)
+            }
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.myFisTap)
+    }
+}
+
+/// 자주 쓰는 기구 — **꽂아 둔 기구로 바로 가는 자리** (DESIGN §6.27).
+///
+/// 짜임은 **카카오 T `자주 쓰는 서비스`** 에서 가져왔다 (사용자 지정) —
+/// 카드 하나에 제목 + `편집`, 그 밑에 칸 넷. 빈 칸은 **압정**으로 자리를 보여 준다.
+///
+/// ⚠️ 레퍼런스는 칸이 다섯인데 **넷으로 줄였다.** 위 빠른 고르기가 4열이라 다섯을 두면
+/// 판이 어긋나 두 묶음이 따로 노는 것처럼 보인다.
+private struct FavoriteMachines: View {
+    /// ⚠️ 여기 이름은 **기구**다. 위 빠른 고르기는 구역(`프리웨이트`)인데
+    /// 여기까지 구역 이름을 쓰면 "자주 쓰는 기구"라는 제목과 어긋난다
+    // TODO: 꽂아 둔 기구를 서버에서 받는다 (M-08). 지금은 보여 주기용이다
+    private let pinned: [(icon: String, title: String)] = [
+        ("ic_place_free", "벤치프레스"),
+        ("ic_place_cardio", "러닝머신"),
+    ]
+
+    var body: some View {
+        VStack(spacing: MyFisSpacing.lg) {
+            HStack(spacing: MyFisSpacing.sm) {
+                Text("자주 쓰는 기구")
+                    .font(MyFisFont.titleSm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+
+                Spacer(minLength: 0)
+
+                // TODO: 꽂기/빼기 편집으로 (M-08)
+                Button {} label: {
+                    Text("편집")
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.myFisTap)
+            }
+
+            HStack(spacing: MyFisSpacing.md) {
+                ForEach(0..<4, id: \.self) { index in
+                    if index < pinned.count {
+                        PlaceCell(icon: pinned[index].icon, title: pinned[index].title)
+                    } else {
+                        EmptyPinSlot()
+                    }
+                }
+            }
+        }
+        .padding(MyFisSpacing.cardPadding)
+        .background(
+            MyFisColor.surface1,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+        )
+    }
+}
+
+/// 빈 칸. **자리를 비워 두지 않고 압정을 놓는다** — 비워 두면 칸이 몇 개인지 안 보이고,
+/// 꽂을 수 있다는 것도 안 보인다.
+private struct EmptyPinSlot: View {
+    var body: some View {
+        // TODO: 누르면 기구 고르기로 (M-08)
+        Button {} label: {
+            VStack(spacing: MyFisSpacing.sm) {
+                Image("ic_place_pin")
+                    .resizable()
+                    .renderingMode(.template)
+                    .frame(width: 24, height: 24)
+                    // 찬 칸(28 원색)보다 작고 흐리다. 같은 무게로 두면 빈 칸이 먼저 읽힌다
+                    .foregroundStyle(MyFisColor.textTertiary)
+                    .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
+                    .background(
+                        MyFisColor.surface2,
+                        in: RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
+                            .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1)
+                    )
+
+                Text("추가")
+                    .font(MyFisFont.label)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                    .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
