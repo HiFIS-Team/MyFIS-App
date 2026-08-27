@@ -66,7 +66,15 @@ enum BranchPlace: String, CaseIterable, Identifiable {
     /// **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
     ///
     /// 화장실의 파랑·분홍은 남녀 표시 그 자체이고, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다.
-    var colorIcon: Bool { self == .toilet || self == .fitting }
+    ///
+    /// 스쿼트랙 · 러닝머신은 사용자가 준 원본이 원색이라 여기 들어온다 —
+    /// 하단 탭 `유산소`(`ic_benefit_cardio_color`)와 **같은 그림**이다
+    var colorIcon: Bool {
+        switch self {
+        case .rack, .treadmill, .toilet, .fitting: true
+        case .bench, .dumbbell, .shower, .pt: false
+        }
+    }
 
     var title: String {
         switch self {

@@ -449,4 +449,9 @@ bake("ic_benefit_dice_color", DICE)
 bake("ic_benefit_diet_color", UTENSIL)
 bake("ic_benefit_scratch_color", SCRATCH)
 
-print("wrote 13 color icons")
+# `기구 찾기`(M-08) 의 스쿼트랙 · 러닝머신은 **같은 그림**이다 (사용자가 준 원본이 하나다).
+# 이름만 갈라 굽는다 — 그림을 베껴 두면 한쪽만 고쳐지는 날이 온다 (DESIGN §6.26)
+bake("ic_place_rack", WEIGHT)
+bake("ic_place_treadmill", CARDIO)
+
+print("wrote 15 color icons")

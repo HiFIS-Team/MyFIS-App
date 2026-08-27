@@ -108,13 +108,14 @@ private enum class BranchPlace(
      * **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
      *
      * 화장실의 파랑·분홍은 남녀 표시 그 자체이고, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다.
+     * 스쿼트랙 · 러닝머신은 사용자가 준 원본이 원색이라 여기 들어온다.
      */
     val colorIcon: Boolean = false,
 ) {
-    RACK(R.drawable.ic_place_rack, "스쿼트랙"),
+    RACK(R.drawable.ic_place_rack, "스쿼트랙", colorIcon = true),
     BENCH(R.drawable.ic_place_bench, "벤치"),
     DUMBBELL(R.drawable.ic_place_dumbbell, "덤벨"),
-    TREADMILL(R.drawable.ic_place_treadmill, "러닝머신"),
+    TREADMILL(R.drawable.ic_place_treadmill, "러닝머신", colorIcon = true),
     TOILET(R.drawable.ic_place_toilet, "화장실", colorIcon = true),
     SHOWER(R.drawable.ic_place_shower, "샤워실"),
     FITTING(R.drawable.ic_place_fitting, "탈의실", colorIcon = true),
