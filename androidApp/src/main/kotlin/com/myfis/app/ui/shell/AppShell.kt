@@ -33,6 +33,7 @@ import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
 import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreScreen
+import com.myfis.app.ui.screens.TouchScreen
 import com.myfis.app.ui.screens.WeightLogScreen
 import com.myfis.app.ui.theme.MyFisColor
 
@@ -91,7 +92,11 @@ fun AppShell() {
         ) {
             // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
             benefitAction?.let {
-                // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만들 때까지 자리만 둔다
+                // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만든 것부터 갈아 끼운다
+                if (it.kind == BenefitKind.TOUCH) {
+                    TouchScreen(onClose = { nav.popBackStack() })
+                    return@composable
+                }
                 Column(
                     Modifier
                         .fillMaxSize()
