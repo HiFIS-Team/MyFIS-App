@@ -24,7 +24,6 @@ import com.myfis.app.ui.screens.BenefitAction
 import com.myfis.app.ui.screens.BenefitKind
 import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.BranchScreen
-import com.myfis.app.ui.screens.CardioScreen
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.screens.StoreCartScreen
@@ -173,7 +172,7 @@ private fun TabShell(
                     // 홈의 마일리지 상품 — 같은 세트 안이라 탭만 옮긴다
                     onStore = { baseTab = BaseTab.STORE },
                 )
-                TabSet.WEIGHT -> WeightTabContent(weightTab, onBranch)
+                TabSet.WEIGHT -> WeightTabContent(weightTab)
             }
         }
 
@@ -236,17 +235,10 @@ private fun BaseTabContent(
 }
 
 @Composable
-private fun WeightTabContent(tab: WeightTab, onBranch: () -> Unit) {
+private fun WeightTabContent(tab: WeightTab) {
     when (tab) {
         WeightTab.WEIGHT -> PlaceholderScreen("W-01", "이번 주 루틴", "AI가 보낸 주간 루틴")
-        WeightTab.CARDIO -> CardioScreen(
-            // TODO: 지도를 **카디오존이 잡힌 채로** 열어야 한다 (SPEC C-01).
-            // 구역 고르기가 아직 없어 지금은 지도만 연다
-            onBranch = onBranch,
-            // TODO: C-05 유산소 기록 · C-02 NFC 스캔이 붙으면 연결한다
-            onHistory = {},
-            onScan = {},
-        )
+        WeightTab.CARDIO -> PlaceholderScreen("C-01", "유산소", "기기 목록 · NFC 스캔")
         WeightTab.RANKING -> PlaceholderScreen("R-01", "랭킹", "웨이트 · 유산소 · 마일리지")
         WeightTab.GROUP -> PlaceholderScreen("G-01", "모임", "모임 · 커뮤니티")
         WeightTab.BACK -> Unit
