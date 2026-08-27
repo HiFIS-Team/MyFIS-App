@@ -24,7 +24,7 @@ struct BranchScreen: View {
 
             ZStack {
                 // 평면도가 **바탕**이다. 헤더 · 찾기 줄 · 시트가 전부 이 위에 얹힌다
-                BranchMap()
+                BranchMap(bottomInset: peek)
 
                 VStack(spacing: 0) {
                     DetailHeader(title: "기구 찾기", onBack: onBack)
@@ -43,17 +43,163 @@ struct BranchScreen: View {
     }
 }
 
-/// 평면도 자리. **아직 그림이 없다** — SPEC M-08 의 빈 상태를 그대로 쓴다.
+/// 평면도 — **화면의 바탕**. 확대 · 이동만 되고 돌리지는 않는다 (SPEC M-08).
 ///
-/// 바탕을 `bg.base` 로 두는 건 위에 얹힐 시트(`surface.1`)와 갈라 보이게 하려는 것이다 (§5.4).
+/// 처음엔 **폭에 맞춰** 앉힌다. 헬스장은 옆으로 긴데 폰은 세로로 길어서,
+/// 높이에 맞추면 화면 밖으로 넘치고 손으로 찾아 들어가야 한다.
 private struct BranchMap: View {
+    /// 시트에 가려지는 높이. **가려질 자리를 빼고 가운데에 놓는다** —
+    /// 화면 한가운데에 놓으면 도면 아래쪽이 시트에 먹힌다
+    var bottomInset: CGFloat = 0
+
+    @State private var scale: CGFloat = 1
+    @State private var lastScale: CGFloat = 1
+    @State private var offset: CGSize = .zero
+    @State private var lastOffset: CGSize = .zero
+
     var body: some View {
-        // TODO: 평면도 + 기구 핀 (M-08). "재지 않고 보고 그린다"로 정해 뒀다
-        Text("이 지점은 지도가 아직 없어요")
-            .font(MyFisFont.bodySm)
-            .foregroundStyle(MyFisColor.textTertiary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(MyFisColor.bgBase)
+        GeometryReader { geo in
+            Canvas { context, size in
+                draw(context: context, size: size)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle())
+            .gesture(
+                SimultaneousGesture(
+                    MagnificationGesture()
+                        .onChanged { scale = clampScale(lastScale * $0) }
+                        .onEnded { _ in lastScale = scale },
+                    DragGesture()
+                        .onChanged {
+                            offset = CGSize(width: lastOffset.width + $0.translation.width,
+                                            height: lastOffset.height + $0.translation.height)
+                        }
+                        .onEnded { _ in lastOffset = offset }
+                )
+            )
+        }
+        .background(MyFisColor.bgBase)
+        .clipped()
+    }
+
+    // 1배보다 작게는 못 줄인다. 줄이면 도면이 점이 되고 다시 찾기가 더 어렵다
+    private func clampScale(_ value: CGFloat) -> CGFloat { min(max(value, 1), 4) }
+
+    private func draw(context: GraphicsContext, size: CGSize) {
+        let plan = BranchFloorPlan.size
+        // 폭에 맞춘 뒤 손으로 키운 만큼 곱한다
+        let fit = (size.width - MyFisSpacing.xl * 2) / plan.width
+        let s = fit * scale
+        let originX = (size.width - plan.width * s) / 2 + offset.width
+        let originY = (size.height - bottomInset - plan.height * s) / 2 + offset.height
+
+        func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: originX + x * s, y: originY + y * s)
+        }
+        func rect(_ r: CGRect) -> CGRect {
+            CGRect(x: originX + r.minX * s, y: originY + r.minY * s,
+                   width: r.width * s, height: r.height * s)
+        }
+        func rounded(_ r: CGRect, _ radius: CGFloat) -> Path {
+            Path(roundedRect: rect(r), cornerRadius: radius * s, style: .continuous)
+        }
+
+        // ① 바닥 — **벽 모양 그대로** 칠한다. 네모로 칠하면 꺾인 구석 밖까지 바닥이 나온다
+        var floor = Path()
+        for (index, p) in BranchFloorPlan.outline.enumerated() {
+            let cg = point(p.x, p.y)
+            index == 0 ? floor.move(to: cg) : floor.addLine(to: cg)
+        }
+        floor.closeSubpath()
+        context.fill(floor, with: .color(MyFisColor.surface1))
+
+        // ② 구역 — 옅게 칠하고 테두리를 한 겹
+        for zone in BranchFloorPlan.zones {
+            let path = rounded(zone.rect, 5)
+            context.fill(path, with: .color(zone.tint.color.opacity(0.14)))
+            context.stroke(path, with: .color(zone.tint.color.opacity(0.45)), lineWidth: 1)
+        }
+
+        // ③ 방 — 구역과 달리 **벽으로 막힌 곳**이라 테두리를 진하게 두른다
+        for room in BranchFloorPlan.rooms {
+            let path = rounded(room.rect, 2)
+            context.fill(path, with: .color(room.tint.color.opacity(0.12)))
+            context.stroke(path, with: .color(MyFisColor.borderSubtle), lineWidth: 1)
+        }
+
+        // ④ 물건
+        for item in BranchFloorPlan.items {
+            context.fill(rounded(item.rect, item.radius), with: .color(item.tone.color))
+        }
+
+        // ⑤ 바깥 벽 — 물건 위에 그린다. 밑에 깔면 기둥에 먹힌다
+        var wall = Path()
+        for (index, p) in BranchFloorPlan.outline.enumerated() {
+            let cg = point(p.x, p.y)
+            index == 0 ? wall.move(to: cg) : wall.addLine(to: cg)
+        }
+        context.stroke(wall, with: .color(MyFisColor.borderStrong),
+                       style: StrokeStyle(lineWidth: 2.5 * s, lineCap: .round, lineJoin: .round))
+
+        // ⑥ 글자
+        for zone in BranchFloorPlan.zones {
+            label(context, zone.title, at: CGPoint(x: zone.rect.midX, y: zone.rect.minY + 9),
+                  size: 10 * s, color: zone.tint.color, point: point)
+        }
+        for room in BranchFloorPlan.rooms {
+            label(context, room.title, at: CGPoint(x: room.rect.midX, y: room.rect.midY + 9),
+                  size: 8 * s, color: MyFisColor.textSecondary, point: point)
+        }
+
+        // ⑦ 출입구 — 벽이 끊긴 자리. 이 화면의 **두 번째 라임**이다 (§3.2)
+        let e = BranchFloorPlan.entrance
+        let pin = CGRect(x: e.x - 5, y: e.y - 12, width: 10, height: 10)
+        context.fill(rounded(pin, 5), with: .color(MyFisColor.accent))
+        var tip = Path()
+        tip.move(to: point(e.x - 3.4, e.y - 4))
+        tip.addLine(to: point(e.x, e.y + 1))
+        tip.addLine(to: point(e.x + 3.4, e.y - 4))
+        context.fill(tip, with: .color(MyFisColor.accent))
+        label(context, "출입구", at: CGPoint(x: e.x, y: e.y + 12),
+              size: 8 * s, color: MyFisColor.accent, point: point)
+    }
+
+    private func label(_ context: GraphicsContext, _ text: String, at spot: CGPoint,
+                       size: CGFloat, color: Color,
+                       point: (CGFloat, CGFloat) -> CGPoint) {
+        // 지도 글자는 §4.2 스케일 밖이다 — 확대하면 같이 커지므로 크기를 고정할 수 없다
+        guard size >= 7 else { return }
+        context.draw(
+            Text(text).font(MyFisFont.map(size)).foregroundStyle(color),
+            at: point(spot.x, spot.y),
+            anchor: .center
+        )
+    }
+}
+
+private extension PlanTint {
+    var color: Color {
+        switch self {
+        case .green: MyFisColor.categoryGreen
+        case .teal: MyFisColor.categoryTeal
+        case .violet: MyFisColor.categoryViolet
+        case .blue: MyFisColor.categoryBlue
+        case .orange: MyFisColor.categoryOrange
+        case .gold: MyFisColor.categoryGold
+        case .pink: MyFisColor.categoryPink
+        case .gray: MyFisColor.categoryGray
+        }
+    }
+}
+
+private extension PlanTone {
+    var color: Color {
+        switch self {
+        case .body: MyFisColor.borderStrong
+        case .cap: MyFisColor.textSecondary
+        case .pillar: MyFisColor.surface3
+        case .plant: MyFisColor.categoryGreen
+        }
     }
 }
 

@@ -1,8 +1,10 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,11 +27,36 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.shell.DetailHeader
@@ -98,7 +125,7 @@ fun BranchScreen(onBack: () -> Unit = {}) {
                 .statusBarsPadding(),
         ) {
             // 평면도가 **바탕**이다. 헤더 · 찾기 줄이 그 위에 얹힌다
-            BranchMap()
+            BranchMap(bottomInset = 264.dp)
 
             Column {
                 DetailHeader(title = "기구 찾기", onBack = onBack)
@@ -114,20 +141,153 @@ fun BranchScreen(onBack: () -> Unit = {}) {
 }
 
 /**
- * 평면도 자리. **아직 그림이 없다** — SPEC M-08 의 빈 상태를 그대로 쓴다.
+ * 평면도 — **화면의 바탕**. 확대 · 이동만 되고 돌리지는 않는다 (SPEC M-08).
  *
- * 바탕을 `bg.base` 로 두는 건 위에 얹힐 시트(`surface.1`)와 갈라 보이게 하려는 것이다 (§5.4).
+ * 처음엔 **폭에 맞춰** 앉힌다. 헬스장은 옆으로 긴데 폰은 세로로 길어서,
+ * 높이에 맞추면 화면 밖으로 넘치고 손으로 찾아 들어가야 한다.
+ *
+ * @param bottomInset 시트에 가려지는 높이. **가려질 자리를 빼고 가운데에 놓는다** —
+ * 화면 한가운데에 놓으면 도면 아래쪽이 시트에 먹힌다.
  */
 @Composable
-private fun BranchMap() {
-    // TODO: 평면도 + 기구 핀 (M-08). "재지 않고 보고 그린다"로 정해 뒀다
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(
-            "이 지점은 지도가 아직 없어요",
-            style = MyFisTheme.type.bodySm,
-            color = MyFisColor.TextTertiary,
+private fun BranchMap(bottomInset: Dp) {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
+
+    val zoneTint = MyFisColor.run {
+        mapOf(
+            PlanTint.GREEN to CategoryGreen, PlanTint.TEAL to CategoryTeal,
+            PlanTint.VIOLET to CategoryViolet, PlanTint.BLUE to CategoryBlue,
+            PlanTint.ORANGE to CategoryOrange, PlanTint.GOLD to CategoryGold,
+            PlanTint.PINK to CategoryPink, PlanTint.GRAY to CategoryGray,
         )
     }
+    val toneColor = mapOf(
+        PlanTone.BODY to MyFisColor.BorderStrong,
+        PlanTone.CAP to MyFisColor.TextSecondary,
+        PlanTone.PILLAR to MyFisColor.Surface3,
+        PlanTone.PLANT to MyFisColor.CategoryGreen,
+    )
+    val gapPx = with(density) { MyFisSpacing.xl.toPx() }
+    val insetPx = with(density) { bottomInset.toPx() }
+
+    Canvas(
+        Modifier
+            .fillMaxSize()
+            .clipToBounds()
+            .pointerInput(Unit) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    // 1배보다 작게는 못 줄인다. 줄이면 도면이 점이 되고 다시 찾기가 더 어렵다
+                    scale = (scale * zoom).coerceIn(1f, 4f)
+                    offset += pan
+                }
+            },
+    ) {
+        val s = (size.width - gapPx * 2) / BranchFloorPlan.WIDTH * scale
+        val originX = (size.width - BranchFloorPlan.WIDTH * s) / 2 + offset.x
+        val originY = (size.height - insetPx - BranchFloorPlan.HEIGHT * s) / 2 + offset.y
+
+        fun px(x: Float, y: Float) = Offset(originX + x * s, originY + y * s)
+        fun box(x: Float, y: Float, w: Float, h: Float) =
+            px(x, y) to Size(w * s, h * s)
+
+        // ① 바닥 — **벽 모양 그대로** 칠한다. 네모로 칠하면 꺾인 구석 밖까지 바닥이 나온다
+        val shell = Path().apply {
+            BranchFloorPlan.outline.forEachIndexed { index, (x, y) ->
+                val p = px(x, y)
+                if (index == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
+            }
+        }
+        drawPath(Path().apply { addPath(shell); close() }, MyFisColor.Surface1)
+
+        // ② 구역 — 옅게 칠하고 테두리를 한 겹
+        BranchFloorPlan.zones.forEach { zone ->
+            val tint = zoneTint.getValue(zone.tint)
+            val (at, size) = box(zone.x, zone.y, zone.w, zone.h)
+            val radius = CornerRadius(5 * s, 5 * s)
+            drawRoundRect(tint.copy(alpha = 0.14f), at, size, radius)
+            drawRoundRect(tint.copy(alpha = 0.45f), at, size, radius, Stroke(1f))
+        }
+
+        // ③ 방 — 구역과 달리 **벽으로 막힌 곳**이라 테두리를 진하게 두른다
+        BranchFloorPlan.rooms.forEach { room ->
+            val tint = zoneTint.getValue(room.tint)
+            val (at, size) = box(room.x, room.y, room.w, room.h)
+            val radius = CornerRadius(2 * s, 2 * s)
+            drawRoundRect(tint.copy(alpha = 0.12f), at, size, radius)
+            drawRoundRect(MyFisColor.BorderSubtle, at, size, radius, Stroke(1f))
+        }
+
+        // ④ 물건
+        BranchFloorPlan.items.forEach { item ->
+            val (at, size) = box(item.x, item.y, item.w, item.h)
+            drawRoundRect(
+                toneColor.getValue(item.tone), at, size,
+                CornerRadius(item.radius * s, item.radius * s),
+            )
+        }
+
+        // ⑤ 바깥 벽 — 물건 위에 그린다. 밑에 깔면 기둥에 먹힌다
+        drawPath(
+            shell, MyFisColor.BorderStrong,
+            style = Stroke(2.5f * s, cap = StrokeCap.Round, join = StrokeJoin.Round),
+        )
+
+        // ⑥ 글자
+        BranchFloorPlan.zones.forEach { zone ->
+            planLabel(measurer, density, zone.title, px(zone.x + zone.w / 2, zone.y + 4),
+                10 * s, zoneTint.getValue(zone.tint))
+        }
+        BranchFloorPlan.rooms.forEach { room ->
+            planLabel(measurer, density, room.title,
+                px(room.x + room.w / 2, room.y + room.h / 2 - 9), 8 * s,
+                MyFisColor.TextSecondary)
+        }
+
+        // ⑦ 출입구 — 벽이 끊긴 자리. 이 화면의 **두 번째 라임**이다 (§3.2)
+        val ex = BranchFloorPlan.ENTRANCE_X
+        val ey = BranchFloorPlan.ENTRANCE_Y
+        val (pinAt, pinSize) = box(ex - 5, ey - 12, 10f, 10f)
+        drawRoundRect(MyFisColor.Accent, pinAt, pinSize, CornerRadius(5 * s, 5 * s))
+        drawPath(
+            Path().apply {
+                val a = px(ex - 3.4f, ey - 4)
+                val b = px(ex, ey + 1)
+                val c = px(ex + 3.4f, ey - 4)
+                moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); close()
+            },
+            MyFisColor.Accent,
+        )
+        planLabel(measurer, density, "출입구", px(ex, ey + 6), 8 * s, MyFisColor.Accent)
+    }
+}
+
+/**
+ * 지도 글자. **가로 가운데**에 맞춰 그린다.
+ *
+ * ⚠️ 지도 글자는 §4.2 스케일 밖이다 — 확대하면 같이 커지므로 크기를 고정할 수 없다.
+ * 너무 작아지면 얼룩이 되므로 아예 안 그린다.
+ */
+private fun DrawScope.planLabel(
+    measurer: TextMeasurer,
+    density: Density,
+    text: String,
+    at: Offset,
+    sizePx: Float,
+    color: Color,
+) {
+    if (sizePx < 7f) return
+    val style = TextStyle(
+        color = color,
+        fontSize = with(density) { sizePx.toSp() },
+        fontWeight = FontWeight.SemiBold,
+        textAlign = TextAlign.Center,
+        lineHeight = with(density) { (sizePx * 1.25f).toSp() },
+    )
+    val laid = measurer.measure(AnnotatedString(text), style)
+    drawText(laid, topLeft = Offset(at.x - laid.size.width / 2f, at.y))
 }
 
 /**

@@ -43,6 +43,10 @@ enum MyFisFont {
     static let wordmark = Font.custom(Face.wordmark, size: 22)
     static let wordmarkTracking: CGFloat = -0.22
 
+    /// 지도 안 글자 (§6.26 평면도) — **§4.2 스케일 밖이다.**
+    /// 확대하면 같이 커져야 하므로 크기를 미리 고정할 수 없다
+    static func map(_ size: CGFloat) -> Font { .custom(Face.semibold, size: size) }
+
     /// 번들 폰트를 프로세스에 등록한다. 앱 시작 시 한 번 호출한다.
     ///
     /// `INFOPLIST_KEY_UIAppFonts` 는 Xcode 가 지원하지 않는 키라 생성된 Info.plist 에 안 들어간다.
