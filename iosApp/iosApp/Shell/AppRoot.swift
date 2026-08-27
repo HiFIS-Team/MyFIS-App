@@ -136,6 +136,8 @@ struct AppRoot: View {
                 StoreCartScreen(onBack: back, onStore: backToShell)
             case .storeMy:
                 StoreMyScreen(onBack: back, onCart: { open(.storeCart) })
+            case .branch:
+                BranchScreen(onBack: back)
             }
         }
     }

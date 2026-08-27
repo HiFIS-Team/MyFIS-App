@@ -69,6 +69,8 @@ import java.time.LocalTime
  */
 @Composable
 fun HomeScreen(
+    /** M-01 지점 선택 — 헤더 핀 */
+    onBranch: () -> Unit = {},
     onNotification: () -> Unit = {},
     onDiet: () -> Unit = {},
     onCardio: () -> Unit = {},
@@ -87,7 +89,7 @@ fun HomeScreen(
 
     Column(Modifier.fillMaxSize()) {
         // 헤더는 고정, 그 아래만 스크롤한다 (스토어와 같은 구조)
-        AppHeader(onNotification = onNotification)
+        AppHeader(onBranch = onBranch, onNotification = onNotification)
         Column(
             Modifier
                 .weight(1f)

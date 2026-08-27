@@ -17,7 +17,9 @@ enum Route: Hashable {
     case weightLog
     /// S-02 상품 상세
     case storeItem(StoreItem)
-    // TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 추가한다.
+    /// M-01 지점 선택 — 홈 헤더의 핀으로 들어온다
+    case branch
+    // TODO: 회원권(M-06) 이 붙으면 추가한다.
 
     /// 잎 화면의 제목. 헤더가 이 값을 쓴다 — 화면마다 따로 적지 않는다
     var title: String {
@@ -28,6 +30,7 @@ enum Route: Hashable {
         case .activity(let action): action.title
         case .weightLog: "체중 기록"
         case .storeItem(let item): item.name
+        case .branch: "지점"
         }
     }
 }

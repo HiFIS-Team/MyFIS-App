@@ -89,6 +89,7 @@ struct TabShell: View {
                 switch Self.baseTabs[slot] {
                 case .home:
                     HomeScreen(
+                        onBranch: { open(.branch) },
                         onNotification: { open(.notifications) },
                         // TODO: H-03 AI 식단이 붙으면 onDiet 을 연결한다
                         // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다

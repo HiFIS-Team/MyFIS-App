@@ -8,6 +8,7 @@ import UIKit
 ///
 /// ```
 /// SIMCTL_CHILD_MYFIS_ROUTE=notifications      잎 화면을 띄운 채로 시작
+///   (notifications · store_my · store_cart · weight_log · activity · store_item · branch)
 /// SIMCTL_CHILD_MYFIS_TAB=benefit              그 탭에서 시작 (home · benefit · store · my)
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
@@ -29,6 +30,7 @@ enum MyFisDebug {
         case "weight_log": .weightLog
         case "activity": .activity(activityAction)
         case "store_item": .storeItem(StorePlaceholder.items[0])
+        case "branch": .branch
         default: nil
         }
     }

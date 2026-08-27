@@ -26,6 +26,9 @@ object Route {
 
     /** S-02 상품 상세 */
     const val STORE_ITEM = "store_item"
+
+    /** M-01 지점 선택 — 홈 헤더의 핀으로 들어온다 */
+    const val BRANCH = "branch"
 }
 
 /**

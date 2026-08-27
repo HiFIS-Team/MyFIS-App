@@ -23,6 +23,7 @@ import com.myfis.app.ui.screens.ActivityIntroScreen
 import com.myfis.app.ui.screens.BenefitAction
 import com.myfis.app.ui.screens.BenefitKind
 import com.myfis.app.ui.screens.BenefitScreen
+import com.myfis.app.ui.screens.BranchScreen
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.screens.StoreCartScreen
@@ -63,6 +64,7 @@ fun AppShell() {
     ) {
         composable(Route.SHELL) {
             TabShell(
+                onBranch = { nav.navigateOnce(Route.BRANCH) },
                 onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) },
                 onStoreMy = { nav.navigateOnce(Route.STORE_MY) },
                 onStoreCart = { nav.navigateOnce(Route.STORE_CART) },
@@ -87,6 +89,9 @@ fun AppShell() {
         }
         composable(Route.WEIGHT_LOG) {
             WeightLogScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Route.BRANCH) {
+            BranchScreen(onBack = { nav.popBackStack() })
         }
         composable(Route.NOTIFICATIONS) {
             NotificationScreen(onBack = { nav.popBackStack() })
@@ -124,6 +129,7 @@ fun AppShell() {
 /** 탭 셸 — 순검정 위에 헤더와 하단 탭 바. */
 @Composable
 private fun TabShell(
+    onBranch: () -> Unit,
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
@@ -144,6 +150,7 @@ private fun TabShell(
             when (tabSet) {
                 TabSet.BASE -> BaseTabContent(
                     tab = baseTab,
+                    onBranch = onBranch,
                     onNotification = onNotification,
                     onStoreMy = onStoreMy,
                     onStoreCart = onStoreCart,
@@ -188,6 +195,7 @@ private fun TabShell(
 @Composable
 private fun BaseTabContent(
     tab: BaseTab,
+    onBranch: () -> Unit,
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
@@ -202,6 +210,7 @@ private fun BaseTabContent(
 ) {
     when (tab) {
         BaseTab.HOME -> HomeScreen(
+            onBranch = onBranch,
             onNotification = onNotification,
             onCardio = onCardio,
             onWeight = onWeight,

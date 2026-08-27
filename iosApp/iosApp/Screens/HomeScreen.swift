@@ -8,7 +8,9 @@ import SwiftUI
 /// **헤더는 이 화면이 직접 그린다** (DESIGN.md §6.9 · §7.1) — 지점·워드마크·멤버십·알림.
 /// 시스템 내비 바에 얹지 않는다 — 그러면 화면이 바뀔 때마다 시스템이 아이템을 제멋대로 옮긴다.
 struct HomeScreen: View {
-    /// TODO: 지점 선택(M-01) · 회원권(M-06) 이 붙으면 연결한다
+    /// M-01 지점 선택 — 헤더 핀
+    var onBranch: () -> Void = {}
+    /// TODO: 회원권(M-06) 이 붙으면 연결한다
     var onNotification: () -> Void = {}
     var onDiet: () -> Void = {}
     var onCardio: () -> Void = {}
@@ -71,7 +73,7 @@ struct HomeScreen: View {
     /// 홈 헤더 (§6.9) — 지점 · 워드마크 · 멤버십 · 알림
     private var header: some View {
         HeaderBar {
-            HeaderIcon("ic_header_branch", "지점") {}
+            HeaderIcon("ic_header_branch", "지점", action: onBranch)
         } center: {
             Wordmark()
         } trailing: {
