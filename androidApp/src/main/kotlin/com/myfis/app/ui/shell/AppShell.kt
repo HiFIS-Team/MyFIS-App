@@ -26,6 +26,7 @@ import com.myfis.app.ui.screens.BenefitAction
 import com.myfis.app.ui.screens.BenefitKind
 import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.BranchScreen
+import com.myfis.app.ui.screens.DiceScreen
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.screens.StoreCartScreen
@@ -93,9 +94,16 @@ fun AppShell() {
             // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
             benefitAction?.let {
                 // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만든 것부터 갈아 끼운다
-                if (it.kind == BenefitKind.TOUCH) {
-                    TouchScreen(onClose = { nav.popBackStack() })
-                    return@composable
+                when (it.kind) {
+                    BenefitKind.TOUCH -> {
+                        TouchScreen(onClose = { nav.popBackStack() })
+                        return@composable
+                    }
+                    BenefitKind.DICE -> {
+                        DiceScreen(onClose = { nav.popBackStack() })
+                        return@composable
+                    }
+                    else -> Unit
                 }
                 Column(
                     Modifier

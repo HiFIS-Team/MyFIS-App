@@ -136,6 +136,8 @@ struct AppRoot: View {
                 switch action.kind {
                 case .touch:
                     TouchScreen(onClose: back)
+                case .dice:
+                    DiceScreen(onClose: back)
                 default:
                     VStack(spacing: 0) {
                         DetailHeader(title: action.title, onBack: back,
