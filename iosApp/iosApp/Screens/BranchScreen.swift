@@ -446,7 +446,8 @@ private struct PlaceQuickPick: View {
     }
 }
 
-/// 아이콘 판 + 라벨. 판의 짜임은 **혜택 행과 같다** (§6.23) — 같은 물건은 같게 그린다.
+/// 아이콘 판 + 라벨. 판은 공용 `MyFisIconTile` 이다 (§6.23 · §6.26) —
+/// 혜택 행과 **같은 물건이라 같은 벌을 쓴다.** 전에는 여기서 따로 그렸다 (2026-08-27 이관)
 ///
 /// 아이콘은 **여덟이 전부 원색**이라 tint 를 걸지 않는다.
 /// 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
@@ -458,19 +459,12 @@ private struct PlaceCell: View {
         // TODO: 누르면 그 갈래를 지도에서 집는다 (M-08)
         Button {} label: {
             VStack(spacing: MyFisSpacing.sm) {
-                Image(icon)
-                    .resizable()
-                    .renderingMode(.original)
-                    .frame(width: 28, height: 28)
-                    .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
-                    .background(
-                        MyFisColor.surface2,
-                        in: RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
-                            .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1)
-                    )
+                MyFisIconTile {
+                    Image(icon)
+                        .resizable()
+                        .renderingMode(.original)
+                        .frame(width: 28, height: 28)
+                }
 
                 Text(title)
                     .font(MyFisFont.label)
@@ -503,39 +497,36 @@ private struct FavoriteMachines: View {
     ]
 
     var body: some View {
-        VStack(spacing: MyFisSpacing.lg) {
-            HStack(spacing: MyFisSpacing.sm) {
-                Text("자주 쓰는 기구")
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
+        MyFisCard {
+            VStack(spacing: MyFisSpacing.lg) {
+                HStack(spacing: MyFisSpacing.sm) {
+                    Text("자주 쓰는 기구")
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(MyFisColor.textPrimary)
 
-                Spacer(minLength: 0)
+                    Spacer(minLength: 0)
 
-                // TODO: 꽂기/빼기 편집으로 (M-08)
-                Button {} label: {
-                    Text("편집")
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textSecondary)
-                        .contentShape(Rectangle())
+                    // TODO: 꽂기/빼기 편집으로 (M-08)
+                    Button {} label: {
+                        Text("편집")
+                            .font(MyFisFont.bodySm)
+                            .foregroundStyle(MyFisColor.textSecondary)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.myFisTap)
                 }
-                .buttonStyle(.myFisTap)
-            }
 
-            HStack(spacing: MyFisSpacing.md) {
-                ForEach(0..<4, id: \.self) { index in
-                    if index < pinned.count {
-                        PlaceCell(icon: pinned[index].icon, title: pinned[index].title)
-                    } else {
-                        EmptyPinSlot()
+                HStack(spacing: MyFisSpacing.md) {
+                    ForEach(0..<4, id: \.self) { index in
+                        if index < pinned.count {
+                            PlaceCell(icon: pinned[index].icon, title: pinned[index].title)
+                        } else {
+                            EmptyPinSlot()
+                        }
                     }
                 }
             }
         }
-        .padding(MyFisSpacing.cardPadding)
-        .background(
-            MyFisColor.surface1,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
     }
 }
 
@@ -546,21 +537,14 @@ private struct EmptyPinSlot: View {
         // TODO: 누르면 기구 고르기로 (M-08)
         Button {} label: {
             VStack(spacing: MyFisSpacing.sm) {
-                Image("ic_place_pin")
-                    .resizable()
-                    .renderingMode(.template)
-                    .frame(width: 24, height: 24)
-                    // 찬 칸(28 원색)보다 작고 흐리다. 같은 무게로 두면 빈 칸이 먼저 읽힌다
-                    .foregroundStyle(MyFisColor.textTertiary)
-                    .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
-                    .background(
-                        MyFisColor.surface2,
-                        in: RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: MyFisRadius.tile, style: .continuous)
-                            .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1)
-                    )
+                MyFisIconTile {
+                    Image("ic_place_pin")
+                        .resizable()
+                        .renderingMode(.template)
+                        .frame(width: 24, height: 24)
+                        // 찬 칸(28 원색)보다 작고 흐리다. 같은 무게로 두면 빈 칸이 먼저 읽힌다
+                        .foregroundStyle(MyFisColor.textTertiary)
+                }
 
                 Text("추가")
                     .font(MyFisFont.label)

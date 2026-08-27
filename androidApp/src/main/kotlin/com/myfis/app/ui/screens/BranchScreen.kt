@@ -63,7 +63,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.shell.DetailHeader
+import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisIconTile
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
@@ -450,7 +452,8 @@ private fun PlaceQuickPick(modifier: Modifier = Modifier) {
 }
 
 /**
- * 아이콘 판 + 라벨. 판의 짜임은 **혜택 행과 같다** (§6.23) — 같은 물건은 같게 그린다.
+ * 아이콘 판 + 라벨. 판은 공용 `MyFisIconTile` 이다 (§6.23 · §6.26) —
+ * 혜택 행과 **같은 물건이라 같은 벌을 쓴다.** 전에는 여기서 따로 그렸다 (2026-08-27 이관)
  *
  * 아이콘은 **여덟이 전부 원색**이라 tint 를 걸지 않는다 (§8).
  * 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
@@ -465,13 +468,7 @@ private fun PlaceCell(icon: Int, title: String, modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
     ) {
-        Box(
-            Modifier
-                .size(MyFisSize.listRowMin)
-                .background(MyFisColor.Surface2, MyFisRadius.tile)
-                .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
-            contentAlignment = Alignment.Center,
-        ) {
+        MyFisIconTile {
             // ⚠️ 원색 벌은 **`Image`** 로 그린다 — `Icon` 은 tint 로 한 색을 덮어씌운다
             Image(
                 painter = painterResource(icon),
@@ -510,40 +507,39 @@ private fun FavoriteMachines(modifier: Modifier = Modifier) {
     )
     val interaction = remember { MutableInteractionSource() }
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .background(MyFisColor.Surface1, MyFisRadius.md)
-            .padding(MyFisSpacing.cardPadding),
-        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
-    ) {
-        Row(
-            Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+    MyFisCard(modifier = modifier) {
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
         ) {
-            Text(
-                "자주 쓰는 기구",
-                style = MyFisTheme.type.titleSm,
-                color = MyFisColor.TextPrimary,
-                modifier = Modifier.weight(1f),
-            )
-            // TODO: 꽂기/빼기 편집으로 (M-08)
-            Text(
-                "편집",
-                style = MyFisTheme.type.bodySm,
-                color = MyFisColor.TextSecondary,
-                modifier = Modifier.tapWithHaptics(interaction) {},
-            )
-        }
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+            ) {
+                Text(
+                    "자주 쓰는 기구",
+                    style = MyFisTheme.type.titleSm,
+                    color = MyFisColor.TextPrimary,
+                    modifier = Modifier.weight(1f),
+                )
+                // TODO: 꽂기/빼기 편집으로 (M-08)
+                Text(
+                    "편집",
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextSecondary,
+                    modifier = Modifier.tapWithHaptics(interaction) {},
+                )
+            }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap)) {
-            repeat(4) { index ->
-                if (index < pinned.size) {
-                    val (icon, title) = pinned[index]
-                    PlaceCell(icon, title, Modifier.weight(1f))
-                } else {
-                    EmptyPinSlot(Modifier.weight(1f))
+            Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap)) {
+                repeat(4) { index ->
+                    if (index < pinned.size) {
+                        val (icon, title) = pinned[index]
+                        PlaceCell(icon, title, Modifier.weight(1f))
+                    } else {
+                        EmptyPinSlot(Modifier.weight(1f))
+                    }
                 }
             }
         }
@@ -564,13 +560,7 @@ private fun EmptyPinSlot(modifier: Modifier = Modifier) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
     ) {
-        Box(
-            Modifier
-                .size(MyFisSize.listRowMin)
-                .background(MyFisColor.Surface2, MyFisRadius.tile)
-                .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
-            contentAlignment = Alignment.Center,
-        ) {
+        MyFisIconTile {
             Icon(
                 painter = painterResource(R.drawable.ic_place_pin),
                 contentDescription = null, // 밑의 라벨이 이름 역할을 한다
