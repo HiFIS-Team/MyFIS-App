@@ -54,43 +54,43 @@ private struct BranchSearchBar: View {
 
 /// 빠른 고르기 여덟 칸 (DESIGN §6.26).
 ///
-/// 앞 넷은 **기구**, 뒤 넷은 **편의시설** 이다. 순서로만 가른다 —
-/// 줄마다 제목을 달면 여덟 칸짜리 판이 두 개의 섹션으로 커진다.
+/// **구역**이지 기구 낱개가 아니다 🟢 (2026-08-27). 기구 하나하나는 위 **찾기 줄**이 맡고,
+/// 이 판은 지도의 **구역과 1:1** 로 맞춘다 — 스쿼트랙 · 벤치 · 덤벨은 셋 다 프리웨이트존 안이라
+/// 나란히 놓을 것이 아니었다. 앞 넷은 운동 구역, 뒤 넷은 편의시설이다.
 enum BranchPlace: String, CaseIterable, Identifiable {
-    case rack, bench, dumbbell, treadmill
-    case toilet, shower, fitting, pt
+    case free, machine, cardio, stretch
+    case toilet, shower, fitting, desk
 
     var id: String { rawValue }
     var icon: String { "ic_place_\(rawValue)" }
 
-    /// **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
-    ///
-    /// 화장실의 파랑·분홍은 남녀 표시 그 자체이고, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다.
-    ///
-    /// 스쿼트랙 · 러닝머신은 사용자가 준 원본이 원색이라 여기 들어온다 —
-    /// 하단 탭 `유산소`(`ic_benefit_cardio_color`)와 **같은 그림**이다
-    var colorIcon: Bool {
-        switch self {
-        case .rack, .treadmill, .toilet, .fitting: true
-        case .bench, .dumbbell, .shower, .pt: false
-        }
-    }
-
     var title: String {
         switch self {
-        case .rack: "스쿼트랙"
-        case .bench: "벤치"
-        case .dumbbell: "덤벨"
-        case .treadmill: "러닝머신"
+        case .free: "프리웨이트"
+        case .machine: "머신"
+        case .cardio: "유산소"
+        case .stretch: "스트레칭"
         case .toilet: "화장실"
         case .shower: "샤워실"
         case .fitting: "탈의실"
-        case .pt: "PT존"
+        case .desk: "데스크"
+        }
+    }
+
+    /// **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
+    ///
+    /// 색이 붙는 기준은 둘 중 하나다 — **① 색이 곧 뜻인 표지판**(화장실의 파랑·분홍은
+    /// 남녀 표시 그 자체, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다),
+    /// **② 사용자가 준 원본이 원색인 것**(프리웨이트 · 유산소 · 스트레칭 — 혜택 행과 같은 그림).
+    var colorIcon: Bool {
+        switch self {
+        case .free, .cardio, .stretch, .toilet, .fitting: true
+        case .machine, .shower, .desk: false
         }
     }
 }
 
-/// **네 칸 × 두 줄.** 한 줄에 다섯을 넣으면 라벨(`스쿼트랙`)이 줄어들고,
+/// **네 칸 × 두 줄.** 한 줄에 다섯을 넣으면 라벨(`프리웨이트`)이 줄어들고,
 /// 셋으로 줄이면 판이 커져 밑에 올 지도를 밀어낸다.
 private struct PlaceQuickPick: View {
     var body: some View {
@@ -139,7 +139,7 @@ private struct PlaceCell: View {
                     .font(MyFisFont.label)
                     .foregroundStyle(MyFisColor.textSecondary)
                     .lineLimit(1)
-                    // `스쿼트랙` 이 좁은 기기에서 잘리는 것보다 조금 줄어드는 편이 낫다
+                    // `프리웨이트` 가 좁은 기기에서 잘리는 것보다 조금 줄어드는 편이 낫다
                     .minimumScaleFactor(0.85)
             }
             .frame(maxWidth: .infinity)
