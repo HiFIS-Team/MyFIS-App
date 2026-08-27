@@ -238,8 +238,17 @@ private fun BaseTabContent(
             onStore = onStore,
         )
         BaseTab.BENEFIT -> BenefitScreen(
-            // 체중은 매일 하는 기록이라 랜딩을 거치지 않는다 (§6.25)
-            onAction = { if (it.kind == BenefitKind.WEIGHT) onWeightLog() else onActivity(it) },
+            onAction = {
+                when (it.kind) {
+                    // 루틴·유산소는 활동 화면이 따로 없다 — **하단 바에 자기 탭이 있다.**
+                    // 덮개를 띄우는 대신 그 탭으로 보낸다 (홈 바로가기와 같은 길)
+                    BenefitKind.ROUTINE -> onWeight()
+                    BenefitKind.CARDIO -> onCardio()
+                    // 체중은 매일 하는 기록이라 활동을 거치지 않고 바로 기록으로 간다
+                    BenefitKind.WEIGHT -> onWeightLog()
+                    else -> onActivity(it)
+                }
+            },
         )
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
         BaseTab.STORE -> StoreScreen(
