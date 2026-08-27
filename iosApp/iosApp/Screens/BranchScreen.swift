@@ -2,32 +2,125 @@ import SwiftUI
 
 /// 홈 헤더의 **핀으로 들어오는 잎 화면** (SPEC M-08 지점 내부 지도).
 ///
-/// 지금은 **찾기 줄 + 빠른 고르기 + 자주 쓰는 기구**까지다. 밑에 들어갈 평면도는 아직 미정이다.
+/// 짜임은 **지도 앱 방식**이다 🟢 (2026-08-27) — 평면도가 화면을 채우고,
+/// 찾기 줄은 그 위에 뜨고, 고르는 것들은 **바닥 시트** 안으로 들어간다.
 ///
-/// 줄의 짜임은 **카카오 T 홈**에서 가져왔다 (사용자 지정) —
-/// 큰 알약 하나에 **물음 한 줄**. 색은 우리 것을 쓴다.
+/// ⚠️ 처음엔 위에서부터 찾기 줄 → 빠른 고르기 → 자주 쓰는 기구 → 지도로 쌓았는데,
+/// 그러면 지도에 **280pt** 밖에 안 남았다. 이 화면의 북극성은 "쉬는 시간 20초 안에"인데
+/// 지도를 보려고 스크롤해야 하면 그 자체로 실패다 (SPEC M-08).
 struct BranchScreen: View {
     var onBack: () -> Void = {}
 
+    /// 시트가 펼쳐졌는지. **두 자리뿐이다** — 접힘(첫 줄만) / 펼침(전부).
+    /// 자리를 셋 이상 두면 어디에 멈출지 손이 못 맞춘다
+    @State private var expanded = MyFisDebug.sheetExpanded
+
     var body: some View {
-        VStack(spacing: 0) {
-            DetailHeader(title: "기구 찾기", onBack: onBack)
+        GeometryReader { geo in
+            // 접힘은 **빠른 고르기 두 줄이 다 보이는 높이**다 (778 기준 186 + 바닥 여백).
+            // 한 줄만 보이게 하면 나머지 넷이 있는 줄 모르고, 더 올리면 지도가 반으로 줄어든다
+            let peek = geo.size.height * 0.24
+            let full = geo.size.height * 0.56
 
-            BranchSearchBar()
-                .padding(.horizontal, MyFisSpacing.screenHorizontal)
-                .padding(.top, MyFisSpacing.sm)
+            ZStack {
+                // 평면도가 **바탕**이다. 헤더 · 찾기 줄 · 시트가 전부 이 위에 얹힌다
+                BranchMap()
 
-            PlaceQuickPick()
-                .padding(.horizontal, MyFisSpacing.screenHorizontal)
-                .padding(.top, MyFisSpacing.xl)
+                VStack(spacing: 0) {
+                    DetailHeader(title: "기구 찾기", onBack: onBack)
 
-            FavoriteMachines()
-                .padding(.horizontal, MyFisSpacing.screenHorizontal)
-                .padding(.top, MyFisSpacing.xxl)
+                    BranchSearchBar()
+                        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                        .padding(.top, MyFisSpacing.sm)
+                }
+                .frame(maxHeight: .infinity, alignment: .top)
 
-            Spacer(minLength: 0)
+                BranchSheet(expanded: $expanded, peek: peek, full: full)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// 평면도 자리. **아직 그림이 없다** — SPEC M-08 의 빈 상태를 그대로 쓴다.
+///
+/// 바탕을 `bg.base` 로 두는 건 위에 얹힐 시트(`surface.1`)와 갈라 보이게 하려는 것이다 (§5.4).
+private struct BranchMap: View {
+    var body: some View {
+        // TODO: 평면도 + 기구 핀 (M-08). "재지 않고 보고 그린다"로 정해 뒀다
+        Text("이 지점은 지도가 아직 없어요")
+            .font(MyFisFont.bodySm)
+            .foregroundStyle(MyFisColor.textTertiary)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(MyFisColor.bgBase)
+    }
+}
+
+/// 바닥 시트 — **빠른 고르기 + 자주 쓰는 기구**가 여기 들어간다.
+///
+/// ⚠️ SwiftUI 의 `.sheet` 는 **모달 표시**라 이 자리에 못 쓴다. 잎 화면 자체가 이미
+/// 밀려 들어오는 중인데 그 위에 모달을 또 띄우면 전환이 둘로 겹치고,
+/// 뒤로 가기로 잎을 닫을 때 시트가 따로 논다. 그래서 **화면 안에 그린다**.
+/// (안드로이드는 `BottomSheetScaffold` 가 이 자리를 정확히 맡아 준다 — 거긴 그걸 쓴다)
+private struct BranchSheet: View {
+    @Binding var expanded: Bool
+    let peek: CGFloat
+    let full: CGFloat
+
+    @State private var drag: CGFloat = 0
+
+    private var offset: CGFloat {
+        let base = expanded ? 0 : full - peek
+        // 끝에서 더 끌면 **덜 따라온다.** 안 그러면 시트가 화면 밖으로 빠진다
+        return min(max(base + drag, -24), full - peek + 24)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Capsule()
+                .fill(MyFisColor.borderStrong)
+                .frame(width: 36, height: 4)
+                .padding(.top, MyFisSpacing.md)
+                .padding(.bottom, MyFisSpacing.lg)
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: MyFisSpacing.xxl) {
+                    PlaceQuickPick()
+                    FavoriteMachines()
+                }
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                .padding(.bottom, MyFisSpacing.xxxl)
+            }
+            // 접혀 있을 땐 시트를 못 굴린다. 굴리면 첫 줄이 위로 사라져 빈 판만 남는다
+            .disabled(!expanded)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: full, alignment: .top)
+        .background(
+            MyFisColor.surface1,
+            in: UnevenRoundedRectangle(
+                topLeadingRadius: MyFisRadius.lg,
+                topTrailingRadius: MyFisRadius.lg,
+                style: .continuous
+            )
+        )
+        .offset(y: offset)
+        .gesture(
+            DragGesture()
+                .onChanged { drag = $0.translation.height }
+                .onEnded { value in
+                    // 40 을 넘겨야 자리를 바꾼다. 손 떨림으로 넘어가면 안 된다
+                    let moved = value.translation.height
+                    withAnimation(MyFisMotion.slow) {
+                        if moved < -40 { expanded = true }
+                        if moved > 40 { expanded = false }
+                        drag = 0
+                    }
+                }
+        )
+        .animation(MyFisMotion.slow, value: expanded)
+        .ignoresSafeArea(edges: .bottom)
     }
 }
 

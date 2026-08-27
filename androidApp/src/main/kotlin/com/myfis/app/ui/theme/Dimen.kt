@@ -36,6 +36,9 @@ object MyFisRadius {
 
     /** 아이콘 판 (§6.23 혜택 행) — `56` 판에 맞춘 값이다. 다른 크기에 그대로 쓰지 않는다 */
     val tile = RoundedCornerShape(18.dp)
+
+    /** 바닥 시트 — **위 모서리만** 둥글다. 네 모서리를 다 굴리면 바닥에서 뜬 카드가 된다 */
+    val sheet = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     val full = RoundedCornerShape(percent = 50)
 }
 

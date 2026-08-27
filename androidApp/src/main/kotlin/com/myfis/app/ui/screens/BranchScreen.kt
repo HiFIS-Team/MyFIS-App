@@ -11,11 +11,19 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberStandardBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,40 +43,89 @@ import com.myfis.app.ui.theme.tapWithHaptics
 /**
  * 홈 헤더의 **핀으로 들어오는 잎 화면** (SPEC M-08 지점 내부 지도).
  *
- * 지금은 **찾기 줄 + 빠른 고르기 + 자주 쓰는 기구**까지다. 밑에 들어갈 평면도는 아직 미정이다.
+ * 짜임은 **지도 앱 방식**이다 🟢 (2026-08-27) — 평면도가 화면을 채우고,
+ * 찾기 줄은 그 위에 뜨고, 고르는 것들은 **바닥 시트** 안으로 들어간다.
  *
- * 줄의 짜임은 **카카오 T 홈**에서 가져왔다 (사용자 지정) —
- * 큰 알약 하나에 **물음 한 줄**. 색은 우리 것을 쓴다.
+ * ⚠️ 처음엔 위에서부터 찾기 줄 → 빠른 고르기 → 자주 쓰는 기구 → 지도로 쌓았는데,
+ * 그러면 지도에 **280dp** 밖에 안 남았다. 이 화면의 북극성은 "쉬는 시간 20초 안에"인데
+ * 지도를 보려고 스크롤해야 하면 그 자체로 실패다 (SPEC M-08).
+ *
+ * 시트는 **`BottomSheetScaffold`** 다 — 끌기 · 멈춤 · 그림자를 플랫폼이 준다 (§2 원칙 6).
  *
  * ⚠️ 잎 화면은 셸 밖이라 **바탕색과 상태바 여백을 스스로 넣는다.**
  * 바탕이 없으면 밀려 들어오는 동안 뒤 화면이 비쳐 겹쳐 보이고, 여백이 없으면 헤더가 시계에 겹친다.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BranchScreen(onBack: () -> Unit = {}) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(MyFisColor.BgBase)
-            .statusBarsPadding(),
+    val state = rememberBottomSheetScaffoldState(
+        bottomSheetState = rememberStandardBottomSheetState(
+            initialValue = SheetValue.PartiallyExpanded,
+            // 접힌 자리로 못 내려가게 막는다 — 내려가면 지도만 남고 고를 데가 사라진다
+            skipHiddenState = true,
+        ),
+    )
+
+    BottomSheetScaffold(
+        scaffoldState = state,
+        // 접혔을 때 **빠른 고르기 두 줄이 다 보인다.** 한 줄만 보이게 하면 나머지 넷이
+        // 있는 줄 모르고, 더 올리면 지도가 반으로 줄어든다 (손잡이 + 두 줄 + 바닥 여백)
+        sheetPeekHeight = 264.dp,
+        sheetContainerColor = MyFisColor.Surface1,
+        sheetContentColor = MyFisColor.TextPrimary,
+        sheetShape = MyFisRadius.sheet,
+        sheetShadowElevation = 0.dp,
+        containerColor = MyFisColor.BgBase,
+        sheetContent = {
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = MyFisSpacing.screenHorizontal)
+                    .padding(bottom = MyFisSpacing.xxxl)
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(MyFisSpacing.xxl),
+            ) {
+                PlaceQuickPick()
+                FavoriteMachines()
+            }
+        },
     ) {
-        DetailHeader(title = "기구 찾기", onBack = onBack)
-
-        BranchSearchBar(
+        Box(
             Modifier
-                .padding(horizontal = MyFisSpacing.screenHorizontal)
-                .padding(top = MyFisSpacing.sm),
-        )
+                .fillMaxSize()
+                .background(MyFisColor.BgBase)
+                .statusBarsPadding(),
+        ) {
+            // 평면도가 **바탕**이다. 헤더 · 찾기 줄이 그 위에 얹힌다
+            BranchMap()
 
-        PlaceQuickPick(
-            Modifier
-                .padding(horizontal = MyFisSpacing.screenHorizontal)
-                .padding(top = MyFisSpacing.xl),
-        )
+            Column {
+                DetailHeader(title = "기구 찾기", onBack = onBack)
 
-        FavoriteMachines(
-            Modifier
-                .padding(horizontal = MyFisSpacing.screenHorizontal)
-                .padding(top = MyFisSpacing.xxl),
+                BranchSearchBar(
+                    Modifier
+                        .padding(horizontal = MyFisSpacing.screenHorizontal)
+                        .padding(top = MyFisSpacing.sm),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 평면도 자리. **아직 그림이 없다** — SPEC M-08 의 빈 상태를 그대로 쓴다.
+ *
+ * 바탕을 `bg.base` 로 두는 건 위에 얹힐 시트(`surface.1`)와 갈라 보이게 하려는 것이다 (§5.4).
+ */
+@Composable
+private fun BranchMap() {
+    // TODO: 평면도 + 기구 핀 (M-08). "재지 않고 보고 그린다"로 정해 뒀다
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(
+            "이 지점은 지도가 아직 없어요",
+            style = MyFisTheme.type.bodySm,
+            color = MyFisColor.TextTertiary,
         )
     }
 }

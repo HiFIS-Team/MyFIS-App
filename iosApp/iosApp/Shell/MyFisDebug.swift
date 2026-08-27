@@ -18,6 +18,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
 /// SIMCTL_CHILD_MYFIS_ACTIVITY=ladder          활동 랜딩(MYFIS_ROUTE=activity)에 띄울 활동
 /// SIMCTL_CHILD_MYFIS_AUTOPLAY=2               2초 뒤 그 활동의 연출을 스스로 재생한다
+/// SIMCTL_CHILD_MYFIS_SHEET=expanded           기구 찾기(M-08) 바닥 시트를 펼친 채로 시작
 /// ```
 enum MyFisDebug {
     private static var env: [String: String] { ProcessInfo.processInfo.environment }
@@ -65,6 +66,16 @@ enum MyFisDebug {
         env["MYFIS_TABSET"] == "weight" ? .weight : .base
         #else
         .base
+        #endif
+    }
+
+    /// 기구 찾기(M-08) 바닥 시트를 펼친 채로 — `SIMCTL_CHILD_MYFIS_SHEET=expanded`.
+    /// 시뮬레이터에서는 끌 수단이 없어 펼친 모습을 볼 방법이 이것뿐이다
+    static var sheetExpanded: Bool {
+        #if DEBUG
+        env["MYFIS_SHEET"] == "expanded"
+        #else
+        false
         #endif
     }
 
