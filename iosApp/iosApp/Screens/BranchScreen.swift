@@ -58,10 +58,15 @@ private struct BranchSearchBar: View {
 /// 줄마다 제목을 달면 여덟 칸짜리 판이 두 개의 섹션으로 커진다.
 enum BranchPlace: String, CaseIterable, Identifiable {
     case rack, bench, dumbbell, treadmill
-    case toilet, shower, locker, pt
+    case toilet, shower, fitting, pt
 
     var id: String { rawValue }
     var icon: String { "ic_place_\(rawValue)" }
+
+    /// **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
+    ///
+    /// 화장실의 파랑·분홍은 남녀 표시 그 자체이고, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다.
+    var colorIcon: Bool { self == .toilet || self == .fitting }
 
     var title: String {
         switch self {
@@ -71,7 +76,7 @@ enum BranchPlace: String, CaseIterable, Identifiable {
         case .treadmill: "러닝머신"
         case .toilet: "화장실"
         case .shower: "샤워실"
-        case .locker: "탈의실"
+        case .fitting: "탈의실"
         case .pt: "PT존"
         }
     }
@@ -98,8 +103,8 @@ private struct PlaceQuickPick: View {
 
 /// 아이콘 판 + 라벨. 판의 짜임은 **혜택 행과 같다** (§6.23) — 같은 물건은 같게 그린다.
 ///
-/// 다만 여기 아이콘은 **원색이 아니라 단색 아웃라인**이다.
-/// 여덟이 나란한 고르기라 하나만 색이 붙으면 그 칸이 먼저 읽힌다 (§3.2 액센트 예산).
+/// 아이콘은 **기본이 단색 아웃라인**이고, 표지판인 둘만 원색이다 (`colorIcon`).
+/// 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
 private struct PlaceCell: View {
     let place: BranchPlace
 
@@ -109,7 +114,7 @@ private struct PlaceCell: View {
             VStack(spacing: MyFisSpacing.sm) {
                 Image(place.icon)
                     .resizable()
-                    .renderingMode(.template)
+                    .renderingMode(place.colorIcon ? .original : .template)
                     .frame(width: 28, height: 28)
                     .foregroundStyle(MyFisColor.textPrimary)
                     .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)

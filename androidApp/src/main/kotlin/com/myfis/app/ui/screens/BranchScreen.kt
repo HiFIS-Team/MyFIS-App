@@ -1,5 +1,6 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -100,14 +101,23 @@ private fun BranchSearchBar(modifier: Modifier = Modifier) {
  * 앞 넷은 **기구**, 뒤 넷은 **편의시설** 이다. 순서로만 가른다 —
  * 줄마다 제목을 달면 여덟 칸짜리 판이 두 개의 섹션으로 커진다.
  */
-private enum class BranchPlace(val icon: Int, val title: String) {
+private enum class BranchPlace(
+    val icon: Int,
+    val title: String,
+    /**
+     * **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
+     *
+     * 화장실의 파랑·분홍은 남녀 표시 그 자체이고, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다.
+     */
+    val colorIcon: Boolean = false,
+) {
     RACK(R.drawable.ic_place_rack, "스쿼트랙"),
     BENCH(R.drawable.ic_place_bench, "벤치"),
     DUMBBELL(R.drawable.ic_place_dumbbell, "덤벨"),
     TREADMILL(R.drawable.ic_place_treadmill, "러닝머신"),
-    TOILET(R.drawable.ic_place_toilet, "화장실"),
+    TOILET(R.drawable.ic_place_toilet, "화장실", colorIcon = true),
     SHOWER(R.drawable.ic_place_shower, "샤워실"),
-    LOCKER(R.drawable.ic_place_locker, "탈의실"),
+    FITTING(R.drawable.ic_place_fitting, "탈의실", colorIcon = true),
     PT(R.drawable.ic_place_pt, "PT존"),
 }
 
@@ -135,8 +145,8 @@ private fun PlaceQuickPick(modifier: Modifier = Modifier) {
 /**
  * 아이콘 판 + 라벨. 판의 짜임은 **혜택 행과 같다** (§6.23) — 같은 물건은 같게 그린다.
  *
- * 다만 여기 아이콘은 **원색이 아니라 단색 아웃라인**이다.
- * 여덟이 나란한 고르기라 하나만 색이 붙으면 그 칸이 먼저 읽힌다 (§3.2 액센트 예산).
+ * 아이콘은 **기본이 단색 아웃라인**이고, 표지판인 둘만 원색이다 (`colorIcon`).
+ * 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
  */
 @Composable
 private fun PlaceCell(place: BranchPlace, modifier: Modifier = Modifier) {
@@ -155,12 +165,21 @@ private fun PlaceCell(place: BranchPlace, modifier: Modifier = Modifier) {
                 .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
             contentAlignment = Alignment.Center,
         ) {
-            Icon(
-                painter = painterResource(place.icon),
-                contentDescription = null, // 밑의 라벨이 이름 역할을 한다
-                tint = MyFisColor.TextPrimary,
-                modifier = Modifier.size(28.dp),
-            )
+            // 원색 벌은 **`Image`** 로 그린다 — `Icon` 은 tint 로 한 색을 덮어씌운다
+            if (place.colorIcon) {
+                Image(
+                    painter = painterResource(place.icon),
+                    contentDescription = null, // 밑의 라벨이 이름 역할을 한다
+                    modifier = Modifier.size(28.dp),
+                )
+            } else {
+                Icon(
+                    painter = painterResource(place.icon),
+                    contentDescription = null,
+                    tint = MyFisColor.TextPrimary,
+                    modifier = Modifier.size(28.dp),
+                )
+            }
         }
 
         Text(
