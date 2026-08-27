@@ -18,6 +18,7 @@ import com.myfis.app.R
 import com.myfis.app.ui.screens.toMileage
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisRadius
+import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 
@@ -63,13 +64,11 @@ fun MileageBand(balance: Int, modifier: Modifier = Modifier) {
 fun MileageChip(balance: Int, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
+            // 높이는 여백이 아니라 **값으로 못 박는다** (§5.2). 전에는 상하 `7` 이었는데
+            // 그 값이 §5.1 스케일 밖이었다 — 결과 높이는 그대로 36 이다 (2026-08-27)
+            .height(MyFisSize.chip)
             .background(MyFisColor.Surface2, MyFisRadius.full)
-            .padding(
-                start = MyFisSpacing.sm,
-                end = MyFisSpacing.md,
-                top = 7.dp,
-                bottom = 7.dp,
-            ),
+            .padding(start = MyFisSpacing.sm, end = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(

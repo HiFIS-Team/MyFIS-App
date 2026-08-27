@@ -90,109 +90,8 @@ struct LuckStage: View {
                 .mask(alignment: top ? .top : .bottom) {
                     Rectangle().frame(height: 50)
                 }
-                .shadow(color: color.opacity(0.4), radius: 20, y: top ? -6 : 8)
-        }
-    }
-}
-
-/// 사다리 — **점이 길을 타고 내려가고, 당첨 칸 종이가 뜯긴다.**
-///
-/// ⚠️ 사다리 행은 **주사위로 갈렸다** (2026-08-26). 지금 이걸 부르는 곳은 없다 —
-/// 주사위 굴리는 연출을 붙일 때 이 골격(진행값 하나로 walk → tear → reveal)을 그대로 쓴다.
-struct LadderStage: View {
-    let color: Color
-    let progress: Double
-    let reward: String
-
-    // 대기 글리프(사다리 아이콘)와 같은 크기여야 재생 순간 안 튄다.
-    // 아이콘을 다시 그려 폭이 넓어져서 같이 올렸다 (24 기준 기둥 간격 12.8 · 높이 18.8 → 148 기준)
-    private static let railGap: CGFloat = 79
-    private static let height: CGFloat = 116
-    /// 가로대 간격 — 아이콘 기준 4.3 (24) → 26.5 (148)
-    private static let rung: CGFloat = 26.5
-
-    private var walk: Double { Stagecraft.slice(progress, 0.1, 0.68) }
-    private var tear: Double { Stagecraft.ease(Stagecraft.slice(progress, 0.68, 0.84)) }
-    private var reveal: Double { Stagecraft.ease(Stagecraft.slice(progress, 0.78, 1)) }
-
-    /// 왼쪽 기둥에서 출발해 가로대를 만날 때마다 건너간다.
-    /// **오른쪽으로 두 번 건너가는 길**을 고정으로 쓴다 — 결과는 어차피 서버가 정한다
-    private var dot: CGPoint {
-        let legs: [(CGPoint, CGPoint)] = {
-            let left = -Self.railGap / 2, right = Self.railGap / 2
-            let top = -Self.height / 2, mid1 = -Self.rung
-            let mid2 = Self.rung, bottom = Self.height / 2
-            return [
-                (CGPoint(x: left, y: top), CGPoint(x: left, y: mid1)),
-                (CGPoint(x: left, y: mid1), CGPoint(x: right, y: mid1)),
-                (CGPoint(x: right, y: mid1), CGPoint(x: right, y: mid2)),
-                (CGPoint(x: right, y: mid2), CGPoint(x: left, y: mid2)),
-                (CGPoint(x: left, y: mid2), CGPoint(x: left, y: bottom)),
-            ]
-        }()
-        let step = walk * Double(legs.count)
-        let index = min(Int(step), legs.count - 1)
-        let t = step - Double(index)
-        let (from, to) = legs[index]
-        return CGPoint(
-            x: from.x + (to.x - from.x) * t,
-            y: from.y + (to.y - from.y) * t
-        )
-    }
-
-    var body: some View {
-        ZStack {
-            Group {
-                Ladder(color: color)
-
-                // 걸어 내려가는 점 — **흰 점**이다. 같은 색이면 기둥에 묻혀 안 보인다 (확인함)
-                Circle()
-                    .fill(MyFisColor.textPrimary)
-                    .frame(width: 14, height: 14)
-                    .shadow(color: color.opacity(0.9), radius: 10)
-                    .offset(x: dot.x, y: dot.y)
-                    .opacity(walk > 0 ? 1 : 0)
-
-                // 당첨 칸 — 도착하면 **뜯겨 떨어진다**
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                        .fill(color.opacity(0.9))
-                    Capsule()
-                        .fill(MyFisColor.bgBase.opacity(0.35))
-                        .frame(width: 26, height: 4)
-                }
-                .frame(width: Self.railGap + 10, height: 24)
-                .offset(x: -Self.railGap / 2, y: Self.height / 2 + 26 + 52 * tear)
-                .rotationEffect(.degrees(30 * tear), anchor: .topLeading)
-                .opacity(1 - tear)
-            }
-            // 결과가 나오면 사다리는 **물러난다**. 안 그러면 숫자가 기둥에 걸쳐 안 읽힌다
-            .opacity(1 - 0.72 * reveal)
-
-            RewardText(text: reward, color: color, reveal: reveal, settle: 0)
-        }
-    }
-
-    /// 기둥 둘 + 가로대 셋
-    private struct Ladder: View {
-        let color: Color
-
-        var body: some View {
-            ZStack {
-                // 굵기도 아이콘에서 가져왔다 (24 기준 3.2 → 148 기준 20)
-                ForEach([-1.0, 1.0], id: \.self) { side in
-                    Capsule()
-                        .fill(color.opacity(0.9))
-                        .frame(width: 20, height: LadderStage.height)
-                        .offset(x: LadderStage.railGap / 2 * side)
-                }
-                ForEach([-1.0, 0.0, 1.0], id: \.self) { row in
-                    Capsule()
-                        .fill(color.opacity(0.6))
-                        .frame(width: LadderStage.railGap, height: 16)
-                        .offset(y: LadderStage.rung * row)
-                }
-            }
+                // ⚠️ 그림자를 걸지 않는다 (§9 이탈 #5) — 다크에서 거의 안 보이는데
+                // **iOS 에만** 있어 안드로이드와 화면이 달라져 있었다 (2026-08-27)
         }
     }
 }
@@ -208,7 +107,8 @@ private struct RewardText: View {
         Text(text)
             .font(MyFisFont.metricLg.monospacedDigit())
             .foregroundStyle(color)
-            .shadow(color: color.opacity(0.5), radius: 18)
+            // ⚠️ 글로우를 걸지 않는다 (§9 이탈 #5) — 안드로이드에는 없다.
+            // 커졌다 제자리로 오는 움직임만으로 충분히 읽힌다 (2026-08-27)
             .scaleEffect(0.4 + 0.78 * reveal - 0.16 * settle)
             .opacity(reveal)
     }

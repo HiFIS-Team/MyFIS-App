@@ -46,7 +46,9 @@ struct MileageChip: View {
         }
         .padding(.leading, MyFisSpacing.sm)
         .padding(.trailing, MyFisSpacing.md)
-        .padding(.vertical, 7)
+        // 높이는 여백이 아니라 **값으로 못 박는다** (§5.2). 전에는 상하 `7` 이었는데
+        // 그 값이 §5.1 스케일 밖이었다 — 결과 높이는 그대로 36 이다 (2026-08-27)
+        .frame(height: MyFisSize.chip)
         .background(MyFisColor.surface2, in: Capsule())
         .accessibilityElement(children: .combine)
         .accessibilityLabel("내 마일리지 \(balance.mileage)")

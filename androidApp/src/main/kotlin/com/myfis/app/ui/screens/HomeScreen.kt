@@ -251,10 +251,12 @@ private fun CalendarBar(
     ) {
         Row(
             modifier = Modifier
+                // 오른쪽 뱃지와 세로 중심을 맞춘다 (패딩이 다르면 한쪽이 떠 보인다) —
+                // 이제 **둘 다 `size.chip`** 이라 저절로 맞는다 (§5.2, 2026-08-27)
+                .height(MyFisSize.chip)
                 .clip(MyFisRadius.full)
                 .tapWithHaptics(interaction, onToggle)
-                // 오른쪽 뱃지와 세로 중심을 맞춘다 (패딩이 다르면 한쪽이 떠 보인다)
-                .padding(horizontal = MyFisSpacing.sm, vertical = 6.dp),
+                .padding(horizontal = MyFisSpacing.sm),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(2.dp),
         ) {
@@ -279,8 +281,9 @@ private fun CalendarBar(
         Row(
             modifier = Modifier
                 .padding(horizontal = MyFisSpacing.sm)
+                .height(MyFisSize.chip)
                 .background(MyFisColor.Surface1, MyFisRadius.full)
-                .padding(start = MyFisSpacing.sm, end = MyFisSpacing.md, top = 6.dp, bottom = 6.dp),
+                .padding(start = MyFisSpacing.sm, end = MyFisSpacing.md),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
         ) {

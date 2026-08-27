@@ -107,9 +107,10 @@ private struct CalendarBar: View {
                         .rotationEffect(.degrees(expanded ? 180 : 0))
                 }
                 .foregroundStyle(MyFisColor.textSecondary)
-                // 오른쪽 뱃지와 세로 중심을 맞춘다 (패딩이 다르면 한쪽이 떠 보인다)
+                // 오른쪽 뱃지와 세로 중심을 맞춘다 (패딩이 다르면 한쪽이 떠 보인다) —
+                // 이제 **둘 다 `size.chip`** 이라 저절로 맞는다 (§5.2, 2026-08-27)
                 .padding(.horizontal, MyFisSpacing.sm)
-                .padding(.vertical, 6)
+                .frame(height: MyFisSize.chip)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.myFisTap)
@@ -137,7 +138,7 @@ private struct CalendarBar: View {
             }
             .padding(.leading, MyFisSpacing.sm)
             .padding(.trailing, MyFisSpacing.md)
-            .padding(.vertical, 6)
+            .frame(height: MyFisSize.chip)
             .background(MyFisColor.surface1, in: Capsule())
             .padding(.horizontal, MyFisSpacing.sm)
         }

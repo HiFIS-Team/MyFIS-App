@@ -516,7 +516,9 @@ private struct HelpfulButton: View {
             // 색이 차는 건 **즉시**여야 한다 (하트와 같은 이유)
             .animation(nil, value: marked)
             .padding(.horizontal, MyFisSpacing.md)
-            .padding(.vertical, 6)
+            // 다른 칩과 **같은 높이**로 맞춘다 (§5.2). 전에는 상하 `6` 이라 34 였고
+            // 그 값이 §5.1 스케일 밖이었다 — 여기만 **34 → 36** 으로 바뀐다 (2026-08-27)
+            .frame(height: MyFisSize.chip)
             // 켜지면 배경도 같은 색 16% 로 든다 — 아이콘만 바뀌면 눌렀는지 스쳐 지나간다
             .background(
                 marked ? MyFisColor.helpful.opacity(0.16) : MyFisColor.surface2,

@@ -50,6 +50,7 @@ import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisPrimaryButton
 import com.myfis.app.ui.theme.MyFisRadius
+import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.pressScale
@@ -753,13 +754,16 @@ private fun HelpfulButton(count: Int, reviewId: Int, modifier: Modifier = Modifi
 
     Row(
         modifier = modifier
+            // 다른 칩과 **같은 높이**로 맞춘다 (§5.2). 전에는 상하 `6` 이라 34 였고
+            // 그 값이 §5.1 스케일 밖이었다 — 여기만 **34 → 36** 으로 바뀐다 (2026-08-27)
+            .height(MyFisSize.chip)
             .clip(MyFisRadius.full)
             // 켜지면 배경도 같은 색 16% 로 든다 — 아이콘만 바뀌면 눌렀는지 스쳐 지나간다
             .background(
                 if (marked) MyFisColor.Helpful.copy(alpha = 0.16f) else MyFisColor.Surface2,
             )
             .tapWithHaptics(interaction) { marked = !marked }
-            .padding(horizontal = MyFisSpacing.md, vertical = 6.dp),
+            .padding(horizontal = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
     ) {

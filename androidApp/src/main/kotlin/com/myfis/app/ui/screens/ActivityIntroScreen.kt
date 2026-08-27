@@ -409,7 +409,7 @@ val BenefitKind.intro: ActivityIntro
             ),
         )
         // TODO(연출): 사다리에는 종이 뜯는 연출이 있었다. 주사위 굴리는 연출을 붙이면
-        // `stagecraft = true` 로 되돌린다 (`LadderStage` 골격 참고)
+        // `stagecraft = true` 로 되돌린다 (`LuckStage` 골격 참고 — 진행값 하나로 walk → reveal)
         BenefitKind.DICE -> ActivityIntro(
             "주사위", "오늘의 주사위", "하루 한 번", "꽝은 없어요. 최소 10 P", "주사위 굴리기",
             ActivityArtStyle(

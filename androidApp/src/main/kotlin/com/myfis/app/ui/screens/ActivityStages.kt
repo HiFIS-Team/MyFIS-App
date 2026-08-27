@@ -3,25 +3,17 @@ package com.myfis.app.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisTheme
 import kotlin.math.cos
@@ -116,111 +108,6 @@ private fun Half(color: Color, top: Boolean, rotation: Float, dy: Float, alpha: 
     }
 }
 
-/**
- * 사다리 — **점이 길을 타고 내려가고, 당첨 칸 종이가 뜯긴다**
- *
- * ⚠️ 사다리 행은 **주사위로 갈렸다** (2026-08-26). 지금 이걸 부르는 곳은 없다 —
- * 주사위 굴리는 연출을 붙일 때 이 골격(진행값 하나로 walk → tear → reveal)을 그대로 쓴다.
- */
-@Suppress("unused")
-@Composable
-fun LadderStage(color: Color, progress: Float, reward: String) {
-    val walk = Stagecraft.slice(progress, 0.1f, 0.68f)
-    val tear = Stagecraft.ease(Stagecraft.slice(progress, 0.68f, 0.84f))
-    val reveal = Stagecraft.ease(Stagecraft.slice(progress, 0.78f, 1f))
-
-    val dot = ladderDot(walk)
-
-    Box(contentAlignment = Alignment.Center) {
-        // 결과가 나오면 사다리는 **물러난다**. 안 그러면 숫자가 기둥에 걸쳐 안 읽힌다
-        Box(Modifier.alpha(1f - 0.72f * reveal), contentAlignment = Alignment.Center) {
-            Ladder(color)
-
-            // 걸어 내려가는 점 — **흰 점**이다. 같은 색이면 기둥에 묻혀 안 보인다 (확인함)
-            Box(
-                Modifier
-                    .offset(x = dot.x.dp, y = dot.y.dp)
-                    .size(14.dp)
-                    .alpha(if (walk > 0f) 1f else 0f)
-                    .background(MyFisColor.TextPrimary, MyFisRadius.full),
-            )
-
-            // 당첨 칸 — 도착하면 **뜯겨 떨어진다**
-            Box(
-                Modifier
-                    .offset(
-                        x = (-LADDER_GAP / 2).dp,
-                        y = (LADDER_HEIGHT / 2 + 26 + 52 * tear).dp,
-                    )
-                    .graphicsLayer {
-                        rotationZ = 30f * tear
-                        transformOrigin = TransformOrigin(0f, 0f)
-                        alpha = 1f - tear
-                    }
-                    .size(width = (LADDER_GAP + 10).dp, height = 24.dp)
-                    .background(color.copy(alpha = 0.9f), MyFisRadius.md),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(
-                    Modifier
-                        .size(width = 26.dp, height = 4.dp)
-                        .background(MyFisColor.BgBase.copy(alpha = 0.35f), MyFisRadius.full),
-                )
-            }
-        }
-
-        RewardText(reward, color, reveal, 0f)
-    }
-}
-
-/**
- * 왼쪽 기둥에서 출발해 가로대를 만날 때마다 건너간다.
- * **오른쪽으로 두 번 건너가는 길**을 고정으로 쓴다 — 결과는 어차피 서버가 정한다
- */
-private fun ladderDot(walk: Float): Offset {
-    val left = -LADDER_GAP / 2
-    val right = LADDER_GAP / 2
-    val top = -LADDER_HEIGHT / 2
-    val mid1 = -LADDER_RUNG
-    val mid2 = LADDER_RUNG
-    val bottom = LADDER_HEIGHT / 2
-    val legs = listOf(
-        Offset(left, top) to Offset(left, mid1),
-        Offset(left, mid1) to Offset(right, mid1),
-        Offset(right, mid1) to Offset(right, mid2),
-        Offset(right, mid2) to Offset(left, mid2),
-        Offset(left, mid2) to Offset(left, bottom),
-    )
-    val step = walk * legs.size
-    val index = step.toInt().coerceAtMost(legs.size - 1)
-    val t = step - index
-    val (from, to) = legs[index]
-    return Offset(from.x + (to.x - from.x) * t, from.y + (to.y - from.y) * t)
-}
-
-/** 기둥 둘 + 가로대 셋. 굵기도 아이콘에서 가져왔다 (24 기준 3.2 → 148 기준 20) */
-@Composable
-private fun Ladder(color: Color) {
-    Box(contentAlignment = Alignment.Center) {
-        listOf(-1f, 1f).forEach { side ->
-            Box(
-                Modifier
-                    .offset(x = (LADDER_GAP / 2 * side).dp)
-                    .size(width = 20.dp, height = LADDER_HEIGHT.dp)
-                    .background(color.copy(alpha = 0.9f), MyFisRadius.full),
-            )
-        }
-        listOf(-1f, 0f, 1f).forEach { row ->
-            Box(
-                Modifier
-                    .offset(y = (LADDER_RUNG * row).dp)
-                    .size(width = LADDER_GAP.dp, height = 16.dp)
-                    .background(color.copy(alpha = 0.6f), MyFisRadius.full),
-            )
-        }
-    }
-}
-
 /** 연출 끝에 나오는 값. **커졌다 제자리로** — 그냥 떠오르면 받은 느낌이 안 난다 */
 @Composable
 private fun RewardText(text: String, color: Color, reveal: Float, settle: Float) {
@@ -236,11 +123,3 @@ private fun RewardText(text: String, color: Color, reveal: Float, settle: Float)
         },
     )
 }
-
-// 대기 글리프(사다리 아이콘)와 같은 크기여야 재생 순간 안 튄다.
-// 아이콘을 다시 그려 폭이 넓어져서 같이 올렸다 (24 기준 기둥 간격 12.8 · 높이 18.8 → 148 기준)
-private const val LADDER_GAP = 79f
-private const val LADDER_HEIGHT = 116f
-
-/** 가로대 간격 — 아이콘 기준 4.3 (24) → 26.5 (148) */
-private const val LADDER_RUNG = 26.5f

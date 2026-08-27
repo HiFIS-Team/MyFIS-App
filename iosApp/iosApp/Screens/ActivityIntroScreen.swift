@@ -306,7 +306,7 @@ extension BenefitKind {
                   art: .init(duration: 1.6, dy: 18, rotation: 0,
                              discs: [.init(x: 0, y: 86, size: 150, alpha: 0.12, dy: -6)]))
         // TODO(연출): 사다리에는 종이 뜯는 연출이 있었다. 주사위 굴리는 연출을 붙이면
-        // `stagecraft: true` 로 되돌린다 (`LadderStage` 골격 참고)
+        // `stagecraft: true` 로 되돌린다 (`LuckStage` 골격 참고 — 진행값 하나로 walk → reveal)
         case .dice:
             .init(kicker: "주사위", label: "오늘의 주사위",
                   period: "하루 한 번", hint: "꽝은 없어요. 최소 10 P",
