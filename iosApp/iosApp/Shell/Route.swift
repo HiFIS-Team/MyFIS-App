@@ -33,4 +33,15 @@ enum Route: Hashable {
         case .branch: "지점"
         }
     }
+
+    /// **아래에서 올라오는** 화면인지 (§7.1).
+    ///
+    /// 적립 활동은 잎이 아니라 **덮개**다 — 목록에서 하나 골라 하고 닫는 자리라
+    /// 옆에서 밀려 들어오면 다른 탭 화면처럼 읽힌다. 올라오면 "여기서 끝내고 돌아간다"가 된다.
+    var risesFromBottom: Bool {
+        switch self {
+        case .activity: true
+        default: false
+        }
+    }
 }

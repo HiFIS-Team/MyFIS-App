@@ -41,11 +41,14 @@ struct AppRoot: View {
 
                 ForEach(Array(pages.enumerated()), id: \.offset) { index, route in
                     let isTop = index == pages.count - 1
+                    // 아래에서 올라온 화면은 **옆으로 끌어 닫지 않는다** — 옆으로 끌다
+                    // 아래로 사라지면 방향이 어긋나 화면이 튄다. 닫기는 헤더의 X 다
+                    let swipeable = isTop && !route.risesFromBottom
                     leaf(route)
-                        .offset(x: isTop ? drag : 0)
+                        .offset(x: swipeable ? drag : 0)
                         .zIndex(Double(index + 1))
-                        .transition(.move(edge: .trailing))
-                        .gesture(isTop ? edgeBack(width: proxy.size.width) : nil)
+                        .transition(.move(edge: route.risesFromBottom ? .bottom : .trailing))
+                        .gesture(swipeable ? edgeBack(width: proxy.size.width) : nil)
                 }
             }
         }

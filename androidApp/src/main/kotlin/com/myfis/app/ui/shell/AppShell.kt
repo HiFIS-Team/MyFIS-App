@@ -3,7 +3,9 @@ package com.myfis.app.ui.shell
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,11 +83,21 @@ fun AppShell() {
                 },
             )
         }
-        composable(Route.ACTIVITY_INTRO) {
+        composable(
+            Route.ACTIVITY_INTRO,
+            // 적립 활동은 잎이 아니라 **덮개**라 아래에서 올라온다 (iOS `Route.risesFromBottom`)
+            enterTransition = { slideInVertically(pushSpec) { it } },
+            popExitTransition = { slideOutVertically(pushSpec) { it } },
+        ) {
             // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
             benefitAction?.let {
                 // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만들 때까지 자리만 둔다
-                Column(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier
+                        .fillMaxSize()
+                        .background(MyFisColor.BgBase)
+                        .statusBarsPadding(),
+                ) {
                     DetailHeader(
                         title = it.title,
                         onBack = { nav.popBackStack() },
