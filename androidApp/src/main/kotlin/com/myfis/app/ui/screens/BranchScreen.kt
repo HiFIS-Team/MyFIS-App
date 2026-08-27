@@ -2,30 +2,39 @@ package com.myfis.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.myfis.app.R
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
+import com.myfis.app.ui.theme.tapWithHaptics
 
 /**
  * 홈 헤더의 **핀으로 들어오는 잎 화면** (SPEC M-08 지점 내부 지도).
  *
- * 지금은 **맨 위 찾기 줄만** 있다. 밑에 들어갈 것(평면도 · 기구 핀)은 아직 미정이다.
+ * 지금은 **찾기 줄 + 빠른 고르기**까지다. 밑에 들어갈 평면도 · 기구 핀은 아직 미정이다.
  *
  * 줄의 짜임은 **카카오 T 홈**에서 가져왔다 (사용자 지정) —
  * 큰 알약 하나에 **물음 한 줄**. 색은 우리 것을 쓴다.
@@ -47,6 +56,12 @@ fun BranchScreen(onBack: () -> Unit = {}) {
             Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(top = MyFisSpacing.sm),
+        )
+
+        PlaceQuickPick(
+            Modifier
+                .padding(horizontal = MyFisSpacing.screenHorizontal)
+                .padding(top = MyFisSpacing.xl),
         )
     }
 }
@@ -72,6 +87,85 @@ private fun BranchSearchBar(modifier: Modifier = Modifier) {
         Text(
             "어떤 기구 찾으세요?",
             style = MyFisTheme.type.titleMd,
+            color = MyFisColor.TextSecondary,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/**
+ * 빠른 고르기 여덟 칸 (DESIGN §6.26).
+ *
+ * 앞 넷은 **기구**, 뒤 넷은 **편의시설** 이다. 순서로만 가른다 —
+ * 줄마다 제목을 달면 여덟 칸짜리 판이 두 개의 섹션으로 커진다.
+ */
+private enum class BranchPlace(val icon: Int, val title: String) {
+    RACK(R.drawable.ic_place_rack, "스쿼트랙"),
+    BENCH(R.drawable.ic_place_bench, "벤치"),
+    DUMBBELL(R.drawable.ic_place_dumbbell, "덤벨"),
+    TREADMILL(R.drawable.ic_place_treadmill, "러닝머신"),
+    TOILET(R.drawable.ic_place_toilet, "화장실"),
+    SHOWER(R.drawable.ic_place_shower, "샤워실"),
+    LOCKER(R.drawable.ic_place_locker, "탈의실"),
+    PT(R.drawable.ic_place_pt, "PT존"),
+}
+
+/**
+ * **네 칸 × 두 줄.** 한 줄에 다섯을 넣으면 라벨(`스쿼트랙`)이 줄어들고,
+ * 셋으로 줄이면 판이 커져 밑에 올 지도를 밀어낸다.
+ *
+ * 여덟 칸뿐이라 `LazyVerticalGrid` 를 쓰지 않는다 — 세로 스크롤이 둘이 되면 지도와 부딪힌다.
+ */
+@Composable
+private fun PlaceQuickPick(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        // 줄 사이는 16 이다. 칸 사이(12)보다 넓어야 라벨이 아래 판에 붙지 않는다
+        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
+    ) {
+        BranchPlace.entries.chunked(4).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap)) {
+                row.forEach { PlaceCell(it, Modifier.weight(1f)) }
+            }
+        }
+    }
+}
+
+/**
+ * 아이콘 판 + 라벨. 판의 짜임은 **혜택 행과 같다** (§6.23) — 같은 물건은 같게 그린다.
+ *
+ * 다만 여기 아이콘은 **원색이 아니라 단색 아웃라인**이다.
+ * 여덟이 나란한 고르기라 하나만 색이 붙으면 그 칸이 먼저 읽힌다 (§3.2 액센트 예산).
+ */
+@Composable
+private fun PlaceCell(place: BranchPlace, modifier: Modifier = Modifier) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Column(
+        // TODO: 누르면 그 갈래를 지도에서 집는다 (M-08)
+        modifier = modifier.tapWithHaptics(interaction) {},
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+    ) {
+        Box(
+            Modifier
+                .size(MyFisSize.listRowMin)
+                .background(MyFisColor.Surface2, MyFisRadius.tile)
+                .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                painter = painterResource(place.icon),
+                contentDescription = null, // 밑의 라벨이 이름 역할을 한다
+                tint = MyFisColor.TextPrimary,
+                modifier = Modifier.size(28.dp),
+            )
+        }
+
+        Text(
+            place.title,
+            style = MyFisTheme.type.label,
             color = MyFisColor.TextSecondary,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
