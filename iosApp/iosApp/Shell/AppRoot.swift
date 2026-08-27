@@ -129,7 +129,13 @@ struct AppRoot: View {
                     onCart: { open(.storeCart) }
                 )
             case .activity(let action):
-                ActivityIntroScreen(action: action, onClose: back)
+                // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만들 때까지 자리만 둔다
+                VStack(spacing: 0) {
+                    DetailHeader(title: action.title, onBack: back,
+                                 backIcon: "ic_header_close", backLabel: "닫기")
+                    PlaceholderScreen(id: "\(action.kind)", title: action.title,
+                                      description: action.reward)
+                }
             case .weightLog:
                 WeightLogScreen(onBack: back)
             case .storeCart:

@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.myfis.app.ui.screens.ActivityIntroScreen
+import com.myfis.app.R
 import com.myfis.app.ui.screens.BenefitAction
 import com.myfis.app.ui.screens.BenefitKind
 import com.myfis.app.ui.screens.BenefitScreen
@@ -84,7 +84,16 @@ fun AppShell() {
         composable(Route.ACTIVITY_INTRO) {
             // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
             benefitAction?.let {
-                ActivityIntroScreen(action = it, onClose = { nav.popBackStack() })
+                // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만들 때까지 자리만 둔다
+                Column(Modifier.fillMaxSize()) {
+                    DetailHeader(
+                        title = it.title,
+                        onBack = { nav.popBackStack() },
+                        backIcon = R.drawable.ic_header_close,
+                        backDescription = "닫기",
+                    )
+                    PlaceholderScreen(it.kind.name, it.title, it.reward)
+                }
             }
         }
         composable(Route.WEIGHT_LOG) {

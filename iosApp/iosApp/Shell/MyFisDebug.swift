@@ -16,8 +16,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
-/// SIMCTL_CHILD_MYFIS_ACTIVITY=ladder          활동 랜딩(MYFIS_ROUTE=activity)에 띄울 활동
-/// SIMCTL_CHILD_MYFIS_AUTOPLAY=2               2초 뒤 그 활동의 연출을 스스로 재생한다
+/// SIMCTL_CHILD_MYFIS_ACTIVITY=scratch         활동 자리(MYFIS_ROUTE=activity)에 띄울 갈래
 /// SIMCTL_CHILD_MYFIS_SHEET=expanded           기구 찾기(M-08) 바닥 시트를 펼친 채로 시작
 /// ```
 enum MyFisDebug {
@@ -88,20 +87,12 @@ enum MyFisDebug {
         #endif
     }
 
-    /// 랜딩에 띄울 활동 — `SIMCTL_CHILD_MYFIS_ACTIVITY=ladder` (기본은 뽑기)
+    /// 활동 자리에 띄울 갈래 — `SIMCTL_CHILD_MYFIS_ACTIVITY=scratch` (기본은 뽑기)
     private static var activityAction: BenefitAction {
         // 아이콘 이름이 아니라 **갈래 이름**으로 찾는다 — 행 아이콘은 원색 벌로 갈릴 수 있다
         let name = env["MYFIS_ACTIVITY"] ?? "luck"
         return BenefitPlaceholder.actions.first { "\($0.kind)" == name }
             ?? BenefitPlaceholder.actions[6]
-    }
-
-    /// 시뮬레이터에는 버튼을 누를 수단이 없다. 연출을 보려면 `SIMCTL_CHILD_MYFIS_AUTOPLAY=2`
-    static func scheduleAutoPlay(_ play: @escaping () -> Void) {
-        #if DEBUG
-        guard let delay = env["MYFIS_AUTOPLAY"].flatMap(Double.init) else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: play)
-        #endif
     }
 
     /// 검색 모드로 시작할지 — 검색은 잎이 아니라 **스토어의 모드**라 라우트가 아니다 (§6.9)
