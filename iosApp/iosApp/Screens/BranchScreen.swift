@@ -50,6 +50,10 @@ struct BranchScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // ⚠️ **바닥 안전영역까지 쓴다.** 안 그러면 시트를 끝까지 올려도 화면 맨 밑에
+        // 바탕색 띠가 남아 시트가 바닥에서 뜬 것처럼 보인다.
+        // 홈 인디케이터에 글자가 닿는 건 시트 안쪽 여백(`xxxl`)이 막는다
+        .ignoresSafeArea(edges: .bottom)
     }
 }
 
@@ -361,7 +365,6 @@ private struct BranchSheet: View {
                 }
         )
         .animation(MyFisMotion.slow, value: expanded)
-        .ignoresSafeArea(edges: .bottom)
     }
 }
 
