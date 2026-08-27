@@ -16,8 +16,8 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
-/// SIMCTL_CHILD_MYFIS_ACTIVITY=scratch         활동 자리(MYFIS_ROUTE=activity)에 띄울 갈래
-/// SIMCTL_CHILD_MYFIS_AUTOPLAY=2               2초 뒤 그 활동을 스스로 시작한다 (연출 확인용)
+/// SIMCTL_CHILD_MYFIS_ACTIVITY=ladder          활동 랜딩(MYFIS_ROUTE=activity)에 띄울 활동
+/// SIMCTL_CHILD_MYFIS_AUTOPLAY=2               2초 뒤 그 활동의 연출을 스스로 재생한다
 /// SIMCTL_CHILD_MYFIS_SHEET=expanded           기구 찾기(M-08) 바닥 시트를 펼친 채로 시작
 /// ```
 enum MyFisDebug {
@@ -88,7 +88,7 @@ enum MyFisDebug {
         #endif
     }
 
-    /// 활동 자리에 띄울 갈래 — `SIMCTL_CHILD_MYFIS_ACTIVITY=scratch` (기본은 뽑기)
+    /// 랜딩에 띄울 활동 — `SIMCTL_CHILD_MYFIS_ACTIVITY=ladder` (기본은 뽑기)
     private static var activityAction: BenefitAction {
         // 아이콘 이름이 아니라 **갈래 이름**으로 찾는다 — 행 아이콘은 원색 벌로 갈릴 수 있다
         let name = env["MYFIS_ACTIVITY"] ?? "luck"

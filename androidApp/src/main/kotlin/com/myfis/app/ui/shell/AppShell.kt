@@ -3,9 +3,7 @@ package com.myfis.app.ui.shell
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +19,11 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.myfis.app.R
+import com.myfis.app.ui.screens.ActivityIntroScreen
 import com.myfis.app.ui.screens.BenefitAction
 import com.myfis.app.ui.screens.BenefitKind
 import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.BranchScreen
-import com.myfis.app.ui.screens.DiceScreen
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.screens.StoreCartScreen
@@ -34,7 +31,6 @@ import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
 import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreScreen
-import com.myfis.app.ui.screens.TouchScreen
 import com.myfis.app.ui.screens.WeightLogScreen
 import com.myfis.app.ui.theme.MyFisColor
 
@@ -85,40 +81,10 @@ fun AppShell() {
                 },
             )
         }
-        composable(
-            Route.ACTIVITY_INTRO,
-            // 적립 활동은 잎이 아니라 **덮개**라 아래에서 올라온다 (iOS `Route.risesFromBottom`)
-            enterTransition = { slideInVertically(pushSpec) { it } },
-            popExitTransition = { slideOutVertically(pushSpec) { it } },
-        ) {
+        composable(Route.ACTIVITY_INTRO) {
             // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
             benefitAction?.let {
-                // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만든 것부터 갈아 끼운다
-                when (it.kind) {
-                    BenefitKind.TOUCH -> {
-                        TouchScreen(onClose = { nav.popBackStack() })
-                        return@composable
-                    }
-                    BenefitKind.DICE -> {
-                        DiceScreen(onClose = { nav.popBackStack() })
-                        return@composable
-                    }
-                    else -> Unit
-                }
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .background(MyFisColor.BgBase)
-                        .statusBarsPadding(),
-                ) {
-                    DetailHeader(
-                        title = it.title,
-                        onBack = { nav.popBackStack() },
-                        backIcon = R.drawable.ic_header_close,
-                        backDescription = "닫기",
-                    )
-                    PlaceholderScreen(it.kind.name, it.title, it.reward)
-                }
+                ActivityIntroScreen(action = it, onClose = { nav.popBackStack() })
             }
         }
         composable(Route.WEIGHT_LOG) {
@@ -251,17 +217,8 @@ private fun BaseTabContent(
             onStore = onStore,
         )
         BaseTab.BENEFIT -> BenefitScreen(
-            onAction = {
-                when (it.kind) {
-                    // 루틴·유산소는 활동 화면이 따로 없다 — **하단 바에 자기 탭이 있다.**
-                    // 덮개를 띄우는 대신 그 탭으로 보낸다 (홈 바로가기와 같은 길)
-                    BenefitKind.ROUTINE -> onWeight()
-                    BenefitKind.CARDIO -> onCardio()
-                    // 체중은 매일 하는 기록이라 활동을 거치지 않고 바로 기록으로 간다
-                    BenefitKind.WEIGHT -> onWeightLog()
-                    else -> onActivity(it)
-                }
-            },
+            // 체중은 매일 하는 기록이라 랜딩을 거치지 않는다 (§6.25)
+            onAction = { if (it.kind == BenefitKind.WEIGHT) onWeightLog() else onActivity(it) },
         )
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
         BaseTab.STORE -> StoreScreen(

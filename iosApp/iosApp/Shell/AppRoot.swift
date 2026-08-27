@@ -41,14 +41,11 @@ struct AppRoot: View {
 
                 ForEach(Array(pages.enumerated()), id: \.offset) { index, route in
                     let isTop = index == pages.count - 1
-                    // 아래에서 올라온 화면은 **옆으로 끌어 닫지 않는다** — 옆으로 끌다
-                    // 아래로 사라지면 방향이 어긋나 화면이 튄다. 닫기는 헤더의 X 다
-                    let swipeable = isTop && !route.risesFromBottom
                     leaf(route)
-                        .offset(x: swipeable ? drag : 0)
+                        .offset(x: isTop ? drag : 0)
                         .zIndex(Double(index + 1))
-                        .transition(.move(edge: route.risesFromBottom ? .bottom : .trailing))
-                        .gesture(swipeable ? edgeBack(width: proxy.size.width) : nil)
+                        .transition(.move(edge: .trailing))
+                        .gesture(isTop ? edgeBack(width: proxy.size.width) : nil)
                 }
             }
         }
@@ -132,20 +129,7 @@ struct AppRoot: View {
                     onCart: { open(.storeCart) }
                 )
             case .activity(let action):
-                // 활동 화면은 갈래마다 따로 만든다 (2026-08-27). 만든 것부터 갈아 끼운다
-                switch action.kind {
-                case .touch:
-                    TouchScreen(onClose: back)
-                case .dice:
-                    DiceScreen(onClose: back)
-                default:
-                    VStack(spacing: 0) {
-                        DetailHeader(title: action.title, onBack: back,
-                                     backIcon: "ic_header_close", backLabel: "닫기")
-                        PlaceholderScreen(id: "\(action.kind)", title: action.title,
-                                          description: action.reward)
-                    }
-                }
+                ActivityIntroScreen(action: action, onClose: back)
             case .weightLog:
                 WeightLogScreen(onBack: back)
             case .storeCart:
