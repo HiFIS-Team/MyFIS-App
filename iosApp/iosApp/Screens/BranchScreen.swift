@@ -26,6 +26,17 @@ struct BranchScreen: View {
                 // 평면도가 **바탕**이다. 헤더 · 찾기 줄 · 시트가 전부 이 위에 얹힌다
                 BranchMap(bottomInset: peek)
 
+                // 지도가 화면을 채우니 **헤더 밑이 어두워야 글자가 읽힌다.**
+                // 판을 깔면 지도가 잘려 보이므로 **번지는 그늘**로 둔다 (지도 앱과 같은 방식)
+                LinearGradient(
+                    colors: [MyFisColor.bgBase, MyFisColor.bgBase.opacity(0)],
+                    startPoint: .top, endPoint: .bottom
+                )
+                .frame(height: 190)
+                .frame(maxHeight: .infinity, alignment: .top)
+                .allowsHitTesting(false)
+                .ignoresSafeArea(edges: .top)
+
                 VStack(spacing: 0) {
                     DetailHeader(title: "기구 찾기", onBack: onBack)
 
@@ -45,53 +56,106 @@ struct BranchScreen: View {
 
 /// 평면도 — **화면의 바탕**. 확대 · 이동만 되고 돌리지는 않는다 (SPEC M-08).
 ///
-/// 처음엔 **폭에 맞춰** 앉힌다. 헬스장은 옆으로 긴데 폰은 세로로 길어서,
-/// 높이에 맞추면 화면 밖으로 넘치고 손으로 찾아 들어가야 한다.
+/// 처음엔 **화면을 꽉 채운다** 🟢 (2026-08-27 수정). 폭에만 맞췄더니 도면이 화면 가운데
+/// 떠 있는 그림처럼 보였다 — 지도 앱은 화면에 빈 데가 없고, 보고 싶은 데로 밀어서 간다.
+///
+/// - 처음 배율 = **덮기**(가로·세로 중 큰 쪽에 맞춤). 화면에 빈 데가 안 생긴다
+/// - 가장 작게 = **전부 보기**. 한 번 오므리면 헬스장 전체가 들어온다
+/// - 민 거리는 **가장자리에서 멈춘다.** 안 막으면 도면이 화면 밖으로 사라진다
 private struct BranchMap: View {
-    /// 시트에 가려지는 높이. **가려질 자리를 빼고 가운데에 놓는다** —
-    /// 화면 한가운데에 놓으면 도면 아래쪽이 시트에 먹힌다
+    /// 시트에 가려지는 높이. **가려질 자리를 빼고 채운다**
     var bottomInset: CGFloat = 0
 
-    @State private var scale: CGFloat = 1
-    @State private var lastScale: CGFloat = 1
+    /// 지금 배율. `0` 은 아직 못 정했다는 뜻이다 (화면 크기를 알아야 정할 수 있다)
+    @State private var zoom: CGFloat = 0
+    /// 전부 보고 있는 중인지. 버튼 글자가 이걸 따라 바뀐다
+    @State private var showingAll = false
+    @State private var pinchStart: CGFloat = 0
     @State private var offset: CGSize = .zero
-    @State private var lastOffset: CGSize = .zero
+    @State private var dragStart: CGSize = .zero
 
     var body: some View {
         GeometryReader { geo in
+            let plan = BranchFloorPlan.size
+            let visible = CGSize(width: geo.size.width,
+                                 height: max(geo.size.height - bottomInset, 1))
+            let fit = min((visible.width - MyFisSpacing.xxl * 2) / plan.width,
+                          (visible.height - MyFisSpacing.xxl * 2) / plan.height)
+            let cover = max(visible.width / plan.width, visible.height / plan.height)
+            let current = zoom > 0 ? zoom : cover
+
             Canvas { context, size in
-                draw(context: context, size: size)
+                draw(context: context, size: size, visible: visible, scale: current)
             }
-            .frame(width: geo.size.width, height: geo.size.height)
             .contentShape(Rectangle())
             .gesture(
                 SimultaneousGesture(
                     MagnificationGesture()
-                        .onChanged { scale = clampScale(lastScale * $0) }
-                        .onEnded { _ in lastScale = scale },
-                    DragGesture()
-                        .onChanged {
-                            offset = CGSize(width: lastOffset.width + $0.translation.width,
-                                            height: lastOffset.height + $0.translation.height)
+                        .onChanged { value in
+                            if pinchStart == 0 { pinchStart = current }
+                            zoom = min(max(pinchStart * value, fit), cover * 2.5)
+                            showingAll = zoom <= fit * 1.05
+                            offset = clamp(offset, plan: plan, visible: visible, scale: zoom)
                         }
-                        .onEnded { _ in lastOffset = offset }
+                        .onEnded { _ in pinchStart = 0 },
+                    DragGesture()
+                        .onChanged { value in
+                            if dragStart == .zero { dragStart = offset }
+                            offset = clamp(
+                                CGSize(width: dragStart.width + value.translation.width,
+                                       height: dragStart.height + value.translation.height),
+                                plan: plan, visible: visible, scale: current
+                            )
+                        }
+                        .onEnded { _ in dragStart = .zero }
                 )
             )
+            .onAppear { if zoom == 0 { zoom = cover } }
+            .overlay(alignment: .bottomTrailing) {
+                // 꽉 채우면 헬스장 **전체가 안 보인다.** 한 번에 되돌아올 길을 둔다 —
+                // 지도 앱이 `현위치` 단추를 띄워 두는 것과 같은 자리다
+                Button {
+                    withAnimation(MyFisMotion.slow) {
+                        showingAll.toggle()
+                        zoom = showingAll ? fit : cover
+                        offset = .zero
+                    }
+                } label: {
+                    Text(showingAll ? "채우기" : "전체 보기")
+                        .font(MyFisFont.label)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                        .padding(.horizontal, MyFisSpacing.md)
+                        .frame(height: MyFisSize.buttonSmall)
+                        .background(
+                            MyFisColor.surface2,
+                            in: Capsule(style: .continuous)
+                        )
+                        .overlay(Capsule(style: .continuous)
+                            .strokeBorder(MyFisColor.borderSubtle, lineWidth: 1))
+                }
+                .buttonStyle(.myFisTap)
+                .padding(.trailing, MyFisSpacing.screenHorizontal)
+                .padding(.bottom, bottomInset + MyFisSpacing.lg)
+            }
         }
         .background(MyFisColor.bgBase)
         .clipped()
     }
 
-    // 1배보다 작게는 못 줄인다. 줄이면 도면이 점이 되고 다시 찾기가 더 어렵다
-    private func clampScale(_ value: CGFloat) -> CGFloat { min(max(value, 1), 4) }
+    /// 민 거리를 **가장자리 안**으로 되돌린다. 도면이 화면보다 작으면 가운데에 못 박는다
+    private func clamp(_ value: CGSize, plan: CGSize, visible: CGSize,
+                       scale: CGFloat) -> CGSize {
+        let slackX = max((plan.width * scale - visible.width) / 2, 0)
+        let slackY = max((plan.height * scale - visible.height) / 2, 0)
+        return CGSize(width: min(max(value.width, -slackX), slackX),
+                      height: min(max(value.height, -slackY), slackY))
+    }
 
-    private func draw(context: GraphicsContext, size: CGSize) {
+    private func draw(context: GraphicsContext, size: CGSize,
+                      visible: CGSize, scale s: CGFloat) {
         let plan = BranchFloorPlan.size
-        // 폭에 맞춘 뒤 손으로 키운 만큼 곱한다
-        let fit = (size.width - MyFisSpacing.xl * 2) / plan.width
-        let s = fit * scale
-        let originX = (size.width - plan.width * s) / 2 + offset.width
-        let originY = (size.height - bottomInset - plan.height * s) / 2 + offset.height
+        let originX = (visible.width - plan.width * s) / 2 + offset.width
+        let originY = (visible.height - plan.height * s) / 2 + offset.height
 
         func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
             CGPoint(x: originX + x * s, y: originY + y * s)
@@ -102,6 +166,26 @@ private struct BranchMap: View {
         }
         func rounded(_ r: CGRect, _ radius: CGFloat) -> Path {
             Path(roundedRect: rect(r), cornerRadius: radius * s, style: .continuous)
+        }
+
+        // ⓪ 바닥 결 — **오므려서 도면이 작아졌을 때 화면이 비지 않게** 한다.
+        // 지도 앱의 바깥은 빈 검정이 아니라 늘 뭔가 깔려 있다
+        let step = 20 * s
+        if step > 6 {
+            var grid = Path()
+            var x = originX.truncatingRemainder(dividingBy: step)
+            while x < size.width {
+                grid.move(to: CGPoint(x: x, y: 0))
+                grid.addLine(to: CGPoint(x: x, y: size.height))
+                x += step
+            }
+            var y = originY.truncatingRemainder(dividingBy: step)
+            while y < size.height {
+                grid.move(to: CGPoint(x: 0, y: y))
+                grid.addLine(to: CGPoint(x: size.width, y: y))
+                y += step
+            }
+            context.stroke(grid, with: .color(MyFisColor.surface1), lineWidth: 1)
         }
 
         // ① 바닥 — **벽 모양 그대로** 칠한다. 네모로 칠하면 꺾인 구석 밖까지 바닥이 나온다

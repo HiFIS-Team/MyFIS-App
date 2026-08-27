@@ -1,5 +1,7 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -31,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +41,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -66,6 +70,7 @@ import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.tapWithHaptics
+import kotlinx.coroutines.launch
 
 /**
  * 홈 헤더의 **핀으로 들어오는 잎 화면** (SPEC M-08 지점 내부 지도).
@@ -127,6 +132,19 @@ fun BranchScreen(onBack: () -> Unit = {}) {
             // 평면도가 **바탕**이다. 헤더 · 찾기 줄이 그 위에 얹힌다
             BranchMap(bottomInset = 264.dp)
 
+            // 지도가 화면을 채우니 **헤더 밑이 어두워야 글자가 읽힌다.**
+            // 판을 깔면 지도가 잘려 보이므로 **번지는 그늘**로 둔다 (지도 앱과 같은 방식)
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(MyFisColor.BgBase, MyFisColor.BgBase.copy(alpha = 0f)),
+                        ),
+                    ),
+            )
+
             Column {
                 DetailHeader(title = "기구 찾기", onBack = onBack)
 
@@ -143,18 +161,29 @@ fun BranchScreen(onBack: () -> Unit = {}) {
 /**
  * 평면도 — **화면의 바탕**. 확대 · 이동만 되고 돌리지는 않는다 (SPEC M-08).
  *
- * 처음엔 **폭에 맞춰** 앉힌다. 헬스장은 옆으로 긴데 폰은 세로로 길어서,
- * 높이에 맞추면 화면 밖으로 넘치고 손으로 찾아 들어가야 한다.
+ * 처음엔 **화면을 꽉 채운다** 🟢 (2026-08-27 수정). 폭에만 맞췄더니 도면이 화면 가운데
+ * 떠 있는 그림처럼 보였다 — 지도 앱은 화면에 빈 데가 없고, 보고 싶은 데로 밀어서 간다.
  *
- * @param bottomInset 시트에 가려지는 높이. **가려질 자리를 빼고 가운데에 놓는다** —
- * 화면 한가운데에 놓으면 도면 아래쪽이 시트에 먹힌다.
+ * - 처음 배율 = **덮기**(가로 · 세로 중 큰 쪽에 맞춤). 화면에 빈 데가 안 생긴다
+ * - 가장 작게 = **전부 보기**. 한 번 오므리면 헬스장 전체가 들어온다
+ * - 민 거리는 **가장자리에서 멈춘다.** 안 막으면 도면이 화면 밖으로 사라진다
+ *
+ * @param bottomInset 시트에 가려지는 높이. **가려질 자리를 빼고 채운다**
  */
 @Composable
 private fun BranchMap(bottomInset: Dp) {
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
-    var scale by remember { mutableFloatStateOf(1f) }
+    // 0 은 아직 못 정했다는 뜻이다 — 화면 크기를 알아야 정할 수 있다
+    var zoom by remember { mutableFloatStateOf(0f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    // 전부 보고 있는 중인지. 버튼 글자가 이걸 따라 바뀐다
+    var showingAll by remember { mutableStateOf(false) }
+    // 화면 크기를 그릴 때 알게 되므로, 단추가 쓸 수 있게 받아 둔다
+    var fitScale by remember { mutableFloatStateOf(0f) }
+    var coverScale by remember { mutableFloatStateOf(0f) }
+    val scope = rememberCoroutineScope()
+    val interaction = remember { MutableInteractionSource() }
 
     val zoneTint = MyFisColor.run {
         mapOf(
@@ -170,28 +199,73 @@ private fun BranchMap(bottomInset: Dp) {
         PlanTone.PILLAR to MyFisColor.Surface3,
         PlanTone.PLANT to MyFisColor.CategoryGreen,
     )
-    val gapPx = with(density) { MyFisSpacing.xl.toPx() }
     val insetPx = with(density) { bottomInset.toPx() }
+    val marginPx = with(density) { MyFisSpacing.xxl.toPx() }
 
+    Box(Modifier.fillMaxSize()) {
     Canvas(
         Modifier
             .fillMaxSize()
             .clipToBounds()
             .pointerInput(Unit) {
-                detectTransformGestures { _, pan, zoom, _ ->
-                    // 1배보다 작게는 못 줄인다. 줄이면 도면이 점이 되고 다시 찾기가 더 어렵다
-                    scale = (scale * zoom).coerceIn(1f, 4f)
-                    offset += pan
+                detectTransformGestures { _, pan, gestureZoom, _ ->
+                    val visibleW = size.width.toFloat()
+                    val visibleH = (size.height - insetPx).coerceAtLeast(1f)
+                    val fit = minOf(
+                        (visibleW - marginPx * 2) / BranchFloorPlan.WIDTH,
+                        (visibleH - marginPx * 2) / BranchFloorPlan.HEIGHT,
+                    )
+                    val cover = maxOf(
+                        visibleW / BranchFloorPlan.WIDTH,
+                        visibleH / BranchFloorPlan.HEIGHT,
+                    )
+                    val next = ((if (zoom > 0f) zoom else cover) * gestureZoom)
+                        .coerceIn(fit, cover * 2.5f)
+                    zoom = next
+                    showingAll = next <= fit * 1.05f
+                    // 민 거리를 **가장자리 안**으로 되돌린다.
+                    // 도면이 화면보다 작으면 가운데에 못 박는다
+                    val slackX =
+                        ((BranchFloorPlan.WIDTH * next - visibleW) / 2).coerceAtLeast(0f)
+                    val slackY =
+                        ((BranchFloorPlan.HEIGHT * next - visibleH) / 2).coerceAtLeast(0f)
+                    offset = Offset(
+                        (offset.x + pan.x).coerceIn(-slackX, slackX),
+                        (offset.y + pan.y).coerceIn(-slackY, slackY),
+                    )
                 }
             },
     ) {
-        val s = (size.width - gapPx * 2) / BranchFloorPlan.WIDTH * scale
-        val originX = (size.width - BranchFloorPlan.WIDTH * s) / 2 + offset.x
-        val originY = (size.height - insetPx - BranchFloorPlan.HEIGHT * s) / 2 + offset.y
+        val visibleW = size.width
+        val visibleH = (size.height - insetPx).coerceAtLeast(1f)
+        val cover = maxOf(visibleW / BranchFloorPlan.WIDTH, visibleH / BranchFloorPlan.HEIGHT)
+        coverScale = cover
+        fitScale = minOf(
+            (visibleW - marginPx * 2) / BranchFloorPlan.WIDTH,
+            (visibleH - marginPx * 2) / BranchFloorPlan.HEIGHT,
+        )
+        val s = if (zoom > 0f) zoom else cover
+        val originX = (visibleW - BranchFloorPlan.WIDTH * s) / 2 + offset.x
+        val originY = (visibleH - BranchFloorPlan.HEIGHT * s) / 2 + offset.y
 
         fun px(x: Float, y: Float) = Offset(originX + x * s, originY + y * s)
-        fun box(x: Float, y: Float, w: Float, h: Float) =
-            px(x, y) to Size(w * s, h * s)
+        fun box(x: Float, y: Float, w: Float, h: Float) = px(x, y) to Size(w * s, h * s)
+
+        // ⓪ 바닥 결 — **오므려서 도면이 작아졌을 때 화면이 비지 않게** 한다.
+        // 지도 앱의 바깥은 빈 검정이 아니라 늘 뭔가 깔려 있다
+        val step = 20 * s
+        if (step > 6f) {
+            var x = originX.mod(step)
+            while (x < size.width) {
+                drawLine(MyFisColor.Surface1, Offset(x, 0f), Offset(x, size.height), 1f)
+                x += step
+            }
+            var y = originY.mod(step)
+            while (y < size.height) {
+                drawLine(MyFisColor.Surface1, Offset(0f, y), Offset(size.width, y), 1f)
+                y += step
+            }
+        }
 
         // ① 바닥 — **벽 모양 그대로** 칠한다. 네모로 칠하면 꺾인 구석 밖까지 바닥이 나온다
         val shell = Path().apply {
@@ -205,26 +279,26 @@ private fun BranchMap(bottomInset: Dp) {
         // ② 구역 — 옅게 칠하고 테두리를 한 겹
         BranchFloorPlan.zones.forEach { zone ->
             val tint = zoneTint.getValue(zone.tint)
-            val (at, size) = box(zone.x, zone.y, zone.w, zone.h)
+            val (at, boxSize) = box(zone.x, zone.y, zone.w, zone.h)
             val radius = CornerRadius(5 * s, 5 * s)
-            drawRoundRect(tint.copy(alpha = 0.14f), at, size, radius)
-            drawRoundRect(tint.copy(alpha = 0.45f), at, size, radius, Stroke(1f))
+            drawRoundRect(tint.copy(alpha = 0.14f), at, boxSize, radius)
+            drawRoundRect(tint.copy(alpha = 0.45f), at, boxSize, radius, Stroke(1f))
         }
 
         // ③ 방 — 구역과 달리 **벽으로 막힌 곳**이라 테두리를 진하게 두른다
         BranchFloorPlan.rooms.forEach { room ->
             val tint = zoneTint.getValue(room.tint)
-            val (at, size) = box(room.x, room.y, room.w, room.h)
+            val (at, boxSize) = box(room.x, room.y, room.w, room.h)
             val radius = CornerRadius(2 * s, 2 * s)
-            drawRoundRect(tint.copy(alpha = 0.12f), at, size, radius)
-            drawRoundRect(MyFisColor.BorderSubtle, at, size, radius, Stroke(1f))
+            drawRoundRect(tint.copy(alpha = 0.12f), at, boxSize, radius)
+            drawRoundRect(MyFisColor.BorderSubtle, at, boxSize, radius, Stroke(1f))
         }
 
         // ④ 물건
         BranchFloorPlan.items.forEach { item ->
-            val (at, size) = box(item.x, item.y, item.w, item.h)
+            val (at, boxSize) = box(item.x, item.y, item.w, item.h)
             drawRoundRect(
-                toneColor.getValue(item.tone), at, size,
+                toneColor.getValue(item.tone), at, boxSize,
                 CornerRadius(item.radius * s, item.radius * s),
             )
         }
@@ -261,6 +335,31 @@ private fun BranchMap(bottomInset: Dp) {
             MyFisColor.Accent,
         )
         planLabel(measurer, density, "출입구", px(ex, ey + 6), 8 * s, MyFisColor.Accent)
+    }
+
+    // 꽉 채우면 헬스장 **전체가 안 보인다.** 한 번에 되돌아올 길을 둔다 —
+    // 지도 앱이 `현위치` 단추를 띄워 두는 것과 같은 자리다
+    Text(
+        if (showingAll) "채우기" else "전체 보기",
+        style = MyFisTheme.type.label,
+        color = MyFisColor.TextPrimary,
+        modifier = Modifier
+            .align(Alignment.BottomEnd)
+            .padding(end = MyFisSpacing.screenHorizontal, bottom = bottomInset + MyFisSpacing.lg)
+            .background(MyFisColor.Surface2, MyFisRadius.full)
+            .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.full)
+            .tapWithHaptics(interaction) {
+                val target = if (showingAll) coverScale else fitScale
+                if (target <= 0f) return@tapWithHaptics
+                showingAll = !showingAll
+                offset = Offset.Zero
+                val from = if (zoom > 0f) zoom else coverScale
+                scope.launch {
+                    animate(from, target, animationSpec = tween(320)) { value, _ -> zoom = value }
+                }
+            }
+            .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.sm),
+    )
     }
 }
 
