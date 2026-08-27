@@ -110,18 +110,20 @@ private enum class BranchPlace(
      *
      * 색이 붙는 기준은 둘 중 하나다 — **① 색이 곧 뜻인 표지판**(화장실의 파랑·분홍은
      * 남녀 표시 그 자체, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다),
-     * **② 사용자가 준 원본이 원색인 것**(프리웨이트 · 유산소 · 스트레칭 — 혜택 행과 같은 그림).
+     * **② 사용자가 준 원본이 원색인 것**(나머지 전부).
+     *
+     * 지금은 **샤워실만** 단색이다 — 원본을 아직 안 받았다.
      */
     val colorIcon: Boolean = false,
 ) {
     FREE(R.drawable.ic_place_free, "프리웨이트", colorIcon = true),
-    MACHINE(R.drawable.ic_place_machine, "머신"),
+    MACHINE(R.drawable.ic_place_machine, "머신", colorIcon = true),
     CARDIO(R.drawable.ic_place_cardio, "유산소", colorIcon = true),
     STRETCH(R.drawable.ic_place_stretch, "스트레칭", colorIcon = true),
     TOILET(R.drawable.ic_place_toilet, "화장실", colorIcon = true),
     SHOWER(R.drawable.ic_place_shower, "샤워실"),
     FITTING(R.drawable.ic_place_fitting, "탈의실", colorIcon = true),
-    DESK(R.drawable.ic_place_desk, "데스크"),
+    DESK(R.drawable.ic_place_desk, "데스크", colorIcon = true),
 }
 
 /**

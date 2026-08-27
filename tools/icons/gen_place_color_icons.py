@@ -2,10 +2,13 @@
 
     python3 tools/icons/gen_place_color_icons.py
 
-나머지 여섯은 단색 아웃라인(`gen_place_icons.py`)이다. 여기 둘은 **표지판**이라 색이 곧 뜻이다 —
-화장실의 파랑·분홍은 남녀 표시 그 자체이고, 탈의실의 커튼은 색이 빠지면 창문으로 읽힌다.
+화장실 · 탈의실은 **표지판**이라 색이 곧 뜻이고 (파랑·분홍이 남녀 표시 그 자체다),
+머신 · 데스크는 **사용자가 준 원본이 원색**이다.
 
 쓰는 쪽에서 tint 를 걸지 않는다 (`BranchPlace.colorIcon == true`).
+
+⚠️ 원본이 **아이소메트릭**(비스듬히 본 그림)이어도 그대로 옮기지 않는다. 24px 안에서
+비스듬한 면은 전부 얇은 삼각형이 되어 사라진다 — **옆에서 본 그림으로 다시 세운다.**
 """
 import os, json
 
@@ -79,7 +82,70 @@ FITTING = [
     ("fill", rrect(2.9, 4.6, 18.2, 1.8, 0.6), F_ROD),              # 봉 — 커튼 위에 얹는다
 ]
 
-ICONS = {"ic_place_toilet": TOILET, "ic_place_fitting": FITTING}
+# ── 머신 ──────────────────────────────────────────────────────────────────
+M_FRAME = "#C7D4EE"
+M_BAR = "#DEE6F7"
+M_PLATE = "#E8352E"
+M_PLATE_EDGE = "#C92B25"
+M_HUB = "#F9C74F"
+M_SEAT = "#474C53"
+M_SEAT_LIT = "#5C626B"
+
+# 인클라인 벤치프레스. **빨간 원판**이 프리웨이트(쇳빛 원판)와 갈라 주는 표시다 —
+# 같은 랙 모양이라도 색이 다르면 다른 구역으로 읽힌다
+MACHINE = [
+    ("fill", rrect(3.4, 19.6, 17.2, 1.9, 0.9), M_FRAME),           # 받침
+    ("fill", rrect(5.6, 8.2, 1.7, 11.6, 0.6), M_FRAME),            # 왼쪽 기둥
+    ("fill", rrect(17, 8.2, 1.7, 11.6, 0.6), M_FRAME),             # 오른쪽 기둥
+    # ⚠️ 기둥을 A 자로 기울였더니 바와 꼭짓점이 겹쳐 **이젤**로 읽혔다. 수직으로 세운다
+    ("fill", rrect(1.8, 5.2, 20.4, 1.8, 0.9), M_BAR),              # 바 — 기둥 위에 얹힌다
+    ("fill", circ(4.2, 6.1, 3.4), M_PLATE_EDGE),                   # 왼쪽 원판
+    ("fill", circ(4.2, 6.1, 2.8), M_PLATE),
+    ("fill", circ(4.2, 6.1, 1.1), M_HUB),
+    ("fill", circ(19.8, 6.1, 3.4), M_PLATE_EDGE),                  # 오른쪽 원판
+    ("fill", circ(19.8, 6.1, 2.8), M_PLATE),
+    ("fill", circ(19.8, 6.1, 1.1), M_HUB),
+    # ⚠️ 등받이를 **비스듬한 판 하나**로 두면 금지 표시의 빗금처럼 읽힌다.
+    # **깔개(가로) + 등받이(비스듬)** 두 조각이라야 인클라인 벤치가 된다
+    ("fill", rrect(6, 16.4, 7.6, 2.8, 0.7), M_SEAT),               # 깔개
+    ("fill", "M11.6,17.4 L16.4,11.4 L18.9,13.4 L14.1,19.4 Z", M_SEAT),   # 등받이
+    ("fill", "M11.6,17.4 L16.4,11.4 L17.2,12.1 L12.4,18.1 Z", M_SEAT_LIT),
+]
+
+# ── 데스크 ────────────────────────────────────────────────────────────────
+D_BODY = "#F0B70E"
+D_BODY_EDGE = "#DDA409"
+D_BODY_LIT = "#F8CF52"
+D_TOP = "#E7E7E9"
+D_TOP_EDGE = "#D1D1D5"
+D_MONITOR = "#6B6B6B"
+D_MONITOR_LIT = "#8C8C8C"
+D_CLOCK = "#7C7C7C"
+D_FACE = "#F2F2F2"
+
+# 노란 카운터 + 모니터. 시계는 **벽시계**라 데스크를 `프론트` 로 못박아 준다 —
+# 다만 28px 에서 바늘은 안 보이므로 **테와 흰 판만** 남긴다
+DESK = [
+    ("fill", circ(19.6, 4.4, 3.3), D_CLOCK),                       # 벽시계
+    ("fill", circ(19.6, 4.4, 2.4), D_FACE),
+    ("fill", rrect(19.25, 2.6, 0.7, 2.1, 0.35), D_CLOCK),          # 긴 바늘
+    ("fill", rrect(19.25, 4.05, 1.9, 0.7, 0.35), D_CLOCK),         # 짧은 바늘
+    ("fill", rrect(6.3, 9.6, 1.4, 2.2, 0), D_MONITOR),             # 모니터 목
+    ("fill", rrect(2.3, 3.3, 9.4, 6.9, 1.1), D_MONITOR),           # 모니터
+    ("fill", rrect(3.5, 4.5, 0.75, 1.8, 0.37), D_MONITOR_LIT),     # 화면 빛
+    ("fill", rrect(1.6, 14.1, 20.8, 8.2, 0.8), D_BODY),            # 카운터 몸통
+    ("fill", rrect(20.2, 14.1, 2.2, 8.2, 0.8), D_BODY_EDGE),       # 오른쪽 결
+    ("fill", rrect(3.1, 16, 0.75, 2, 0.37), D_BODY_LIT),
+    ("fill", rrect(0.7, 11.1, 22.6, 3.3, 0.9), D_TOP),             # 상판 — 몸통보다 넓다
+    ("fill", rrect(21.2, 11.1, 2.1, 3.3, 0.9), D_TOP_EDGE),
+]
+
+ICONS = {
+    "ic_place_toilet": TOILET,
+    "ic_place_fitting": FITTING,
+    "ic_place_machine": MACHINE,
+    "ic_place_desk": DESK,
+}
 
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
                 '<vector xmlns:android="http://schemas.android.com/apk/res/android"\n'
