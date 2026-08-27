@@ -5,6 +5,11 @@ import SwiftUI
 /// 짜임은 **지도 앱 방식**이다 🟢 (2026-08-27) — 평면도가 화면을 채우고,
 /// 찾기 줄은 그 위에 뜨고, 고르는 것들은 **바닥 시트** 안으로 들어간다.
 ///
+/// ⚠️ 다만 **헤더 밑에서 시작한다.** 네이버·카카오맵이 지도를 끝까지 까는 건 그 화면에
+/// **헤더가 없기** 때문이다 — 떠 있는 단추만 있다. 우리는 제목이 있는 진짜 헤더를 쓰는데,
+/// 제목을 움직이는 배경 위에 올리려면 그늘을 그만큼 진하게 깔아야 하고
+/// **그럴 거면 이미 불투명한 바**다. 떠 있어야 하는 건 헤더가 아니라 **찾기 줄**이다.
+///
 /// ⚠️ 처음엔 위에서부터 찾기 줄 → 빠른 고르기 → 자주 쓰는 기구 → 지도로 쌓았는데,
 /// 그러면 지도에 **280pt** 밖에 안 남았다. 이 화면의 북극성은 "쉬는 시간 20초 안에"인데
 /// 지도를 보려고 스크롤해야 하면 그 자체로 실패다 (SPEC M-08).
@@ -23,28 +28,22 @@ struct BranchScreen: View {
             let full = geo.size.height * 0.56
 
             ZStack {
-                // 평면도가 **바탕**이다. 헤더 · 찾기 줄 · 시트가 전부 이 위에 얹힌다
-                BranchMap(bottomInset: peek)
-
-                // 지도가 화면을 채우니 **헤더 밑이 어두워야 글자가 읽힌다.**
-                // 판을 깔면 지도가 잘려 보이므로 **번지는 그늘**로 둔다 (지도 앱과 같은 방식)
-                LinearGradient(
-                    colors: [MyFisColor.bgBase, MyFisColor.bgBase.opacity(0)],
-                    startPoint: .top, endPoint: .bottom
-                )
-                .frame(height: 190)
-                .frame(maxHeight: .infinity, alignment: .top)
-                .allowsHitTesting(false)
-                .ignoresSafeArea(edges: .top)
-
                 VStack(spacing: 0) {
+                    // 헤더는 **불투명한 바**다. 지도가 밑에서 시작한다
                     DetailHeader(title: "기구 찾기", onBack: onBack)
+                        .background(MyFisColor.bgBase)
 
-                    BranchSearchBar()
-                        .padding(.horizontal, MyFisSpacing.screenHorizontal)
-                        .padding(.top, MyFisSpacing.sm)
+                    ZStack(alignment: .top) {
+                        // 평면도가 **바탕**이다. 찾기 줄과 시트가 이 위에 얹힌다
+                        BranchMap(bottomInset: peek)
+
+                        // 찾기 줄만 **떠 있다.** 자기 판(`surface.1`)과 라임 테두리가 있어
+                        // 그늘 없이도 지도 위에서 읽힌다
+                        BranchSearchBar()
+                            .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                            .padding(.top, MyFisSpacing.sm)
+                    }
                 }
-                .frame(maxHeight: .infinity, alignment: .top)
 
                 BranchSheet(expanded: $expanded, peek: peek, full: full)
                     .frame(maxHeight: .infinity, alignment: .bottom)
