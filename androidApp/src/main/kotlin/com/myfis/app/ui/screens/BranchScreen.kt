@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -102,28 +101,15 @@ private fun BranchSearchBar(modifier: Modifier = Modifier) {
  * 이 판은 지도의 **구역과 1:1** 로 맞춘다 — 스쿼트랙 · 벤치 · 덤벨은 셋 다 프리웨이트존 안이라
  * 나란히 놓을 것이 아니었다. 앞 넷은 운동 구역, 뒤 넷은 편의시설이다.
  */
-private enum class BranchPlace(
-    val icon: Int,
-    val title: String,
-    /**
-     * **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
-     *
-     * 색이 붙는 기준은 둘 중 하나다 — **① 색이 곧 뜻인 표지판**(화장실의 파랑·분홍은
-     * 남녀 표시 그 자체, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다),
-     * **② 사용자가 준 원본이 원색인 것**(나머지 전부).
-     *
-     * 지금은 **샤워실만** 단색이다 — 원본을 아직 안 받았다.
-     */
-    val colorIcon: Boolean = false,
-) {
-    FREE(R.drawable.ic_place_free, "프리웨이트", colorIcon = true),
-    MACHINE(R.drawable.ic_place_machine, "머신", colorIcon = true),
-    CARDIO(R.drawable.ic_place_cardio, "유산소", colorIcon = true),
-    STRETCH(R.drawable.ic_place_stretch, "스트레칭", colorIcon = true),
-    TOILET(R.drawable.ic_place_toilet, "화장실", colorIcon = true),
+private enum class BranchPlace(val icon: Int, val title: String) {
+    FREE(R.drawable.ic_place_free, "프리웨이트"),
+    MACHINE(R.drawable.ic_place_machine, "머신"),
+    CARDIO(R.drawable.ic_place_cardio, "유산소"),
+    STRETCH(R.drawable.ic_place_stretch, "스트레칭"),
+    TOILET(R.drawable.ic_place_toilet, "화장실"),
     SHOWER(R.drawable.ic_place_shower, "샤워실"),
-    FITTING(R.drawable.ic_place_fitting, "탈의실", colorIcon = true),
-    DESK(R.drawable.ic_place_desk, "데스크", colorIcon = true),
+    FITTING(R.drawable.ic_place_fitting, "탈의실"),
+    DESK(R.drawable.ic_place_desk, "데스크"),
 }
 
 /**
@@ -150,7 +136,7 @@ private fun PlaceQuickPick(modifier: Modifier = Modifier) {
 /**
  * 아이콘 판 + 라벨. 판의 짜임은 **혜택 행과 같다** (§6.23) — 같은 물건은 같게 그린다.
  *
- * 아이콘은 **기본이 단색 아웃라인**이고, 표지판인 둘만 원색이다 (`colorIcon`).
+ * 아이콘은 **여덟이 전부 원색**이라 tint 를 걸지 않는다 (§8).
  * 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
  */
 @Composable
@@ -170,21 +156,12 @@ private fun PlaceCell(place: BranchPlace, modifier: Modifier = Modifier) {
                 .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
             contentAlignment = Alignment.Center,
         ) {
-            // 원색 벌은 **`Image`** 로 그린다 — `Icon` 은 tint 로 한 색을 덮어씌운다
-            if (place.colorIcon) {
-                Image(
-                    painter = painterResource(place.icon),
-                    contentDescription = null, // 밑의 라벨이 이름 역할을 한다
-                    modifier = Modifier.size(28.dp),
-                )
-            } else {
-                Icon(
-                    painter = painterResource(place.icon),
-                    contentDescription = null,
-                    tint = MyFisColor.TextPrimary,
-                    modifier = Modifier.size(28.dp),
-                )
-            }
+            // ⚠️ 원색 벌은 **`Image`** 로 그린다 — `Icon` 은 tint 로 한 색을 덮어씌운다
+            Image(
+                painter = painterResource(place.icon),
+                contentDescription = null, // 밑의 라벨이 이름 역할을 한다
+                modifier = Modifier.size(28.dp),
+            )
         }
 
         Text(

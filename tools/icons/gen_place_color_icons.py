@@ -3,7 +3,7 @@
     python3 tools/icons/gen_place_color_icons.py
 
 화장실 · 탈의실은 **표지판**이라 색이 곧 뜻이고 (파랑·분홍이 남녀 표시 그 자체다),
-머신 · 데스크는 **사용자가 준 원본이 원색**이다.
+머신 · 데스크 · 샤워실은 **사용자가 준 원본이 원색**이다.
 
 쓰는 쪽에서 tint 를 걸지 않는다 (`BranchPlace.colorIcon == true`).
 
@@ -140,11 +140,53 @@ DESK = [
     ("fill", rrect(21.2, 11.1, 2.1, 3.3, 0.9), D_TOP_EDGE),
 ]
 
+# ── 샤워실 ────────────────────────────────────────────────────────────────
+S_PIPE = "#635E66"
+S_HEAD = "#F4F4F5"
+S_HEAD_EDGE = "#DFDFE1"
+S_HEAD_LIT = "#FFFFFF"
+S_CAP = "#4F4A54"
+S_WATER = "#9EC0F5"
+
+# 물줄기는 **45° 격자**로 뿌린다. 한 줄씩 손으로 놓으면 간격이 흔들려 얼룩이 된다.
+#
+# `a` 는 흐르는 쪽(머리에서 멀어지는 거리), `b` 는 퍼지는 쪽이다.
+# ⚠️ 칸 간격은 **점 길이 + 굵기보다 커야 한다.** 처음엔 성겨서 줄기 예닐곱 개만 남았고,
+# 촘촘히 했더니 이번엔 점끼리 붙어 **빗금 친 덩어리**가 됐다. 사이가 보여야 물이다
+def _spray():
+    out = []
+    hx, hy = 8.8, 3.6
+    d = 0.7071
+    a = 3.8
+    while a <= 20:
+        b = -9.5
+        while b <= 9.5:
+            x = hx + d * (a + b)
+            y = hy + d * (a - b)
+            if 2.6 <= x <= 22.6 and 5.2 <= y <= 22.6:
+                out.append(("stroke", f"M{n(x)},{n(y)} L{n(x + 1)},{n(y + 1)}", S_WATER, 1.1))
+            b += 3.6
+        a += 3.8
+    return out
+
+
+SHOWER = [
+    # 파이프는 **벽에서 꺾여 나온다.** 곧은 막대로 두면 어디에 달린 건지 안 보인다
+    ("stroke", "M1.4,23 V5.6 a3.4,3.4 0 0 1 3.4,-3.4 h2.2", S_PIPE, 2),
+] + _spray() + [
+    ("fill", circ(8.8, 3.6, 3.55), S_HEAD_EDGE),
+    ("fill", circ(8.8, 3.6, 3.2), S_HEAD),
+    ("fill", circ(7.8, 2.4, 1.5), S_HEAD_LIT),                     # 빛
+    # 물 나오는 판. **머리 한가운데를 지나게** 두면 반으로 갈린 공이 된다 — 아래쪽으로 밀어 둔다
+    ("stroke", "M7.35,6.85 L12.05,2.15", S_CAP, 2),
+]
+
 ICONS = {
     "ic_place_toilet": TOILET,
     "ic_place_fitting": FITTING,
     "ic_place_machine": MACHINE,
     "ic_place_desk": DESK,
+    "ic_place_shower": SHOWER,
 }
 
 ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
@@ -156,7 +198,18 @@ ANDROID_HEAD = ('<?xml version="1.0" encoding="utf-8"?>\n'
 
 for name, parts in ICONS.items():
     android, svg = "", ""
-    for _kind, d, color in parts:
+    for part in parts:
+        kind, d, color = part[:3]
+        if kind == "stroke":
+            w = part[3]
+            android += (f'    <path\n        android:pathData="{d}"\n'
+                        f'        android:strokeWidth="{w}"\n'
+                        f'        android:strokeColor="{color}"\n'
+                        f'        android:strokeLineCap="round"\n'
+                        f'        android:strokeLineJoin="round" />\n')
+            svg += (f'  <path d="{d}" fill="none" stroke="{color}" stroke-width="{w}"'
+                    ' stroke-linecap="round" stroke-linejoin="round"/>\n')
+            continue
         android += (f'    <path\n        android:pathData="{d}"\n'
                     f'        android:fillColor="{color}" />\n')
         svg += f'  <path d="{d}" fill="{color}"/>\n'

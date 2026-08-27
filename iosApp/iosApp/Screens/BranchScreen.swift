@@ -62,6 +62,9 @@ enum BranchPlace: String, CaseIterable, Identifiable {
     case toilet, shower, fitting, desk
 
     var id: String { rawValue }
+
+    /// ⚠️ **여덟이 전부 원색 벌**이다 (§8). 쓰는 쪽에서 tint 를 걸지 않는다 —
+    /// 걸면 그림이 한 색으로 눌려 실루엣만 남는다
     var icon: String { "ic_place_\(rawValue)" }
 
     var title: String {
@@ -76,15 +79,6 @@ enum BranchPlace: String, CaseIterable, Identifiable {
         case .desk: "데스크"
         }
     }
-
-    /// **자기 색을 가진 그림**이라 tint 를 걸지 않는다 (§8 원색 벌).
-    ///
-    /// 색이 붙는 기준은 둘 중 하나다 — **① 색이 곧 뜻인 표지판**(화장실의 파랑·분홍은
-    /// 남녀 표시 그 자체, 탈의실 커튼은 색이 빠지면 창문으로 읽힌다),
-    /// **② 사용자가 준 원본이 원색인 것**(나머지 전부).
-    ///
-    /// 지금은 **샤워실만** 단색이다 — 원본을 아직 안 받았다.
-    var colorIcon: Bool { self != .shower }
 }
 
 /// **네 칸 × 두 줄.** 한 줄에 다섯을 넣으면 라벨(`프리웨이트`)이 줄어들고,
@@ -108,7 +102,7 @@ private struct PlaceQuickPick: View {
 
 /// 아이콘 판 + 라벨. 판의 짜임은 **혜택 행과 같다** (§6.23) — 같은 물건은 같게 그린다.
 ///
-/// 아이콘은 **기본이 단색 아웃라인**이고, 표지판인 둘만 원색이다 (`colorIcon`).
+/// 아이콘은 **여덟이 전부 원색**이라 tint 를 걸지 않는다.
 /// 라임은 안 쓴다 — 이 화면의 액센트는 찾기 줄 테두리 하나다 (§3.2 액센트 예산).
 private struct PlaceCell: View {
     let place: BranchPlace
@@ -119,9 +113,8 @@ private struct PlaceCell: View {
             VStack(spacing: MyFisSpacing.sm) {
                 Image(place.icon)
                     .resizable()
-                    .renderingMode(place.colorIcon ? .original : .template)
+                    .renderingMode(.original)
                     .frame(width: 28, height: 28)
-                    .foregroundStyle(MyFisColor.textPrimary)
                     .frame(width: MyFisSize.listRowMin, height: MyFisSize.listRowMin)
                     .background(
                         MyFisColor.surface2,
