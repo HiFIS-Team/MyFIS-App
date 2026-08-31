@@ -19,6 +19,10 @@ enum Route: Hashable {
     case storeItem(StoreItem)
     /// M-01 지점 선택 — 홈 헤더의 핀으로 들어온다
     case branch
+    /// P-05 물 마시기 — 활동 랜딩을 거치지 않고 바로 연다
+    case water
+    /// P-05 물 마시기 — 미션 시각 고르기
+    case waterTime
     // TODO: 회원권(M-06) 이 붙으면 추가한다.
 
     /// 잎 화면의 제목. 헤더가 이 값을 쓴다 — 화면마다 따로 적지 않는다
@@ -31,6 +35,7 @@ enum Route: Hashable {
         case .weightLog: "체중 기록"
         case .storeItem(let item): item.name
         case .branch: "지점"
+        case .water, .waterTime: "물 마시기"
         }
     }
 }

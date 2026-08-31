@@ -21,6 +21,8 @@ struct AppRoot: View {
     @State private var pages: [Route] = MyFisDebug.initialRoutes
     /// 스토어 검색 모드. **잎이 아니라 셸의 상태다** — 상품 상세의 검색 버튼도 이걸 켠다 (§6.9)
     @State private var storeSearching = MyFisDebug.startsInSearch
+    /// 물 마시기 미션 시각 — 두 화면이 나눠 쓴다. TODO(서버): 회원 설정으로 옮긴다 (SPEC P-05)
+    @State private var waterTimes = WaterSlot.defaultTimes
     /// 가장자리 스와이프로 끌고 있는 거리
     @State private var drag: CGFloat = 0
 
@@ -138,6 +140,13 @@ struct AppRoot: View {
                 StoreMyScreen(onBack: back, onCart: { open(.storeCart) })
             case .branch:
                 BranchScreen(onBack: back)
+            case .water:
+                WaterScreen(times: waterTimes, onClose: back,
+                            onChangeTime: { open(.waterTime) })
+            case .waterTime:
+                WaterTimeScreen(times: waterTimes,
+                                onSave: { waterTimes = $0 },
+                                onBack: back)
             }
         }
     }

@@ -32,6 +32,8 @@ enum MyFisDebug {
         case "activity": .activity(activityAction)
         case "store_item": .storeItem(StorePlaceholder.items[0])
         case "branch": .branch
+        case "water": .water
+        case "water_time": .waterTime
         default: nil
         }
     }

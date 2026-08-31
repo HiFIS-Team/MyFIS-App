@@ -203,6 +203,28 @@ enum BenefitKind {
         }
     }
 
+    /// **밝은 면(활동 화면)에서 쓰는 같은 갈래의 진한 색** 🟢 (2026-08-28).
+    ///
+    /// 갈래 색 원본은 흰 배경 위 1.3~3.0:1 이라 테두리·글자로 못 쓴다.
+    /// 색상·채도는 그대로 두고 밝기만 낮춰 **전부 4.5:1 이상**으로 맞춘 벌이다 (§3.1)
+    var lightColor: Color {
+        switch self {
+        case .attend: MyFisColor.lightAccentGold
+        case .routine: MyFisColor.lightAccentLime
+        case .cardio: MyFisColor.lightAccentBlue
+        case .stretch: MyFisColor.lightAccentViolet
+        case .water: MyFisColor.lightAccentCyan
+        case .dice: MyFisColor.lightAccentOrange
+        case .luck: MyFisColor.lightAccentTeal
+        case .scratch: MyFisColor.lightAccentFuchsia
+        case .quiz: MyFisColor.lightAccentIndigo
+        case .touch: MyFisColor.lightAccentGreen
+        case .sns: MyFisColor.lightAccentPink
+        case .weight: MyFisColor.lightAccentCoral
+        case .diet: MyFisColor.lightAccentGray
+        }
+    }
+
 }
 
 /// 적립 경로 한 줄 (SPEC P-01).

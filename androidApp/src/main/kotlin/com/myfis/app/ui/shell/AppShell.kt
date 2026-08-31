@@ -31,6 +31,9 @@ import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
 import com.myfis.app.ui.screens.StoreMyScreen
 import com.myfis.app.ui.screens.StoreScreen
+import com.myfis.app.ui.screens.WaterScreen
+import com.myfis.app.ui.screens.waterDefaultTimes
+import com.myfis.app.ui.screens.WaterTimeScreen
 import com.myfis.app.ui.screens.WeightLogScreen
 import com.myfis.app.ui.theme.MyFisColor
 
@@ -48,6 +51,8 @@ fun AppShell() {
     val nav = rememberNavController()
     // 상세로 넘길 상품. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다
     var storeItem by remember { mutableStateOf<StoreItem?>(null) }
+    // 물 마시기 미션 시각 — 두 화면이 나눠 쓴다. TODO(서버): 회원 설정으로 옮긴다 (SPEC P-05)
+    var waterTimes by rememberSaveable { mutableStateOf(waterDefaultTimes) }
     // 검색은 잎이 아니라 **스토어의 모드**다 (§6.9). 상품 상세의 검색 버튼도 이걸 켠다
     var storeSearching by rememberSaveable { mutableStateOf(false) }
     // 랜딩에 띄울 활동. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다 (상품 상세와 같다)
@@ -72,8 +77,13 @@ fun AppShell() {
                 onStoreSearching = { storeSearching = it },
                 onWeightLog = { nav.navigateOnce(Route.WEIGHT_LOG) },
                 onActivity = {
-                    benefitAction = it
-                    nav.navigateOnce(Route.ACTIVITY_INTRO)
+                    // 물 마시기는 **때가 정해진 미션**이라 랜딩을 거치지 않는다 (§6.25, 체중과 같은 처리)
+                    if (it.kind == BenefitKind.WATER) {
+                        nav.navigateOnce(Route.WATER)
+                    } else {
+                        benefitAction = it
+                        nav.navigateOnce(Route.ACTIVITY_INTRO)
+                    }
                 },
                 onStoreItem = {
                     storeItem = it
@@ -86,6 +96,20 @@ fun AppShell() {
             benefitAction?.let {
                 ActivityIntroScreen(action = it, onClose = { nav.popBackStack() })
             }
+        }
+        composable(Route.WATER) {
+            WaterScreen(
+                times = waterTimes,
+                onClose = { nav.popBackStack() },
+                onChangeTime = { nav.navigateOnce(Route.WATER_TIME) },
+            )
+        }
+        composable(Route.WATER_TIME) {
+            WaterTimeScreen(
+                times = waterTimes,
+                onSave = { waterTimes = it },
+                onBack = { nav.popBackStack() },
+            )
         }
         composable(Route.WEIGHT_LOG) {
             WeightLogScreen(onBack = { nav.popBackStack() })

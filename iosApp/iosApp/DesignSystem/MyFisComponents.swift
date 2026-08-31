@@ -6,6 +6,11 @@ import SwiftUI
 struct MyFisPrimaryButton: View {
     let title: String
     var isEnabled: Bool = true
+    /// 흰 바탕 화면(혜택·활동, §9 이탈 #1)에서는 **비활성** 면을 밝은 쪽으로 바꾼다
+    var light: Bool = false
+    /// 활동 화면은 **그 활동의 갈래 색**으로 칠한다 (2026-08-28). 기본은 라임
+    var fill: Color = MyFisColor.accent
+    var onFill: Color = MyFisColor.onAccent
     var action: () -> Void = {}
 
     var body: some View {
@@ -17,8 +22,10 @@ struct MyFisPrimaryButton: View {
         .buttonStyle(.myFisTap)
         .disabled(!isEnabled)
         // 비활성에 opacity 를 쓰지 않는다 (§9 의도된 이탈 #2) — 색 토큰 자체를 바꾼다.
-        .foregroundStyle(isEnabled ? MyFisColor.onAccent : MyFisColor.textTertiary)
-        .background(isEnabled ? MyFisColor.accent : MyFisColor.surface2)
+        .foregroundStyle(isEnabled ? onFill
+                         : (light ? MyFisColor.lightTextTertiary : MyFisColor.textTertiary))
+        .background(isEnabled ? fill
+                    : (light ? MyFisColor.lightSurface2 : MyFisColor.surface2))
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
     }
 }
@@ -102,6 +109,8 @@ struct MyFisCard<Content: View>: View {
     /// 기본은 `radius.md`. **화면 폭을 다 쓰는 배너만 `radius.lg`** 다 (§6.2) —
     /// 스토어 캐러셀·혜택 초대 배너가 둘 다 `lg` 로 그려져 있어 그 관행을 그대로 받는다
     var radius: CGFloat = MyFisRadius.md
+    /// 흰 바탕 화면(혜택·활동, §9 이탈 #1)에서는 면을 밝은 쪽으로 바꾼다
+    var light: Bool = false
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -110,7 +119,7 @@ struct MyFisCard<Content: View>: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(MyFisSpacing.cardPadding)
-        .background(MyFisColor.surface1)
+        .background(light ? MyFisColor.lightSurface1 : MyFisColor.surface1)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
     }
 }

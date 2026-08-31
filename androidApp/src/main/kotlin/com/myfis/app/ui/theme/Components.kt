@@ -31,6 +31,11 @@ fun MyFisPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    /** 흰 바탕 화면(혜택·활동, §9 이탈 #1)에서는 **비활성** 면을 밝은 쪽으로 바꾼다 */
+    light: Boolean = false,
+    /** 활동 화면은 **그 활동의 갈래 색**으로 칠한다 (2026-08-28). 기본은 라임 */
+    fill: Color = MyFisColor.Accent,
+    onFill: Color = MyFisColor.OnAccent,
 ) {
     Button(
         onClick = onClick,
@@ -38,11 +43,11 @@ fun MyFisPrimaryButton(
         modifier = modifier.fillMaxWidth().height(MyFisSize.buttonPrimary),
         shape = MyFisRadius.md,
         colors = ButtonDefaults.buttonColors(
-            containerColor = MyFisColor.Accent,
-            contentColor = MyFisColor.OnAccent,
+            containerColor = fill,
+            contentColor = onFill,
             // 비활성에 alpha 를 쓰지 않는다 (§9 의도된 이탈 #2) — 색 토큰 자체를 바꾼다.
-            disabledContainerColor = MyFisColor.Surface2,
-            disabledContentColor = MyFisColor.TextTertiary,
+            disabledContainerColor = if (light) MyFisColor.LightSurface2 else MyFisColor.Surface2,
+            disabledContentColor = if (light) MyFisColor.LightTextTertiary else MyFisColor.TextTertiary,
         ),
     ) {
         Text(text = text, style = MyFisTheme.type.titleSm)
@@ -121,12 +126,14 @@ fun MyFisDangerButton(text: String, onClick: () -> Unit, modifier: Modifier = Mo
 fun MyFisCard(
     modifier: Modifier = Modifier,
     shape: androidx.compose.ui.graphics.Shape = MyFisRadius.md,
+    /** 흰 바탕 화면(혜택·활동, §9 이탈 #1)에서는 면을 밝은 쪽으로 바꾼다 */
+    light: Boolean = false,
     content: @Composable ColumnScopeAlias.() -> Unit,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(MyFisColor.Surface1, shape)
+            .background(if (light) MyFisColor.LightSurface1 else MyFisColor.Surface1, shape)
             .padding(MyFisSpacing.cardPadding),
         content = content,
     )

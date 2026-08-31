@@ -19,33 +19,33 @@ struct ActivityIntroScreen: View {
     var body: some View {
         VStack(spacing: 0) {
             DetailHeader(title: action.kind.intro.kicker, onBack: onClose,
-                         backIcon: "ic_header_close", backLabel: "닫기")
+                         backIcon: "ic_header_close", backLabel: "닫기", light: true)
 
             ScrollView {
                 VStack(spacing: 0) {
                     // 작은 라벨이 제목 위에 붙어야 머리가 두 단으로 잡힌다 (레퍼런스와 같은 구성)
                     Text(action.kind.intro.label)
                         .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textSecondary)
+                        .foregroundStyle(MyFisColor.lightTextSecondary)
                         .padding(.bottom, MyFisSpacing.sm)
 
                     // 두 줄짜리 큰 제목 — 목록의 `~하고` / `~받기` 를 그대로 편 것이다.
                     // 목록에서 누른 문장이 그대로 커지므로 어디로 왔는지 다시 읽을 필요가 없다
                     Text(action.title)
-                        .foregroundStyle(MyFisColor.textPrimary)
+                        .foregroundStyle(MyFisColor.lightTextPrimary)
                         + Text("\n")
                         + Text(action.reward)
-                        .foregroundStyle(MyFisColor.textPrimary)
+                        .foregroundStyle(MyFisColor.lightTextPrimary)
 
                     Text(action.kind.intro.period)
                         .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
+                        .foregroundStyle(MyFisColor.lightTextTertiary)
                         .padding(.top, MyFisSpacing.md)
 
                     illustration
                         .padding(.top, MyFisSpacing.giant)
 
-                    HintBubble(text: action.kind.intro.hint, color: action.kind.color)
+                    HintBubble(text: action.kind.intro.hint, color: action.kind.lightColor)
                         .padding(.top, MyFisSpacing.giant)
                 }
                 .font(MyFisFont.display)
@@ -56,11 +56,21 @@ struct ActivityIntroScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
 
-            MyFisPrimaryButton(title: buttonTitle, isEnabled: stage != .playing, action: tapButton)
+            MyFisPrimaryButton(
+                title: buttonTitle,
+                isEnabled: stage != .playing,
+                light: true,
+                // 활동 화면의 Primary 는 **그 활동의 색**이다 (2026-08-28)
+                fill: action.kind.lightColor,
+                onFill: MyFisColor.lightBgBase,
+                action: tapButton
+            )
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
                 .padding(.bottom, MyFisSpacing.xxxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // **흰 바탕** — 혜택의 활동 화면은 밝다 (§9 이탈 #1, 2026-08-28 개정)
+        .background(MyFisColor.lightBgBase)
         .task { MyFisDebug.scheduleAutoPlay(tapButton) }
     }
 
@@ -117,7 +127,7 @@ private struct ActivityArt: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var floating = false
 
-    private var color: Color { action.kind.color }
+    private var color: Color { action.kind.lightColor }
 
     private var style: ActivityArtStyle { action.kind.intro.art }
 

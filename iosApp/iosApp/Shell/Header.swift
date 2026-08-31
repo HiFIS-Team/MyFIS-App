@@ -13,11 +13,16 @@ struct HeaderIcon: View {
     let label: String
     let action: () -> Void
 
-    init(_ asset: String, _ label: String, action: @escaping () -> Void) {
+    init(_ asset: String, _ label: String, action: @escaping () -> Void,
+         tint: Color = MyFisColor.textPrimary) {
         self.asset = asset
         self.label = label
         self.action = action
+        self.tint = tint
     }
+
+    /// 흰 바탕 화면에서는 어두운 아이콘을 쓴다 (§9 이탈 #1)
+    var tint: Color
 
     var body: some View {
         Button(action: action) {
@@ -30,7 +35,7 @@ struct HeaderIcon: View {
         }
         // 누름은 아이콘만 줄인다 (§6.7)
         .buttonStyle(.myFisIcon)
-        .foregroundStyle(MyFisColor.textPrimary)
+        .foregroundStyle(tint)
         .accessibilityLabel(label)
     }
 }
@@ -74,19 +79,23 @@ struct DetailHeader: View {
     var actionIcon: String?
     var actionLabel: String = ""
     var onAction: () -> Void = {}
+    /// 흰 바탕 화면(혜택·활동, §9 이탈 #1)에서는 글자·아이콘을 어두운 쪽으로 바꾼다
+    var light: Bool = false
+
+    private var ink: Color { light ? MyFisColor.lightTextPrimary : MyFisColor.textPrimary }
 
     var body: some View {
         HeaderBar {
-            HeaderIcon(backIcon, backLabel, action: onBack)
+            HeaderIcon(backIcon, backLabel, action: onBack, tint: ink)
         } center: {
             if let title {
                 Text(title)
                     .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
+                    .foregroundStyle(ink)
             }
         } trailing: {
             if let actionIcon {
-                HeaderIcon(actionIcon, actionLabel, action: onAction)
+                HeaderIcon(actionIcon, actionLabel, action: onAction, tint: ink)
             }
         }
     }

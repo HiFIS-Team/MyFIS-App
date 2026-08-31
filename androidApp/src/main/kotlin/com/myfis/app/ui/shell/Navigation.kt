@@ -29,6 +29,12 @@ object Route {
 
     /** M-01 지점 선택 — 홈 헤더의 핀으로 들어온다 */
     const val BRANCH = "branch"
+
+    /** P-05 물 마시기 — 활동 랜딩을 거치지 않고 바로 연다 */
+    const val WATER = "water"
+
+    /** P-05 물 마시기 — 미션 시각 고르기 */
+    const val WATER_TIME = "water_time"
 }
 
 /**

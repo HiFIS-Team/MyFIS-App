@@ -22,6 +22,52 @@ enum MyFisColor {
     static let textSecondary = Color(hex: 0xA3A9B5)
     static let textTertiary = Color(hex: 0x9BA2AF)
 
+    // ── 라이트 면 (혜택·활동 화면) 🟢 (2026-08-28 사용자 지정) ──
+    //
+    // §9 이탈 #1 은 "다크 고정" 이지만, **혜택(P-01)과 그 활동 화면들은 흰 바탕**으로 간다.
+    // 카카오뱅크·토스의 혜택 화면이 밝은 것과 같은 판단이다.
+    //
+    // ⚠️ **라임은 흰 면 위에서 `칠`로만 쓴다.** 글자·테두리로 쓰면 안 된다 —
+    //    흰 배경 대비가 **1.27:1** 이라 아예 안 보인다 (실측 2026-08-28).
+    //    라임 판 위 검정 글자는 16.6:1 로 잘 읽힌다 — 카카오뱅크가 노랑을 쓰는 방식과 같다
+    static let lightBgBase = Color(hex: 0xFFFFFF)
+    static let lightSurface1 = Color(hex: 0xF5F6F8)
+    static let lightSurface2 = Color(hex: 0xEDEFF2)
+    static let lightSurface3 = Color(hex: 0xE1E4E9)
+    static let lightBorderSubtle = Color(hex: 0xE5E7EB)
+    static let lightBorderStrong = Color(hex: 0xC3C8D0)
+
+    /// 17.2:1
+    static let lightTextPrimary = Color(hex: 0x1B1B1D)
+    /// 6.1:1
+    static let lightTextSecondary = Color(hex: 0x5A6273)
+    /// 4.8:1 — **AA 하한선이므로 이보다 밝게 쓰지 않는다** (다크의 `text.tertiary` 와 같은 구실)
+    static let lightTextTertiary = Color(hex: 0x6B7280)
+
+    // ── 밝은 면의 갈래 액센트 🟢 (2026-08-28 사용자 지정) ──
+    //
+    // 활동 화면이 흰 바탕이 되면서 **라임이 강조로 약해졌다** (흰 위 1.27:1).
+    // 그래서 밝은 면에서는 **그 활동의 갈래 색을 진하게** 써서 강조한다 — 활동마다 색이 다르다.
+    // 갈래 색 원본(`categoryCyan` #22D3EE)은 흰 위에서 1.81:1 이라 그대로는 못 쓴다.
+    //
+    // ⚠️ 이 색들은 **밝은 면 전용**이다. 다크 화면의 갈래 색은 §3.1 그대로 둔다
+    // 전부 **흰 배경 위 4.5:1 이상**이다 — 테두리로도, 칠 위 흰 글자로도 쓸 수 있다.
+    // 갈래 색의 색상(H)·채도(S)는 그대로 두고 밝기(L)만 낮춰 뽑았다
+    /// 물 마시기(P-05). 4.87:1
+    static let lightAccentCyan = Color(hex: 0x0277B5)
+    static let lightAccentGold = Color(hex: 0x986E03)
+    static let lightAccentLime = Color(hex: 0x647F06)
+    static let lightAccentBlue = Color(hex: 0x216BFF)
+    static let lightAccentViolet = Color(hex: 0x8058F8)
+    static let lightAccentOrange = Color(hex: 0xBE5804)
+    static let lightAccentTeal = Color(hex: 0x1B8578)
+    static let lightAccentFuchsia = Color(hex: 0xC90AE6)
+    static let lightAccentIndigo = Color(hex: 0x5867F6)
+    static let lightAccentGreen = Color(hex: 0x198841)
+    static let lightAccentPink = Color(hex: 0xE2127E)
+    static let lightAccentCoral = Color(hex: 0xE02F00)
+    static let lightAccentGray = Color(hex: 0x6D7688)
+
     // 액센트 — 한 화면에 2곳 이하
     static let accent = Color(hex: 0xC9F531)
     static let accentPressed = Color(hex: 0xA8CE24)

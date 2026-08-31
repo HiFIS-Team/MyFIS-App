@@ -93,7 +93,7 @@ fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
     Column(
         Modifier
             .fillMaxSize()
-            .background(MyFisColor.BgBase)
+            .background(MyFisColor.LightBgBase)
             .statusBarsPadding(),
     ) {
         DetailHeader(
@@ -101,6 +101,7 @@ fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
             onBack = onClose,
             backIcon = R.drawable.ic_header_close,
             backDescription = "닫기",
+            light = true,
         )
 
         Column(
@@ -118,7 +119,7 @@ fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
             Text(
                 action.kind.intro.label,
                 style = MyFisTheme.type.bodySm,
-                color = MyFisColor.TextSecondary,
+                color = MyFisColor.LightTextSecondary,
                 textAlign = TextAlign.Center,
             )
 
@@ -127,7 +128,7 @@ fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
             Text(
                 "${action.title}\n${action.reward}",
                 style = MyFisTheme.type.display,
-                color = MyFisColor.TextPrimary,
+                color = MyFisColor.LightTextPrimary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = MyFisSpacing.sm),
             )
@@ -135,7 +136,7 @@ fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
             Text(
                 action.kind.intro.period,
                 style = MyFisTheme.type.bodySm,
-                color = MyFisColor.TextTertiary,
+                color = MyFisColor.LightTextTertiary,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = MyFisSpacing.md),
             )
@@ -149,7 +150,7 @@ fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
 
             HintBubble(
                 text = action.kind.intro.hint,
-                color = action.kind.color,
+                color = action.kind.lightColor,
                 modifier = Modifier.padding(top = MyFisSpacing.giant),
             )
         }
@@ -165,6 +166,10 @@ fun ActivityIntroScreen(action: BenefitAction, onClose: () -> Unit) {
             modifier = Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(bottom = MyFisSpacing.xxxl),
+            light = true,
+            // 활동 화면의 Primary 는 **그 활동의 색**이다 (2026-08-28)
+            fill = action.kind.lightColor,
+            onFill = MyFisColor.LightBgBase,
         )
     }
 }
@@ -186,7 +191,7 @@ private fun Illustration(
     progress: Float,
     modifier: Modifier = Modifier,
 ) {
-    val color = action.kind.color
+    val color = action.kind.lightColor
     val style = action.kind.intro.art
     val transition = rememberInfiniteTransition(label = "활동 그림")
     val phase by transition.animateFloat(

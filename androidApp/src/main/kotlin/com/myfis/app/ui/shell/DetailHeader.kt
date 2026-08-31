@@ -45,7 +45,10 @@ fun DetailHeader(
     /** 오른쪽 아이콘 버튼. 없으면 자리도 비운다 */
     @DrawableRes actionIcon: Int? = null,
     onAction: () -> Unit = {},
+    /** 흰 바탕 화면(혜택·활동, §9 이탈 #1)에서는 글자·아이콘을 어두운 쪽으로 바꾼다 */
+    light: Boolean = false,
 ) {
+    val ink = if (light) MyFisColor.LightTextPrimary else MyFisColor.TextPrimary
     val interaction = remember { MutableInteractionSource() }
     val actionInteraction = remember { MutableInteractionSource() }
     val actionPress by actionInteraction.pressScale()
@@ -59,7 +62,7 @@ fun DetailHeader(
         contentAlignment = Alignment.Center,
     ) {
         if (title != null) {
-            Text(title, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+            Text(title, style = MyFisTheme.type.titleSm, color = ink)
         }
 
         Box(
@@ -73,7 +76,7 @@ fun DetailHeader(
             Icon(
                 painter = painterResource(backIcon),
                 contentDescription = backDescription,
-                tint = MyFisColor.TextPrimary,
+                tint = ink,
                 modifier = Modifier
                     .size(24.dp)
                     .graphicsLayer {
@@ -96,7 +99,7 @@ fun DetailHeader(
                 Icon(
                     painter = painterResource(actionIcon),
                     contentDescription = "설정",
-                    tint = MyFisColor.TextPrimary,
+                    tint = ink,
                     modifier = Modifier
                         .size(24.dp)
                         .graphicsLayer {
