@@ -158,35 +158,45 @@ struct CardioScreen: View {
         }
     }
 
-    /// 미션 갈래 줄 — `튜토리얼 0/4` · `월간 0/3` · `주간 0/3`.
+    /// 미션 갈래 줄 — `일간` · `주간` · `월간`.
     ///
-    /// 고른 갈래는 **밑줄**로 알린다 (색을 쓰지 않는다 — 라임은 진행바와 버튼의 몫이다).
+    /// **밑줄이 칸을 따라 흐른다** — 스토어 카테고리(§6.12)와 같은 규칙이다.
+    /// 다만 스토어는 칸 폭이 제각각이라 **위치를 재야** 하지만,
+    /// 여기는 셋이 폭을 고르게 나눠 가지므로 **순번만 알면** 자리가 나온다.
+    ///
+    /// 고른 것은 색이 아니라 밑줄로 알린다 — 라임은 진행바와 버튼의 몫이다.
     private var missionTabs: some View {
-        HStack(spacing: 0) {
-            ForEach(CardioMissionTab.allCases, id: \.self) { item in
-                let on = item == tab
+        let tabs = CardioMissionTab.allCases
+        let index = tabs.firstIndex(of: tab) ?? 0
 
+        return HStack(spacing: 0) {
+            ForEach(tabs, id: \.self) { item in
                 Button {
                     tab = item
                 } label: {
-                    // 밑줄은 **글자 폭**이다 — 칸 전체로 늘이면 글자보다 훨씬 길어진다
-                    VStack(spacing: MyFisSpacing.sm) {
-                        Text(item.title)
-                            .font(MyFisFont.titleSm)
-                            .foregroundStyle(on ? MyFisColor.textPrimary : MyFisColor.textTertiary)
-                            .lineLimit(1)
-                            .fixedSize()
-                        Capsule()
-                            .fill(on ? MyFisColor.textPrimary : .clear)
-                            .frame(height: 2)
-                    }
-                    // ⚠️ `Capsule` 은 폭이 무르다. 이걸 안 걸면 밑줄이 **칸 전체로 늘어난다**
-                    .fixedSize(horizontal: true, vertical: false)
-                    // 셋이 폭을 고르게 나눠 갖고, 글자는 제 칸 가운데에 선다
-                    .frame(maxWidth: .infinity)
+                    Text(item.title)
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(item == tab ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, MyFisSpacing.md)
                 }
                 .buttonStyle(.myFisTap)
             }
+        }
+        // 바닥 줄이 세 칸을 하나로 묶는다 — 없으면 막대가 허공에서 움직인다
+        .overlay(alignment: .bottom) {
+            MyFisColor.borderSubtle.frame(height: 1)
+        }
+        .overlay(alignment: .bottomLeading) {
+            GeometryReader { geo in
+                let slot = geo.size.width / CGFloat(tabs.count)
+                MyFisColor.textPrimary
+                    .frame(width: slot, height: 2)
+                    .offset(x: slot * CGFloat(index), y: geo.size.height - 2)
+            }
+            // 고르는 동작이라 `fast`(120ms) 다 — 스토어 밑줄과 같은 값 (§7)
+            .animation(MyFisMotion.fast, value: tab)
         }
     }
 }

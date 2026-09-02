@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,15 +30,17 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
+import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisPrimaryButton
 import com.myfis.app.ui.theme.MyFisProgress
 import com.myfis.app.ui.theme.MyFisRadius
@@ -260,9 +264,13 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 /**
- * 미션 갈래 줄 — `튜토리얼 0/4` · `월간 0/3` · `주간 0/3`.
+ * 미션 갈래 줄 — `일간` · `주간` · `월간`.
  *
- * 고른 갈래는 **밑줄**로 알린다 (색을 쓰지 않는다 — 라임은 진행바와 버튼의 몫이다).
+ * **밑줄이 칸을 따라 흐른다** — 스토어 카테고리(§6.12)와 같은 규칙이다.
+ * 다만 스토어는 칸 폭이 제각각이라 **위치를 재야** 하지만,
+ * 여기는 셋이 폭을 고르게 나눠 가지므로 **순번만 알면** 자리가 나온다.
+ *
+ * 고른 것은 색이 아니라 밑줄로 알린다 — 라임은 진행바와 버튼의 몫이다.
  */
 @Composable
 private fun MissionTabs(
@@ -270,39 +278,49 @@ private fun MissionTabs(
     onSelect: (CardioMissionTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier.fillMaxWidth()) {
-        CardioMissionTab.entries.forEach { tab ->
-            val on = tab == selected
-            val interaction = remember(tab) { MutableInteractionSource() }
+    val tabs = CardioMissionTab.entries
 
-            // 셋이 폭을 고르게 나눠 갖고, 글자는 제 칸 가운데에 선다
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Column(
-                    // ⚠️ 밑줄이 `fillMaxWidth` 라 이 폭을 못 박지 않으면
-                    // 밑줄이 칸 전체로 늘어나 글자보다 훨씬 길어진다 (확인함)
-                    Modifier
-                        .width(IntrinsicSize.Max)
-                        .tapWithHaptics(interaction) { onSelect(tab) },
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        tab.title,
-                        style = MyFisTheme.type.titleSm,
-                        color = if (on) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
-                    )
-                    Box(
-                        Modifier
-                            .padding(top = MyFisSpacing.sm)
-                            .fillMaxWidth()
-                            .height(2.dp)
-                            .background(
-                                if (on) MyFisColor.TextPrimary else Color.Transparent,
-                                MyFisRadius.full,
-                            ),
-                    )
-                }
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val slot = maxWidth / tabs.size
+        // 고르는 동작이라 `fast`(120ms) 다 — 스토어 밑줄과 같은 값 (§7)
+        val barX by animateDpAsState(
+            slot * tabs.indexOf(selected), MyFisMotion.fast(), label = "barX",
+        )
+
+        Row(Modifier.fillMaxWidth()) {
+            tabs.forEach { tab ->
+                val on = tab == selected
+                val interaction = remember(tab) { MutableInteractionSource() }
+
+                Text(
+                    tab.title,
+                    style = MyFisTheme.type.titleSm,
+                    color = if (on) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .weight(1f)
+                        .tapWithHaptics(interaction) { onSelect(tab) }
+                        .padding(vertical = MyFisSpacing.md),
+                )
             }
         }
+
+        // 바닥 줄이 세 칸을 하나로 묶는다 — 없으면 막대가 허공에서 움직인다
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(MyFisColor.BorderSubtle),
+        )
+        Box(
+            Modifier
+                .align(Alignment.BottomStart)
+                .offset(x = barX)
+                .width(slot)
+                .height(2.dp)
+                .background(MyFisColor.TextPrimary),
+        )
     }
 }
 
