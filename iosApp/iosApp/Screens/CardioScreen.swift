@@ -112,9 +112,9 @@ struct CardioScreen: View {
 
     /// 뱃지 · 주문 — 원본의 `BADGE` / `ORDER` 두 칸. 좁은 칸 하나 + 넓은 칸 하나다
     private var shortcutRow: some View {
-        HStack(spacing: MyFisSpacing.cardGap) {
+        WeightedRow(weights: [5, 8], spacing: MyFisSpacing.cardGap) {
             MyFisCard {
-                Text("뱃지")
+                Text("BADGE")
                     .font(MyFisFont.label)
                     .foregroundStyle(MyFisColor.textSecondary)
                 Image("ic_stamp")
@@ -129,12 +129,11 @@ struct CardioScreen: View {
                     .padding(.top, MyFisSpacing.md)
             }
             .frame(maxHeight: .infinity)
-            .layoutPriority(1)
 
             Button(action: onStore) {
                 MyFisCard {
                     HStack(spacing: MyFisSpacing.md) {
-                        Text("주문")
+                        Text("ORDER")
                             .font(MyFisFont.label)
                             .foregroundStyle(MyFisColor.textSecondary)
                         Spacer(minLength: 0)
@@ -156,9 +155,7 @@ struct CardioScreen: View {
                 .frame(maxHeight: .infinity)
             }
             .buttonStyle(.myFisTap)
-            .layoutPriority(2)
         }
-        .fixedSize(horizontal: false, vertical: true)
     }
 
     /// 미션 갈래 줄 — `튜토리얼 0/4` · `월간 0/3` · `주간 0/3`.
@@ -168,27 +165,16 @@ struct CardioScreen: View {
         HStack(spacing: MyFisSpacing.lg) {
             ForEach(CardioMissionTab.allCases, id: \.self) { item in
                 let on = item == tab
-                let done = CardioPlaceholder.missions.filter { $0.tab == item && $0.ratio >= 1 }.count
 
                 Button {
                     tab = item
                 } label: {
                     VStack(alignment: .leading, spacing: MyFisSpacing.sm) {
-                        HStack(spacing: MyFisSpacing.sm) {
-                            Text(item.title)
-                                .font(MyFisFont.titleSm)
-                                .foregroundStyle(on ? MyFisColor.textPrimary : MyFisColor.textTertiary)
-                                .lineLimit(1)
-                                .fixedSize()
-                            Text("\(done) / \(item.total)")
-                                .font(MyFisFont.caption)
-                                .foregroundStyle(MyFisColor.textSecondary)
-                                .lineLimit(1)
-                                .fixedSize()
-                                .padding(.horizontal, MyFisSpacing.sm)
-                                .padding(.vertical, 2)
-                                .background(MyFisColor.surface3, in: Capsule())
-                        }
+                        Text(item.title)
+                            .font(MyFisFont.titleSm)
+                            .foregroundStyle(on ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                            .lineLimit(1)
+                            .fixedSize()
                         Capsule()
                             .fill(on ? MyFisColor.textPrimary : .clear)
                             .frame(height: 2)
@@ -198,6 +184,44 @@ struct CardioScreen: View {
             }
             Spacer(minLength: 0)
         }
+    }
+}
+
+/// 폭을 **비율로** 나누는 가로줄.
+///
+/// SwiftUI 에는 Compose 의 `weight` 가 없다 — `layoutPriority` 는 순서만 정하지 비율을 못 정한다.
+/// `WaterTimeScreen` 의 `FlowLayout` 과 같은 방식으로 `Layout` 을 직접 짠다.
+struct WeightedRow: Layout {
+    let weights: [CGFloat]
+    let spacing: CGFloat
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let total = proposal.width ?? 0
+        let widths = widths(in: total)
+        // 두 칸 높이를 맞춘다 — 더 높은 쪽에 낮은 쪽을 맞춘다
+        let height = zip(subviews, widths)
+            .map { $0.sizeThatFits(.init(width: $1, height: nil)).height }
+            .max() ?? 0
+        return CGSize(width: total, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = bounds.minX
+        for (view, width) in zip(subviews, widths(in: bounds.width)) {
+            view.place(
+                at: CGPoint(x: x, y: bounds.minY),
+                proposal: .init(width: width, height: bounds.height)
+            )
+            x += width + spacing
+        }
+    }
+
+    private func widths(in total: CGFloat) -> [CGFloat] {
+        let gaps = spacing * CGFloat(max(weights.count - 1, 0))
+        let usable = max(total - gaps, 0)
+        let sum = weights.reduce(0, +)
+        guard sum > 0 else { return weights.map { _ in 0 } }
+        return weights.map { usable * $0 / sum }
     }
 }
 
@@ -280,13 +304,6 @@ enum CardioMissionTab: CaseIterable {
         case .tutorial: "튜토리얼"
         case .monthly: "월간"
         case .weekly: "주간"
-        }
-    }
-
-    var total: Int {
-        switch self {
-        case .tutorial: 4
-        case .monthly, .weekly: 3
         }
     }
 }

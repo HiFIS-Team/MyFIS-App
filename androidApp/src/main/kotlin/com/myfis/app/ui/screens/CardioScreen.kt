@@ -198,8 +198,8 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
         modifier = modifier.height(IntrinsicSize.Min),
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
     ) {
-        MyFisCard(Modifier.weight(1f).fillMaxHeight()) {
-            Text("뱃지", style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+        MyFisCard(Modifier.weight(5f).fillMaxHeight()) {
+            Text("BADGE", style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
             Image(
                 painter = painterResource(R.drawable.ic_stamp),
                 contentDescription = null,
@@ -219,13 +219,13 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
         }
         MyFisCard(
             Modifier
-                .weight(2f)
+                .weight(8f)
                 .fillMaxHeight()
                 .tapWithHaptics(storeInteraction, onStore),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
-                    "주문",
+                    "ORDER",
                     style = MyFisTheme.type.label,
                     color = MyFisColor.TextSecondary,
                     modifier = Modifier.weight(1f),
@@ -268,7 +268,6 @@ private fun MissionTabs(
         CardioMissionTab.entries.forEach { tab ->
             val on = tab == selected
             val interaction = remember(tab) { MutableInteractionSource() }
-            val done = cardioMissionPlaceholder.count { it.tab == tab && it.ratio >= 1f }
 
             Column(
                 Modifier
@@ -277,22 +276,11 @@ private fun MissionTabs(
                     .width(IntrinsicSize.Max)
                     .tapWithHaptics(interaction) { onSelect(tab) },
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        tab.title,
-                        style = MyFisTheme.type.titleSm,
-                        color = if (on) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
-                    )
-                    Text(
-                        "$done / ${tab.total}",
-                        style = MyFisTheme.type.caption,
-                        color = MyFisColor.TextSecondary,
-                        modifier = Modifier
-                            .padding(start = MyFisSpacing.sm)
-                            .background(MyFisColor.Surface3, MyFisRadius.full)
-                            .padding(horizontal = MyFisSpacing.sm, vertical = 2.dp),
-                    )
-                }
+                Text(
+                    tab.title,
+                    style = MyFisTheme.type.titleSm,
+                    color = if (on) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+                )
                 Box(
                     Modifier
                         .padding(top = MyFisSpacing.sm)
@@ -376,10 +364,10 @@ private fun Chevron() {
 }
 
 /** 미션 갈래 (SPEC C-01) */
-enum class CardioMissionTab(val title: String, val total: Int) {
-    TUTORIAL("튜토리얼", 4),
-    MONTHLY("월간", 3),
-    WEEKLY("주간", 3),
+enum class CardioMissionTab(val title: String) {
+    TUTORIAL("튜토리얼"),
+    MONTHLY("월간"),
+    WEEKLY("주간"),
 }
 
 /** 미션 한 칸 (SPEC C-01) */
