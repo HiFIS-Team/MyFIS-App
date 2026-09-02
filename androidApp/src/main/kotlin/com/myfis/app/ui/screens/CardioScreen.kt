@@ -61,7 +61,7 @@ fun CardioScreen(
     onStore: () -> Unit = {},
     onStart: () -> Unit = {},
 ) {
-    var tab by rememberSaveable { mutableStateOf(CardioMissionTab.TUTORIAL) }
+    var tab by rememberSaveable { mutableStateOf(CardioMissionTab.DAILY) }
 
     Column(Modifier.fillMaxSize()) {
         CardioHeader()
@@ -199,7 +199,12 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
     ) {
         MyFisCard(Modifier.weight(5f).fillMaxHeight()) {
-            Text("BADGE", style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+            Text(
+                "BADGE",
+                style = MyFisTheme.type.label,
+                color = MyFisColor.TextSecondary,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
+            )
             Image(
                 painter = painterResource(R.drawable.ic_stamp),
                 contentDescription = null,
@@ -223,14 +228,15 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
                 .fillMaxHeight()
                 .tapWithHaptics(storeInteraction, onStore),
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.fillMaxWidth()) {
                 Text(
                     "ORDER",
                     style = MyFisTheme.type.label,
                     color = MyFisColor.TextSecondary,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.align(Alignment.Center),
                 )
-                Chevron()
+                // 꺾쇠는 **얹는다** — 줄 안에 끼우면 가운데 글자가 왼쪽으로 밀린다
+                Box(Modifier.align(Alignment.CenterEnd)) { Chevron() }
             }
             Icon(
                 painter = painterResource(R.drawable.ic_tab_store),
@@ -264,33 +270,37 @@ private fun MissionTabs(
     onSelect: (CardioMissionTab) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.lg)) {
+    Row(modifier.fillMaxWidth()) {
         CardioMissionTab.entries.forEach { tab ->
             val on = tab == selected
             val interaction = remember(tab) { MutableInteractionSource() }
 
-            Column(
-                Modifier
+            // 셋이 폭을 고르게 나눠 갖고, 글자는 제 칸 가운데에 선다
+            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                Column(
                     // ⚠️ 밑줄이 `fillMaxWidth` 라 이 폭을 못 박지 않으면
-                    // 첫 갈래가 남은 폭을 다 먹고 뒤 갈래가 화면 밖으로 밀린다 (확인함)
-                    .width(IntrinsicSize.Max)
-                    .tapWithHaptics(interaction) { onSelect(tab) },
-            ) {
-                Text(
-                    tab.title,
-                    style = MyFisTheme.type.titleSm,
-                    color = if (on) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
-                )
-                Box(
+                    // 밑줄이 칸 전체로 늘어나 글자보다 훨씬 길어진다 (확인함)
                     Modifier
-                        .padding(top = MyFisSpacing.sm)
-                        .fillMaxWidth()
-                        .height(2.dp)
-                        .background(
-                            if (on) MyFisColor.TextPrimary else Color.Transparent,
-                            MyFisRadius.full,
-                        ),
-                )
+                        .width(IntrinsicSize.Max)
+                        .tapWithHaptics(interaction) { onSelect(tab) },
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        tab.title,
+                        style = MyFisTheme.type.titleSm,
+                        color = if (on) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+                    )
+                    Box(
+                        Modifier
+                            .padding(top = MyFisSpacing.sm)
+                            .fillMaxWidth()
+                            .height(2.dp)
+                            .background(
+                                if (on) MyFisColor.TextPrimary else Color.Transparent,
+                                MyFisRadius.full,
+                            ),
+                    )
+                }
             }
         }
     }
@@ -365,9 +375,9 @@ private fun Chevron() {
 
 /** 미션 갈래 (SPEC C-01) */
 enum class CardioMissionTab(val title: String) {
-    TUTORIAL("튜토리얼"),
-    MONTHLY("월간"),
+    DAILY("일간"),
     WEEKLY("주간"),
+    MONTHLY("월간"),
 }
 
 /** 미션 한 칸 (SPEC C-01) */
@@ -385,33 +395,22 @@ const val cardioNamePlaceholder = "은후"
 const val cardioMonthKmPlaceholder = "12.4"
 
 val cardioMissionPlaceholder = listOf(
+    // 일간 — 하루 안에 끝나는 것. `첫 ~` 은 처음 한 번뿐이라 여기 못 온다
     CardioMission(
-        CardioMissionTab.TUTORIAL, R.drawable.ic_place_cardio,
-        "첫 러닝머신", "0.4Km / 1Km", 0.4f,
+        CardioMissionTab.DAILY, R.drawable.ic_place_cardio,
+        "오늘 3km", "0.4Km / 3Km", 0.13f,
     ),
     CardioMission(
-        CardioMissionTab.TUTORIAL, R.drawable.ic_place_machine,
-        "첫 계단", "0분 / 10분", 0f,
+        CardioMissionTab.DAILY, R.drawable.ic_place_machine,
+        "계단 10분", "0분 / 10분", 0f,
     ),
     CardioMission(
-        CardioMissionTab.TUTORIAL, R.drawable.ic_tab_store,
-        "첫 주문", "0회 / 1회", 0f,
+        CardioMissionTab.DAILY, R.drawable.ic_quest_attend,
+        "오늘 출석", "1일 / 1일", 1f,
     ),
     CardioMission(
-        CardioMissionTab.TUTORIAL, R.drawable.ic_quest_board,
-        "첫 기록", "0회 / 1회", 0f,
-    ),
-    CardioMission(
-        CardioMissionTab.MONTHLY, R.drawable.ic_tab_cardio,
-        "이번 달 30km", "12.4Km / 30Km", 0.41f,
-    ),
-    CardioMission(
-        CardioMissionTab.MONTHLY, R.drawable.ic_quest_attend,
-        "12일 채우기", "5일 / 12일", 0.42f,
-    ),
-    CardioMission(
-        CardioMissionTab.MONTHLY, R.drawable.ic_tab_ranking,
-        "랭킹 100위", "142위 / 100위", 0.7f,
+        CardioMissionTab.DAILY, R.drawable.ic_quest_board,
+        "기록 남기기", "0회 / 1회", 0f,
     ),
     CardioMission(
         CardioMissionTab.WEEKLY, R.drawable.ic_tab_cardio,
@@ -424,5 +423,17 @@ val cardioMissionPlaceholder = listOf(
     CardioMission(
         CardioMissionTab.WEEKLY, R.drawable.ic_place_machine,
         "계단 20분", "0분 / 20분", 0f,
+    ),
+    CardioMission(
+        CardioMissionTab.MONTHLY, R.drawable.ic_tab_cardio,
+        "이번 달 30km", "12.4Km / 30Km", 0.41f,
+    ),
+    CardioMission(
+        CardioMissionTab.MONTHLY, R.drawable.ic_quest_attend,
+        "12일 채우기", "5일 / 12일", 0.42f,
+    ),
+    CardioMission(
+        CardioMissionTab.MONTHLY, R.drawable.ic_tab_ranking,
+        "랭킹 100위", "142위 / 100위", 0.7f,
     ),
 )

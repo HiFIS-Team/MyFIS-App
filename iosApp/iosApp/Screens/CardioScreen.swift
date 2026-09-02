@@ -13,7 +13,7 @@ struct CardioScreen: View {
     var onStore: () -> Void = {}
     var onStart: () -> Void = {}
 
-    @State private var tab: CardioMissionTab = .tutorial
+    @State private var tab: CardioMissionTab = .daily
 
     var body: some View {
         VStack(spacing: 0) {
@@ -117,6 +117,7 @@ struct CardioScreen: View {
                 Text("BADGE")
                     .font(MyFisFont.label)
                     .foregroundStyle(MyFisColor.textSecondary)
+                    .frame(maxWidth: .infinity)
                 Image("ic_stamp")
                     .resizable()
                     .frame(width: 48, height: 48)
@@ -132,13 +133,12 @@ struct CardioScreen: View {
 
             Button(action: onStore) {
                 MyFisCard {
-                    HStack(spacing: MyFisSpacing.md) {
-                        Text("ORDER")
-                            .font(MyFisFont.label)
-                            .foregroundStyle(MyFisColor.textSecondary)
-                        Spacer(minLength: 0)
-                        Chevron()
-                    }
+                    // 꺾쇠는 **얹는다** — 줄 안에 끼우면 가운데 글자가 왼쪽으로 밀린다
+                    Text("ORDER")
+                        .font(MyFisFont.label)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .overlay(alignment: .trailing) { Chevron() }
                     Image("ic_tab_store")
                         .renderingMode(.template)
                         .resizable()
@@ -162,14 +162,15 @@ struct CardioScreen: View {
     ///
     /// 고른 갈래는 **밑줄**로 알린다 (색을 쓰지 않는다 — 라임은 진행바와 버튼의 몫이다).
     private var missionTabs: some View {
-        HStack(spacing: MyFisSpacing.lg) {
+        HStack(spacing: 0) {
             ForEach(CardioMissionTab.allCases, id: \.self) { item in
                 let on = item == tab
 
                 Button {
                     tab = item
                 } label: {
-                    VStack(alignment: .leading, spacing: MyFisSpacing.sm) {
+                    // 밑줄은 **글자 폭**이다 — 칸 전체로 늘이면 글자보다 훨씬 길어진다
+                    VStack(spacing: MyFisSpacing.sm) {
                         Text(item.title)
                             .font(MyFisFont.titleSm)
                             .foregroundStyle(on ? MyFisColor.textPrimary : MyFisColor.textTertiary)
@@ -179,10 +180,13 @@ struct CardioScreen: View {
                             .fill(on ? MyFisColor.textPrimary : .clear)
                             .frame(height: 2)
                     }
+                    // ⚠️ `Capsule` 은 폭이 무르다. 이걸 안 걸면 밑줄이 **칸 전체로 늘어난다**
+                    .fixedSize(horizontal: true, vertical: false)
+                    // 셋이 폭을 고르게 나눠 갖고, 글자는 제 칸 가운데에 선다
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.myFisTap)
             }
-            Spacer(minLength: 0)
         }
     }
 }
@@ -297,13 +301,13 @@ private struct Chevron: View {
 
 /// 미션 갈래 (SPEC C-01)
 enum CardioMissionTab: CaseIterable {
-    case tutorial, monthly, weekly
+    case daily, weekly, monthly
 
     var title: String {
         switch self {
-        case .tutorial: "튜토리얼"
-        case .monthly: "월간"
+        case .daily: "일간"
         case .weekly: "주간"
+        case .monthly: "월간"
         }
     }
 }
@@ -325,14 +329,14 @@ enum CardioPlaceholder {
     static let monthKm = "12.4"
 
     static let missions: [CardioMission] = [
-        .init(id: 1, tab: .tutorial, icon: "ic_place_cardio",
-              title: "첫 러닝머신", progress: "0.4Km / 1Km", ratio: 0.4),
-        .init(id: 2, tab: .tutorial, icon: "ic_place_machine",
-              title: "첫 계단", progress: "0분 / 10분", ratio: 0),
-        .init(id: 3, tab: .tutorial, icon: "ic_tab_store",
-              title: "첫 주문", progress: "0회 / 1회", ratio: 0),
-        .init(id: 4, tab: .tutorial, icon: "ic_quest_board",
-              title: "첫 기록", progress: "0회 / 1회", ratio: 0),
+        .init(id: 1, tab: .daily, icon: "ic_place_cardio",
+              title: "오늘 3km", progress: "0.4Km / 3Km", ratio: 0.13),
+        .init(id: 2, tab: .daily, icon: "ic_place_machine",
+              title: "계단 10분", progress: "0분 / 10분", ratio: 0),
+        .init(id: 3, tab: .daily, icon: "ic_quest_attend",
+              title: "오늘 출석", progress: "1일 / 1일", ratio: 1),
+        .init(id: 4, tab: .daily, icon: "ic_quest_board",
+              title: "기록 남기기", progress: "0회 / 1회", ratio: 0),
         .init(id: 5, tab: .monthly, icon: "ic_tab_cardio",
               title: "이번 달 30km", progress: "12.4Km / 30Km", ratio: 0.41),
         .init(id: 6, tab: .monthly, icon: "ic_quest_attend",
