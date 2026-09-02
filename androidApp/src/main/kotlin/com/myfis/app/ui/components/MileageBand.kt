@@ -1,5 +1,6 @@
 package com.myfis.app.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -71,10 +72,9 @@ fun MileageChip(balance: Int, modifier: Modifier = Modifier) {
             .padding(start = MyFisSpacing.sm, end = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_mileage_fill),
+        Image(
+            painter = painterResource(R.drawable.ic_coin),
             contentDescription = null, // 옆 숫자가 이름 역할을 한다
-            tint = MyFisColor.Accent,
             modifier = Modifier.size(22.dp),
         )
         MileageText(

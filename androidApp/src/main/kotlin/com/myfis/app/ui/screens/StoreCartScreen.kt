@@ -1,5 +1,6 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -269,10 +270,9 @@ private fun CartRow(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_mileage_fill),
+                Image(
+                    painter = painterResource(R.drawable.ic_coin),
                     contentDescription = null,
-                    tint = MyFisColor.Accent,
                     modifier = Modifier.size(18.dp),
                 )
                 MileageText(
@@ -497,10 +497,9 @@ private fun CartBar(
                 modifier = Modifier.padding(top = 2.dp, bottom = MyFisSpacing.md),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_mileage_fill),
+                Image(
+                    painter = painterResource(R.drawable.ic_coin),
                     contentDescription = null,
-                    tint = MyFisColor.Accent,
                     modifier = Modifier.size(22.dp),
                 )
                 MileageText(

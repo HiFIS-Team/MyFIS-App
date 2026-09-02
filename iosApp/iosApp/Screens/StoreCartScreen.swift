@@ -146,10 +146,9 @@ struct StoreCartScreen: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
 
                 HStack(spacing: MyFisSpacing.xs) {
-                    Image("ic_mileage_fill")
+                    Image("ic_coin")
                         .resizable()
                         .frame(width: 22, height: 22)
-                        .foregroundStyle(MyFisColor.accent)
                     MileageText(total)
                         .font(MyFisFont.metricMd)
                     Spacer(minLength: 0)
@@ -237,10 +236,9 @@ private struct CartRow: View {
                     .lineLimit(1)
 
                 HStack(spacing: MyFisSpacing.xs) {
-                    Image("ic_mileage_fill")
+                    Image("ic_coin")
                         .resizable()
                         .frame(width: 18, height: 18)
-                        .foregroundStyle(MyFisColor.accent)
                     MileageText(line.item.price * line.count)
                         .font(MyFisFont.titleSm)
                 }

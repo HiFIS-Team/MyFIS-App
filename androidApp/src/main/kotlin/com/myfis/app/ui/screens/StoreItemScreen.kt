@@ -1,6 +1,7 @@
 package com.myfis.app.ui.screens
 
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -222,10 +223,9 @@ private fun ItemHead(item: StoreItem) {
                 modifier = Modifier.weight(1f),
             )
             Spacer(Modifier.size(MyFisSpacing.md))
-            Icon(
-                painter = painterResource(R.drawable.ic_mileage_fill),
+            Image(
+                painter = painterResource(R.drawable.ic_coin),
                 contentDescription = null, // 옆 숫자가 이름 역할을 한다
-                tint = MyFisColor.Accent,
                 modifier = Modifier.size(22.dp),
             )
             Spacer(Modifier.size(MyFisSpacing.xs))

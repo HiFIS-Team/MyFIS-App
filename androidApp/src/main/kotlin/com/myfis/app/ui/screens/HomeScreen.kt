@@ -747,10 +747,9 @@ private fun MileageShopSection(
             Text("마일리지로 바꾸기", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
             Spacer(Modifier.weight(1f))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_mileage_fill),
+                Image(
+                    painter = painterResource(R.drawable.ic_coin),
                     contentDescription = null, // 옆 숫자가 이름 역할을 한다
-                    tint = MyFisColor.Accent,
                     modifier = Modifier.size(20.dp),
                 )
                 MileageText(

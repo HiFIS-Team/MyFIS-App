@@ -112,10 +112,9 @@ struct StoreItemScreen: View {
                     .lineLimit(2)
                 Spacer(minLength: 0)
                 HStack(spacing: MyFisSpacing.xs) {
-                    Image("ic_mileage_fill")
+                    Image("ic_coin")
                         .resizable()
                         .frame(width: 22, height: 22)
-                        .foregroundStyle(MyFisColor.accent)
                     MileageText(item.price)
                         .font(MyFisFont.metricMd)
                 }

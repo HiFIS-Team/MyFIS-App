@@ -638,10 +638,9 @@ private struct MileageShopSection: View {
                     .foregroundStyle(MyFisColor.textPrimary)
                 Spacer(minLength: 0)
                 HStack(spacing: MyFisSpacing.xs) {
-                    Image("ic_mileage_fill")
+                    Image("ic_coin")
                         .resizable()
                         .frame(width: 20, height: 20)
-                        .foregroundStyle(MyFisColor.accent)
                     MileageText(balance)
                         .font(MyFisFont.titleSm)
                 }

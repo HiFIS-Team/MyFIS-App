@@ -37,10 +37,9 @@ struct MileageChip: View {
 
     var body: some View {
         HStack(spacing: MyFisSpacing.xs) {
-            Image("ic_mileage_fill")
+            Image("ic_coin")
                 .resizable()
                 .frame(width: 22, height: 22)
-                .foregroundStyle(MyFisColor.accent)
             MileageText(balance)
                 .font(MyFisFont.titleSm)
         }
