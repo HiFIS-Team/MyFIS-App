@@ -23,8 +23,13 @@ struct BenefitScreen: View {
                     InviteBanner()
                         .padding(.horizontal, MyFisSpacing.screenHorizontal)
 
-                    Section("바로 받아요", rows: BenefitPlaceholder.actions, onTap: onAction)
-                        .padding(.top, MyFisSpacing.sectionGap)
+                    ForEach(BenefitGroup.allCases, id: \.self) { group in
+                        let rows = BenefitPlaceholder.actions.filter { $0.kind.group == group }
+                        if !rows.isEmpty {
+                            Section(group.title, rows: rows, onTap: onAction)
+                                .padding(.top, MyFisSpacing.sectionGap)
+                        }
+                    }
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
@@ -180,8 +185,36 @@ private struct InviteBanner: View {
 ///
 /// **행마다 색이 다르다.** 아홉 줄이 같은 회색이면 목록이 덩어리로 보이고,
 /// 색을 몇 개로 묶으면 "왜 이 둘만 같은 색이지"를 먼저 묻게 된다.
+/// 목록의 묶음 🟢 (2026-09-02, 사용자 지정).
+///
+/// 열세 줄이 `바로 받아요` 하나에 다 들어 있어 **운동과 게임이 섞여 있었다.**
+/// **하는 성격으로 가른다** — 몸을 쓰는 것 / 운으로 받는 것 / 남이 있어야 되는 것.
+///
+/// 색도 같이 좋아졌다: §6.23 이 "붙여 놓으면 같아 보인다"고 경고한 이웃 색 셋
+/// (`coral↔orange` · `cyan↔teal` · `blue↔indigo`)이 **전부 다른 묶음으로 갈렸다.**
+enum BenefitGroup: CaseIterable {
+    case workout, game, together
+
+    var title: String {
+        switch self {
+        case .workout: "운동하고 받아요"
+        case .game: "게임하고 받아요"
+        case .together: "함께 받아요"
+        }
+    }
+}
+
 enum BenefitKind {
     case attend, routine, cardio, stretch, water, dice, luck, scratch, quiz, touch, sns, weight, diet
+
+    /// 어느 묶음에 걸리는지 (§6.23)
+    var group: BenefitGroup {
+        switch self {
+        case .attend, .routine, .cardio, .stretch, .water, .weight, .diet: .workout
+        case .dice, .luck, .scratch, .quiz: .game
+        case .touch, .sns: .together
+        }
+    }
 
     var color: Color {
         switch self {

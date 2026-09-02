@@ -66,8 +66,12 @@ fun BenefitScreen(
             item {
                 InviteBanner(Modifier.padding(horizontal = MyFisSpacing.screenHorizontal))
             }
-            item { SectionTitle("바로 받아요") }
-            items(benefitActionPlaceholder) { ActionRow(it) { onAction(it) } }
+            BenefitGroup.entries.forEach { group ->
+                val rows = benefitActionPlaceholder.filter { it.kind.group == group }
+                if (rows.isEmpty()) return@forEach
+                item { SectionTitle(group.title) }
+                items(rows) { ActionRow(it) { onAction(it) } }
+            }
         }
     }
 }
@@ -231,6 +235,21 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
 }
 
 /**
+ * 목록의 묶음 🟢 (2026-09-02, 사용자 지정).
+ *
+ * 열세 줄이 `바로 받아요` 하나에 다 들어 있어 **운동과 게임이 섞여 있었다.**
+ * **하는 성격으로 가른다** — 몸을 쓰는 것 / 운으로 받는 것 / 남이 있어야 되는 것.
+ *
+ * 색도 같이 좋아졌다: §6.23 이 "붙여 놓으면 같아 보인다"고 경고한 이웃 색 셋
+ * (`coral↔orange` · `cyan↔teal` · `blue↔indigo`)이 **전부 다른 묶음으로 갈렸다.**
+ */
+enum class BenefitGroup(val title: String) {
+    WORKOUT("운동하고 받아요"),
+    GAME("게임하고 받아요"),
+    TOGETHER("함께 받아요"),
+}
+
+/**
  * 적립 활동 종류 — 목록에서 **색으로 구분한다** (§3.1 카테고리 팔레트).
  *
  * **행마다 색이 다르다.** 아홉 줄이 같은 회색이면 목록이 덩어리로 보이고,
@@ -239,6 +258,14 @@ private fun InviteBanner(modifier: Modifier = Modifier) {
 enum class BenefitKind {
     ATTEND, ROUTINE, CARDIO, STRETCH, WATER, DICE, LUCK, SCRATCH, QUIZ, TOUCH, SNS, WEIGHT, DIET,
     ;
+
+    /** 어느 묶음에 걸리는지 (§6.23) */
+    val group: BenefitGroup
+        get() = when (this) {
+            ATTEND, ROUTINE, CARDIO, STRETCH, WATER, WEIGHT, DIET -> BenefitGroup.WORKOUT
+            DICE, LUCK, SCRATCH, QUIZ -> BenefitGroup.GAME
+            TOUCH, SNS -> BenefitGroup.TOGETHER
+        }
 
     val color: Color
         get() = when (this) {

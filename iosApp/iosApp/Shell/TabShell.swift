@@ -107,11 +107,19 @@ struct TabShell: View {
                     )
                 case .benefit:
                     BenefitScreen(onAction: { action in
-                        // 체중은 매일 하는 기록이라 랜딩을 거치지 않는다 (§6.25)
+                        // **갈 곳이 있는 줄은 바로 보낸다** (§6.23, 2026-09-02 사용자 지정) —
+                        // 랜딩은 여기서 끝내고 돌아가는 활동의 몫이지, 다른 화면으로 가는 길목이 아니다.
                         // 체중·물 마시기는 매일 하는 기록이라 랜딩을 거치지 않는다 (§6.25)
                         switch action.kind {
                         case .weight: open(.weightLog)
                         case .water: open(.water)
+                        // 홈의 `오늘의 루틴` · `유산소` 바로가기와 **같은 길**로 세트를 바꾼다
+                        case .routine:
+                            weightTab = .weight
+                            withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
+                        case .cardio:
+                            weightTab = .cardio
+                            withAnimation(.snappy(duration: 0.35)) { tabSet = .weight }
                         default: open(.activity(action))
                         }
                     })
