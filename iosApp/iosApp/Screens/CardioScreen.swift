@@ -1,0 +1,332 @@
+import SwiftUI
+
+/// SPEC.md C-01 유산소 탭 (DESIGN.md §6.28).
+///
+/// 레퍼런스는 **버핏그라운드 유산소 탭**이다 (사용자 지정).
+/// **뼈대만 가져오고 색은 우리 것을 쓴다** (§3.2) — 원본은 카드 아홉 장을 형광 초록으로
+/// 채우지만 우리는 판을 어둡게 두고 **진행바에만 라임**을 쓴다 (§2 원칙 3).
+///
+/// 이 탭이 답하는 질문은 둘 — **"이번 달 얼마나 뛰었지"** 와 **"다음에 뭘 하면 되지"**.
+/// 한때 `이번 주 누적 → 빈 기기 → 최근 기록` 이었는데(§6.28 구안), 그건 **다 본 뒤에
+/// 할 일이 없는 화면**이었다. 미션이 그 자리를 메운다.
+struct CardioScreen: View {
+    var onStore: () -> Void = {}
+    var onStart: () -> Void = {}
+
+    @State private var tab: CardioMissionTab = .tutorial
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    monthCard
+                    shortcutRow
+                        .padding(.top, MyFisSpacing.cardGap)
+                    missionTabs
+                        .padding(.top, MyFisSpacing.sectionGap)
+                    MissionGrid(tab: tab)
+                        .padding(.top, MyFisSpacing.lg)
+                }
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                .padding(.bottom, MyFisSpacing.xxxl)
+            }
+
+            // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — 엄지가 닿는 자리에 못 박는다 (원칙 2)
+            MyFisPrimaryButton(title: "유산소 시작하기", action: onStart)
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                .padding(.bottom, MyFisSpacing.md)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    /// **누구의 기록인지 밝히는 줄이다.**
+    ///
+    /// 다른 탭 헤더(§6.9)는 아이콘만 두지만 여기는 **내 몸의 기록**이라 이름이 앞에 온다.
+    /// 사진을 얼굴이 아니라 **색 원 + 첫 글자**로 대신한다 — P-07 레이더와 같은 규칙이다
+    /// (SPEC P-07 프라이버시: 실명·사진을 쓰지 않는다).
+    private var header: some View {
+        HStack(spacing: MyFisSpacing.md) {
+            Text(CardioPlaceholder.name.prefix(1))
+                .font(MyFisFont.titleSm)
+                .foregroundStyle(MyFisColor.textPrimary)
+                .frame(width: MyFisSize.chip, height: MyFisSize.chip)
+                .background(MyFisColor.surface3, in: Circle())
+
+            Text(CardioPlaceholder.name)
+                .font(MyFisFont.titleMd)
+                .foregroundStyle(MyFisColor.textPrimary)
+
+            Spacer(minLength: MyFisSpacing.md)
+
+            MileageChip(balance: BenefitPlaceholder.balance)
+        }
+        .frame(height: MyFisSize.header)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+    }
+
+    /// 이번 달 누적 — **이 화면의 주인공**이다 (§2 원칙 1).
+    ///
+    /// 주가 아니라 **달**로 센다 (2026-09-02 수정, 사용자 지정 레퍼런스) —
+    /// 유산소는 주 단위로 보면 0인 주가 흔해서 **숫자가 자주 비어 보인다.**
+    private var monthCard: some View {
+        MyFisCard(radius: MyFisRadius.lg) {
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: MyFisSpacing.sm) {
+                        Image("ic_tab_cardio")
+                            .renderingMode(.template)
+                            .resizable()
+                            .frame(width: 20, height: 20)
+                            .foregroundStyle(MyFisColor.textSecondary)
+                        Text("이번 달")
+                            .font(MyFisFont.label)
+                            .foregroundStyle(MyFisColor.textSecondary)
+                    }
+                    Text(CardioPlaceholder.monthKm)
+                        .font(MyFisFont.metricXl)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                        .padding(.top, MyFisSpacing.md)
+                    Text("km / month")
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textTertiary)
+                }
+                Spacer(minLength: MyFisSpacing.md)
+                // 브랜드 마크는 **우리 도장**이다 — 원본의 네온 방패 자리
+                Image("ic_stamp")
+                    .resizable()
+                    .frame(width: 72, height: 72)
+            }
+
+            HStack(spacing: MyFisSpacing.md) {
+                Text("지금까지 \(CardioPlaceholder.monthKm)km 달렸어요")
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textSecondary)
+                Spacer(minLength: 0)
+                Chevron()
+            }
+            .padding(.top, MyFisSpacing.lg)
+        }
+    }
+
+    /// 뱃지 · 주문 — 원본의 `BADGE` / `ORDER` 두 칸. 좁은 칸 하나 + 넓은 칸 하나다
+    private var shortcutRow: some View {
+        HStack(spacing: MyFisSpacing.cardGap) {
+            MyFisCard {
+                Text("뱃지")
+                    .font(MyFisFont.label)
+                    .foregroundStyle(MyFisColor.textSecondary)
+                Image("ic_stamp")
+                    .resizable()
+                    .frame(width: 48, height: 48)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, MyFisSpacing.md)
+                Text("1개 획득")
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, MyFisSpacing.md)
+            }
+            .frame(maxHeight: .infinity)
+            .layoutPriority(1)
+
+            Button(action: onStore) {
+                MyFisCard {
+                    HStack(spacing: MyFisSpacing.md) {
+                        Text("주문")
+                            .font(MyFisFont.label)
+                            .foregroundStyle(MyFisColor.textSecondary)
+                        Spacer(minLength: 0)
+                        Chevron()
+                    }
+                    Image("ic_tab_store")
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 48, height: 48)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, MyFisSpacing.md)
+                    Text("운동하고 마실 것 주문하기")
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, MyFisSpacing.md)
+                }
+                .frame(maxHeight: .infinity)
+            }
+            .buttonStyle(.myFisTap)
+            .layoutPriority(2)
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// 미션 갈래 줄 — `튜토리얼 0/4` · `월간 0/3` · `주간 0/3`.
+    ///
+    /// 고른 갈래는 **밑줄**로 알린다 (색을 쓰지 않는다 — 라임은 진행바와 버튼의 몫이다).
+    private var missionTabs: some View {
+        HStack(spacing: MyFisSpacing.lg) {
+            ForEach(CardioMissionTab.allCases, id: \.self) { item in
+                let on = item == tab
+                let done = CardioPlaceholder.missions.filter { $0.tab == item && $0.ratio >= 1 }.count
+
+                Button {
+                    tab = item
+                } label: {
+                    VStack(alignment: .leading, spacing: MyFisSpacing.sm) {
+                        HStack(spacing: MyFisSpacing.sm) {
+                            Text(item.title)
+                                .font(MyFisFont.titleSm)
+                                .foregroundStyle(on ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                                .lineLimit(1)
+                                .fixedSize()
+                            Text("\(done) / \(item.total)")
+                                .font(MyFisFont.caption)
+                                .foregroundStyle(MyFisColor.textSecondary)
+                                .lineLimit(1)
+                                .fixedSize()
+                                .padding(.horizontal, MyFisSpacing.sm)
+                                .padding(.vertical, 2)
+                                .background(MyFisColor.surface3, in: Capsule())
+                        }
+                        Capsule()
+                            .fill(on ? MyFisColor.textPrimary : .clear)
+                            .frame(height: 2)
+                    }
+                }
+                .buttonStyle(.myFisTap)
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+/// 미션 칸 세 줄짜리 격자. 줄 수가 적어 `LazyVGrid` 를 쓰지 않는다 (화면이 통째로 스크롤한다)
+private struct MissionGrid: View {
+    let tab: CardioMissionTab
+
+    private var rows: [[CardioMission]] {
+        let items = CardioPlaceholder.missions.filter { $0.tab == tab }
+        return stride(from: 0, to: items.count, by: 3).map {
+            Array(items[$0 ..< min($0 + 3, items.count)])
+        }
+    }
+
+    var body: some View {
+        VStack(spacing: MyFisSpacing.cardGap) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(alignment: .top, spacing: MyFisSpacing.cardGap) {
+                    ForEach(row) { MissionCard(mission: $0) }
+                    // 마지막 줄이 덜 찼으면 빈 칸으로 채운다 — 남은 칸이 늘어나면 안 된다
+                    ForEach(0 ..< (3 - row.count), id: \.self) { _ in
+                        Color.clear.frame(maxWidth: .infinity)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// 미션 한 칸.
+///
+/// ⚠️ **판을 라임으로 채우지 않는다.** 원본은 칸을 통째로 형광 초록으로 채우는데,
+/// 그러면 아홉 칸이 전부 액센트라 **어느 것도 강조가 아니게 된다** (§2 원칙 3).
+/// 라임은 **진행바 한 줄**에만 준다 — 그게 이 칸에서 유일하게 변하는 값이다.
+private struct MissionCard: View {
+    let mission: CardioMission
+
+    var body: some View {
+        MyFisCard {
+            Image(mission.icon)
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 28, height: 28)
+                .foregroundStyle(MyFisColor.textSecondary)
+                .frame(maxWidth: .infinity)
+            Text(mission.title)
+                .font(MyFisFont.bodySm)
+                .foregroundStyle(MyFisColor.textPrimary)
+                .lineLimit(1)
+                .padding(.top, MyFisSpacing.md)
+            Text(mission.progress)
+                .font(MyFisFont.caption)
+                .foregroundStyle(MyFisColor.textTertiary)
+                .lineLimit(1)
+                .padding(.top, 2)
+            MyFisProgress(value: mission.ratio)
+                .padding(.top, MyFisSpacing.md)
+        }
+    }
+}
+
+/// 오른쪽 꺾쇠 — 아래 꺾쇠를 돌려 쓴다 (§6.28 구안과 같은 방법)
+private struct Chevron: View {
+    var body: some View {
+        Image("ic_chevron_down")
+            .renderingMode(.template)
+            .resizable()
+            .frame(width: 20, height: 20)
+            .rotationEffect(.degrees(-90))
+            .foregroundStyle(MyFisColor.textTertiary)
+    }
+}
+
+/// 미션 갈래 (SPEC C-01)
+enum CardioMissionTab: CaseIterable {
+    case tutorial, monthly, weekly
+
+    var title: String {
+        switch self {
+        case .tutorial: "튜토리얼"
+        case .monthly: "월간"
+        case .weekly: "주간"
+        }
+    }
+
+    var total: Int {
+        switch self {
+        case .tutorial: 4
+        case .monthly, .weekly: 3
+        }
+    }
+}
+
+/// 미션 한 칸 (SPEC C-01)
+struct CardioMission: Identifiable {
+    let id: Int
+    let tab: CardioMissionTab
+    let icon: String
+    let title: String
+    /// `0.4Km / 1Km` 처럼 **얼마나 남았는지**를 그대로 적는다
+    let progress: String
+    let ratio: Double
+}
+
+// TODO(서버): 이름·누적·미션 달성은 서버가 준다 (SPEC §8). 하드코딩하지 않는다
+enum CardioPlaceholder {
+    static let name = "은후"
+    static let monthKm = "12.4"
+
+    static let missions: [CardioMission] = [
+        .init(id: 1, tab: .tutorial, icon: "ic_place_cardio",
+              title: "첫 러닝머신", progress: "0.4Km / 1Km", ratio: 0.4),
+        .init(id: 2, tab: .tutorial, icon: "ic_place_machine",
+              title: "첫 계단", progress: "0분 / 10분", ratio: 0),
+        .init(id: 3, tab: .tutorial, icon: "ic_tab_store",
+              title: "첫 주문", progress: "0회 / 1회", ratio: 0),
+        .init(id: 4, tab: .tutorial, icon: "ic_quest_board",
+              title: "첫 기록", progress: "0회 / 1회", ratio: 0),
+        .init(id: 5, tab: .monthly, icon: "ic_tab_cardio",
+              title: "이번 달 30km", progress: "12.4Km / 30Km", ratio: 0.41),
+        .init(id: 6, tab: .monthly, icon: "ic_quest_attend",
+              title: "12일 채우기", progress: "5일 / 12일", ratio: 0.42),
+        .init(id: 7, tab: .monthly, icon: "ic_tab_ranking",
+              title: "랭킹 100위", progress: "142위 / 100위", ratio: 0.7),
+        .init(id: 8, tab: .weekly, icon: "ic_tab_cardio",
+              title: "이번 주 5km", progress: "3.2Km / 5Km", ratio: 0.64),
+        .init(id: 9, tab: .weekly, icon: "ic_quest_attend",
+              title: "3일 나오기", progress: "2일 / 3일", ratio: 0.66),
+        .init(id: 10, tab: .weekly, icon: "ic_place_machine",
+              title: "계단 20분", progress: "0분 / 20분", ratio: 0),
+    ]
+}

@@ -19,7 +19,7 @@ struct TabShell: View {
 
     @State private var tabSet: TabSet = MyFisDebug.initialTabSet
     @State private var baseTab: BaseTab = MyFisDebug.initialBaseTab
-    @State private var weightTab: WeightTab = .weight
+    @State private var weightTab: WeightTab = MyFisDebug.initialWeightTab
 
     var body: some View {
         TabView(selection: selection) {
@@ -141,7 +141,12 @@ struct TabShell: View {
                 case .weight:
                     PlaceholderScreen(id: "W-01", title: "이번 주 루틴", description: "AI가 보낸 주간 루틴")
                 case .cardio:
-                    PlaceholderScreen(id: "C-01", title: "유산소", description: "기기 목록 · NFC 스캔")
+                    // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
+                    CardioScreen(onStore: {
+                        // 유산소의 `주문` 칸 — 세트를 되돌리고 스토어로 보낸다
+                        baseTab = .store
+                        withAnimation(.snappy(duration: 0.35)) { tabSet = .base }
+                    })
                 case .ranking:
                     PlaceholderScreen(id: "R-01", title: "랭킹", description: "웨이트 · 유산소 · 마일리지")
                 case .group:
