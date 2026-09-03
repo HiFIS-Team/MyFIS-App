@@ -160,41 +160,43 @@ private fun CardioHeader() {
 @Composable
 private fun MonthCard() {
     MyFisCard(shape = MyFisRadius.lg) {
-        Row(verticalAlignment = Alignment.Top) {
-            Column(Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_tab_cardio),
-                        contentDescription = null,
-                        tint = MyFisColor.TextSecondary,
-                        modifier = Modifier.size(20.dp),
-                    )
-                    Text(
-                        "이번 달",
-                        style = MyFisTheme.type.label,
-                        color = MyFisColor.TextSecondary,
-                        modifier = Modifier.padding(start = MyFisSpacing.sm),
-                    )
-                }
-                Text(
-                    cardioMonthKmPlaceholder,
-                    style = MyFisTheme.type.metricXl,
-                    color = MyFisColor.TextPrimary,
-                    modifier = Modifier.padding(top = MyFisSpacing.md),
-                )
-                Text(
-                    "km / month",
-                    style = MyFisTheme.type.bodySm,
-                    color = MyFisColor.TextTertiary,
-                )
-            }
-            // 브랜드 마크는 **우리 도장**이다 — 원본의 네온 방패 자리
-            Image(
-                painter = painterResource(R.drawable.ic_stamp),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                painter = painterResource(R.drawable.ic_tab_cardio),
                 contentDescription = null,
-                modifier = Modifier.size(72.dp),
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                "이번 달",
+                style = MyFisTheme.type.label,
+                color = MyFisColor.TextSecondary,
+                modifier = Modifier.padding(start = MyFisSpacing.sm),
             )
         }
+        // 마크는 **숫자와 같은 줄**에 선다 — 위에 붙이면 라벨과 눈이 겹친다
+        Row(
+            modifier = Modifier.padding(top = MyFisSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                cardioMonthKmPlaceholder,
+                style = MyFisTheme.type.metricXl,
+                color = MyFisColor.TextPrimary,
+                modifier = Modifier.weight(1f),
+            )
+            // 브랜드 마크는 **도장이 아니라 로고**다 (2026-09-03, 사용자 지정).
+            // 크기를 안 준다 — 밀도별로 구운 고유 크기(80×43dp)가 곧 규격이다
+            Image(
+                painter = painterResource(R.drawable.ic_logo),
+                contentDescription = null,
+            )
+        }
+        Text(
+            "km / month",
+            style = MyFisTheme.type.bodySm,
+            color = MyFisColor.TextTertiary,
+        )
         Row(
             modifier = Modifier.padding(top = MyFisSpacing.lg),
             verticalAlignment = Alignment.CenterVertically,

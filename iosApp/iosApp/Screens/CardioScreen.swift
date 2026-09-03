@@ -78,32 +78,32 @@ struct CardioScreen: View {
     /// 유산소는 주 단위로 보면 0인 주가 흔해서 **숫자가 자주 비어 보인다.**
     private var monthCard: some View {
         MyFisCard(radius: MyFisRadius.lg) {
-            HStack(alignment: .top, spacing: 0) {
-                VStack(alignment: .leading, spacing: 0) {
-                    HStack(spacing: MyFisSpacing.sm) {
-                        Image("ic_tab_cardio")
-                            .renderingMode(.template)
-                            .resizable()
-                            .frame(width: 20, height: 20)
-                            .foregroundStyle(MyFisColor.textSecondary)
-                        Text("이번 달")
-                            .font(MyFisFont.label)
-                            .foregroundStyle(MyFisColor.textSecondary)
-                    }
-                    Text(CardioPlaceholder.monthKm)
-                        .font(MyFisFont.metricXl)
-                        .foregroundStyle(MyFisColor.textPrimary)
-                        .padding(.top, MyFisSpacing.md)
-                    Text("km / month")
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                }
-                Spacer(minLength: MyFisSpacing.md)
-                // 브랜드 마크는 **우리 도장**이다 — 원본의 네온 방패 자리
-                Image("ic_stamp")
+            HStack(spacing: MyFisSpacing.sm) {
+                Image("ic_tab_cardio")
+                    .renderingMode(.template)
                     .resizable()
-                    .frame(width: 72, height: 72)
+                    .frame(width: 20, height: 20)
+                    .foregroundStyle(MyFisColor.textSecondary)
+                Text("이번 달")
+                    .font(MyFisFont.label)
+                    .foregroundStyle(MyFisColor.textSecondary)
             }
+
+            // 마크는 **숫자와 같은 줄**에 선다 — 위에 붙이면 라벨과 눈이 겹친다
+            HStack(spacing: MyFisSpacing.md) {
+                Text(CardioPlaceholder.monthKm)
+                    .font(MyFisFont.metricXl)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                Spacer(minLength: 0)
+                // 브랜드 마크는 **도장이 아니라 로고**다 (2026-09-03, 사용자 지정).
+                // 크기를 안 준다 — 배율별로 구운 고유 크기(80×43pt)가 곧 규격이다
+                Image("ic_logo")
+            }
+            .padding(.top, MyFisSpacing.md)
+
+            Text("km / month")
+                .font(MyFisFont.bodySm)
+                .foregroundStyle(MyFisColor.textTertiary)
 
             HStack(spacing: MyFisSpacing.md) {
                 Text("지금까지 \(CardioPlaceholder.monthKm)km 달렸어요")
