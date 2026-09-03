@@ -124,12 +124,12 @@ struct CardioScreen: View {
                     .font(MyFisFont.label)
                     .foregroundStyle(MyFisColor.textSecondary)
                     .frame(maxWidth: .infinity)
-                Image("ic_stamp")
+                Image(CardioPlaceholder.tier.badge)
                     .resizable()
                     .frame(width: 48, height: 48)
                     .frame(maxWidth: .infinity)
                     .padding(.top, MyFisSpacing.md)
-                Text(CardioPlaceholder.tier)
+                Text(CardioPlaceholder.tier.label)
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textPrimary)
                     .frame(maxWidth: .infinity)
@@ -363,6 +363,36 @@ private struct Chevron: View {
     }
 }
 
+/// 등급 — 여섯 (사용자 제공 뱃지, 2026-09-03).
+///
+/// 뱃지는 **원색 그림**이라 칠하지 않는다 (§6.23 원색 아이콘과 같은 규칙).
+/// 갈래 색(`category.*`)을 붙이지 않는 것도 같은 이유다 — **금속 자체가 등급을 말한다.**
+enum CardioTier: CaseIterable {
+    case bronze, silver, gold, platinum, diamond, master
+
+    var label: String {
+        switch self {
+        case .bronze: "브론즈"
+        case .silver: "실버"
+        case .gold: "골드"
+        case .platinum: "플래티넘"
+        case .diamond: "다이아"
+        case .master: "마스터"
+        }
+    }
+
+    var badge: String {
+        switch self {
+        case .bronze: "ic_tier_bronze"
+        case .silver: "ic_tier_silver"
+        case .gold: "ic_tier_gold"
+        case .platinum: "ic_tier_platinum"
+        case .diamond: "ic_tier_diamond"
+        case .master: "ic_tier_master"
+        }
+    }
+}
+
 /// 미션 갈래 (SPEC C-01)
 enum CardioMissionTab: CaseIterable {
     case daily, weekly, monthly
@@ -391,8 +421,8 @@ struct CardioMission: Identifiable {
 enum CardioPlaceholder {
     static let name = "은후"
     static let monthKm = "12.4"
-    /// 🔵 등급 체계는 아직 없다 — 자리만 잡아 둔 것이다
-    static let tier = "실버"
+    /// 🔵 무엇으로 등급이 오르는지는 아직 안 정했다 — 값만 자리를 잡아 둔 것이다
+    static let tier = CardioTier.silver
 
     static let missions: [CardioMission] = [
         .init(id: 1, tab: .daily, icon: "ic_place_cardio",

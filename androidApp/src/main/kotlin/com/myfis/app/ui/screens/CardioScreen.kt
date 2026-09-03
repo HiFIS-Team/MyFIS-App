@@ -227,7 +227,7 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             )
             Image(
-                painter = painterResource(R.drawable.ic_stamp),
+                painter = painterResource(cardioTierPlaceholder.badge),
                 contentDescription = null,
                 modifier = Modifier
                     .padding(top = MyFisSpacing.md)
@@ -235,7 +235,7 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
                     .size(48.dp),
             )
             Text(
-                cardioTierPlaceholder,
+                cardioTierPlaceholder.label,
                 style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextPrimary,
                 modifier = Modifier
@@ -458,8 +458,23 @@ data class CardioMission(
 const val cardioNamePlaceholder = "은후"
 const val cardioMonthKmPlaceholder = "12.4"
 
-/** 🔵 등급 체계는 아직 없다 — 자리만 잡아 둔 것이다 */
-const val cardioTierPlaceholder = "실버"
+/**
+ * 등급 — 여섯 (사용자 제공 뱃지, 2026-09-03).
+ *
+ * 뱃지는 **원색 그림**이라 칠하지 않는다 (§6.23 원색 아이콘과 같은 규칙).
+ * 갈래 색(`category.*`)을 붙이지 않는 것도 같은 이유다 — **금속 자체가 등급을 말한다.**
+ */
+enum class CardioTier(val label: String, val badge: Int) {
+    BRONZE("브론즈", R.drawable.ic_tier_bronze),
+    SILVER("실버", R.drawable.ic_tier_silver),
+    GOLD("골드", R.drawable.ic_tier_gold),
+    PLATINUM("플래티넘", R.drawable.ic_tier_platinum),
+    DIAMOND("다이아", R.drawable.ic_tier_diamond),
+    MASTER("마스터", R.drawable.ic_tier_master),
+}
+
+/** 🔵 무엇으로 등급이 오르는지는 아직 안 정했다 — 값만 자리를 잡아 둔 것이다 */
+val cardioTierPlaceholder = CardioTier.SILVER
 
 val cardioMissionPlaceholder = listOf(
     // 일간 — 하루 안에 끝나는 것. `첫 ~` 은 처음 한 번뿐이라 여기 못 온다
