@@ -210,6 +210,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyFIS;
+				INFOPLIST_KEY_NFCReaderUsageDescription = "\Uc720\Uc0b0\Uc18c \Uae30\Uae30\Uc758 \Ud0dc\Uadf8\Ub97c \Uc77d\Uc5b4 \Uc6b4\Ub3d9\Uc744 \Uc2dc\Uc791\Ud569\Ub2c8\Ub2e4.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -248,6 +249,7 @@
 				);
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyFIS;
+				INFOPLIST_KEY_NFCReaderUsageDescription = "\Uc720\Uc0b0\Uc18c \Uae30\Uae30\Uc758 \Ud0dc\Uadf8\Ub97c \Uc77d\Uc5b4 \Uc6b4\Ub3d9\Uc744 \Uc2dc\Uc791\Ud569\Ub2c8\Ub2e4.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

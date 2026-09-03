@@ -68,9 +68,13 @@ import com.myfis.app.ui.theme.tapWithHaptics
 @Composable
 fun CardioScreen(
     onStore: () -> Unit = {},
-    onStart: () -> Unit = {},
+    // TODO(C-03): 태그를 읽으면 `운동 중` 으로 넘긴다. 지금은 시트에서 끝난다
 ) {
     var tab by rememberSaveable { mutableStateOf(CardioMissionTab.DAILY) }
+    // 스캔은 잎 화면이 아니라 **이 화면 위에 덮이는 시트**다 (SPEC C-02) — 여기서 끝내고 돌아간다
+    var scanning by rememberSaveable { mutableStateOf(false) }
+
+    if (scanning) CardioScanSheet(onDismiss = { scanning = false })
 
     Column(Modifier.fillMaxSize()) {
         CardioHeader()
@@ -98,7 +102,7 @@ fun CardioScreen(
             // 폭을 다 쓰면 **떠 있는 탭 바와 둥근 덩어리가 둘로 겹치므로** 알약으로 맞춘다 (§6.28)
             MyFisPrimaryButton(
                 text = "유산소 시작하기",
-                onClick = onStart,
+                onClick = { scanning = true },
                 pill = true,
                 modifier = Modifier
                     .align(Alignment.BottomCenter)

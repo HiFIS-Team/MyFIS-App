@@ -13,7 +13,7 @@ import UIKit
 /// 할 일이 없는 화면**이었다. 미션이 그 자리를 메운다.
 struct CardioScreen: View {
     var onStore: () -> Void = {}
-    var onStart: () -> Void = {}
+    // TODO(C-03): 태그를 읽으면 `운동 중` 으로 넘긴다. 지금은 시스템 시트에서 끝난다
 
     @State private var tab: CardioMissionTab = .daily
 
@@ -39,7 +39,8 @@ struct CardioScreen: View {
 
                 // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — 엄지가 닿는 자리에 둔다 (원칙 2).
                 // 폭을 다 쓰면 **떠 있는 탭 바와 둥근 덩어리가 둘로 겹치므로** 알약으로 맞춘다 (§6.28)
-                MyFisPrimaryButton(title: "유산소 시작하기", pill: true, action: onStart)
+                MyFisPrimaryButton(title: "유산소 시작하기", pill: true,
+                                   action: { CardioScanner.shared.start() })
                     .padding(.bottom, MyFisSpacing.md)
             }
         }
