@@ -343,23 +343,23 @@ const val benefitEarnedThisMonthPlaceholder = 320
 
 val benefitActionPlaceholder = listOf(
     BenefitAction(
-        1, BenefitKind.ATTEND, R.drawable.ic_benefit_attend_color, "오늘 출석 도장 찍기", "+50 P 받기",
+        1, BenefitKind.ATTEND, R.drawable.ic_benefit_attend_color, "출석 도장 찍기", "+50 P 받기",
         introIcon = R.drawable.ic_benefit_attend,
     ),
     BenefitAction(
-        2, BenefitKind.ROUTINE, R.drawable.ic_benefit_routine_color, "오늘 루틴 끝내기", "+80 P 받기",
+        2, BenefitKind.ROUTINE, R.drawable.ic_benefit_routine_color, "루틴 끝내기", "+80 P 받기",
         introIcon = R.drawable.ic_benefit_routine,
     ),
     BenefitAction(
-        3, BenefitKind.CARDIO, R.drawable.ic_benefit_cardio_color, "유산소 10분 채우기", "10분마다 +10 P",
+        3, BenefitKind.CARDIO, R.drawable.ic_benefit_cardio_color, "유산소 타기", "10분마다 +10 P",
         introIcon = R.drawable.ic_benefit_cardio,
     ),
     BenefitAction(
-        4, BenefitKind.STRETCH, R.drawable.ic_benefit_stretch_color, "AI가 고른 3동작 따라 하기", "+20 P 받기",
+        4, BenefitKind.STRETCH, R.drawable.ic_benefit_stretch_color, "스트레칭 하기", "+20 P 받기",
         introIcon = R.drawable.ic_benefit_stretch,
     ),
     BenefitAction(
-        5, BenefitKind.WATER, R.drawable.ic_benefit_water_color, "제때 물 마시기",
+        5, BenefitKind.WATER, R.drawable.ic_benefit_water_color, "물마시기",
         "하루 2번 마시면 +50 P", introIcon = R.drawable.ic_benefit_water,
     ),
     // 랜딩에도 이 그림을 그대로 쓴다 — 주사위는 두 톤 벌이 아예 없다
@@ -367,28 +367,28 @@ val benefitActionPlaceholder = listOf(
         6, BenefitKind.DICE, R.drawable.ic_benefit_dice_color, "주사위 굴리기", "나온 눈만큼 P 받기",
     ),
     BenefitAction(
-        7, BenefitKind.LUCK, R.drawable.ic_benefit_luck_color, "뽑기 돌리기",
+        7, BenefitKind.LUCK, R.drawable.ic_benefit_luck_color, "행운 룰렛 돌리기",
         "랜덤 P 받기", badge = "이벤트", introIcon = R.drawable.ic_benefit_luck,
     ),
     // 주사위 · 뽑기 바로 뒤에 둔다 — **운으로 받는 셋**이 한 덩어리로 읽힌다
     BenefitAction(
-        13, BenefitKind.SCRATCH, R.drawable.ic_benefit_scratch_color, "은박 카드 긁기", "숨은 P 받기",
+        13, BenefitKind.SCRATCH, R.drawable.ic_benefit_scratch_color, "카드 긁기", "숨은 P 받기",
     ),
     BenefitAction(8, BenefitKind.QUIZ, R.drawable.ic_benefit_quiz, "AI가 생각하는 퀴즈 풀기", "+30 P 받기"),
     BenefitAction(
-        9, BenefitKind.TOUCH, R.drawable.ic_benefit_touch_color, "함께 마일리지 받기",
+        9, BenefitKind.TOUCH, R.drawable.ic_benefit_touch_color, "친구와 함께 받기",
         "+10 P 받기", badge = "신규", introIcon = R.drawable.ic_benefit_touch,
     ),
     BenefitAction(
-        10, BenefitKind.SNS, R.drawable.ic_benefit_sns, "인스타에 인증샷 올리기",
+        10, BenefitKind.SNS, R.drawable.ic_benefit_sns, "인스타 스토리 공유하기",
         "+100 P 받기", badge = "인기",
     ),
     BenefitAction(
-        11, BenefitKind.WEIGHT, R.drawable.ic_benefit_scale_color, "오늘 체중 재기", "+20 P 받기",
+        11, BenefitKind.WEIGHT, R.drawable.ic_benefit_scale_color, "인바디 재기", "+20 P 받기",
         introIcon = R.drawable.ic_benefit_scale,
     ),
     BenefitAction(
-        12, BenefitKind.DIET, R.drawable.ic_benefit_diet_color, "먹은 것 사진 찍기",
+        12, BenefitKind.DIET, R.drawable.ic_benefit_diet_color, "식단 분석 하기",
         "+20 P 받기", done = true, introIcon = R.drawable.ic_benefit_diet,
     ),
 )
