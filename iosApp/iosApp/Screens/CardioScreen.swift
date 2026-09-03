@@ -1,4 +1,6 @@
+import ImageIO
 import SwiftUI
+import UIKit
 
 /// SPEC.md C-01 유산소 탭 (DESIGN.md §6.28).
 ///
@@ -139,11 +141,8 @@ struct CardioScreen: View {
                         .foregroundStyle(MyFisColor.textSecondary)
                         .frame(maxWidth: .infinity)
                         .overlay(alignment: .trailing) { Chevron() }
-                    Image("ic_tab_store")
-                        .renderingMode(.template)
-                        .resizable()
+                    AnimatedDrink()
                         .frame(width: 48, height: 48)
-                        .foregroundStyle(MyFisColor.textSecondary)
                         .frame(maxWidth: .infinity)
                         .padding(.top, MyFisSpacing.md)
                     Text("운동하고 마실 것 주문하기")
@@ -294,6 +293,57 @@ private struct MissionCard: View {
             MyFisProgress(value: mission.ratio)
                 .padding(.top, MyFisSpacing.md)
         }
+    }
+}
+
+/// `ORDER` 칸의 움직이는 잔 (사용자 제공, 2026-09-03).
+///
+/// **플랫폼이 주는 디코더를 그대로 쓴다** (§2 원칙 6) — `ImageIO` 가 움직이는 WebP 의
+/// 프레임을 풀어 주고 `UIImageView` 가 돌린다. 그림 라이브러리를 붙이지 않는다.
+///
+/// ⚠️ 원본 GIF 는 **알파가 없어** 흰 바탕이 통째로 들어 있었다. 어두운 판에 얹으면 흰 네모가 된다 —
+/// 모서리에서 번지는 흰 영역만 지우고(잔 안의 흰 하이라이트는 살린다) **알파 있는 WebP** 로 다시 구웠다.
+struct AnimatedDrink: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIImageView {
+        let view = UIImageView(image: Self.image)
+        view.contentMode = .scaleAspectFit
+        // 카드가 폭을 정하므로 이미지가 제 크기를 주장하면 안 된다
+        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return view
+    }
+
+    func updateUIView(_ uiView: UIImageView, context: Context) {}
+
+    /// 프레임을 푸는 건 한 번이면 된다 — 칸이 다시 그려질 때마다 풀지 않는다
+    private static let image: UIImage? = load("ic_order_drink")
+
+    private static func load(_ name: String) -> UIImage? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: "webp"),
+              let data = try? Data(contentsOf: url),
+              let source = CGImageSourceCreateWithData(data as CFData, nil)
+        else { return nil }
+
+        var frames: [UIImage] = []
+        var total: TimeInterval = 0
+        for index in 0 ..< CGImageSourceGetCount(source) {
+            guard let cg = CGImageSourceCreateImageAtIndex(source, index, nil) else { continue }
+            frames.append(UIImage(cgImage: cg))
+            total += delay(source, index)
+        }
+        guard !frames.isEmpty else { return nil }
+        return UIImage.animatedImage(with: frames, duration: total)
+    }
+
+    /// 프레임 간격은 파일이 들고 있다. 못 읽으면 우리가 구운 값(80ms)으로 둔다
+    private static func delay(_ source: CGImageSource, _ index: Int) -> TimeInterval {
+        guard let all = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any],
+              let webp = all[kCGImagePropertyWebPDictionary] as? [CFString: Any],
+              let value = (webp[kCGImagePropertyWebPUnclampedDelayTime]
+                           ?? webp[kCGImagePropertyWebPDelayTime]) as? TimeInterval,
+              value > 0
+        else { return 0.08 }
+        return value
     }
 }
 

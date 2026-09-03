@@ -1,5 +1,9 @@
 package com.myfis.app.ui.screens
 
+import android.graphics.ImageDecoder
+import android.graphics.drawable.AnimatedImageDrawable
+import android.os.Build
+import android.widget.ImageView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -36,6 +40,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import com.myfis.app.R
 import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.theme.MyFisCard
@@ -242,11 +247,8 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
                 // 꺾쇠는 **얹는다** — 줄 안에 끼우면 가운데 글자가 왼쪽으로 밀린다
                 Box(Modifier.align(Alignment.CenterEnd)) { Chevron() }
             }
-            Icon(
-                painter = painterResource(R.drawable.ic_tab_store),
-                contentDescription = null,
-                tint = MyFisColor.TextSecondary,
-                modifier = Modifier
+            AnimatedDrink(
+                Modifier
                     .padding(top = MyFisSpacing.md)
                     .align(Alignment.CenterHorizontally)
                     .size(48.dp),
@@ -376,6 +378,38 @@ private fun MissionCard(mission: CardioMission, modifier: Modifier = Modifier) {
         )
         MyFisProgress(mission.ratio, Modifier.padding(top = MyFisSpacing.md))
     }
+}
+
+/**
+ * `ORDER` 칸의 움직이는 잔 (사용자 제공, 2026-09-03).
+ *
+ * **플랫폼이 주는 디코더를 그대로 쓴다** (§2 원칙 6) — `ImageDecoder` 가 움직이는 WebP 를
+ * `AnimatedImageDrawable` 로 풀어 준다. 그림 라이브러리를 붙이지 않는다.
+ *
+ * ⚠️ 원본 GIF 는 **알파가 없어** 흰 바탕이 통째로 들어 있었다. 어두운 판에 얹으면 흰 네모가 된다 —
+ * 모서리에서 번지는 흰 영역만 지우고(잔 안의 흰 하이라이트는 살린다) **알파 있는 WebP** 로 다시 구웠다.
+ */
+@Composable
+private fun AnimatedDrink(modifier: Modifier = Modifier) {
+    AndroidView(
+        modifier = modifier,
+        factory = { ctx ->
+            ImageView(ctx).apply {
+                setImageDrawable(
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        ImageDecoder
+                            .decodeDrawable(
+                                ImageDecoder.createSource(ctx.resources, R.drawable.ic_order_drink),
+                            )
+                            .also { (it as? AnimatedImageDrawable)?.start() }
+                    } else {
+                        // API 27 이하는 첫 프레임만 나온다 — 안 움직일 뿐 그림은 맞다
+                        ctx.getDrawable(R.drawable.ic_order_drink)
+                    },
+                )
+            }
+        },
+    )
 }
 
 /** 오른쪽 꺾쇠 — 아래 꺾쇠를 돌려 쓴다 (§6.28 구안과 같은 방법) */
