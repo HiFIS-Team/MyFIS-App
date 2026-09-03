@@ -11,13 +11,21 @@ struct MyFisPrimaryButton: View {
     /// 활동 화면은 **그 활동의 갈래 색**으로 칠한다 (2026-08-28). 기본은 라임
     var fill: Color = MyFisColor.accent
     var onFill: Color = MyFisColor.onAccent
+    /// **떠 있는 알약**으로 그린다 (§6.28 유산소 탭, 2026-09-03).
+    ///
+    /// 탭 화면은 아래에 **떠 있는 탭 바**가 있어서, 폭을 다 쓰는 판을 얹으면
+    /// **둥근 덩어리가 둘로 겹쳐** 보이고 뒤 카드가 모서리에 반쯤 잘린다.
+    /// 탭 바와 **같은 캡슐 모양**으로 맞추고 폭은 글자에 맡긴다.
+    var pill: Bool = false
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(MyFisFont.titleSm)
-                .frame(maxWidth: .infinity, minHeight: MyFisSize.buttonPrimary)
+                .padding(.horizontal, pill ? MyFisSpacing.xxl : 0)
+                .frame(maxWidth: pill ? nil : .infinity,
+                       minHeight: pill ? MyFisSize.buttonSecondary : MyFisSize.buttonPrimary)
         }
         .buttonStyle(.myFisTap)
         .disabled(!isEnabled)
@@ -26,7 +34,8 @@ struct MyFisPrimaryButton: View {
                          : (light ? MyFisColor.lightTextTertiary : MyFisColor.textTertiary))
         .background(isEnabled ? fill
                     : (light ? MyFisColor.lightSurface2 : MyFisColor.surface2))
-        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+        .clipShape(pill ? AnyShape(Capsule())
+                   : AnyShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)))
     }
 }
 

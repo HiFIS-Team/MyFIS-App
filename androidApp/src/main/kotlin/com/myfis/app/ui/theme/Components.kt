@@ -36,12 +36,27 @@ fun MyFisPrimaryButton(
     /** 활동 화면은 **그 활동의 갈래 색**으로 칠한다 (2026-08-28). 기본은 라임 */
     fill: Color = MyFisColor.Accent,
     onFill: Color = MyFisColor.OnAccent,
+    /**
+     * **떠 있는 알약**으로 그린다 (§6.28 유산소 탭, 2026-09-03).
+     *
+     * 탭 화면은 아래에 **떠 있는 탭 바**가 있어서, 폭을 다 쓰는 판을 얹으면
+     * **둥근 덩어리가 둘로 겹쳐** 보이고 뒤 카드가 모서리에 반쯤 잘린다.
+     * 탭 바와 **같은 `radius.full`** 로 맞추고 폭은 글자에 맡긴다.
+     */
+    pill: Boolean = false,
 ) {
     Button(
         onClick = onClick,
         enabled = enabled,
-        modifier = modifier.fillMaxWidth().height(MyFisSize.buttonPrimary),
-        shape = MyFisRadius.md,
+        modifier = modifier
+            .then(if (pill) Modifier else Modifier.fillMaxWidth())
+            .height(if (pill) MyFisSize.buttonSecondary else MyFisSize.buttonPrimary),
+        shape = if (pill) MyFisRadius.full else MyFisRadius.md,
+        contentPadding = if (pill) {
+            PaddingValues(horizontal = MyFisSpacing.xxl)
+        } else {
+            ButtonDefaults.ContentPadding
+        },
         colors = ButtonDefaults.buttonColors(
             containerColor = fill,
             contentColor = onFill,

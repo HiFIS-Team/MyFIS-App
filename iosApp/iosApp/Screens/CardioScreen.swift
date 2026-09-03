@@ -21,24 +21,27 @@ struct CardioScreen: View {
         VStack(spacing: 0) {
             header
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    monthCard
-                    shortcutRow
-                        .padding(.top, MyFisSpacing.cardGap)
-                    missionTabs
-                        .padding(.top, MyFisSpacing.sectionGap)
-                    MissionGrid(tab: tab)
-                        .padding(.top, MyFisSpacing.lg)
+            ZStack(alignment: .bottom) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        monthCard
+                        shortcutRow
+                            .padding(.top, MyFisSpacing.cardGap)
+                        missionTabs
+                            .padding(.top, MyFisSpacing.sectionGap)
+                        MissionGrid(tab: tab)
+                            .padding(.top, MyFisSpacing.lg)
+                    }
+                    .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                    // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다
+                    .padding(.bottom, MyFisSize.buttonSecondary + MyFisSpacing.xxxl)
                 }
-                .padding(.horizontal, MyFisSpacing.screenHorizontal)
-                .padding(.bottom, MyFisSpacing.xxxl)
-            }
 
-            // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — 엄지가 닿는 자리에 못 박는다 (원칙 2)
-            MyFisPrimaryButton(title: "유산소 시작하기", action: onStart)
-                .padding(.horizontal, MyFisSpacing.screenHorizontal)
-                .padding(.bottom, MyFisSpacing.md)
+                // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — 엄지가 닿는 자리에 둔다 (원칙 2).
+                // 폭을 다 쓰면 **떠 있는 탭 바와 둥근 덩어리가 둘로 겹치므로** 알약으로 맞춘다 (§6.28)
+                MyFisPrimaryButton(title: "유산소 시작하기", pill: true, action: onStart)
+                    .padding(.bottom, MyFisSpacing.md)
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
@@ -116,7 +119,7 @@ struct CardioScreen: View {
     private var shortcutRow: some View {
         WeightedRow(weights: [5, 8], spacing: MyFisSpacing.cardGap) {
             MyFisCard {
-                Text("BADGE")
+                Text("TIER")
                     .font(MyFisFont.label)
                     .foregroundStyle(MyFisColor.textSecondary)
                     .frame(maxWidth: .infinity)
@@ -125,7 +128,7 @@ struct CardioScreen: View {
                     .frame(width: 48, height: 48)
                     .frame(maxWidth: .infinity)
                     .padding(.top, MyFisSpacing.md)
-                Text("1개 획득")
+                Text(CardioPlaceholder.tier)
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textPrimary)
                     .frame(maxWidth: .infinity)
@@ -387,6 +390,8 @@ struct CardioMission: Identifiable {
 enum CardioPlaceholder {
     static let name = "은후"
     static let monthKm = "12.4"
+    /// 🔵 등급 체계는 아직 없다 — 자리만 잡아 둔 것이다
+    static let tier = "실버"
 
     static let missions: [CardioMission] = [
         .init(id: 1, tab: .daily, icon: "ic_place_cardio",

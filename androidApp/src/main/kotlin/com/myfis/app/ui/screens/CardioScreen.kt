@@ -75,28 +75,36 @@ fun CardioScreen(
     Column(Modifier.fillMaxSize()) {
         CardioHeader()
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = MyFisSpacing.screenHorizontal),
-        ) {
-            MonthCard()
-            ShortcutRow(onStore = onStore, modifier = Modifier.padding(top = MyFisSpacing.cardGap))
-            MissionTabs(tab, { tab = it }, Modifier.padding(top = MyFisSpacing.sectionGap))
-            MissionGrid(tab, Modifier.padding(top = MyFisSpacing.lg, bottom = MyFisSpacing.xxxl))
-        }
+        Box(Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = MyFisSpacing.screenHorizontal),
+            ) {
+                MonthCard()
+                ShortcutRow(onStore = onStore, modifier = Modifier.padding(top = MyFisSpacing.cardGap))
+                MissionTabs(tab, { tab = it }, Modifier.padding(top = MyFisSpacing.sectionGap))
+                // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다
+                MissionGrid(
+                    tab,
+                    Modifier.padding(
+                        top = MyFisSpacing.lg,
+                        bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl,
+                    ),
+                )
+            }
 
-        // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — 엄지가 닿는 자리에 못 박는다 (원칙 2)
-        MyFisPrimaryButton(
-            text = "유산소 시작하기",
-            onClick = onStart,
-            modifier = Modifier.padding(
-                start = MyFisSpacing.screenHorizontal,
-                end = MyFisSpacing.screenHorizontal,
-                bottom = MyFisSpacing.md,
-            ),
-        )
+            // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — 엄지가 닿는 자리에 둔다 (원칙 2).
+            // 폭을 다 쓰면 **떠 있는 탭 바와 둥근 덩어리가 둘로 겹치므로** 알약으로 맞춘다 (§6.28)
+            MyFisPrimaryButton(
+                text = "유산소 시작하기",
+                onClick = onStart,
+                pill = true,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = MyFisSpacing.md),
+            )
+        }
     }
 }
 
@@ -198,7 +206,7 @@ private fun MonthCard() {
     }
 }
 
-/** 뱃지 · 주문 — 원본의 `BADGE` / `ORDER` 두 칸. 좁은 칸 하나 + 넓은 칸 하나다 */
+/** 등급 · 주문 — 원본의 `BADGE` / `ORDER` 두 칸. 좁은 칸 하나 + 넓은 칸 하나다 */
 @Composable
 private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
     val storeInteraction = remember { MutableInteractionSource() }
@@ -209,7 +217,7 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
     ) {
         MyFisCard(Modifier.weight(5f).fillMaxHeight()) {
             Text(
-                "BADGE",
+                "TIER",
                 style = MyFisTheme.type.label,
                 color = MyFisColor.TextSecondary,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
@@ -223,7 +231,7 @@ private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
                     .size(48.dp),
             )
             Text(
-                "1개 획득",
+                cardioTierPlaceholder,
                 style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextPrimary,
                 modifier = Modifier
@@ -445,6 +453,9 @@ data class CardioMission(
 // TODO(서버): 이름·누적·미션 달성은 서버가 준다 (SPEC §8). 하드코딩하지 않는다
 const val cardioNamePlaceholder = "은후"
 const val cardioMonthKmPlaceholder = "12.4"
+
+/** 🔵 등급 체계는 아직 없다 — 자리만 잡아 둔 것이다 */
+const val cardioTierPlaceholder = "실버"
 
 val cardioMissionPlaceholder = listOf(
     // 일간 — 하루 안에 끝나는 것. `첫 ~` 은 처음 한 번뿐이라 여기 못 온다
