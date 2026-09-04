@@ -108,26 +108,32 @@ struct StoreScreen: View {
     }
 
     var body: some View {
-        GeometryReader { geo in
-            ZStack(alignment: .top) {
-                VStack(spacing: 0) {
-                    header
-                    home
-                }
-
-                // **판은 늘 여기 있다. 자리만 옮긴다** 🟢 (2026-09-04, 사용자 지정).
-                //
-                // `transition` 으로 붙였다 떼면 **들어오는 순간에야 안쪽이 만들어진다** —
-                // 특히 `TextField` 는 UIKit 뷰라 뒤늦게 그려져서
-                // **판은 들어왔는데 글씨가 따라 들어오는 것처럼** 보인다 (2026-09-04 사용자 지적).
-                // 화면 밖에 세워 두면 안쪽이 **이미 그려져 있어** 판과 같이 움직인다
-                searchOverlay
-                    .offset(x: searching ? 0 : geo.size.width)
-                    // 밖에 서 있는 동안에는 없는 셈 쳐야 한다 — 보이스오버가 읽으면 안 된다
-                    .accessibilityHidden(!searching)
+        ZStack(alignment: .top) {
+            VStack(spacing: 0) {
+                header
+                home
             }
-            .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
-            .clipped()
+
+            // **판은 늘 여기 있다. 자리만 옮긴다** 🟢 (2026-09-04, 사용자 지정).
+            //
+            // `transition` 으로 붙였다 떼면 **들어오는 순간에야 안쪽이 만들어진다** —
+            // 특히 `TextField` 는 UIKit 뷰라 뒤늦게 그려져서
+            // **판은 들어왔는데 글씨가 따라 들어오는 것처럼** 보인다 (2026-09-04 사용자 지적).
+            // 화면 밖에 세워 두면 안쪽이 **이미 그려져 있어** 판과 같이 움직인다
+            //
+            // ⚠️ **`GeometryReader` 로 화면 전체를 감싸면 안 된다** 🟢 (2026-09-04 버그, 사용자 지적).
+            // 전에는 이 자리에서 뿌리를 통째로 감싸고 `frame(height:)` + `clipped()` 로 잘랐는데,
+            // `geo.size` 는 **안전 영역을 뺀 크기**라 본문이 **하단 탭 바 윗선에서 잘렸다.**
+            // 다른 탭은 콘텐츠가 유리 밑으로 흘러 들어가는데 스토어만 거기서 끊겨서
+            // **바가 회색 판 위에 얹힌 것처럼** 보였다. 재는 것은 **판 하나만** 감싼다
+            GeometryReader { geo in
+                searchOverlay
+                    .frame(width: geo.size.width, height: geo.size.height)
+                    // 화면 밖으로 밀어 두면 그릴 것이 없다 — 따로 잘라낼 필요가 없다
+                    .offset(x: searching ? 0 : geo.size.width)
+            }
+            // 밖에 서 있는 동안에는 없는 셈 쳐야 한다 — 보이스오버가 읽으면 안 된다
+            .accessibilityHidden(!searching)
         }
         .task { MyFisDebug.scheduleAutoSearch(openSearch) }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
