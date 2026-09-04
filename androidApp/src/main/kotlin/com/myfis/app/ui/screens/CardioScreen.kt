@@ -136,7 +136,8 @@ private fun CardioHeader() {
             .padding(horizontal = MyFisSpacing.screenHorizontal),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("유산소", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+        // 화면 이름은 `title.lg` 다 (§4.2 · §6.9, 2026-09-04)
+        Text("유산소", style = MyFisTheme.type.titleLg, color = MyFisColor.TextPrimary)
         Spacer(Modifier.weight(1f))
         MileageChip(balance = benefitBalancePlaceholder)
     }

@@ -57,7 +57,8 @@ struct CardioScreen: View {
     private var header: some View {
         HStack(spacing: MyFisSpacing.md) {
             Text("유산소")
-                .font(MyFisFont.titleMd)
+                // 화면 이름은 `title.lg` 다 (§4.2 · §6.9, 2026-09-04)
+                .font(MyFisFont.titleLg)
                 .foregroundStyle(MyFisColor.textPrimary)
 
             Spacer(minLength: MyFisSpacing.md)

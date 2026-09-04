@@ -180,7 +180,8 @@ private fun GroupHeader(onSearch: () -> Unit) {
     ) {
         Text(
             "모임",
-            style = MyFisTheme.type.titleMd,
+            // 화면 이름은 `title.lg` 다 (§4.2 · §6.9, 2026-09-04)
+            style = MyFisTheme.type.titleLg,
             color = MyFisColor.TextPrimary,
         )
         Spacer(Modifier.weight(1f))

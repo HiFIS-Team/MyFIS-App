@@ -108,7 +108,8 @@ struct GroupScreen: View {
     private var header: some View {
         HStack(spacing: 0) {
             Text("모임")
-                .font(MyFisFont.titleMd)
+                // 화면 이름은 `title.lg` 다 (§4.2 · §6.9, 2026-09-04)
+                .font(MyFisFont.titleLg)
                 .foregroundStyle(MyFisColor.textPrimary)
                 .padding(.leading, MyFisSpacing.sm)
 

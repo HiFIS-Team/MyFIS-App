@@ -153,7 +153,9 @@ struct WeightScreen: View {
     private var header: some View {
         HStack(spacing: MyFisSpacing.md) {
             Text("웨이트")
-                .font(MyFisFont.titleMd)
+                // §4.2 에서 `title.lg` 가 **화면 제목**이다. `title.md` 는 섹션 제목이라
+                // 화면 이름에 쓰면 제목으로 안 읽힌다 (2026-09-04, 사용자 지정)
+                .font(MyFisFont.titleLg)
                 .foregroundStyle(MyFisColor.textPrimary)
 
             Spacer(minLength: MyFisSpacing.md)
@@ -345,22 +347,27 @@ private struct SelectorCard: View {
     var body: some View {
         Button { open = true } label: {
             MyFisCard(compact: true) {
-                HStack(spacing: MyFisSpacing.xs) {
+                HStack(spacing: MyFisSpacing.md) {
+                    // 아이콘은 **두 줄에 걸쳐 세로 가운데**에 선다 (사용자 지정 레퍼런스).
+                    // 라벨 옆에 작게 붙였을 때는 라벨의 장식으로 읽혔다 — 이 칸이 무엇에 관한
+                    // 칸인지는 라벨이 아니라 **칸 전체**의 성격이라 그림도 칸을 맡는다
                     Image(icon)
                         .renderingMode(.template)
                         .resizable()
-                        .frame(width: 16, height: 16)
+                        .frame(width: MyFisSpacing.xxl, height: MyFisSpacing.xxl)
                         .foregroundStyle(MyFisColor.textSecondary)
-                    Text(label)
-                        .font(MyFisFont.label)
-                        .foregroundStyle(MyFisColor.textSecondary)
-                }
 
-                HStack(spacing: MyFisSpacing.sm) {
-                    Text(format(value))
-                        .font(MyFisFont.titleMd.monospacedDigit())
-                        .foregroundStyle(MyFisColor.textPrimary)
-                    Spacer(minLength: 0)
+                    VStack(alignment: .leading, spacing: MyFisSpacing.xs) {
+                        Text(label)
+                            .font(MyFisFont.label)
+                            .foregroundStyle(MyFisColor.textSecondary)
+                        Text(format(value))
+                            .font(MyFisFont.titleMd.monospacedDigit())
+                            .foregroundStyle(MyFisColor.textPrimary)
+                    }
+
+                    Spacer(minLength: MyFisSpacing.sm)
+
                     Chevron(degrees: 0, size: 18)
                 }
             }

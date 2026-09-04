@@ -246,7 +246,9 @@ private fun WeightHeader(weekOpen: Boolean, onToggleWeek: () -> Unit) {
             .padding(horizontal = MyFisSpacing.screenHorizontal),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("웨이트", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+        // §4.2 에서 `title.lg` 가 **화면 제목**이다. `title.md` 는 섹션 제목이라
+        // 화면 이름에 쓰면 제목으로 안 읽힌다 (2026-09-04, 사용자 지정)
+        Text("웨이트", style = MyFisTheme.type.titleLg, color = MyFisColor.TextPrimary)
         Spacer(Modifier.weight(1f))
         Row(
             modifier = Modifier
@@ -387,22 +389,23 @@ private fun SelectorCard(
     Box(modifier) {
         MyFisCard(Modifier.tapWithHaptics(interaction) { open = true }, compact = true) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+                horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
             ) {
+                // 아이콘은 **두 줄에 걸쳐 세로 가운데**에 선다 (사용자 지정 레퍼런스).
+                // 라벨 옆에 작게 붙였을 때는 라벨의 장식으로 읽혔다 — 이 칸이 무엇에 관한
+                // 칸인지는 라벨이 아니라 **칸 전체**의 성격이라 그림도 칸을 맡는다
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
                     tint = MyFisColor.TextSecondary,
-                    modifier = Modifier.size(16.dp),
+                    modifier = Modifier.size(MyFisSpacing.xxl),
                 )
-                Text(label, style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(format(value), style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+                Column(verticalArrangement = Arrangement.spacedBy(MyFisSpacing.xs)) {
+                    Text(label, style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+                    Text(format(value), style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+                }
                 Spacer(Modifier.weight(1f))
                 Icon(
                     painter = painterResource(R.drawable.ic_chevron_down),
