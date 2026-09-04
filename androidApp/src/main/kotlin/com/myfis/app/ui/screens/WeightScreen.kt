@@ -39,7 +39,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
-import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisIconTile
@@ -139,29 +138,38 @@ private val routineConditionOptions = listOf(100, 80, 60, 40)
 fun WeightScreen() {
     // 순서를 바꾸므로 화면이 들고 있는다. TODO(서버): 바뀐 순서를 올린다
     val exercises = remember { mutableStateListOf(*routineExercisesPlaceholder.toTypedArray()) }
+    // 요일 띠는 **접힌 채로 시작한다** 🟢 (2026-09-04, 사용자 지정)
+    var weekOpen by rememberSaveable { mutableStateOf(false) }
     var warmupOpen by rememberSaveable { mutableStateOf(false) }
     var reordering by rememberSaveable { mutableStateOf(false) }
     var minutes by rememberSaveable { mutableStateOf(60) }
     var condition by rememberSaveable { mutableStateOf(100) }
 
     Column(Modifier.fillMaxSize()) {
-        WeightHeader()
+        WeightHeader(weekOpen = weekOpen, onToggleWeek = { weekOpen = !weekOpen })
 
         Box(Modifier.weight(1f)) {
             Column(
                 modifier = Modifier
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = MyFisSpacing.screenHorizontal)
+                    .padding(top = MyFisSpacing.sm)
                     // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다 (§6.28 과 같은 값)
                     .padding(bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl),
             ) {
-                WeekStrip(routineWeekPlaceholder)
+                // ⚠️ 높이만 움직이면 안 된다 — 내용이 먼저 사라지고 빈칸이 늦게 닫혀
+                // 아래 줄이 뒤늦게 따라오는 것처럼 보인다 (§6.11 에서 같은 걸 겪었다)
+                AnimatedVisibility(weekOpen) {
+                    WeekStrip(
+                        routineWeekPlaceholder,
+                        Modifier.padding(bottom = MyFisSpacing.sectionGap),
+                    )
+                }
                 ConditionRow(
                     minutes = minutes,
                     onMinutes = { minutes = it },
                     condition = condition,
                     onCondition = { condition = it },
-                    modifier = Modifier.padding(top = MyFisSpacing.sectionGap),
                 )
                 ListHeader(
                     count = exercises.size + 1,
@@ -213,9 +221,20 @@ fun WeightScreen() {
     }
 }
 
-/** 유산소(§6.28) · 모임(§6.29) 과 같은 꼴 — **화면 이름 한 줄 + 마일리지 칩** */
+/**
+ * `웨이트` + **이번 주를 여닫는 칩**.
+ *
+ * 유산소(§6.28)·모임(§6.29)은 이 자리에 마일리지 칩을 두지만 **웨이트는 뺐다**
+ * 🟢 (2026-09-04, 사용자 지정) — 요일 띠가 늘 펼쳐져 있으면 화면 위 `100` 가까이를
+ * *오늘 할 일이 아닌 것*이 먹는다. 자리를 맞바꿔서, **접힌 동안에도 `3 / 5` 는 남는다.**
+ *
+ * 칩 규격은 마일리지 칩(§6.12)과 같다 — 높이 `chip` · `surface.2` · 캡슐
+ */
 @Composable
-private fun WeightHeader() {
+private fun WeightHeader(weekOpen: Boolean, onToggleWeek: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val turn by animateFloatAsState(if (weekOpen) 180f else 0f, MyFisMotion.base(), label = "week")
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -225,7 +244,29 @@ private fun WeightHeader() {
     ) {
         Text("웨이트", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
         Spacer(Modifier.weight(1f))
-        MileageChip(balance = benefitBalancePlaceholder)
+        Row(
+            modifier = Modifier
+                .height(MyFisSize.chip)
+                .background(MyFisColor.Surface2, MyFisRadius.full)
+                .tapWithHaptics(interaction, onToggleWeek)
+                .padding(horizontal = MyFisSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+        ) {
+            Text("이번 주", style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+            Text(
+                "${routineWeekPlaceholder.count { it.done }} / " +
+                    "${routineWeekPlaceholder.count { !it.rest }}",
+                style = MyFisTheme.type.label,
+                color = MyFisColor.TextPrimary,
+            )
+            Icon(
+                painter = painterResource(R.drawable.ic_chevron_down),
+                contentDescription = if (weekOpen) "이번 주 접기" else "이번 주 펼치기",
+                tint = MyFisColor.TextTertiary,
+                modifier = Modifier.size(16.dp).rotate(turn),
+            )
+        }
     }
 }
 
@@ -237,20 +278,10 @@ private fun WeightHeader() {
  * 위계를 **표면 밝기**로 세운다 (§5.4).
  */
 @Composable
-private fun WeekStrip(days: List<RoutineDay>) {
-    Column(verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("이번 주", style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
-            Spacer(Modifier.weight(1f))
-            Text(
-                "${days.count { it.done }} / ${days.count { !it.rest }}일 완료",
-                style = MyFisTheme.type.label,
-                color = MyFisColor.TextTertiary,
-            )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs)) {
-            days.forEach { WeekCell(it, Modifier.weight(1f)) }
-        }
+private fun WeekStrip(days: List<RoutineDay>, modifier: Modifier = Modifier) {
+    // 머리 줄(`이번 주` · `n / n일 완료`)은 **헤더 칩이 가져갔다** — 접힌 동안에도 보여야 해서다
+    Row(modifier, horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs)) {
+        days.forEach { WeekCell(it, Modifier.weight(1f)) }
     }
 }
 

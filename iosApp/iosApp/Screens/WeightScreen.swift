@@ -70,6 +70,10 @@ enum RoutinePlaceholder {
         RoutineExercise(id: 6, name: "케이블 푸시다운", gear: .machine, sets: 3, load: "15kg", reps: 15),
     ]
 
+    /// 이번 주 운동하는 날 수 · 그중 끝낸 날 수 — 헤더 칩이 쓴다
+    static var workoutCount: Int { week.filter { !$0.rest }.count }
+    static var doneCount: Int { week.filter { $0.done }.count }
+
     /// 오늘 쓸 수 있는 시간 — 고르면 서버가 분량을 맞춰 다시 짠다
     static let minuteOptions = [30, 45, 60, 75, 90]
     static let minutes = 60
@@ -97,6 +101,8 @@ enum RoutinePlaceholder {
 struct WeightScreen: View {
     /// 순서를 바꾸므로 화면이 들고 있는다. TODO(서버): 바뀐 순서를 올린다
     @State private var exercises = RoutinePlaceholder.exercises
+    /// 요일 띠는 **접힌 채로 시작한다** 🟢 (2026-09-04, 사용자 지정)
+    @State private var weekOpen = MyFisDebug.weightWeekOpen
     @State private var warmupOpen = MyFisDebug.weightWarmupOpen
     @State private var reordering = MyFisDebug.weightReordering
     @State private var minutes = RoutinePlaceholder.minutes
@@ -109,15 +115,21 @@ struct WeightScreen: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        WeekStrip(days: RoutinePlaceholder.week)
+                        if weekOpen {
+                            WeekStrip(days: RoutinePlaceholder.week)
+                                .padding(.bottom, MyFisSpacing.sectionGap)
+                        }
                         conditionRow
-                            .padding(.top, MyFisSpacing.sectionGap)
                         listHeader
                             .padding(.top, MyFisSpacing.sectionGap)
                         list
                             .padding(.top, MyFisSpacing.sm)
                     }
                     .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                    .padding(.top, MyFisSpacing.sm)
+                    // ⚠️ 높이만 움직이면 안 된다 — 내용이 먼저 사라지고 빈칸이 늦게 닫혀
+                    // 아래 줄이 뒤늦게 따라오는 것처럼 보인다 (§6.11 에서 같은 걸 겪었다)
+                    .animation(MyFisMotion.base, value: weekOpen)
                     // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다 (§6.28 과 같은 값)
                     .padding(.bottom, MyFisSize.buttonSecondary + MyFisSpacing.xxxl)
                 }
@@ -133,7 +145,11 @@ struct WeightScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// 유산소(§6.28) · 모임(§6.29) 과 같은 꼴 — **화면 이름 한 줄 + 마일리지 칩**
+    /// `웨이트` + **이번 주를 여닫는 칩**.
+    ///
+    /// 유산소(§6.28)·모임(§6.29)은 이 자리에 마일리지 칩을 두지만 **웨이트는 뺐다**
+    /// 🟢 (2026-09-04, 사용자 지정) — 요일 띠가 늘 펼쳐져 있으면 화면 위 `100` 가까이를
+    /// *오늘 할 일이 아닌 것*이 먹는다. 자리를 맞바꿔서, **접힌 동안에도 `3 / 5` 는 남는다.**
     private var header: some View {
         HStack(spacing: MyFisSpacing.md) {
             Text("웨이트")
@@ -142,10 +158,33 @@ struct WeightScreen: View {
 
             Spacer(minLength: MyFisSpacing.md)
 
-            MileageChip(balance: BenefitPlaceholder.balance)
+            Button {
+                withAnimation(MyFisMotion.base) { weekOpen.toggle() }
+            } label: {
+                weekChip
+            }
+            .buttonStyle(.myFisTap)
+            .accessibilityLabel(weekOpen ? "이번 주 접기" : "이번 주 펼치기")
         }
         .frame(height: MyFisSize.header)
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
+    }
+
+    /// 마일리지 칩(§6.12)과 **같은 규격**이다 — 높이 `chip` · `surface.2` · 캡슐.
+    /// 옆 탭들과 헤더 오른쪽 덩어리가 같은 무게로 보여야 한다
+    private var weekChip: some View {
+        HStack(spacing: MyFisSpacing.sm) {
+            Text("이번 주")
+                .font(MyFisFont.label)
+                .foregroundStyle(MyFisColor.textSecondary)
+            Text("\(RoutinePlaceholder.doneCount) / \(RoutinePlaceholder.workoutCount)")
+                .font(MyFisFont.label.monospacedDigit())
+                .foregroundStyle(MyFisColor.textPrimary)
+            Chevron(degrees: weekOpen ? 180 : 0, size: 16)
+        }
+        .padding(.horizontal, MyFisSpacing.md)
+        .frame(height: MyFisSize.chip)
+        .background(MyFisColor.surface2, in: Capsule())
     }
 
     /// 오늘의 조건 두 칸 — 고치면 **분량이 다시 짜인다**.
@@ -156,7 +195,8 @@ struct WeightScreen: View {
     private var conditionRow: some View {
         HStack(spacing: MyFisSpacing.cardGap) {
             SelectorCard(label: "운동 시간", options: RoutinePlaceholder.minuteOptions,
-                         format: { "\($0)분" }, value: $minutes)
+                         format: { "\($0)분" }, value: $minutes,
+                         debugOpen: MyFisDebug.weightPickerOpen)
             SelectorCard(label: "컨디션", options: RoutinePlaceholder.conditionOptions,
                          format: { "\($0)%" }, value: $condition)
         }
@@ -226,24 +266,10 @@ struct WeightScreen: View {
 private struct WeekStrip: View {
     let days: [RoutineDay]
 
-    private var total: Int { days.filter { !$0.rest }.count }
-    private var done: Int { days.filter { $0.done }.count }
-
     var body: some View {
-        VStack(alignment: .leading, spacing: MyFisSpacing.sm) {
-            HStack(spacing: MyFisSpacing.md) {
-                Text("이번 주")
-                    .font(MyFisFont.label)
-                    .foregroundStyle(MyFisColor.textSecondary)
-                Spacer(minLength: 0)
-                Text("\(done) / \(total)일 완료")
-                    .font(MyFisFont.label.monospacedDigit())
-                    .foregroundStyle(MyFisColor.textTertiary)
-            }
-
-            HStack(spacing: MyFisSpacing.xs) {
-                ForEach(days) { cell($0) }
-            }
+        // 머리 줄(`이번 주` · `n / n일 완료`)은 **헤더 칩이 가져갔다** — 접힌 동안에도 보여야 해서다
+        HStack(spacing: MyFisSpacing.xs) {
+            ForEach(days) { cell($0) }
         }
     }
 
@@ -309,12 +335,12 @@ private struct SelectorCard: View {
     let format: (Int) -> String
     @Binding var value: Int
 
+    /// 시뮬레이터에는 누를 수단이 없어 목록을 열어 볼 방법이 이것뿐이다
+    var debugOpen = false
+    @State private var open = false
+
     var body: some View {
-        Menu {
-            Picker("", selection: $value) {
-                ForEach(options, id: \.self) { Text(format($0)).tag($0) }
-            }
-        } label: {
+        Button { open = true } label: {
             MyFisCard {
                 Text(label)
                     .font(MyFisFont.label)
@@ -331,6 +357,10 @@ private struct SelectorCard: View {
             }
         }
         .buttonStyle(.myFisTap)
+        // 시스템 `Menu` 대신 우리 면으로 그린다 (§6.34)
+        .myFisDropdown(isPresented: $open, options: options,
+                       selection: $value, title: format)
+        .task { if debugOpen { open = true } }
         // TODO(서버): 값이 바뀌면 그 조건으로 루틴을 다시 받아온다
     }
 }

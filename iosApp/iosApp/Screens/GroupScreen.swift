@@ -250,32 +250,27 @@ private struct SegmentBar: View {
 private struct SortChips: View {
     @Binding var selection: GroupSort
     @Binding var order: GroupOrder
+    /// 차례 고르는 목록이 열려 있는지 (§6.34)
+    @State private var orderOpen = MyFisDebug.groupOrderOpen
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: MyFisSpacing.sm) {
                 // **첫 칩만 여는 칩이다** — 나머지는 켜고 끄는 것.
-                // 여는 판은 **네이티브 메뉴 그대로** 쓴다 (§2 원칙 6) — 직접 그리면 두 판이 어긋나고,
-                // 바깥을 눌러 닫는 것부터 다시 만들어야 한다
+                // 여는 판은 **우리 면으로 그린다** (§6.34) — 시스템 `Menu` 는 목록을 유리로 띄우는데
+                // 이 앱에 그 재질은 여기밖에 없고, 안드로이드는 같은 자리를 평면으로 그린다
                 // **필터가 켜져 있으면 누를 때 되돌아가기만 한다** 🟢 (2026-09-04, 사용자 지정).
                 // `인기` 를 보다가 `추천` 을 누르는 사람은 **차례를 고르려는 게 아니라 원래 목록으로 가려는 것**이다 —
                 // 거기서 메뉴를 열면 한 번 더 눌러야 돌아간다.
                 // 차례 고르기는 **이미 추천을 보고 있을 때**만 뜻이 있다
-                if selection != .none {
-                    Button { selection = .none } label: {
-                        chip(order.title, selected: false, chevron: true)
-                    }
-                    .buttonStyle(.myFisTap)
-                } else {
-                    Menu {
-                        Picker("", selection: $order) {
-                            ForEach(GroupOrder.allCases, id: \.self) { Text($0.title).tag($0) }
-                        }
-                    } label: {
-                        chip(order.title, selected: true, chevron: true)
-                    }
-                    .buttonStyle(.myFisTap)
+                Button {
+                    if selection != .none { selection = .none } else { orderOpen = true }
+                } label: {
+                    chip(order.title, selected: selection == .none, chevron: true)
                 }
+                .buttonStyle(.myFisTap)
+                .myFisDropdown(isPresented: $orderOpen, options: GroupOrder.allCases,
+                               selection: $order, title: { $0.title })
 
                 ForEach(GroupSort.allCases, id: \.self) { item in
                     Button { selection = (selection == item) ? .none : item } label: {
