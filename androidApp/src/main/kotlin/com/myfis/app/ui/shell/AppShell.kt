@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.myfis.app.ui.screens.GroupCreateScreen
+import com.myfis.app.ui.screens.GroupIntroScreen
 import com.myfis.app.ui.screens.RegionSearchScreen
 import com.myfis.app.ui.screens.GroupScreen
 import com.myfis.app.ui.screens.ActivityIntroScreen
@@ -125,7 +126,15 @@ fun AppShell() {
                 onRegion = { groupRegion = it },
                 onClose = { nav.popBackStack() },
                 onSearchRegion = { nav.navigateOnce(Route.GROUP_REGION) },
-                onNext = { _, _, _ -> nav.popBackStack() },
+                onNext = { _, _, _ -> nav.navigateOnce(Route.GROUP_INTRO) },
+            )
+        }
+        composable(Route.GROUP_INTRO) {
+            // TODO(서버): `모임 만들기` 가 실제로 모임을 만든다. 지금은 셸로 돌아간다
+            GroupIntroScreen(
+                onClose = { nav.popBackStack(Route.SHELL, false) },
+                onBack = { nav.popBackStack() },
+                onCreate = { nav.popBackStack(Route.SHELL, false) },
             )
         }
         composable(Route.GROUP_REGION) {

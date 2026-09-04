@@ -153,10 +153,14 @@ struct AppRoot: View {
                 // TODO(G-03 2단계): 소개·정원을 묻는 다음 장이 붙으면 `onNext` 를 잇는다
                 GroupCreateScreen(onClose: back,
                                   onSearchRegion: { open(.groupRegion) },
-                                  onNext: { _, _, _ in back() },
+                                  onNext: { _, _, _ in open(.groupIntro) },
                                   region: $groupRegion)
             case .groupRegion:
                 RegionSearchScreen(onBack: back, onPick: { groupRegion = $0; back() })
+            case .groupIntro:
+                // TODO(서버): `모임 만들기` 가 실제로 모임을 만든다. 지금은 셸로 돌아간다
+                GroupIntroScreen(onClose: { back(); back() }, onBack: back,
+                                 onCreate: { _ in back(); back() })
             }
         }
     }

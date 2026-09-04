@@ -27,6 +27,9 @@ object Route {
     /** G-03 활동 지역 설정 — 개설 화면의 `검색` 칩으로 들어온다 */
     const val GROUP_REGION = "group_region"
 
+    /** G-03 모임 개설 **2단계** — 소개 쓰기 */
+    const val GROUP_INTRO = "group_intro"
+
     /** 적립 활동 랜딩 (DESIGN §6.25) */
     const val ACTIVITY_INTRO = "activity_intro"
 

@@ -14,7 +14,8 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
 /// SIMCTL_CHILD_MYFIS_WEIGHTTAB=cardio         웨이트 세트의 어느 탭에서 시작할지
 /// SIMCTL_CHILD_MYFIS_CARDIOTAB=monthly        유산소 미션 갈래 (daily · weekly · monthly)
-/// SIMCTL_CHILD_MYFIS_GROUP_CREATE=filled      모임 개설(G-03)을 채운 채로 (filled · expanded)
+/// SIMCTL_CHILD_MYFIS_GROUP_CREATE=filled      모임 개설(G-03)을 채운 채로 (filled · expanded · region)
+/// SIMCTL_CHILD_MYFIS_GROUP_AI=on              모임 소개(G-03 2단계)의 AI 도움받기를 켠 채로
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
@@ -40,6 +41,7 @@ enum MyFisDebug {
         case "water_time": .waterTime
         case "group_create": .groupCreate
         case "group_region": .groupRegion
+        case "group_intro": .groupIntro
         default: nil
         }
     }
@@ -119,6 +121,16 @@ enum MyFisDebug {
         env["MYFIS_GROUP_CREATE"] == "region" ? "치평동" : nil
         #else
         nil
+        #endif
+    }
+
+    /// 모임 소개(§6.32) 의 AI 도움받기를 켠 채로 — `SIMCTL_CHILD_MYFIS_GROUP_AI=on`.
+    /// 시뮬레이터에서 스위치를 못 눌러 켠 모습(스켈레톤)을 볼 방법이 이것뿐이다
+    static var groupIntroAI: Bool {
+        #if DEBUG
+        env["MYFIS_GROUP_AI"] == "on"
+        #else
+        false
         #endif
     }
 

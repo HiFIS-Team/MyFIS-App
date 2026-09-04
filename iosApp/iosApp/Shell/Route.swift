@@ -27,6 +27,8 @@ enum Route: Hashable {
     case groupCreate
     /// G-03 활동 지역 설정 — 개설 화면의 `검색` 칩으로 들어온다
     case groupRegion
+    /// G-03 모임 개설 **2단계** — 소개 쓰기
+    case groupIntro
     // TODO: 회원권(M-06) 이 붙으면 추가한다.
 
     /// 잎 화면의 제목. 헤더가 이 값을 쓴다 — 화면마다 따로 적지 않는다
@@ -42,6 +44,7 @@ enum Route: Hashable {
         case .water, .waterTime: "물 마시기"
         case .groupCreate: "모임 만들기"
         case .groupRegion: "활동 지역 설정"
+        case .groupIntro: "모임 소개"
         }
     }
 }
