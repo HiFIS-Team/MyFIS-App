@@ -98,15 +98,15 @@ fun CardioScreen(
                 )
             }
 
-            // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — 엄지가 닿는 자리에 둔다 (원칙 2).
+            // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — **오른쪽 아래**, 엄지가 닿는 자리다 (원칙 2).
             // 폭을 다 쓰면 **떠 있는 탭 바와 둥근 덩어리가 둘로 겹치므로** 알약으로 맞춘다 (§6.28)
             MyFisPrimaryButton(
                 text = "유산소 시작하기",
                 onClick = { scanning = true },
                 pill = true,
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = MyFisSpacing.md),
+                    .align(Alignment.BottomEnd)
+                    .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md),
             )
         }
     }

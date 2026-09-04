@@ -65,9 +65,11 @@ struct GroupScreen: View {
                     .padding(.bottom, MyFisSize.buttonSecondary + MyFisSpacing.xxxl)
                 }
 
-                // 이 화면의 액션은 이 하나뿐 (§2 원칙 5). 원본은 우하단이지만
-                // 우리 세트는 **떠 있는 탭 바** 위라 유산소(§6.28)와 같은 자리·같은 알약으로 맞춘다
+                // 이 화면의 액션은 이 하나뿐 (§2 원칙 5) — **오른쪽 아래**, 엄지가 닿는 자리다 (원칙 2).
+                // 원본(당근)도 우하단이고 유산소(§6.28)도 같은 자리다
                 MyFisPrimaryButton(title: "＋ 모임 만들기", pill: true, action: onCreate)
+                    .frame(maxWidth: .infinity, alignment: .trailing)
+                    .padding(.trailing, MyFisSpacing.screenHorizontal)
                     .padding(.bottom, MyFisSpacing.md)
             }
         }
