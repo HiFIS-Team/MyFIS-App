@@ -347,18 +347,6 @@ struct AnimatedDrink: UIViewRepresentable {
     }
 }
 
-/// 오른쪽 꺾쇠 — 아래 꺾쇠를 돌려 쓴다 (§6.28 구안과 같은 방법)
-private struct Chevron: View {
-    var body: some View {
-        Image("ic_chevron_down")
-            .renderingMode(.template)
-            .resizable()
-            .frame(width: 20, height: 20)
-            .rotationEffect(.degrees(-90))
-            .foregroundStyle(MyFisColor.textTertiary)
-    }
-}
-
 /// 등급 — 여섯 (사용자 제공 뱃지, 2026-09-03).
 ///
 /// 뱃지는 **원색 그림**이라 칠하지 않는다 (§6.23 원색 아이콘과 같은 규칙).

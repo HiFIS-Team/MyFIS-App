@@ -14,6 +14,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
 /// SIMCTL_CHILD_MYFIS_WEIGHTTAB=cardio         웨이트 세트의 어느 탭에서 시작할지
 /// SIMCTL_CHILD_MYFIS_CARDIOTAB=monthly        유산소 미션 갈래 (daily · weekly · monthly)
+/// SIMCTL_CHILD_MYFIS_WEIGHT=warmup            웨이트 탭 상태 (warmup 웜업 펼침 · reorder 순서 모드)
 /// SIMCTL_CHILD_MYFIS_GROUP_CREATE=filled      모임 개설(G-03)을 채운 채로 (filled · expanded · region)
 /// SIMCTL_CHILD_MYFIS_GROUP_AI=on              모임 소개(G-03 2단계)의 AI 도움받기를 켠 채로
 /// SIMCTL_CHILD_MYFIS_GROUP_SORT=popular       모임 목록 칩 (popular · rising · thisWeek)
@@ -85,6 +86,25 @@ enum MyFisDebug {
         }
         #else
         .weight
+        #endif
+    }
+
+    /// 웨이트 탭(W-01) 상태 — `SIMCTL_CHILD_MYFIS_WEIGHT=warmup` · `=reorder`.
+    /// 웜업을 펼친 줄과 순서 모드는 눌러야 나오는데 시뮬레이터에는 누를 수단이 없다
+    static var weightWarmupOpen: Bool {
+        #if DEBUG
+        env["MYFIS_WEIGHT"] == "warmup"
+        #else
+        false
+        #endif
+    }
+
+    /// 위와 같은 훅의 다른 값 — 순서 변경 모드로 시작한다
+    static var weightReordering: Bool {
+        #if DEBUG
+        env["MYFIS_WEIGHT"] == "reorder"
+        #else
+        false
         #endif
     }
 

@@ -40,6 +40,7 @@ import com.myfis.app.ui.screens.WaterScreen
 import com.myfis.app.ui.screens.waterDefaultTimes
 import com.myfis.app.ui.screens.WaterTimeScreen
 import com.myfis.app.ui.screens.WeightLogScreen
+import com.myfis.app.ui.screens.WeightScreen
 import com.myfis.app.ui.theme.MyFisColor
 
 /**
@@ -310,7 +311,7 @@ private fun BaseTabContent(
 @Composable
 private fun WeightTabContent(tab: WeightTab, onStore: () -> Unit, onGroupCreate: () -> Unit) {
     when (tab) {
-        WeightTab.WEIGHT -> PlaceholderScreen("W-01", "이번 주 루틴", "AI가 보낸 주간 루틴")
+        WeightTab.WEIGHT -> WeightScreen()
         // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
         WeightTab.CARDIO -> CardioScreen(onStore = onStore)
         WeightTab.RANKING -> PlaceholderScreen("R-01", "랭킹", "웨이트 · 유산소 · 마일리지")

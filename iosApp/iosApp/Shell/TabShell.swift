@@ -139,7 +139,8 @@ struct TabShell: View {
             } else {
                 switch Self.weightTabs[slot] {
                 case .weight:
-                    PlaceholderScreen(id: "W-01", title: "이번 주 루틴", description: "AI가 보낸 주간 루틴")
+                    // TODO(W-04): `운동 시작` 이 세션으로 넘어간다
+                    WeightScreen()
                 case .cardio:
                     // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
                     CardioScreen(onStore: {

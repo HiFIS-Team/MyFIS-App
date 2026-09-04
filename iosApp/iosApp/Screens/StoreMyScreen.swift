@@ -99,7 +99,7 @@ private struct RecentRow: View {
                     HStack(spacing: MyFisSpacing.xs) {
                         ForEach(0..<count, id: \.self) { _ in Thumbnail(size: 36) }
                     }
-                    Chevron()
+                    Chevron(size: 18)
                 }
             }
         }
@@ -183,7 +183,7 @@ private struct InviteRow: View {
                     Text("1,000 P 받는 링크 보내기")
                         .font(MyFisFont.bodySm)
                         .foregroundStyle(MyFisColor.textTertiary)
-                    Chevron()
+                    Chevron(size: 18)
                 }
             }
         }
@@ -266,16 +266,6 @@ private struct Thumbnail: View {
                 MyFisColor.surface2,
                 in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
             )
-    }
-}
-
-private struct Chevron: View {
-    var body: some View {
-        Image("ic_chevron_down")
-            .resizable()
-            .frame(width: 18, height: 18)
-            .rotationEffect(.degrees(-90))
-            .foregroundStyle(MyFisColor.textTertiary)
     }
 }
 
