@@ -37,6 +37,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -458,22 +459,30 @@ fun ItemCard(
             }
         }
 
+        // 제목이 한 줄인 카드는 두 줄째가 빈다. 그 **빈 줄을 가격 위로 보낸다** —
+        // 제목 바로 밑에 두면 제목과 조회수가 남처럼 떨어져 보인다 (2026-09-04).
+        // 카드 높이는 그대로 서로 같다 — 빈 줄을 없앤 게 아니라 자리만 옮긴 것이다
+        var titleLines by remember(item.id) { mutableIntStateOf(TitleLines) }
+        val slack = with(LocalDensity.current) {
+            if (titleLines < TitleLines) TitleLineHeight.toDp() else 0.dp
+        }
+
         Column(Modifier.padding(MyFisSpacing.md)) {
             Text(
                 item.name,
-                // 행간은 토큰(24)보다 좁힌다 — 두 줄을 미리 잡아 두므로 그대로 두면 제목 아래가 휑하다
-                style = MyFisTheme.type.body.copy(lineHeight = 20.sp),
+                // 행간은 토큰(24)보다 좁힌다 — 상품 이름은 두 줄이 붙어 한 덩어리로 읽혀야 한다
+                style = MyFisTheme.type.body.copy(lineHeight = TitleLineHeight),
                 color = if (dimmed) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
-                // 두 줄로 고정해야 카드 높이가 서로 같다
-                minLines = 2,
-                maxLines = 2,
+                maxLines = TitleLines,
                 overflow = TextOverflow.Ellipsis,
+                onTextLayout = { titleLines = it.lineCount },
             )
-            MetaRow(item, Modifier.padding(top = 2.dp))
+            // 제목과 한 덩어리다 — 무엇을 파는지 다음에 얼마나 팔렸는지가 붙어 읽힌다
+            MetaRow(item, Modifier.padding(top = MyFisSpacing.xs))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = MyFisSpacing.sm),
+                    .padding(top = MyFisSpacing.sm + slack),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 MileageText(
@@ -487,6 +496,10 @@ fun ItemCard(
         }
     }
 }
+
+/** 상품 이름은 최대 두 줄. 카드 높이를 맞추는 기준이다 */
+private const val TitleLines = 2
+private val TitleLineHeight = 20.sp
 
 /** 몇 명이 봤는지 · 평점(리뷰 수) — 제목과 가격 사이 */
 @Composable

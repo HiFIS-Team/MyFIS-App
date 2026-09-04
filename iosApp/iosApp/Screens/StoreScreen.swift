@@ -353,17 +353,24 @@ struct ItemCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
+            // 그림이 먼저 자리를 잡는다 — 안 그러면 카드가 늘어난 만큼 정사각이 같이 커져
+            // 폭보다 세로가 먼저 차서 그림이 카드보다 좁아진다 (2026-09-04 확인)
             image
+                .layoutPriority(1)
             VStack(alignment: .leading, spacing: 0) {
                 Text(item.name)
                     .font(MyFisFont.body)
                     .foregroundStyle(dimmed ? MyFisColor.textTertiary : MyFisColor.textPrimary)
-                    // 두 줄로 고정해야 카드 높이가 서로 같다
-                    .lineLimit(2, reservesSpace: true)
+                    .lineLimit(2)
                     .multilineTextAlignment(.leading)
 
+                // 제목과 한 덩어리다 — 무엇을 파는지 다음에 얼마나 팔렸는지가 붙어 읽힌다
                 meta
-                    .padding(.top, 2)
+                    .padding(.top, MyFisSpacing.xs)
+
+                // **남는 세로는 여기서 먹는다.** 제목이 한 줄인 카드의 빈 줄이
+                // 제목 바로 밑에 생기면 제목과 조회수가 남처럼 떨어져 보인다 (2026-09-04)
+                Spacer(minLength: MyFisSpacing.sm)
 
                 HStack(spacing: 0) {
                     MileageText(item.price, tone: dimmed ? .dimmed : .primary)
@@ -371,10 +378,12 @@ struct ItemCard: View {
                     Spacer(minLength: 0)
                     LikeButton(liked: liked, action: onLike)
                 }
-                .padding(.top, MyFisSpacing.sm)
             }
+            .frame(maxHeight: .infinity, alignment: .top)
             .padding(MyFisSpacing.md)
         }
+        // 카드 높이는 줄에서 가장 큰 것에 맞춘다 — 그래야 가격 줄이 나란히 선다
+        .frame(maxHeight: .infinity, alignment: .top)
         .background(MyFisColor.surface1)
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
         .contentShape(Rectangle())
