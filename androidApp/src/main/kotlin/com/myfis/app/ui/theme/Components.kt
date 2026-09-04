@@ -71,10 +71,21 @@ fun MyFisPrimaryButton(
 
 /** DESIGN.md §6.1 Secondary */
 @Composable
-fun MyFisSecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun MyFisSecondaryButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    /**
+     * **Primary 와 나란히 설 때 켠다** 🟢 (2026-09-04) — 높이를 `buttonPrimary`(52) 로 맞춘다.
+     * 44 와 52 가 한 줄에 서면 둘이 다른 종류의 버튼처럼 보인다 (§6.32 모임 소개에서 드러났다)
+     */
+    tall: Boolean = false,
+) {
     Button(
         onClick = onClick,
-        modifier = modifier.fillMaxWidth().height(MyFisSize.buttonSecondary),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(if (tall) MyFisSize.buttonPrimary else MyFisSize.buttonSecondary),
         shape = MyFisRadius.md,
         colors = ButtonDefaults.buttonColors(
             containerColor = MyFisColor.Surface2,

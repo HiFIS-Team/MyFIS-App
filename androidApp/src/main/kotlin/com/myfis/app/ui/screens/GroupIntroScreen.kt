@@ -113,7 +113,12 @@ fun GroupIntroScreen(
                 .padding(bottom = MyFisSpacing.md),
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
         ) {
-            MyFisSecondaryButton(text = "이전", onClick = onBack, modifier = Modifier.width(96.dp))
+            MyFisSecondaryButton(
+                text = "이전",
+                onClick = onBack,
+                modifier = Modifier.width(104.dp),
+                tall = true,
+            )
             MyFisPrimaryButton(
                 text = "모임 만들기",
                 onClick = { onCreate(intro) },
@@ -194,6 +199,9 @@ private fun IntroEditor(value: String, onChange: (String) -> Unit) {
 /** **빈 칸 앞에서 뭘 쓸지 모르는 게 진짜 문제다.** 그래서 질문으로 준다 */
 @Composable
 private fun TipBlock() {
+    // **안내는 `info` 다** 🟢 (2026-09-04, 사용자 지정) — 라임이 아니라 파랑이라
+    // §3.2 액센트 2곳(스위치·`모임 만들기`)을 안 건드린다. `도움 됐어요`(§6.14)와 같은 꼴 —
+    // 글자와 16% 배경을 같은 색으로 둔다
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
@@ -201,12 +209,12 @@ private fun TipBlock() {
         Text(
             "TIP",
             style = MyFisTheme.type.caption,
-            color = MyFisColor.TextSecondary,
+            color = MyFisColor.Info,
             modifier = Modifier
-                .background(MyFisColor.Surface3, MyFisRadius.full)
+                .background(MyFisColor.Info.copy(alpha = 0.16f), MyFisRadius.full)
                 .padding(horizontal = MyFisSpacing.sm, vertical = 2.dp),
         )
-        Text("이런 내용을 적으면 좋아요", style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
+        Text("이런 내용을 적으면 좋아요", style = MyFisTheme.type.bodySm, color = MyFisColor.Info)
     }
     Spacer(Modifier.height(MyFisSpacing.md))
     MyFisCard {
@@ -215,8 +223,10 @@ private fun TipBlock() {
                 Modifier.padding(bottom = MyFisSpacing.sm),
                 horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
             ) {
+                // 질문은 **읽으라고 있는 글**이다 (사용자 지정) — 흐리게 두면
+                // 각주처럼 읽혀 빈 칸을 채우는 데 도움이 안 된다
                 Text("・", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
-                Text(line, style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
+                Text(line, style = MyFisTheme.type.bodySm, color = MyFisColor.TextPrimary)
             }
         }
     }

@@ -42,13 +42,17 @@ struct MyFisPrimaryButton: View {
 /// Secondary
 struct MyFisSecondaryButton: View {
     let title: String
+    /// **Primary 와 나란히 설 때 켠다** 🟢 (2026-09-04) — 높이를 `buttonPrimary`(52) 로 맞춘다.
+    /// 44 와 52 가 한 줄에 서면 둘이 다른 종류의 버튼처럼 보인다 (§6.32 모임 소개에서 드러났다)
+    var tall: Bool = false
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
             Text(title)
                 .font(MyFisFont.bodySm)
-                .frame(maxWidth: .infinity, minHeight: MyFisSize.buttonSecondary)
+                .frame(maxWidth: .infinity,
+                       minHeight: tall ? MyFisSize.buttonPrimary : MyFisSize.buttonSecondary)
         }
         .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.textPrimary)

@@ -55,8 +55,8 @@ struct GroupIntroScreen: View {
             // **`이전` 이 좁고 `모임 만들기` 가 넓다** — 나란히 두되 무게를 다르게 준다.
             // 같은 폭으로 두면 되돌아가는 길과 끝내는 길이 같은 값으로 읽힌다
             HStack(spacing: MyFisSpacing.md) {
-                MyFisSecondaryButton(title: "이전", action: onBack)
-                    .frame(width: 96)
+                MyFisSecondaryButton(title: "이전", tall: true, action: onBack)
+                    .frame(width: 104)
                 MyFisPrimaryButton(title: "모임 만들기", isEnabled: ready) { onCreate(intro) }
             }
             .padding(.horizontal, MyFisSpacing.screenHorizontal)
@@ -132,28 +132,34 @@ struct GroupIntroScreen: View {
     /// **빈 칸 앞에서 뭘 쓸지 모르는 게 진짜 문제다.** 그래서 질문으로 준다
     private var tip: some View {
         VStack(alignment: .leading, spacing: MyFisSpacing.md) {
+            // **안내는 `info` 다** 🟢 (2026-09-04, 사용자 지정) — 라임이 아니라 파랑이라
+            // §3.2 액센트 2곳(스위치·`모임 만들기`)을 안 건드린다. `도움 됐어요`(§6.14)와 같은 꼴 —
+            // 글자와 16% 배경을 같은 색으로 둔다
             HStack(spacing: MyFisSpacing.sm) {
                 Text("TIP")
                     .font(MyFisFont.caption)
-                    .foregroundStyle(MyFisColor.textSecondary)
+                    .foregroundStyle(MyFisColor.info)
                     .padding(.horizontal, MyFisSpacing.sm)
                     .padding(.vertical, 2)
-                    .background(MyFisColor.surface3, in: Capsule())
+                    .background(MyFisColor.info.opacity(0.16), in: Capsule())
                 Text("이런 내용을 적으면 좋아요")
                     .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textSecondary)
+                    .foregroundStyle(MyFisColor.info)
             }
 
             MyFisCard {
                 VStack(alignment: .leading, spacing: MyFisSpacing.sm) {
                     ForEach(Self.tips, id: \.self) { line in
+                        // 질문은 **읽으라고 있는 글**이다 (사용자 지정) — 흐리게 두면
+                        // 각주처럼 읽혀 빈 칸을 채우는 데 도움이 안 된다
                         HStack(alignment: .top, spacing: MyFisSpacing.sm) {
                             Text("・")
+                                .foregroundStyle(MyFisColor.textTertiary)
                             Text(line)
+                                .foregroundStyle(MyFisColor.textPrimary)
                             Spacer(minLength: 0)
                         }
                         .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
                     }
                 }
             }
