@@ -23,6 +23,8 @@ struct AppRoot: View {
     @State private var storeSearching = MyFisDebug.startsInSearch
     /// 물 마시기 미션 시각 — 두 화면이 나눠 쓴다. TODO(서버): 회원 설정으로 옮긴다 (SPEC P-05)
     @State private var waterTimes = WaterSlot.defaultTimes
+    // 개설 화면과 지역 설정이 나눠 쓴다 — 잎이 둘이라 셸이 들고 있는다 (상품 상세와 같다)
+    @State private var groupRegion: String? = MyFisDebug.groupCreateRegion
     /// 가장자리 스와이프로 끌고 있는 거리
     @State private var drag: CGFloat = 0
 
@@ -149,7 +151,12 @@ struct AppRoot: View {
                                 onBack: back)
             case .groupCreate:
                 // TODO(G-03 2단계): 소개·정원을 묻는 다음 장이 붙으면 `onNext` 를 잇는다
-                GroupCreateScreen(onClose: back, onNext: { _, _, _ in back() })
+                GroupCreateScreen(onClose: back,
+                                  onSearchRegion: { open(.groupRegion) },
+                                  onNext: { _, _, _ in back() },
+                                  region: $groupRegion)
+            case .groupRegion:
+                RegionSearchScreen(onBack: back, onPick: { groupRegion = $0; back() })
             }
         }
     }

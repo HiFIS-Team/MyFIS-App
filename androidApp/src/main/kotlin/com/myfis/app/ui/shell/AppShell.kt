@@ -20,6 +20,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.myfis.app.ui.screens.GroupCreateScreen
+import com.myfis.app.ui.screens.RegionSearchScreen
 import com.myfis.app.ui.screens.GroupScreen
 import com.myfis.app.ui.screens.ActivityIntroScreen
 import com.myfis.app.ui.screens.BenefitAction
@@ -60,6 +61,8 @@ fun AppShell() {
     var storeSearching by rememberSaveable { mutableStateOf(false) }
     // 랜딩에 띄울 활동. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다 (상품 상세와 같다)
     var benefitAction by remember { mutableStateOf<BenefitAction?>(null) }
+    // 개설 화면과 지역 설정이 나눠 쓴다 — 잎이 둘이라 셸이 들고 있는다 (상품 상세와 같다)
+    var groupRegion by rememberSaveable { mutableStateOf<String?>(null) }
 
     NavHost(
         navController = nav,
@@ -118,8 +121,17 @@ fun AppShell() {
         composable(Route.GROUP_CREATE) {
             // TODO(G-03 2단계): 소개·정원을 묻는 다음 장이 붙으면 `onNext` 를 잇는다
             GroupCreateScreen(
+                region = groupRegion,
+                onRegion = { groupRegion = it },
                 onClose = { nav.popBackStack() },
+                onSearchRegion = { nav.navigateOnce(Route.GROUP_REGION) },
                 onNext = { _, _, _ -> nav.popBackStack() },
+            )
+        }
+        composable(Route.GROUP_REGION) {
+            RegionSearchScreen(
+                onBack = { nav.popBackStack() },
+                onPick = { groupRegion = it; nav.popBackStack() },
             )
         }
         composable(Route.WEIGHT_LOG) {

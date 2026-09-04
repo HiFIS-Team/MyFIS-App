@@ -439,9 +439,18 @@ struct GroupItem: Identifiable, Hashable {
 enum GroupPlaceholder {
     static let branch = "광주 상무"
 
-    /// 활동 지역 자리값 (§6.30) — 지점 동네와 그 옆이다.
-    /// TODO(서버): 지점 좌표로 가까운 동네를 받아 온다
+    /// 개설 화면 칩에 바로 뜨는 셋 (§6.30) — 지점 동네와 그 옆이다
     static let regions = ["치평동", "화정동", "광천동"]
+
+    /// 활동 지역 설정(§6.31) 목록. **칩 셋으로는 부족해서 있는 목록이다**.
+    /// TODO(서버): 지점 좌표로 가까운 동네를 거리순으로 받아 온다
+    static let nearbyRegions = [
+        "치평동", "화정동", "광천동", "농성동", "유덕동", "쌍촌동",
+        "금호동", "마륵동", "서창동", "풍암동", "동천동", "매곡동",
+    ]
+
+    /// 목록에 적는 온전한 이름 — 동 이름만 두면 어느 도시인지 모른다
+    static func fullName(_ region: String) -> String { "광주광역시 서구 \(region)" }
 
     static let groups: [GroupItem] = [
         .init(id: 1, category: .running, name: "아침 러닝 크루",

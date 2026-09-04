@@ -21,12 +21,15 @@ import SwiftUI
 ///   큰 면적에 못 쓰기 때문이고, 우리는 그 제약이 없다
 struct GroupCreateScreen: View {
     var onClose: () -> Void = {}
+    /// §6.31 활동 지역 설정으로 — 칩에 없는 동네를 찾을 때
+    var onSearchRegion: () -> Void = {}
     /// TODO: 2단계(소개·정원)가 붙으면 연결한다
     var onNext: (String, GroupCategory, String?) -> Void = { _, _, _ in }
 
     @State private var name = MyFisDebug.groupCreateFill?.name ?? ""
     @State private var category: GroupCategory? = MyFisDebug.groupCreateFill?.category
-    @State private var region: String?
+    @Binding var region: String?
+    @State private var range = 0
     @State private var expanded = MyFisDebug.groupCreateFill?.expanded ?? false
 
     /// 이름과 갈래가 있어야 다음이 뜻이 있다
@@ -87,7 +90,7 @@ struct GroupCreateScreen: View {
                     Field("활동 지역") {
                         FlowLayout(spacing: MyFisSpacing.sm) {
                             // 목록에 없는 동네는 찾아서 고른다 (원본과 같은 자리)
-                            PickChip("검색", icon: "ic_header_search") {}
+                            PickChip("검색", icon: "ic_header_search", action: onSearchRegion)
                             ForEach(GroupPlaceholder.regions, id: \.self) { item in
                                 PickChip(item, selected: item == region) {
                                     instantly { region = (region == item) ? nil : item }
@@ -96,6 +99,24 @@ struct GroupCreateScreen: View {
                         }
                     }
                     .padding(.top, MyFisSpacing.xxl)
+
+                    // 지역을 고르면 **얼마나 넓게 볼지**가 그다음 물음이다 (원본과 같은 순서)
+                    if region != nil {
+                        Field("활동 범위") {
+                            MyFisSlider(step: $range)
+                            HStack(spacing: 0) {
+                                Text("가까운 동네")
+                                Spacer(minLength: MyFisSpacing.md)
+                                Text("먼 동네")
+                            }
+                            .font(MyFisFont.bodySm)
+                            .foregroundStyle(MyFisColor.textTertiary)
+
+                            RangePreview(step: range)
+                                .padding(.top, MyFisSpacing.sm)
+                        }
+                        .padding(.top, MyFisSpacing.xxl)
+                    }
                 }
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
                 .padding(.bottom, MyFisSpacing.xxxl)
@@ -246,6 +267,50 @@ private struct PickChip: View {
 }
 
 // MARK: - 모델
+
+/// 고른 범위가 얼마나 넓은지 보여 주는 판.
+///
+/// ⚠️ **지도가 아니다.** 원본은 진짜 지도 위에 반경을 얹는데 우리에겐 지도가 없다 —
+/// **가짜 길과 가짜 동네 이름을 그리지 않는다.** 진짜 자리처럼 보이는 게 없다는 것보다 나쁘다.
+/// 원과 눈금만으로 "이만큼"을 말하고, 지도는 붙을 때 이 판을 통째로 갈아 끼운다.
+///
+/// TODO(지도): MapKit / Google Maps 가 붙으면 여기를 지도 + 반경 원으로 바꾼다
+private struct RangePreview: View {
+    let step: Int
+
+    var body: some View {
+        ZStack {
+            // 눈금 원 — 단계가 몇인지 원 하나만으로는 안 보인다
+            ForEach(0 ..< 4, id: \.self) { index in
+                Circle()
+                    .strokeBorder(MyFisColor.surface3, lineWidth: 1)
+                    .frame(width: diameter(index), height: diameter(index))
+            }
+            Circle()
+                .fill(MyFisColor.surface3.opacity(0.5))
+                .frame(width: diameter(step), height: diameter(step))
+                .overlay(
+                    Circle().strokeBorder(MyFisColor.borderStrong, lineWidth: 1)
+                        .frame(width: diameter(step), height: diameter(step))
+                )
+            Image("ic_header_branch")
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 20, height: 20)
+                .foregroundStyle(MyFisColor.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 220)
+        .background(
+            MyFisColor.surface2,
+            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+        )
+        // 원이 커지는 건 **값이 자라는 것**이라 애니메이션을 준다 (칩과 반대다, §7)
+        .animation(MyFisMotion.base, value: step)
+    }
+
+    private func diameter(_ index: Int) -> CGFloat { 60 + CGFloat(index) * 44 }
+}
 
 private extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }

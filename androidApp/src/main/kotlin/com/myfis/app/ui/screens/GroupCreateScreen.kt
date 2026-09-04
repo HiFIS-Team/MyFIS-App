@@ -1,5 +1,6 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -36,9 +38,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.components.MyFisSlider
 import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisPrimaryButton
+import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
@@ -66,13 +70,17 @@ import com.myfis.app.ui.theme.tapWithHaptics
  */
 @Composable
 fun GroupCreateScreen(
+    region: String?,
+    onRegion: (String?) -> Unit,
     onClose: () -> Unit = {},
+    /** §6.31 활동 지역 설정으로 — 칩에 없는 동네를 찾을 때 */
+    onSearchRegion: () -> Unit = {},
     /** TODO: 2단계(소개·정원)가 붙으면 연결한다 */
     onNext: (String, GroupCategory, String?) -> Unit = { _, _, _ -> },
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf<GroupCategory?>(null) }
-    var region by rememberSaveable { mutableStateOf<String?>(null) }
+    var range by rememberSaveable { mutableIntStateOf(0) }
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     /** 이름과 갈래가 있어야 다음이 뜻이 있다 */
@@ -133,7 +141,20 @@ fun GroupCreateScreen(
             // 이름·갈래를 안 채워도 처음부터 보인다 — 원본도 그렇다
             Spacer(Modifier.height(MyFisSpacing.xxl))
             FieldLabel("활동 지역")
-            RegionChips(region) { region = if (region == it) null else it }
+            RegionChips(region, onSearchRegion) { onRegion(if (region == it) null else it) }
+
+            // 지역을 고르면 **얼마나 넓게 볼지**가 그다음 물음이다 (원본과 같은 순서)
+            if (region != null) {
+                Spacer(Modifier.height(MyFisSpacing.xxl))
+                FieldLabel("활동 범위")
+                MyFisSlider(step = range, onStep = { range = it })
+                Row(Modifier.fillMaxWidth().padding(top = MyFisSpacing.xs)) {
+                    Text("가까운 동네", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
+                    Spacer(Modifier.weight(1f))
+                    Text("먼 동네", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
+                }
+                RangePreview(range, Modifier.padding(top = MyFisSpacing.sm))
+            }
         }
 
         // **바닥에 붙는다.** 다 채우고 누르는 버튼이라 떠 있을 이유가 없다 —
@@ -224,17 +245,61 @@ private fun CategoryChips(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun RegionChips(selected: String?, onSelect: (String) -> Unit) {
+private fun RegionChips(selected: String?, onSearch: () -> Unit, onSelect: (String) -> Unit) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
     ) {
         // 목록에 없는 동네는 찾아서 고른다 (원본과 같은 자리)
-        PickChip("검색", icon = R.drawable.ic_header_search) {}
+        PickChip("검색", icon = R.drawable.ic_header_search, onClick = onSearch)
         groupRegionPlaceholder.forEach { item ->
             PickChip(item, selected = item == selected) { onSelect(item) }
         }
+    }
+}
+
+/**
+ * 고른 범위가 얼마나 넓은지 보여 주는 판.
+ *
+ * ⚠️ **지도가 아니다.** 원본은 진짜 지도 위에 반경을 얹는데 우리에겐 지도가 없다 —
+ * **가짜 길과 가짜 동네 이름을 그리지 않는다.** 진짜 자리처럼 보이는 게 없다는 것보다 나쁘다.
+ * 원과 눈금만으로 "이만큼"을 말하고, 지도는 붙을 때 이 판을 통째로 갈아 끼운다.
+ *
+ * TODO(지도): Google Maps 가 붙으면 여기를 지도 + 반경 원으로 바꾼다
+ */
+@Composable
+private fun RangePreview(step: Int, modifier: Modifier = Modifier) {
+    // 원이 커지는 건 **값이 자라는 것**이라 애니메이션을 준다 (칩과 반대다, §7)
+    val diameter by animateDpAsState(60.dp + 44.dp * step, MyFisMotion.base(), label = "range")
+
+    Box(
+        modifier
+            .fillMaxWidth()
+            .height(220.dp)
+            .background(MyFisColor.Surface2, MyFisRadius.md),
+        contentAlignment = Alignment.Center,
+    ) {
+        // 눈금 원 — 단계가 몇인지 원 하나만으로는 안 보인다
+        for (index in 0 until 4) {
+            Box(
+                Modifier
+                    .size(60.dp + 44.dp * index)
+                    .border(1.dp, MyFisColor.Surface3, MyFisRadius.full),
+            )
+        }
+        Box(
+            Modifier
+                .size(diameter)
+                .background(MyFisColor.Surface3.copy(alpha = 0.5f), MyFisRadius.full)
+                .border(1.dp, MyFisColor.BorderStrong, MyFisRadius.full),
+        )
+        Icon(
+            painter = painterResource(R.drawable.ic_header_branch),
+            contentDescription = null,
+            tint = MyFisColor.TextSecondary,
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
@@ -299,8 +364,17 @@ private fun PickChip(
 
 // MARK: - 모델
 
-/**
- * 활동 지역 자리값 (§6.30) — 지점 동네와 그 옆이다.
- * TODO(서버): 지점 좌표로 가까운 동네를 받아 온다
- */
+/** 개설 화면 칩에 바로 뜨는 셋 (§6.30) — 지점 동네와 그 옆이다 */
 val groupRegionPlaceholder = listOf("치평동", "화정동", "광천동")
+
+/**
+ * 활동 지역 설정(§6.31) 목록. **칩 셋으로는 부족해서 있는 목록이다**.
+ * TODO(서버): 지점 좌표로 가까운 동네를 거리순으로 받아 온다
+ */
+val groupNearbyRegionPlaceholder = listOf(
+    "치평동", "화정동", "광천동", "농성동", "유덕동", "쌍촌동",
+    "금호동", "마륵동", "서창동", "풍암동", "동천동", "매곡동",
+)
+
+/** 목록에 적는 온전한 이름 — 동 이름만 두면 어느 도시인지 모른다 */
+fun groupRegionFullName(region: String) = "광주광역시 서구 $region"

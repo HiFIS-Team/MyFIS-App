@@ -24,6 +24,9 @@ object Route {
     /** G-03 모임 개설 — 모임 탭(G-01)의 `＋ 모임 만들기` 로 들어온다 */
     const val GROUP_CREATE = "group_create"
 
+    /** G-03 활동 지역 설정 — 개설 화면의 `검색` 칩으로 들어온다 */
+    const val GROUP_REGION = "group_region"
+
     /** 적립 활동 랜딩 (DESIGN §6.25) */
     const val ACTIVITY_INTRO = "activity_intro"
 

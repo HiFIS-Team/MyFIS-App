@@ -39,6 +39,7 @@ enum MyFisDebug {
         case "water": .water
         case "water_time": .waterTime
         case "group_create": .groupCreate
+        case "group_region": .groupRegion
         default: nil
         }
     }
@@ -102,10 +103,20 @@ enum MyFisDebug {
     static var groupCreateFill: (name: String, category: GroupCategory, expanded: Bool)? {
         #if DEBUG
         switch env["MYFIS_GROUP_CREATE"] {
-        case "filled": ("아침 러닝 크루", .running, false)
+        case "filled", "region": ("아침 러닝 크루", .running, false)
         case "expanded": ("아침 러닝 크루", .running, true)
         default: nil
         }
+        #else
+        nil
+        #endif
+    }
+
+    /// 활동 지역까지 고른 채로 — `SIMCTL_CHILD_MYFIS_GROUP_CREATE=region`.
+    /// 범위 슬라이더와 미리보기 판은 지역을 골라야 뜬다
+    static var groupCreateRegion: String? {
+        #if DEBUG
+        env["MYFIS_GROUP_CREATE"] == "region" ? "치평동" : nil
         #else
         nil
         #endif
