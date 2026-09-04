@@ -1,5 +1,12 @@
 package com.myfis.app.ui.shell
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import com.myfis.app.ui.theme.MyFisSpacing
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
@@ -201,10 +208,36 @@ private fun TabShell(
     var baseTab by rememberSaveable { mutableStateOf(BaseTab.HOME) }
     var weightTab by rememberSaveable { mutableStateOf(WeightTab.WEIGHT) }
 
-    Column(Modifier.fillMaxSize().background(MyFisColor.BgBase)) {
+    val floating = tabSet == TabSet.WEIGHT
+    val density = LocalDensity.current
+    // 붙어 있을 때 바가 먹는 높이. 시작이 기본 세트라 여기서 한 번 재면 그 뒤로 안 바뀐다
+    var dockedBar by remember { mutableStateOf(0.dp) }
+
+    // **떠 있을 때는 콘텐츠가 바 밑까지 흐른다** 🟢 (2026-09-04, 사용자 지정 — 레퍼런스 토스).
+    // 바 아래 틈과 좌우 여백으로 **뒤가 비쳐야** 변신이 "떠올랐다" 로 읽힌다.
+    // 전에는 `Column` 이라 콘텐츠가 바 위에서 끊기고 바 밑은 그냥 배경이었다 —
+    // 그러면 바가 회색 판 위에서 모양만 바뀌는 것으로 보인다
+    // ⚠️ **애니메이션하지 않는다.** 화면(`when (tabSet)`)이 어차피 그 순간에 통째로 바뀌므로
+    // 늘렸다 줄이면 갓 올라온 화면이 아래로 흘러내리는 것처럼 보인다.
+    // 눈에 보여야 하는 움직임은 **바 자체의 떠오름**이고 그건 그대로 애니메이션한다
+    val contentBottom = if (floating) 0.dp else dockedBar
+    // 대신 화면이 **가려지는 만큼 스스로 비운다** (`LocalTabBarInset`).
+    // ⚠️ 바 높이를 계산으로 뽑으려다 `6dp` 어긋나 `운동 시작` 알약이 바에 붙었다 (2026-09-04 실측).
+    // **재서 쓴다.** 스프링이 잠깐 넘겼다 돌아오므로 **가장 컸던 값**을 남긴다 —
+    // 그래야 애니메이션 도중 값이 흔들려 콘텐츠가 들썩이지 않는다
+    var barBox by remember { mutableStateOf(0.dp) }
+    val barInset = if (floating) maxOf(barBox, dockedBar + MyFisSpacing.sm) else 0.dp
+
+    Box(Modifier.fillMaxSize().background(MyFisColor.BgBase)) {
         // 헤더는 셸이 아니라 **화면마다** 다르다 (DESIGN.md §6.9).
         // 셸은 상태바 여백까지만 책임진다.
-        Box(Modifier.weight(1f).statusBarsPadding()) {
+        CompositionLocalProvider(LocalTabBarInset provides barInset) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .padding(bottom = contentBottom.coerceAtLeast(0.dp)),
+        ) {
             when (tabSet) {
                 TabSet.BASE -> BaseTabContent(
                     tab = baseTab,
@@ -241,8 +274,16 @@ private fun TabShell(
                 )
             }
         }
+        }
 
         MyFisTabBar(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .onSizeChanged {
+                    val height = with(density) { it.height.toDp() }
+                    if (height > barBox) barBox = height
+                    if (!floating && dockedBar == 0.dp) dockedBar = height
+                },
             tabSet = tabSet,
             baseTab = baseTab,
             weightTab = weightTab,

@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.shell.LocalTabBarInset
 import com.myfis.app.ui.components.MyFisUnderlineTabs
 import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisCard
@@ -81,6 +82,8 @@ fun GroupScreen(
     onGroup: (GroupItem) -> Unit = {},
     onSearch: () -> Unit = {},
 ) {
+    // 떠 있는 탭 바가 덮는 만큼 스스로 비운다 (§6.7)
+    val tabBar = LocalTabBarInset.current
     var segment by rememberSaveable { mutableStateOf(GroupSegment.BROWSE) }
     var category by rememberSaveable { mutableStateOf(GroupCategory.ALL) }
     var sort by rememberSaveable { mutableStateOf(GroupSort.NONE) }
@@ -97,7 +100,7 @@ fun GroupScreen(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
                     // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다 (유산소와 같은 규칙)
-                    .padding(bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl),
+                    .padding(bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl + tabBar),
             ) {
                 MyGroupRail(groupRailPlaceholder, onGroup)
 
@@ -152,7 +155,7 @@ fun GroupScreen(
                 pill = true,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md),
+                    .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md + tabBar),
             )
         }
     }

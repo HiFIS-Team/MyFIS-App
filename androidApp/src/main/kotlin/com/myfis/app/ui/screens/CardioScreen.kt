@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.myfis.app.R
+import com.myfis.app.ui.shell.LocalTabBarInset
 import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
@@ -75,6 +76,8 @@ fun CardioScreen(
     onStore: () -> Unit = {},
     // TODO(C-03): 태그를 읽으면 `운동 중` 으로 넘긴다. 지금은 시트에서 끝난다
 ) {
+    // 떠 있는 탭 바가 덮는 만큼 스스로 비운다 (§6.7)
+    val tabBar = LocalTabBarInset.current
     var tab by rememberSaveable { mutableStateOf(CardioMissionTab.DAILY) }
     // 스캔은 잎 화면이 아니라 **이 화면 위에 덮이는 시트**다 (SPEC C-02) — 여기서 끝내고 돌아간다
     var scanning by rememberSaveable { mutableStateOf(false) }
@@ -98,7 +101,7 @@ fun CardioScreen(
                     tab,
                     Modifier.padding(
                         top = MyFisSpacing.lg,
-                        bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl,
+                        bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl + tabBar,
                     ),
                 )
             }
@@ -111,7 +114,7 @@ fun CardioScreen(
                 pill = true,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md),
+                    .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md + tabBar),
             )
         }
     }
