@@ -958,7 +958,7 @@ private fun NoticeRow(notice: String, onClick: () -> Unit) {
     }
 }
 
-private val NewsBannerHeight = 108.dp
+private val NewsBannerHeight = 144.dp
 
 /** TODO(서버): 이벤트·공지 API 가 붙으면 지운다 (SPEC H-04) */
 private data class NewsBanner(val id: Int, val title: String, val body: String)

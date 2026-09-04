@@ -790,7 +790,7 @@ private struct NewsCarousel: View {
         .buttonStyle(.myFisTap)
     }
 
-    private static let height: CGFloat = 108
+    private static let height: CGFloat = 144
 }
 
 /// 공지 한 줄. 목록으로 가는 길이자, 이 섹션이 비어 보이지 않게 하는 최소한의 내용이다
