@@ -22,18 +22,25 @@ import SwiftUI
 struct GroupCreateScreen: View {
     var onClose: () -> Void = {}
     /// TODO: 2단계(소개·정원)가 붙으면 연결한다
-    var onNext: (String, GroupCategory, Set<GroupDay>, GroupTimeSlot?) -> Void = { _, _, _, _ in }
+    var onNext: (String, GroupCategory, String?) -> Void = { _, _, _ in }
 
     @State private var name = MyFisDebug.groupCreateFill?.name ?? ""
     @State private var category: GroupCategory? = MyFisDebug.groupCreateFill?.category
-    @State private var days: Set<GroupDay> = []
-    @State private var slot: GroupTimeSlot?
+    @State private var region: String?
     @State private var expanded = MyFisDebug.groupCreateFill?.expanded ?? false
 
     /// 이름과 갈래가 있어야 다음이 뜻이 있다
     private var ready: Bool { !name.trimmed.isEmpty && category != nil }
-    /// 질문을 언제까지 띄워 두나 — **이름을 치기 시작하면 물러난다**
-    private var asking: Bool { name.isEmpty }
+
+    /// **칩은 애니메이션 없이 즉시 바뀐다** 🟢 (2026-09-04, 사용자 지정).
+    ///
+    /// 고른 칩이 맨 앞으로 미끄러져 가면 **고르는 동작이 기다리는 동작이 된다** —
+    /// 목록이 갈리듯 그 자리에서 바뀌어야 빠르게 읽힌다 (§7 고르는 동작은 `fast`, 여기는 아예 0)
+    private func instantly(_ change: () -> Void) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction, change)
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,16 +48,17 @@ struct GroupCreateScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    if asking {
-                        Text("어떤 모임을 만들까요?")
-                            .font(MyFisFont.titleLg)
-                            .foregroundStyle(MyFisColor.textPrimary)
-                        Text("모임명과 갈래는 만든 뒤에도 바꿀 수 있어요")
-                            .font(MyFisFont.bodySm)
-                            .foregroundStyle(MyFisColor.textTertiary)
-                            .padding(.top, MyFisSpacing.sm)
-                            .padding(.bottom, MyFisSpacing.xxl)
-                    }
+                    // **질문은 안 사라진다** 🟢 (2026-09-04, 사용자 지정).
+                    // 원본은 치기 시작하면 접는데, 그러면 **스크롤해서 돌아왔을 때
+                    // 여기가 무슨 화면인지 다시 알려 줄 게 없다**
+                    Text("어떤 모임을 만들까요?")
+                        .font(MyFisFont.titleLg)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                    Text("모임명과 갈래는 만든 뒤에도 바꿀 수 있어요")
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textTertiary)
+                        .padding(.top, MyFisSpacing.sm)
+                        .padding(.bottom, MyFisSpacing.xxl)
 
                     Field("모임명") {
                         TextField("", text: $name, prompt: prompt("모임명이 짧을수록 알아보기 쉬워요"))
@@ -68,28 +76,26 @@ struct GroupCreateScreen: View {
                             .padding(.top, MyFisSpacing.md)
                     }
 
-                    // 이름과 갈래가 정해져야 나타난다 — 원본에서 지도가 그렇게 뜬다.
-                    // 처음부터 다 보이면 **묻는 게 셋**이 되어 첫 칸에 손이 안 간다
-                    if ready {
-                        Field("모이는 때") {
-                            FlowLayout(spacing: MyFisSpacing.sm) {
-                                ForEach(GroupDay.allCases, id: \.self) { day in
-                                    PickChip(day.title, selected: days.contains(day), compact: true) {
-                                        if days.contains(day) { days.remove(day) } else { days.insert(day) }
-                                    }
+                    // **활동 지역** 🟢 (2026-09-04, 사용자 지정).
+                    //
+                    // 처음엔 `모이는 때`(요일·시간) 를 뒀었다 — 모임이 지점에 매여 있으니
+                    // 지역을 물을 게 없다고 봤는데, **그 전제가 틀렸다.**
+                    // 이 탭의 취지가 *회원이 헬스장에만 묶이지 않는 것* 이라
+                    // **밖에서 모이는 자리**가 오히려 본령이다. 그래서 원본처럼 지역을 묻는다.
+                    //
+                    // 이름·갈래를 안 채워도 처음부터 보인다 — 원본도 그렇다
+                    Field("활동 지역") {
+                        FlowLayout(spacing: MyFisSpacing.sm) {
+                            // 목록에 없는 동네는 찾아서 고른다 (원본과 같은 자리)
+                            PickChip("검색", icon: "ic_header_search") {}
+                            ForEach(GroupPlaceholder.regions, id: \.self) { item in
+                                PickChip(item, selected: item == region) {
+                                    instantly { region = (region == item) ? nil : item }
                                 }
                             }
-                            FlowLayout(spacing: MyFisSpacing.sm) {
-                                ForEach(GroupTimeSlot.allCases, id: \.self) { item in
-                                    PickChip(item.title, selected: item == slot) {
-                                        slot = (slot == item) ? nil : item
-                                    }
-                                }
-                            }
-                            .padding(.top, MyFisSpacing.sm)
                         }
-                        .padding(.top, MyFisSpacing.xxl)
                     }
+                    .padding(.top, MyFisSpacing.xxl)
                 }
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
                 .padding(.bottom, MyFisSpacing.xxxl)
@@ -98,7 +104,7 @@ struct GroupCreateScreen: View {
             // **바닥에 붙는다.** 다 채우고 누르는 버튼이라 떠 있을 이유가 없다 —
             // 이 화면은 탭 바가 없는 잎이라 §6.28 알약 규칙이 걸리지 않는다
             MyFisPrimaryButton(title: "다음", isEnabled: ready) {
-                onNext(name.trimmed, category ?? .weight, days, slot)
+                onNext(name.trimmed, category ?? .weight, region)
             }
             .padding(.horizontal, MyFisSpacing.screenHorizontal)
             .padding(.bottom, MyFisSpacing.md)
@@ -166,13 +172,22 @@ private struct CategoryChips: View {
         FlowLayout(spacing: MyFisSpacing.sm) {
             ForEach(expanded ? ordered : Array(ordered.prefix(Self.collapsed)), id: \.self) { item in
                 PickChip(item.title, selected: item == selection) {
-                    selection = (selection == item) ? nil : item
+                    instantly { selection = (selection == item) ? nil : item }
                 }
             }
             PickChip(expanded ? "접기" : "더보기", chevronUp: expanded) {
-                expanded.toggle()
+                instantly { expanded.toggle() }
             }
         }
+        // 들어온 애니메이션을 여기서 끊는다 — 칩이 미끄러지면 고르는 동작이 기다리는 동작이 된다
+        .transaction { $0.animation = nil }
+    }
+
+    /// 칩 자리는 **그 자리에서 바뀐다** (2026-09-04, 사용자 지정)
+    private func instantly(_ change: () -> Void) {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction, change)
     }
 }
 
@@ -185,23 +200,27 @@ private struct PickChip: View {
     var selected = false
     /// `더보기` / `접기` 칩만 화살표를 단다. `nil` 이면 안 단다
     var chevronUp: Bool?
-    /// 한 글자짜리 요일 칩용 — 여백을 한 단계 좁힌다.
-    /// 넓은 채로 두면 **일곱 개가 한 줄에 안 들어가 `일` 이 혼자 다음 줄로 떨어진다**
-    var compact = false
+    /// 글자 앞에 붙는 그림. 지역 `검색` 칩만 쓴다
+    var icon: String?
     let action: () -> Void
 
     init(_ title: String, selected: Bool = false, chevronUp: Bool? = nil,
-         compact: Bool = false, action: @escaping () -> Void) {
+         icon: String? = nil, action: @escaping () -> Void) {
         self.title = title
         self.selected = selected
         self.chevronUp = chevronUp
-        self.compact = compact
+        self.icon = icon
         self.action = action
     }
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: MyFisSpacing.xs) {
+                if let icon {
+                    Image(icon)
+                        .resizable()
+                        .frame(width: 16, height: 16)
+                }
                 Text(title)
                     .font(selected ? MyFisFont.titleSm : MyFisFont.body)
                 if let chevronUp {
@@ -212,7 +231,7 @@ private struct PickChip: View {
                 }
             }
             .foregroundStyle(selected ? MyFisColor.onAccent : MyFisColor.textSecondary)
-            .padding(.horizontal, compact ? MyFisSpacing.md : MyFisSpacing.lg)
+            .padding(.horizontal, MyFisSpacing.lg)
             .frame(height: MyFisSize.minTouchTarget)
             .background(selected ? MyFisColor.textPrimary : Color.clear, in: Capsule())
             .overlay(
@@ -227,39 +246,6 @@ private struct PickChip: View {
 }
 
 // MARK: - 모델
-
-/// 무슨 요일에 모이나 (SPEC G-03)
-enum GroupDay: CaseIterable {
-    case mon, tue, wed, thu, fri, sat, sun
-
-    var title: String {
-        switch self {
-        case .mon: "월"
-        case .tue: "화"
-        case .wed: "수"
-        case .thu: "목"
-        case .fri: "금"
-        case .sat: "토"
-        case .sun: "일"
-        }
-    }
-}
-
-/// 하루 중 언제 (SPEC G-03) — 시각을 분 단위로 묻지 않는다.
-/// **모임은 대개 "저녁쯤"으로 정해지고**, 분까지 물으면 만들기가 무거워진다
-enum GroupTimeSlot: CaseIterable {
-    case dawn, morning, noon, evening, free
-
-    var title: String {
-        switch self {
-        case .dawn: "새벽"
-        case .morning: "아침"
-        case .noon: "점심"
-        case .evening: "저녁"
-        case .free: "자유"
-        }
-    }
-}
 
 private extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }

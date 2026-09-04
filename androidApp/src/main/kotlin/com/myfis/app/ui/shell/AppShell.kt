@@ -119,7 +119,7 @@ fun AppShell() {
             // TODO(G-03 2단계): 소개·정원을 묻는 다음 장이 붙으면 `onNext` 를 잇는다
             GroupCreateScreen(
                 onClose = { nav.popBackStack() },
-                onNext = { _, _, _, _ -> nav.popBackStack() },
+                onNext = { _, _, _ -> nav.popBackStack() },
             )
         }
         composable(Route.WEIGHT_LOG) {

@@ -68,18 +68,15 @@ import com.myfis.app.ui.theme.tapWithHaptics
 fun GroupCreateScreen(
     onClose: () -> Unit = {},
     /** TODO: 2단계(소개·정원)가 붙으면 연결한다 */
-    onNext: (String, GroupCategory, Set<GroupDay>, GroupTimeSlot?) -> Unit = { _, _, _, _ -> },
+    onNext: (String, GroupCategory, String?) -> Unit = { _, _, _ -> },
 ) {
     var name by rememberSaveable { mutableStateOf("") }
     var category by rememberSaveable { mutableStateOf<GroupCategory?>(null) }
-    var days by rememberSaveable { mutableStateOf(setOf<GroupDay>()) }
-    var slot by rememberSaveable { mutableStateOf<GroupTimeSlot?>(null) }
+    var region by rememberSaveable { mutableStateOf<String?>(null) }
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     /** 이름과 갈래가 있어야 다음이 뜻이 있다 */
     val ready = name.trim().isNotEmpty() && category != null
-    /** 질문을 언제까지 띄워 두나 — **이름을 치기 시작하면 물러난다** */
-    val asking = name.isEmpty()
 
     // 잎 화면은 셸을 덮으므로 **상태바 여백을 스스로 챙긴다** (§7.1)
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
@@ -101,19 +98,20 @@ fun GroupCreateScreen(
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(bottom = MyFisSpacing.xxxl),
         ) {
-            if (asking) {
-                Text(
-                    "어떤 모임을 만들까요?",
-                    style = MyFisTheme.type.titleLg,
-                    color = MyFisColor.TextPrimary,
-                )
-                Text(
-                    "모임명과 갈래는 만든 뒤에도 바꿀 수 있어요",
-                    style = MyFisTheme.type.bodySm,
-                    color = MyFisColor.TextTertiary,
-                    modifier = Modifier.padding(top = MyFisSpacing.sm, bottom = MyFisSpacing.xxl),
-                )
-            }
+            // **질문은 안 사라진다** 🟢 (2026-09-04, 사용자 지정).
+            // 원본은 치기 시작하면 접는데, 그러면 **스크롤해서 돌아왔을 때
+            // 여기가 무슨 화면인지 다시 알려 줄 게 없다**
+            Text(
+                "어떤 모임을 만들까요?",
+                style = MyFisTheme.type.titleLg,
+                color = MyFisColor.TextPrimary,
+            )
+            Text(
+                "모임명과 갈래는 만든 뒤에도 바꿀 수 있어요",
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextTertiary,
+                modifier = Modifier.padding(top = MyFisSpacing.sm, bottom = MyFisSpacing.xxl),
+            )
 
             FieldLabel("모임명")
             NameField(name) { name = it }
@@ -125,25 +123,24 @@ fun GroupCreateScreen(
                 modifier = Modifier.padding(top = MyFisSpacing.md),
             )
 
-            // 이름과 갈래가 정해져야 나타난다 — 원본에서 지도가 그렇게 뜬다.
-            // 처음부터 다 보이면 **묻는 게 셋**이 되어 첫 칸에 손이 안 간다
-            if (ready) {
-                Spacer(Modifier.height(MyFisSpacing.xxl))
-                FieldLabel("모이는 때")
-                DayChips(days) { day ->
-                    days = if (day in days) days - day else days + day
-                }
-                SlotChips(slot, Modifier.padding(top = MyFisSpacing.sm)) {
-                    slot = if (slot == it) null else it
-                }
-            }
+            // **활동 지역** 🟢 (2026-09-04, 사용자 지정).
+            //
+            // 처음엔 `모이는 때`(요일·시간) 를 뒀었다 — 모임이 지점에 매여 있으니
+            // 지역을 물을 게 없다고 봤는데, **그 전제가 틀렸다.**
+            // 이 탭의 취지가 *회원이 헬스장에만 묶이지 않는 것* 이라
+            // **밖에서 모이는 자리**가 오히려 본령이다. 그래서 원본처럼 지역을 묻는다.
+            //
+            // 이름·갈래를 안 채워도 처음부터 보인다 — 원본도 그렇다
+            Spacer(Modifier.height(MyFisSpacing.xxl))
+            FieldLabel("활동 지역")
+            RegionChips(region) { region = if (region == it) null else it }
         }
 
         // **바닥에 붙는다.** 다 채우고 누르는 버튼이라 떠 있을 이유가 없다 —
         // 이 화면은 탭 바가 없는 잎이라 §6.28 알약 규칙이 걸리지 않는다
         MyFisPrimaryButton(
             text = "다음",
-            onClick = { onNext(name.trim(), category ?: GroupCategory.WEIGHT, days, slot) },
+            onClick = { onNext(name.trim(), category ?: GroupCategory.WEIGHT, region) },
             enabled = ready,
             modifier = Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
@@ -227,32 +224,16 @@ private fun CategoryChips(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun DayChips(selected: Set<GroupDay>, onToggle: (GroupDay) -> Unit) {
+private fun RegionChips(selected: String?, onSelect: (String) -> Unit) {
     FlowRow(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
     ) {
-        GroupDay.entries.forEach { day ->
-            PickChip(day.label, selected = day in selected, compact = true) { onToggle(day) }
-        }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun SlotChips(
-    selected: GroupTimeSlot?,
-    modifier: Modifier = Modifier,
-    onSelect: (GroupTimeSlot) -> Unit,
-) {
-    FlowRow(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
-    ) {
-        GroupTimeSlot.entries.forEach { item ->
-            PickChip(item.label, selected = item == selected) { onSelect(item) }
+        // 목록에 없는 동네는 찾아서 고른다 (원본과 같은 자리)
+        PickChip("검색", icon = R.drawable.ic_header_search) {}
+        groupRegionPlaceholder.forEach { item ->
+            PickChip(item, selected = item == selected) { onSelect(item) }
         }
     }
 }
@@ -269,11 +250,8 @@ private fun PickChip(
     selected: Boolean = false,
     /** `더보기` / `접기` 칩만 화살표를 단다. `null` 이면 안 단다 */
     chevronUp: Boolean? = null,
-    /**
-     * 한 글자짜리 요일 칩용 — 여백을 한 단계 좁힌다.
-     * 넓은 채로 두면 **일곱 개가 한 줄에 안 들어가 `일` 이 혼자 다음 줄로 떨어진다**
-     */
-    compact: Boolean = false,
+    /** 글자 앞에 붙는 그림. 지역 `검색` 칩만 쓴다 */
+    icon: Int? = null,
     onClick: () -> Unit,
 ) {
     val interaction = remember { MutableInteractionSource() }
@@ -287,10 +265,18 @@ private fun PickChip(
                 else Modifier.border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.full),
             )
             .tapWithHaptics(interaction, onClick)
-            .padding(horizontal = if (compact) MyFisSpacing.md else MyFisSpacing.lg),
+            .padding(horizontal = MyFisSpacing.lg),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
     ) {
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null,
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier.size(16.dp),
+            )
+        }
         Text(
             label,
             style = MyFisTheme.type.body.copy(
@@ -313,15 +299,8 @@ private fun PickChip(
 
 // MARK: - 모델
 
-/** 무슨 요일에 모이나 (SPEC G-03) */
-enum class GroupDay(val label: String) {
-    MON("월"), TUE("화"), WED("수"), THU("목"), FRI("금"), SAT("토"), SUN("일")
-}
-
 /**
- * 하루 중 언제 (SPEC G-03) — 시각을 분 단위로 묻지 않는다.
- * **모임은 대개 "저녁쯤"으로 정해지고**, 분까지 물으면 만들기가 무거워진다
+ * 활동 지역 자리값 (§6.30) — 지점 동네와 그 옆이다.
+ * TODO(서버): 지점 좌표로 가까운 동네를 받아 온다
  */
-enum class GroupTimeSlot(val label: String) {
-    DAWN("새벽"), MORNING("아침"), NOON("점심"), EVENING("저녁"), FREE("자유")
-}
+val groupRegionPlaceholder = listOf("치평동", "화정동", "광천동")

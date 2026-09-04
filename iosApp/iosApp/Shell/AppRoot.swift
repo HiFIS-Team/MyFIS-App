@@ -149,7 +149,7 @@ struct AppRoot: View {
                                 onBack: back)
             case .groupCreate:
                 // TODO(G-03 2단계): 소개·정원을 묻는 다음 장이 붙으면 `onNext` 를 잇는다
-                GroupCreateScreen(onClose: back, onNext: { _, _, _, _ in back() })
+                GroupCreateScreen(onClose: back, onNext: { _, _, _ in back() })
             }
         }
     }

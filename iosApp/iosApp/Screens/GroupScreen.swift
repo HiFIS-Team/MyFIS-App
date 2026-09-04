@@ -439,6 +439,10 @@ struct GroupItem: Identifiable, Hashable {
 enum GroupPlaceholder {
     static let branch = "광주 상무"
 
+    /// 활동 지역 자리값 (§6.30) — 지점 동네와 그 옆이다.
+    /// TODO(서버): 지점 좌표로 가까운 동네를 받아 온다
+    static let regions = ["치평동", "화정동", "광천동"]
+
     static let groups: [GroupItem] = [
         .init(id: 1, category: .running, name: "아침 러닝 크루",
               summary: "출근 전에 한 바퀴 돌고 가요", schedule: "매일 06:00", members: 24,
