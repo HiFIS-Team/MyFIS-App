@@ -161,24 +161,25 @@ fun MyFisCard(
  * (2026-08-27 실측). 판을 여기 한 벌로 모은다.
  *
  * - 테두리 한 줄이 판을 **타일**로 만든다 — 없으면 배경에 녹는다
- * - ⚠️ `radius.tile` 은 **`56` 판에 맞춘 값**이다 (§5.2). 다른 크기가 필요하면
- *   여기에 크기를 받도록 고치고 라운딩을 비율(32%)로 다시 잡는다
+ * - **크기를 받는다** 🟢 (2026-09-04) — 모임 레일(§6.29)이 `72` 판을 쓰면서
+ *   `23.dp` 를 직접 박고 있었다. `radius.tile` 은 `56` 판에 맞춘 값이라(§5.2) 다른 크기에 그대로 못 쓴다 →
+ *   **라운딩을 비율(`MyFisRadius.tileRatio`)로 뽑는다.** `56` 은 예전과 같은 `18` 이 나온다
  */
 @Composable
 fun MyFisIconTile(
     modifier: Modifier = Modifier,
     /** 이미 받은 줄처럼 한 단계 물러난 자리 — 판을 `surface.1` 로 내린다 */
     dimmed: Boolean = false,
+    /** 판 한 변. 기본은 목록 행(`56`) */
+    size: androidx.compose.ui.unit.Dp = MyFisSize.listRowMin,
     content: @Composable androidx.compose.foundation.layout.BoxScope.() -> Unit,
 ) {
+    val shape = androidx.compose.foundation.shape.RoundedCornerShape(size * MyFisRadius.tileRatio)
     Box(
         modifier = modifier
-            .size(MyFisSize.listRowMin)
-            .background(
-                if (dimmed) MyFisColor.Surface1 else MyFisColor.Surface2,
-                MyFisRadius.tile,
-            )
-            .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.tile),
+            .size(size)
+            .background(if (dimmed) MyFisColor.Surface1 else MyFisColor.Surface2, shape)
+            .border(1.dp, MyFisColor.BorderSubtle, shape),
         contentAlignment = androidx.compose.ui.Alignment.Center,
         content = content,
     )

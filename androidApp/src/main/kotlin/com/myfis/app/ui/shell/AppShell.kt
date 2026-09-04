@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.myfis.app.ui.screens.GroupScreen
 import com.myfis.app.ui.screens.ActivityIntroScreen
 import com.myfis.app.ui.screens.BenefitAction
 import com.myfis.app.ui.screens.BenefitKind
@@ -281,7 +282,7 @@ private fun WeightTabContent(tab: WeightTab, onStore: () -> Unit) {
         // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
         WeightTab.CARDIO -> CardioScreen(onStore = onStore)
         WeightTab.RANKING -> PlaceholderScreen("R-01", "랭킹", "웨이트 · 유산소 · 마일리지")
-        WeightTab.GROUP -> PlaceholderScreen("G-01", "모임", "모임 · 커뮤니티")
+        WeightTab.GROUP -> GroupScreen()
         WeightTab.BACK -> Unit
     }
 }

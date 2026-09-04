@@ -37,6 +37,9 @@ object MyFisRadius {
     /** 아이콘 판 (§6.23 혜택 행) — `56` 판에 맞춘 값이다. 다른 크기에 그대로 쓰지 않는다 */
     val tile = RoundedCornerShape(18.dp)
 
+    /** 그 `18 / 56`. 판 크기가 다르면 이 비율로 다시 뽑는다 (§6.26 · 2026-09-04) */
+    const val tileRatio = 18f / 56f
+
     /** 바닥 시트 — **위 모서리만** 둥글다. 네 모서리를 다 굴리면 바닥에서 뜬 카드가 된다 */
     val sheet = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     val full = RoundedCornerShape(percent = 50)
@@ -67,4 +70,7 @@ object MyFisSize {
     val searchBar = 64.dp
     val listRowMin = 56.dp
     val progressHeight = 8.dp
+
+    /** 헤더 높이 (§6.9) — iOS `MyFisSize.header` 와 같은 값. 화면마다 `56.dp` 를 박아 쓰고 있었다 */
+    val header = 56.dp
 }

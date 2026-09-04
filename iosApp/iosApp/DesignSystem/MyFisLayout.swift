@@ -29,6 +29,8 @@ enum MyFisRadius {
     static let lg: CGFloat = 20
     /// 아이콘 판 (§6.23 혜택 행) — `56` 판에 맞춘 값이다. 다른 크기에 그대로 쓰지 않는다
     static let tile: CGFloat = 18
+    /// 그 `18 / 56`. 판 크기가 다르면 이 비율로 다시 뽑는다 (§6.26 · 2026-09-04)
+    static let tileRatio: CGFloat = tile / MyFisSize.listRowMin
     static let full: CGFloat = 999
 }
 
