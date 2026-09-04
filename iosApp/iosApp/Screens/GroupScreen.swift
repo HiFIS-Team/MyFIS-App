@@ -26,12 +26,19 @@ struct GroupScreen: View {
 
     @State private var segment: GroupSegment = .browse
     @State private var category: GroupCategory = .all
-    @State private var sort: GroupSort = .none
+    @State private var sort: GroupSort = MyFisDebug.initialGroupSort
     @State private var order: GroupOrder = .recommended
 
     private var rows: [GroupItem] {
         GroupPlaceholder.groups.filter { category == .all || $0.category == category }
     }
+
+    /// `인기` — 이번 주 점수 차례. **50 등까지 센다** (원본 `Top 50`)
+    private var ranked: [GroupItem] { rows.sorted { $0.score > $1.score }.prefix(50).map { $0 } }
+
+    /// `요즘 뜨는` — **일정을 모으는 중이거나 이제 막 생긴 것**.
+    /// 오래되고 조용한 모임은 여기 오면 안 된다
+    private var rising: [GroupItem] { rows.filter { $0.recruiting || $0.isNew } }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -57,10 +64,25 @@ struct GroupScreen: View {
                         SortChips(selection: $sort, order: $order)
                             .padding(.top, MyFisSpacing.md)
 
-                        ForEach(rows) { group in
-                            GroupRow(group: group, onTap: { onGroup(group) })
+                        // **칩이 목록의 종류를 바꾼다** 🟢 (2026-09-04, 사용자 지정) —
+                        // 걸러 내기만 하는 게 아니라 **다른 것을 보여 준다**
+                        switch sort {
+                        case .popular:
+                            RankHeader()
+                            ForEach(Array(ranked.enumerated()), id: \.element.id) { index, group in
+                                RankRow(rank: index + 1, group: group, onTap: { onGroup(group) })
+                            }
+                        case .rising:
+                            ForEach(rising) { group in
+                                RisingRow(group: group, onTap: { onGroup(group) })
+                            }
+                            .padding(.top, MyFisSpacing.xs)
+                        default:
+                            ForEach(rows) { group in
+                                GroupRow(group: group, onTap: { onGroup(group) })
+                            }
+                            .padding(.top, MyFisSpacing.xs)
                         }
-                        .padding(.top, MyFisSpacing.xs)
                     }
                     // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다 (유산소와 같은 규칙)
                     .padding(.bottom, MyFisSize.buttonSecondary + MyFisSpacing.xxxl)
@@ -235,14 +257,25 @@ private struct SortChips: View {
                 // **첫 칩만 여는 칩이다** — 나머지는 켜고 끄는 것.
                 // 여는 판은 **네이티브 메뉴 그대로** 쓴다 (§2 원칙 6) — 직접 그리면 두 판이 어긋나고,
                 // 바깥을 눌러 닫는 것부터 다시 만들어야 한다
-                Menu {
-                    Picker("", selection: $order) {
-                        ForEach(GroupOrder.allCases, id: \.self) { Text($0.title).tag($0) }
+                // **필터가 켜져 있으면 누를 때 되돌아가기만 한다** 🟢 (2026-09-04, 사용자 지정).
+                // `인기` 를 보다가 `추천` 을 누르는 사람은 **차례를 고르려는 게 아니라 원래 목록으로 가려는 것**이다 —
+                // 거기서 메뉴를 열면 한 번 더 눌러야 돌아간다.
+                // 차례 고르기는 **이미 추천을 보고 있을 때**만 뜻이 있다
+                if selection != .none {
+                    Button { selection = .none } label: {
+                        chip(order.title, selected: false, chevron: true)
                     }
-                } label: {
-                    chip(order.title, selected: true, chevron: true)
+                    .buttonStyle(.myFisTap)
+                } else {
+                    Menu {
+                        Picker("", selection: $order) {
+                            ForEach(GroupOrder.allCases, id: \.self) { Text($0.title).tag($0) }
+                        }
+                    } label: {
+                        chip(order.title, selected: true, chevron: true)
+                    }
+                    .buttonStyle(.myFisTap)
                 }
-                .buttonStyle(.myFisTap)
 
                 ForEach(GroupSort.allCases, id: \.self) { item in
                     Button { selection = (selection == item) ? .none : item } label: {
@@ -360,6 +393,171 @@ private struct GroupRow: View {
     }
 }
 
+/// `인기` 목록 머리 — **이번 주 몇 등인지 말해 주는 줄**.
+///
+/// 원본은 1위 줄을 **주황**으로 칠하는데 우리는 색이 하나고 그 라임은
+/// `＋ 모임 만들기` 와 안 읽은 점이 이미 쓰고 있다 (§3.2 상한) →
+/// **표면 밝기로 세운다** (§5.4 다크에서 위계는 밝기다)
+private struct RankHeader: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: MyFisSpacing.xs) {
+            HStack(spacing: 0) {
+                Text("이번 주 모임 Top 50")
+                    .font(MyFisFont.titleMd)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                Spacer(minLength: MyFisSpacing.md)
+                // TODO: 순위 산정 기준 안내가 붙으면 연결한다
+                Image("ic_my_ask")
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: 22, height: 22)
+                    .foregroundStyle(MyFisColor.textTertiary)
+            }
+            HStack(spacing: MyFisSpacing.sm) {
+                Text("9월 1주차(월-일) 실시간")
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textTertiary)
+                // TODO: 지난 주 랭킹 화면이 붙으면 연결한다
+                HStack(spacing: 2) {
+                    Text("지난 주")
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                    Image("ic_chevron_down")
+                        .resizable()
+                        .frame(width: 12, height: 12)
+                        .rotationEffect(.degrees(-90))
+                }
+            }
+        }
+        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+        .padding(.top, MyFisSpacing.lg)
+        .padding(.bottom, MyFisSpacing.md)
+    }
+}
+
+/// 순위 한 줄 — 순번 + 타일 + 이름·동네 + 점수.
+///
+/// **1등만 판을 올린다.** 셋을 올리면 시상대가 되고, 이 목록은 시상대가 아니라 **순위표**다
+private struct RankRow: View {
+    let rank: Int
+    let group: GroupItem
+    let onTap: () -> Void
+
+    private var top: Bool { rank == 1 }
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: MyFisSpacing.md) {
+                Text("\(rank)")
+                    .font(MyFisFont.titleSm.monospacedDigit())
+                    .foregroundStyle(top ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                    .frame(width: 24, alignment: .center)
+
+                MyFisIconTile {
+                    Image(group.category.icon)
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 26, height: 26)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(group.name)
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                        .lineLimit(1)
+                    RegionLine(group.region)
+                }
+
+                Spacer(minLength: MyFisSpacing.sm)
+
+                Text("\(group.score.decimal)점")
+                    .font(MyFisFont.titleSm.monospacedDigit())
+                    .foregroundStyle(top ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+            }
+            .padding(.horizontal, MyFisSpacing.screenHorizontal)
+            .padding(.vertical, MyFisSpacing.md)
+            .background(top ? MyFisColor.surface1 : Color.clear)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.myFisTap)
+    }
+}
+
+/// `요즘 뜨는` 한 줄 — **메타가 다르다.** 언제 모이는지 대신 **동네 · 사람 수 · 모집 중**이다.
+///
+/// 여기 오는 모임은 *지금 사람을 받는* 모임이라, 고를 때 궁금한 것이 요일이 아니라
+/// **들어갈 자리가 있느냐**다
+private struct RisingRow: View {
+    let group: GroupItem
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(alignment: .top, spacing: MyFisSpacing.lg) {
+                MyFisIconTile {
+                    Image(group.category.icon)
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 26, height: 26)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(group.name)
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                        .lineLimit(1)
+                    Text(group.summary)
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textTertiary)
+                        .lineLimit(1)
+
+                    HStack(spacing: MyFisSpacing.sm) {
+                        RegionLine(group.region)
+                        Text(group.isNew ? "신규 모임" : "\(group.members)명")
+                            .font(MyFisFont.caption.monospacedDigit())
+                            .foregroundStyle(MyFisColor.textTertiary)
+                        if group.recruiting {
+                            // **상태다** — `info`(안내) 로 적는다. 라임이 아니라 §3.2 상한을 안 건드린다
+                            Text("일정 모집 중")
+                                .font(MyFisFont.caption)
+                                .foregroundStyle(MyFisColor.info)
+                        }
+                    }
+                    .padding(.top, MyFisSpacing.xs)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, MyFisSpacing.screenHorizontal)
+            .padding(.vertical, MyFisSpacing.md)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.myFisTap)
+    }
+}
+
+/// 핀 + 동네. 두 목록이 같이 쓴다
+private struct RegionLine: View {
+    let region: String
+
+    init(_ region: String) { self.region = region }
+
+    var body: some View {
+        HStack(spacing: 3) {
+            Image("ic_place_pin")
+                .renderingMode(.template)
+                .resizable()
+                .frame(width: 12, height: 12)
+            Text(region)
+                .font(MyFisFont.caption)
+                .lineLimit(1)
+        }
+        .foregroundStyle(MyFisColor.textTertiary)
+    }
+}
+
 // MARK: - 모델
 
 /// 세 세그먼트 (SPEC G-01)
@@ -470,6 +668,14 @@ struct GroupItem: Identifiable, Hashable {
     /// `화·목 저녁` 처럼 **언제 모이는지**
     let schedule: String
     let members: Int
+    /// 어느 동네에서 모이나 (§6.30 활동 지역) — `인기`·`요즘 뜨는` 목록이 쓴다
+    let region: String
+    /// 이번 주 랭킹 점수 (`인기`). TODO(서버): 활동량으로 서버가 낸다
+    let score: Int
+    /// 일정을 모으는 중인가 (`요즘 뜨는`)
+    var recruiting: Bool = false
+    /// 이제 막 생긴 모임 — 사람 수 대신 `신규 모임` 이라 적는다
+    var isNew: Bool = false
     /// 내가 든 모임인가
     var joined: Bool = false
     /// 안 읽은 글이 있나 — 든 모임에서만 뜻이 있다
@@ -496,25 +702,40 @@ enum GroupPlaceholder {
     static let groups: [GroupItem] = [
         .init(id: 1, category: .running, name: "아침 러닝 크루",
               summary: "출근 전에 한 바퀴 돌고 가요", schedule: "매일 06:00", members: 24,
-              joined: true, unread: true),
+              region: "서구 치평동", score: 10_483, recruiting: true, joined: true, unread: true),
         .init(id: 2, category: .weight, name: "스쿼트 100개 클럽",
-              summary: "하루 100개, 인증만 하면 끝", schedule: "매일 자유", members: 51, joined: true),
+              summary: "하루 100개, 인증만 하면 끝", schedule: "매일 자유", members: 51,
+              region: "서구 화정동", score: 4_280, joined: true),
         .init(id: 3, category: .classRoom, name: "필라테스 같이 들어요",
-              summary: "3인 이상 모이면 그룹 할인", schedule: "화·목 20:00", members: 12),
+              summary: "3인 이상 모이면 그룹 할인", schedule: "화·목 20:00", members: 12,
+              region: "서구 농성동", score: 4_148, recruiting: true),
         .init(id: 4, category: .social, name: "운동 끝나고 한 잔",
-              summary: "단백질 쉐이크든 맥주든", schedule: "금 21:00", members: 37),
+              summary: "단백질 쉐이크든 맥주든", schedule: "금 21:00", members: 37,
+              region: "서구 치평동", score: 2_981),
         .init(id: 5, category: .diet, name: "도시락 같이 싸요",
-              summary: "일요일에 한 주치 준비", schedule: "일 14:00", members: 19),
+              summary: "일요일에 한 주치 준비", schedule: "일 14:00", members: 19,
+              region: "서구 쌍촌동", score: 2_543, recruiting: true),
         .init(id: 6, category: .outdoor, name: "주말 등산",
-              summary: "무등산부터 시작해요", schedule: "토 07:00", members: 26),
+              summary: "무등산부터 시작해요", schedule: "토 07:00", members: 26,
+              region: "북구 두암동", score: 1_592),
         .init(id: 7, category: .weight, name: "3대 500 가자",
-              summary: "스쿼트·벤치·데드 합계 올리기", schedule: "월·수·금 19:00", members: 33),
+              summary: "스쿼트·벤치·데드 합계 올리기", schedule: "월·수·금 19:00", members: 33,
+              region: "서구 화정동", score: 1_163),
         .init(id: 8, category: .contest, name: "가을 바디 챌린지",
-              summary: "8주 뒤 인바디로 순위 가려요", schedule: "10월 1일 시작", members: 87),
+              summary: "8주 뒤 인바디로 순위 가려요", schedule: "10월 1일 시작", members: 87,
+              region: "서구 치평동", score: 985, recruiting: true),
         .init(id: 9, category: .info, name: "보충제·장비 정보방",
-              summary: "뭐 살지 물어보는 곳", schedule: "아무 때나", members: 64),
+              summary: "뭐 살지 물어보는 곳", schedule: "아무 때나", members: 64,
+              region: "남구 봉선동", score: 742),
         .init(id: 10, category: .classRoom, name: "초보 요가",
-              summary: "처음 오신 분 환영해요", schedule: "일 10:00", members: 9),
+              summary: "처음 오신 분 환영해요", schedule: "일 10:00", members: 9,
+              region: "서구 광천동", score: 613, recruiting: true, isNew: true),
+        .init(id: 11, category: .social, name: "퇴근하고 볼링",
+              summary: "점수 못 내도 괜찮아요", schedule: "수 20:00", members: 0,
+              region: "서구 화정동", score: 480, recruiting: true, isNew: true),
+        .init(id: 12, category: .running, name: "동네방네 러닝",
+              summary: "혼자 뛰는 게 지루해진 분 환영", schedule: "화·목 20:00", members: 13,
+              region: "서구 화정동", score: 402, recruiting: true),
     ]
 
     /// 가로 줄 — **든 모임이 앞**, 그다음이 추천이다

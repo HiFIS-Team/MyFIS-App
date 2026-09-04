@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -117,9 +118,29 @@ fun GroupScreen(
 
                 SortChips(sort, order, { sort = it }, { order = it }, Modifier.padding(top = MyFisSpacing.md))
 
-                Spacer(Modifier.height(MyFisSpacing.xs))
-                rows.forEach { group ->
-                    GroupRow(group) { onGroup(group) }
+                // **칩이 목록의 종류를 바꾼다** 🟢 (2026-09-04, 사용자 지정) —
+                // 걸러 내기만 하는 게 아니라 **다른 것을 보여 준다**
+                when (sort) {
+                    GroupSort.POPULAR -> {
+                        RankHeader()
+                        rows.sortedByDescending { it.score }.take(50)
+                            .forEachIndexed { index, group ->
+                                RankRow(index + 1, group) { onGroup(group) }
+                            }
+                    }
+                    GroupSort.RISING -> {
+                        Spacer(Modifier.height(MyFisSpacing.xs))
+                        // 오래되고 조용한 모임은 여기 오면 안 된다
+                        rows.filter { it.recruiting || it.isNew }.forEach { group ->
+                            RisingRow(group) { onGroup(group) }
+                        }
+                    }
+                    else -> {
+                        Spacer(Modifier.height(MyFisSpacing.xs))
+                        rows.forEach { group ->
+                            GroupRow(group) { onGroup(group) }
+                        }
+                    }
                 }
             }
 
@@ -332,7 +353,12 @@ private fun SortChips(
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
     ) {
         Box {
-            SortChip(order.label, selected = true, chevron = true) { open = true }
+            // **필터가 켜져 있으면 누를 때 되돌아가기만 한다** 🟢 (2026-09-04, 사용자 지정).
+            // `인기` 를 보다가 `추천` 을 누르는 사람은 **차례를 고르려는 게 아니라 원래 목록으로 가려는 것**이다 —
+            // 거기서 메뉴를 열면 한 번 더 눌러야 돌아간다
+            SortChip(order.label, selected = selected == GroupSort.NONE, chevron = true) {
+                if (selected == GroupSort.NONE) open = true else onSelect(GroupSort.NONE)
+            }
             DropdownMenu(
                 expanded = open,
                 onDismissRequest = { open = false },
@@ -503,6 +529,185 @@ private fun GroupMeta(group: GroupItem, modifier: Modifier = Modifier) {
 
 private val RailAvatar = 72.dp
 
+/**
+ * `인기` 목록 머리 — **이번 주 몇 등인지 말해 주는 줄**.
+ *
+ * 원본은 1위 줄을 **주황**으로 칠하는데 우리는 색이 하나고 그 라임은
+ * `＋ 모임 만들기` 와 안 읽은 점이 이미 쓰고 있다 (§3.2 상한) →
+ * **표면 밝기로 세운다** (§5.4 다크에서 위계는 밝기다)
+ */
+@Composable
+private fun RankHeader() {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = MyFisSpacing.screenHorizontal)
+            .padding(top = MyFisSpacing.lg, bottom = MyFisSpacing.md),
+        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("이번 주 모임 Top 50", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
+            Spacer(Modifier.weight(1f))
+            // TODO: 순위 산정 기준 안내가 붙으면 연결한다
+            Icon(
+                painter = painterResource(R.drawable.ic_my_ask),
+                contentDescription = null,
+                tint = MyFisColor.TextTertiary,
+                modifier = Modifier.size(22.dp),
+            )
+        }
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+        ) {
+            Text("9월 1주차(월-일) 실시간", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
+            // TODO: 지난 주 랭킹 화면이 붙으면 연결한다
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                Text("지난 주", style = MyFisTheme.type.bodySm, color = MyFisColor.TextPrimary)
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron_down),
+                    contentDescription = null,
+                    tint = MyFisColor.TextPrimary,
+                    modifier = Modifier.size(12.dp).rotate(-90f),
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 순위 한 줄 — 순번 + 타일 + 이름·동네 + 점수.
+ *
+ * **1등만 판을 올린다.** 셋을 올리면 시상대가 되고, 이 목록은 시상대가 아니라 **순위표**다
+ */
+@Composable
+private fun RankRow(rank: Int, group: GroupItem, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+    val top = rank == 1
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(if (top) MyFisColor.Surface1 else Color.Transparent)
+            .tapWithHaptics(interaction, onClick)
+            .padding(horizontal = MyFisSpacing.screenHorizontal, vertical = MyFisSpacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
+    ) {
+        Text(
+            "$rank",
+            style = MyFisTheme.type.titleSm,
+            color = if (top) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+            modifier = Modifier.width(24.dp),
+            textAlign = TextAlign.Center,
+        )
+        MyFisIconTile {
+            Icon(
+                painter = painterResource(group.category.icon),
+                contentDescription = null,
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier.size(26.dp),
+            )
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                group.name,
+                style = MyFisTheme.type.titleSm,
+                color = MyFisColor.TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            RegionLine(group.region)
+        }
+        Text(
+            "%,d점".format(group.score),
+            style = MyFisTheme.type.titleSm,
+            color = if (top) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+        )
+    }
+}
+
+/**
+ * `요즘 뜨는` 한 줄 — **메타가 다르다.** 언제 모이는지 대신 **동네 · 사람 수 · 모집 중**이다.
+ *
+ * 여기 오는 모임은 *지금 사람을 받는* 모임이라, 고를 때 궁금한 것이 요일이 아니라
+ * **들어갈 자리가 있느냐**다
+ */
+@Composable
+private fun RisingRow(group: GroupItem, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .tapWithHaptics(interaction, onClick)
+            .padding(horizontal = MyFisSpacing.screenHorizontal, vertical = MyFisSpacing.md),
+        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
+    ) {
+        MyFisIconTile {
+            Icon(
+                painter = painterResource(group.category.icon),
+                contentDescription = null,
+                tint = MyFisColor.TextSecondary,
+                modifier = Modifier.size(26.dp),
+            )
+        }
+        Column {
+            Text(
+                group.name,
+                style = MyFisTheme.type.titleSm,
+                color = MyFisColor.TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                group.summary,
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextTertiary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp),
+            )
+            Row(
+                modifier = Modifier.padding(top = MyFisSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+            ) {
+                RegionLine(group.region)
+                Text(
+                    if (group.isNew) "신규 모임" else "${group.members}명",
+                    style = MyFisTheme.type.caption,
+                    color = MyFisColor.TextTertiary,
+                )
+                if (group.recruiting) {
+                    // **상태다** — `info`(안내) 로 적는다. 라임이 아니라 §3.2 상한을 안 건드린다
+                    Text("일정 모집 중", style = MyFisTheme.type.caption, color = MyFisColor.Info)
+                }
+            }
+        }
+    }
+}
+
+/** 핀 + 동네. 두 목록이 같이 쓴다 */
+@Composable
+private fun RegionLine(region: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_place_pin),
+            contentDescription = null,
+            tint = MyFisColor.TextTertiary,
+            modifier = Modifier.size(12.dp),
+        )
+        Text(region, style = MyFisTheme.type.caption, color = MyFisColor.TextTertiary, maxLines = 1)
+    }
+}
+
 // MARK: - 모델
 
 /** 세 세그먼트 (SPEC G-01) */
@@ -585,6 +790,14 @@ data class GroupItem(
     /** `화·목 저녁` 처럼 **언제 모이는지** */
     val schedule: String,
     val members: Int,
+    /** 어느 동네에서 모이나 (§6.30 활동 지역) — `인기`·`요즘 뜨는` 목록이 쓴다 */
+    val region: String,
+    /** 이번 주 랭킹 점수 (`인기`). TODO(서버): 활동량으로 서버가 낸다 */
+    val score: Int,
+    /** 일정을 모으는 중인가 (`요즘 뜨는`) */
+    val recruiting: Boolean = false,
+    /** 이제 막 생긴 모임 — 사람 수 대신 `신규 모임` 이라 적는다 */
+    val isNew: Boolean = false,
     /** 내가 든 모임인가 */
     val joined: Boolean = false,
     /** 안 읽은 글이 있나 — 든 모임에서만 뜻이 있다 */
@@ -595,16 +808,30 @@ data class GroupItem(
 const val groupBranchPlaceholder = "광주 상무"
 
 val groupPlaceholder = listOf(
-    GroupItem(1, GroupCategory.RUNNING, "아침 러닝 크루", "출근 전에 한 바퀴 돌고 가요", "매일 06:00", 24, joined = true, unread = true),
-    GroupItem(2, GroupCategory.WEIGHT, "스쿼트 100개 클럽", "하루 100개, 인증만 하면 끝", "매일 자유", 51, joined = true),
-    GroupItem(3, GroupCategory.CLASS, "필라테스 같이 들어요", "3인 이상 모이면 그룹 할인", "화·목 20:00", 12),
-    GroupItem(4, GroupCategory.SOCIAL, "운동 끝나고 한 잔", "단백질 쉐이크든 맥주든", "금 21:00", 37),
-    GroupItem(5, GroupCategory.DIET, "도시락 같이 싸요", "일요일에 한 주치 준비", "일 14:00", 19),
-    GroupItem(6, GroupCategory.OUTDOOR, "주말 등산", "무등산부터 시작해요", "토 07:00", 26),
-    GroupItem(7, GroupCategory.WEIGHT, "3대 500 가자", "스쿼트·벤치·데드 합계 올리기", "월·수·금 19:00", 33),
-    GroupItem(8, GroupCategory.CONTEST, "가을 바디 챌린지", "8주 뒤 인바디로 순위 가려요", "10월 1일 시작", 87),
-    GroupItem(9, GroupCategory.INFO, "보충제·장비 정보방", "뭐 살지 물어보는 곳", "아무 때나", 64),
-    GroupItem(10, GroupCategory.CLASS, "초보 요가", "처음 오신 분 환영해요", "일 10:00", 9),
+    GroupItem(1, GroupCategory.RUNNING, "아침 러닝 크루", "출근 전에 한 바퀴 돌고 가요", "매일 06:00", 24,
+        "서구 치평동", 10_483, recruiting = true, joined = true, unread = true),
+    GroupItem(2, GroupCategory.WEIGHT, "스쿼트 100개 클럽", "하루 100개, 인증만 하면 끝", "매일 자유", 51,
+        "서구 화정동", 4_280, joined = true),
+    GroupItem(3, GroupCategory.CLASS, "필라테스 같이 들어요", "3인 이상 모이면 그룹 할인", "화·목 20:00", 12,
+        "서구 농성동", 4_148, recruiting = true),
+    GroupItem(4, GroupCategory.SOCIAL, "운동 끝나고 한 잔", "단백질 쉐이크든 맥주든", "금 21:00", 37,
+        "서구 치평동", 2_981),
+    GroupItem(5, GroupCategory.DIET, "도시락 같이 싸요", "일요일에 한 주치 준비", "일 14:00", 19,
+        "서구 쌍촌동", 2_543, recruiting = true),
+    GroupItem(6, GroupCategory.OUTDOOR, "주말 등산", "무등산부터 시작해요", "토 07:00", 26,
+        "북구 두암동", 1_592),
+    GroupItem(7, GroupCategory.WEIGHT, "3대 500 가자", "스쿼트·벤치·데드 합계 올리기", "월·수·금 19:00", 33,
+        "서구 화정동", 1_163),
+    GroupItem(8, GroupCategory.CONTEST, "가을 바디 챌린지", "8주 뒤 인바디로 순위 가려요", "10월 1일 시작", 87,
+        "서구 치평동", 985, recruiting = true),
+    GroupItem(9, GroupCategory.INFO, "보충제·장비 정보방", "뭐 살지 물어보는 곳", "아무 때나", 64,
+        "남구 봉선동", 742),
+    GroupItem(10, GroupCategory.CLASS, "초보 요가", "처음 오신 분 환영해요", "일 10:00", 9,
+        "서구 광천동", 613, recruiting = true, isNew = true),
+    GroupItem(11, GroupCategory.SOCIAL, "퇴근하고 볼링", "점수 못 내도 괜찮아요", "수 20:00", 0,
+        "서구 화정동", 480, recruiting = true, isNew = true),
+    GroupItem(12, GroupCategory.RUNNING, "동네방네 러닝", "혼자 뛰는 게 지루해진 분 환영", "화·목 20:00", 13,
+        "서구 화정동", 402, recruiting = true),
 )
 
 /** 가로 줄 — **든 모임이 앞**, 그다음이 추천이다 */
