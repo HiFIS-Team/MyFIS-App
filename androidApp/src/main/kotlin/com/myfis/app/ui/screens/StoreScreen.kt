@@ -15,6 +15,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -115,7 +116,7 @@ fun StoreScreen(
     LaunchedEffect(searching) { if (searching) focus.requestFocus() }
 
     // 덮개가 화면을 통째로 덮어야 하므로 세로로 쌓지 않고 **포갠다**
-    Box(Modifier.fillMaxSize().clipToBounds()) {
+    BoxWithConstraints(Modifier.fillMaxSize().clipToBounds()) {
     Column(Modifier.fillMaxSize()) {
         // **여기서 지운다.** 닫을 때 지우면 나가는 중인 필드에서 글자가 먼저 사라져
         // 판과 글씨가 따로 움직이는 것처럼 보인다 (2026-09-04)
@@ -145,48 +146,51 @@ fun StoreScreen(
         }
     }
 
-    // **한 판이 통째로 들어왔다 나간다** 🟢 (2026-09-04, 사용자 지정) —
-    // 장바구니·마이 같은 잎과 같은 움직임이다. 다만 **잎은 아니다**:
+    // **한 판이 통째로, 늘 여기 있고 자리만 옮긴다** 🟢 (2026-09-04, 사용자 지정).
+    //
+    // 장바구니·마이 같은 잎과 같은 움직임이다. 다만 **잎은 아니다** —
     // 검색 모드는 셸이 들고 있어야 상품을 열었다 돌아와도 남는다 (§6.9).
     //
-    // 덮개가 **자기 헤더를 들고 다닌다** — 헤더 줄과 본문을 다른 컨테이너에 두면
-    // 나갈 때 글씨가 늦게 따라 나간다 (2026-09-04 사용자 지적). 한 판에 담으면 맞출 것이 없다
-    androidx.compose.animation.AnimatedVisibility(
-        visible = searching,
-        enter = slideInHorizontally(MyFisMotion.base()) { it },
-        exit = slideOutHorizontally(MyFisMotion.base()) { it },
+    // 덮개가 **자기 헤더를 들고 다닌다.** 헤더 줄과 본문을 다른 컨테이너에 두면
+    // 나갈 때 글씨가 늦게 따라 나간다. 붙였다 떼도(`AnimatedVisibility`) **들어오는 순간에야
+    // 안쪽이 만들어져** 글씨가 판을 따라 들어온다 (2026-09-04 사용자 지적).
+    // 화면 밖에 세워 두면 안쪽이 **이미 그려져 있어** 판과 한 몸으로 움직인다
+    val offset by animateDpAsState(
+        if (searching) 0.dp else maxWidth,
+        MyFisMotion.base(),
+        label = "search",
+    )
+    Column(
+        Modifier
+            .fillMaxSize()
+            .offset(x = offset)
+            // 뒤를 덮어야 한다 — 비치면 두 화면이 겹쳐 읽힌다
+            .background(MyFisColor.BgBase),
     ) {
-        Column(
+        Row(
             Modifier
-                .fillMaxSize()
-                // 뒤를 덮어야 한다 — 비치면 두 화면이 겹쳐 읽힌다
-                .background(MyFisColor.BgBase),
+                .fillMaxWidth()
+                .height(MyFisSize.header)
+                .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(MyFisSize.header)
-                    .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                StoreSearchInput(
-                    query = query,
-                    onQuery = { query = it },
-                    focus = focus,
-                    modifier = Modifier.weight(1f).padding(end = MyFisSpacing.xs),
-                )
-                // 닫는 건 **판을 통째로 내보내는 것뿐**이다. 검색어는 다음에 열 때 지운다
-                HeaderIcon(R.drawable.ic_header_close, "검색 닫기") { onSearching(false) }
-            }
-
-            StoreSearchBody(
+            StoreSearchInput(
                 query = query,
                 onQuery = { query = it },
-                liked = liked.filterValues { it }.keys,
-                onLike = { id -> liked[id] = liked[id] != true },
-                onItem = onItem,
+                focus = focus,
+                modifier = Modifier.weight(1f).padding(end = MyFisSpacing.xs),
             )
+            // 닫는 건 **판을 통째로 내보내는 것뿐**이다. 검색어는 다음에 열 때 지운다
+            HeaderIcon(R.drawable.ic_header_close, "검색 닫기") { onSearching(false) }
         }
+
+        StoreSearchBody(
+            query = query,
+            onQuery = { query = it },
+            liked = liked.filterValues { it }.keys,
+            onLike = { id -> liked[id] = liked[id] != true },
+            onItem = onItem,
+        )
     }
     }
 }

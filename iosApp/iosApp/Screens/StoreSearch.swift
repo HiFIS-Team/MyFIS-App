@@ -15,6 +15,9 @@ import SwiftUI
 /// 포커스는 **자기가 잡는다** — 셸에 `@FocusState` 를 두면 내비 바 안까지 닿지 않는다 (확인함).
 struct StoreSearchInput: View {
     @Binding var text: String
+    /// **판이 지금 열려 있나.** 검색 판은 닫혀 있을 때도 화면 밖에 그대로 있어서(§6.9),
+    /// `onAppear` 로 포커스를 잡으면 **스토어를 열자마자 키보드가 올라온다**
+    var active: Bool = true
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -50,7 +53,8 @@ struct StoreSearchInput: View {
                 .accessibilityLabel("지우기")
             }
         }
-        .onAppear { focused = true }
+        .onAppear { focused = active }
+        .onChange(of: active) { _, now in focused = now }
     }
 }
 

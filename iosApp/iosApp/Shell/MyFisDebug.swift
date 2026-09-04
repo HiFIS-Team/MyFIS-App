@@ -20,7 +20,8 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_AUTOSEARCH=2             2초 뒤 스토어 검색을 스스로 연다 (전환 프레임 확인)
-/// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
+/// SIMCTL_CHILD_MYFIS_MOTION=15                우리 전환을 15배 느리게 (중간 프레임 확인)
+/// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               **창** 애니메이션만 0.1배 (잎 밀어넣기 등)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
 /// SIMCTL_CHILD_MYFIS_ACTIVITY=ladder          활동 랜딩(MYFIS_ROUTE=activity)에 띄울 활동
@@ -224,6 +225,9 @@ enum MyFisDebug {
     }
 
     /// 창 전체 애니메이션을 늦춘다. 전환 중간을 스크린샷으로 봐야 할 때만 쓴다.
+    ///
+    /// ⚠️ **`withAnimation` 은 안 늦는다** (2026-09-04 확인) — `layer.speed` 는 CoreAnimation 만 탄다.
+    /// 우리가 건 전환을 늦추려면 `MYFIS_MOTION`(§7 `MyFisMotion.scale`) 을 쓴다
     static func applySlowMotionIfNeeded() {
         #if DEBUG
         guard let value = env["MYFIS_SLOWMO"], let speed = Float(value) else { return }

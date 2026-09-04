@@ -69,7 +69,7 @@ struct StoreScreen: View {
     private var searchOverlay: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                StoreSearchInput(text: $query)
+                StoreSearchInput(text: $query, active: searching)
                     .padding(.trailing, MyFisSpacing.xs)
                 HeaderIcon("ic_header_close", "검색 닫기", action: closeSearch)
             }
@@ -84,6 +84,7 @@ struct StoreScreen: View {
                 onItem: onItem
             )
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         // 뒤를 덮어야 한다 — 비치면 두 화면이 겹쳐 읽힌다
         .background(MyFisColor.bgBase)
     }
@@ -107,22 +108,27 @@ struct StoreScreen: View {
     }
 
     var body: some View {
-        ZStack {
-            VStack(spacing: 0) {
-                header
-                home
-            }
+        GeometryReader { geo in
+            ZStack(alignment: .top) {
+                VStack(spacing: 0) {
+                    header
+                    home
+                }
 
-            // **한 판이 통째로 들어왔다 나간다** 🟢 (2026-09-04, 사용자 지정) —
-            // 장바구니·마이 같은 잎과 같은 움직임이다. 다만 **잎은 아니다**:
-            // 검색 모드는 셸이 들고 있어야 상품을 열었다 돌아와도 남는다 (§6.9)
-            if searching {
+                // **판은 늘 여기 있다. 자리만 옮긴다** 🟢 (2026-09-04, 사용자 지정).
+                //
+                // `transition` 으로 붙였다 떼면 **들어오는 순간에야 안쪽이 만들어진다** —
+                // 특히 `TextField` 는 UIKit 뷰라 뒤늦게 그려져서
+                // **판은 들어왔는데 글씨가 따라 들어오는 것처럼** 보인다 (2026-09-04 사용자 지적).
+                // 화면 밖에 세워 두면 안쪽이 **이미 그려져 있어** 판과 같이 움직인다
                 searchOverlay
-                    .transition(.move(edge: .trailing))
+                    .offset(x: searching ? 0 : geo.size.width)
+                    // 밖에 서 있는 동안에는 없는 셈 쳐야 한다 — 보이스오버가 읽으면 안 된다
+                    .accessibilityHidden(!searching)
             }
+            .frame(width: geo.size.width, height: geo.size.height, alignment: .top)
+            .clipped()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .clipped()
         .task { MyFisDebug.scheduleAutoSearch(openSearch) }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }

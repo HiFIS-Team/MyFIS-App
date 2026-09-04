@@ -67,9 +67,22 @@ enum MyFisSize {
 /// 화면 전환(`slow`)은 **안드로이드 `pushSpec` 과 같은 값**이다 (320ms).
 enum MyFisMotion {
     /// 눌림, 토글, 체크
-    static let fast = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.12)
+    static let fast = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.12 * scale)
     /// 카드 확장, 페이드
-    static let base = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.20)
+    static let base = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.20 * scale)
     /// 바텀시트, 화면 전환
-    static let slow = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.32)
+    static let slow = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.32 * scale)
+
+    /// 전환을 늦춰 **중간 프레임**을 본다 — `SIMCTL_CHILD_MYFIS_MOTION=15` (디버그 빌드 전용).
+    ///
+    /// ⚠️ `MYFIS_SLOWMO` 로는 안 된다 (2026-09-04 확인) — 그건 `window.layer.speed` 라
+    /// **창 전환(CoreAnimation)만** 늦춘다. SwiftUI 의 `withAnimation` 값 애니메이션은
+    /// 제 타이머로 돌아서 영향을 안 받는다
+    private static var scale: Double {
+        #if DEBUG
+        ProcessInfo.processInfo.environment["MYFIS_MOTION"].flatMap(Double.init) ?? 1
+        #else
+        1
+        #endif
+    }
 }
