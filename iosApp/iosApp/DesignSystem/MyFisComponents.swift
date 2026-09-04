@@ -127,6 +127,12 @@ struct MyFisCard<Content: View>: View {
     var radius: CGFloat = MyFisRadius.md
     /// 흰 바탕 화면(혜택·활동, §9 이탈 #1)에서는 면을 밝은 쪽으로 바꾼다
     var light: Bool = false
+    /// **줄 두 개짜리 작은 카드**는 안쪽 여백을 `12` 로 줄인다 🟢 (2026-09-04, §6.2).
+    ///
+    /// 새 카드 종류가 아니라 **같은 카드의 좁은 판**이다 — 면·라운딩·테두리는 그대로다.
+    /// 웨이트의 조건 두 칸(§6.33)처럼 라벨 한 줄 + 값 한 줄뿐인 카드는
+    /// `16` 여백이면 글자보다 빈칸이 더 커 보인다
+    var compact: Bool = false
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -134,7 +140,7 @@ struct MyFisCard<Content: View>: View {
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(MyFisSpacing.cardPadding)
+        .padding(compact ? MyFisSpacing.md : MyFisSpacing.cardPadding)
         .background(light ? MyFisColor.lightSurface1 : MyFisColor.surface1)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
     }

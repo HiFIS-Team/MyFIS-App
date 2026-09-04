@@ -1,5 +1,6 @@
 package com.myfis.app.ui.screens
 
+import androidx.annotation.DrawableRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.shell.LocalTabBarInset
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisIconTile
@@ -142,6 +144,8 @@ fun WeightScreen() {
     var weekOpen by rememberSaveable { mutableStateOf(false) }
     var warmupOpen by rememberSaveable { mutableStateOf(false) }
     var reordering by rememberSaveable { mutableStateOf(false) }
+    // 떠 있는 탭 바가 덮는 만큼 스스로 비운다 (§6.7)
+    val tabBar = LocalTabBarInset.current
     var minutes by rememberSaveable { mutableStateOf(60) }
     var condition by rememberSaveable { mutableStateOf(100) }
 
@@ -155,7 +159,7 @@ fun WeightScreen() {
                     .padding(horizontal = MyFisSpacing.screenHorizontal)
                     .padding(top = MyFisSpacing.sm)
                     // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다 (§6.28 과 같은 값)
-                    .padding(bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl),
+                    .padding(bottom = MyFisSize.buttonSecondary + MyFisSpacing.xxxl + tabBar),
             ) {
                 // ⚠️ 높이만 움직이면 안 된다 — 내용이 먼저 사라지고 빈칸이 늦게 닫혀
                 // 아래 줄이 뒤늦게 따라오는 것처럼 보인다 (§6.11 에서 같은 걸 겪었다)
@@ -214,7 +218,7 @@ fun WeightScreen() {
                 pill = true,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md),
+                    .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md + tabBar),
             )
             // TODO(W-04): `운동 시작` 이 세션으로 넘어간다
         }
@@ -342,9 +346,9 @@ private fun WeekCell(day: RoutineDay, modifier: Modifier = Modifier) {
 /**
  * 오늘의 조건 두 칸 — 고치면 **분량이 다시 짜인다**.
  *
- * 원본은 칸마다 아이콘을 달았지만 우리는 **글자만 둔다** —
- * `시계`·`번개` 는 28px 에서 다른 뜻으로 읽히기 쉬운 그림이고(§8),
- * 두 글자짜리 라벨이 이미 충분히 짧다.
+ * 원본처럼 **아이콘을 붙였다** 🟢 (2026-09-04, 사용자 지정) — 시계·번개 둘 다
+ * 실루엣 하나로 알아볼 수 있는 그림이라 §8 규칙 안이다.
+ * 카드는 `compact` 라 안쪽 여백이 `12` 다 — 줄이 둘뿐인 카드에 `16` 은 빈칸이 더 커 보인다
  */
 @Composable
 private fun ConditionRow(
@@ -355,14 +359,21 @@ private fun ConditionRow(
     modifier: Modifier = Modifier,
 ) {
     Row(modifier, horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap)) {
-        SelectorCard("운동 시간", minutes, routineMinuteOptions, { "${it}분" }, onMinutes, Modifier.weight(1f))
-        SelectorCard("컨디션", condition, routineConditionOptions, { "${it}%" }, onCondition, Modifier.weight(1f))
+        SelectorCard(
+            R.drawable.ic_time, "운동 시간", minutes, routineMinuteOptions,
+            { "${it}분" }, onMinutes, Modifier.weight(1f),
+        )
+        SelectorCard(
+            R.drawable.ic_condition, "컨디션", condition, routineConditionOptions,
+            { "${it}%" }, onCondition, Modifier.weight(1f),
+        )
     }
 }
 
 /** 라벨 위 · 값 아래 — 숫자 카드(§6.3)와 같은 읽는 순서다. 누르면 목록이 뜬다 */
 @Composable
 private fun SelectorCard(
+    @DrawableRes icon: Int,
     label: String,
     value: Int,
     options: List<Int>,
@@ -374,10 +385,21 @@ private fun SelectorCard(
     val interaction = remember { MutableInteractionSource() }
 
     Box(modifier) {
-        MyFisCard(Modifier.tapWithHaptics(interaction) { open = true }) {
-            Text(label, style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+        MyFisCard(Modifier.tapWithHaptics(interaction) { open = true }, compact = true) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(top = MyFisSpacing.xs),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+            ) {
+                Icon(
+                    painter = painterResource(icon),
+                    contentDescription = null,
+                    tint = MyFisColor.TextSecondary,
+                    modifier = Modifier.size(16.dp),
+                )
+                Text(label, style = MyFisTheme.type.label, color = MyFisColor.TextSecondary)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(format(value), style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)

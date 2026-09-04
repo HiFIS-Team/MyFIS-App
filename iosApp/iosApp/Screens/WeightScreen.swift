@@ -189,15 +189,17 @@ struct WeightScreen: View {
 
     /// 오늘의 조건 두 칸 — 고치면 **분량이 다시 짜인다**.
     ///
-    /// 원본은 칸마다 아이콘을 달았지만 우리는 **글자만 둔다** —
-    /// `시계`·`번개` 는 28px 에서 다른 뜻으로 읽히기 쉬운 그림이고(§8),
-    /// 두 글자짜리 라벨이 이미 충분히 짧다.
+    /// 원본처럼 **아이콘을 붙였다** 🟢 (2026-09-04, 사용자 지정) — 시계·번개 둘 다
+    /// 실루엣 하나로 알아볼 수 있는 그림이라 §8 규칙 안이다.
+    /// 카드는 `compact` 라 안쪽 여백이 `12` 다 — 줄이 둘뿐인 카드에 `16` 은 빈칸이 더 커 보인다
     private var conditionRow: some View {
         HStack(spacing: MyFisSpacing.cardGap) {
-            SelectorCard(label: "운동 시간", options: RoutinePlaceholder.minuteOptions,
+            SelectorCard(icon: "ic_time", label: "운동 시간",
+                         options: RoutinePlaceholder.minuteOptions,
                          format: { "\($0)분" }, value: $minutes,
                          debugOpen: MyFisDebug.weightPickerOpen)
-            SelectorCard(label: "컨디션", options: RoutinePlaceholder.conditionOptions,
+            SelectorCard(icon: "ic_condition", label: "컨디션",
+                         options: RoutinePlaceholder.conditionOptions,
                          format: { "\($0)%" }, value: $condition)
         }
     }
@@ -330,6 +332,7 @@ private struct WeekStrip: View {
 
 /// 라벨 위 · 값 아래 — 숫자 카드(§6.3)와 같은 읽는 순서다. 누르면 목록이 뜬다
 private struct SelectorCard: View {
+    let icon: String
     let label: String
     let options: [Int]
     let format: (Int) -> String
@@ -341,10 +344,17 @@ private struct SelectorCard: View {
 
     var body: some View {
         Button { open = true } label: {
-            MyFisCard {
-                Text(label)
-                    .font(MyFisFont.label)
-                    .foregroundStyle(MyFisColor.textSecondary)
+            MyFisCard(compact: true) {
+                HStack(spacing: MyFisSpacing.xs) {
+                    Image(icon)
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 16, height: 16)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                    Text(label)
+                        .font(MyFisFont.label)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                }
 
                 HStack(spacing: MyFisSpacing.sm) {
                     Text(format(value))
@@ -353,7 +363,6 @@ private struct SelectorCard: View {
                     Spacer(minLength: 0)
                     Chevron(degrees: 0, size: 18)
                 }
-                .padding(.top, MyFisSpacing.xs)
             }
         }
         .buttonStyle(.myFisTap)
