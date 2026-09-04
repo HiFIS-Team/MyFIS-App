@@ -76,8 +76,11 @@ fun MyFisSecondaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     /**
-     * **Primary 와 나란히 설 때 켠다** 🟢 (2026-09-04) — 높이를 `buttonPrimary`(52) 로 맞춘다.
-     * 44 와 52 가 한 줄에 서면 둘이 다른 종류의 버튼처럼 보인다 (§6.32 모임 소개에서 드러났다)
+     * **Primary 와 나란히 설 때 켠다** 🟢 (2026-09-04) — 높이를 `buttonPrimary`(52) 로,
+     * **글꼴도 `title.sm` 로** Primary 와 같이 맞춘다.
+     *
+     * 44/52 든 `body.sm`/`title.sm` 이든, 한 줄에 선 두 버튼이 어느 하나라도 다르면
+     * **둘이 다른 종류의 버튼처럼** 보인다 (§6.32 모임 소개에서 두 번 다 드러났다)
      */
     tall: Boolean = false,
 ) {
@@ -92,7 +95,7 @@ fun MyFisSecondaryButton(
             contentColor = MyFisColor.TextPrimary,
         ),
     ) {
-        Text(text = text, style = MyFisTheme.type.bodySm)
+        Text(text = text, style = if (tall) MyFisTheme.type.titleSm else MyFisTheme.type.bodySm)
     }
 }
 
