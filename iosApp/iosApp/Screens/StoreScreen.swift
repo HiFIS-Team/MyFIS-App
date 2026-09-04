@@ -96,18 +96,30 @@ struct StoreScreen: View {
         VStack(spacing: 0) {
             header
 
-            if searching {
-                StoreSearchResults(
-                    query: $query,
-                    balance: StorePlaceholder.balance,
-                    liked: liked,
-                    onLike: toggleLike,
-                    onItem: onItem
-                )
-            } else {
+            // **헤더 줄과 본문이 같이 들어온다** 🟢 (2026-09-04, 사용자 지정).
+            //
+            // 전에는 헤더만 밀려 들어오고 본문은 제자리에서 갈렸다 — 같은 순간에 **다른 움직임**이
+            // 둘이라 검색이 **두 조각으로 들어오는 것처럼** 보였다.
+            // 본문도 같은 쪽에서 같은 곡선·같은 길이로 밀어 넣으면 **한 장**으로 읽힌다.
+            // 그러려면 세로로 쌓지 말고 **덮어야** 한다 — 아래를 밀어내면 그건 또 다른 움직임이다
+            ZStack {
                 home
+
+                if searching {
+                    StoreSearchResults(
+                        query: $query,
+                        balance: StorePlaceholder.balance,
+                        liked: liked,
+                        onLike: toggleLike,
+                        onItem: onItem
+                    )
+                    .background(MyFisColor.bgBase)
+                    .transition(.move(edge: .trailing))
+                }
             }
+            .clipped()
         }
+        .task { MyFisDebug.scheduleAutoSearch(openSearch) }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 

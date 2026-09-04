@@ -130,32 +130,44 @@ fun StoreScreen(
             onMy = onMy,
         )
 
-        if (searching) {
-            StoreSearchBody(
-                query = query,
-                onQuery = { query = it },
-                liked = liked.filterValues { it }.keys,
-                onLike = { id -> liked[id] = liked[id] != true },
-                onItem = onItem,
-            )
-            return@Column
-        }
-
-
-        LazyColumn(contentPadding = PaddingValues(bottom = MyFisSpacing.xxxl)) {
-            item { BannerCarousel(storeBannerPlaceholder) }
-            // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
-            stickyHeader {
-                CategoryFilter(selected = category, onSelect = { category = it })
+        // **헤더 줄과 본문이 같이 들어온다** 🟢 (2026-09-04, 사용자 지정).
+        //
+        // 전에는 헤더만 밀려 들어오고 본문은 제자리에서 갈렸다 — 같은 순간에 **다른 움직임**이
+        // 둘이라 검색이 **두 조각으로 들어오는 것처럼** 보였다.
+        // 본문도 같은 쪽에서 같은 곡선·같은 길이로 밀어 넣으면 **한 장**으로 읽힌다.
+        // 그러려면 세로로 쌓지 말고 **덮어야** 한다 — 아래를 밀어내면 그건 또 다른 움직임이다
+        Box(Modifier.weight(1f).clipToBounds()) {
+            LazyColumn(contentPadding = PaddingValues(bottom = MyFisSpacing.xxxl)) {
+                item { BannerCarousel(storeBannerPlaceholder) }
+                // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
+                stickyHeader {
+                    CategoryFilter(selected = category, onSelect = { category = it })
+                }
+                items(items.chunked(2)) { row ->
+                    ItemRow(
+                        row = row,
+                        balance = mileageBalancePlaceholder,
+                        liked = liked,
+                        onLike = { id -> liked[id] = liked[id] != true },
+                        onItem = onItem,
+                    )
+                }
             }
-            items(items.chunked(2)) { row ->
-                ItemRow(
-                    row = row,
-                    balance = mileageBalancePlaceholder,
-                    liked = liked,
-                    onLike = { id -> liked[id] = liked[id] != true },
-                    onItem = onItem,
-                )
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = searching,
+                enter = slideInHorizontally(MyFisMotion.base()) { it },
+                exit = slideOutHorizontally(MyFisMotion.base()) { it },
+            ) {
+                Box(Modifier.fillMaxSize().background(MyFisColor.BgBase)) {
+                    StoreSearchBody(
+                        query = query,
+                        onQuery = { query = it },
+                        liked = liked.filterValues { it }.keys,
+                        onLike = { id -> liked[id] = liked[id] != true },
+                        onItem = onItem,
+                    )
+                }
             }
         }
     }

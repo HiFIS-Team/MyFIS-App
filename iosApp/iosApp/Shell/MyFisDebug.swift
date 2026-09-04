@@ -19,6 +19,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_GROUP_SORT=popular       모임 목록 칩 (popular · rising · thisWeek)
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
+/// SIMCTL_CHILD_MYFIS_AUTOSEARCH=2             2초 뒤 스토어 검색을 스스로 연다 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
 /// SIMCTL_CHILD_MYFIS_AUTOPOP=6                연 뒤 6초 뒤에 되돌아온다
@@ -209,6 +210,16 @@ enum MyFisDebug {
         env["MYFIS_SEARCH"] ?? ""
         #else
         ""
+        #endif
+    }
+
+    /// 스스로 검색을 연다 — `SIMCTL_CHILD_MYFIS_AUTOSEARCH=2`.
+    /// 시뮬레이터에는 아이콘을 누를 수단이 없어 **들어오는 중간 프레임**을 볼 방법이 이것뿐이다.
+    /// `MYFIS_SLOWMO` 와 같이 쓴다
+    static func scheduleAutoSearch(_ open: @escaping () -> Void) {
+        #if DEBUG
+        guard let delay = env["MYFIS_AUTOSEARCH"].flatMap(Double.init) else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: open)
         #endif
     }
 
