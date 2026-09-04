@@ -37,7 +37,6 @@ import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.BranchScreen
 import com.myfis.app.ui.screens.CardioScreen
 import com.myfis.app.ui.screens.HomeScreen
-import com.myfis.app.ui.screens.MyScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.screens.StoreCartScreen
 import com.myfis.app.ui.screens.StoreItem
@@ -93,7 +92,6 @@ fun AppShell() {
                 onStoreSearching = { storeSearching = it },
                 onWeightLog = { nav.navigateOnce(Route.WEIGHT_LOG) },
                 onGroupCreate = { nav.navigateOnce(Route.GROUP_CREATE) },
-                onSettings = { nav.navigateOnce(Route.SETTINGS) },
                 onActivity = {
                     // 물 마시기는 **때가 정해진 미션**이라 랜딩을 거치지 않는다 (§6.25, 체중과 같은 처리)
                     if (it.kind == BenefitKind.WATER) {
@@ -138,10 +136,6 @@ fun AppShell() {
                 onSearchRegion = { nav.navigateOnce(Route.GROUP_REGION) },
                 onNext = { _, _, _ -> nav.navigateOnce(Route.GROUP_INTRO) },
             )
-        }
-        composable(Route.SETTINGS) {
-            // TODO(Y-03): 알림 · 공개 범위 · 계정 · 정보 네 무리가 들어온다
-            PlaceholderScreen("Y-03", "설정", "알림 · 공개 범위 · 계정 · 약관")
         }
         composable(Route.GROUP_INTRO) {
             // TODO(서버): `모임 만들기` 가 실제로 모임을 만든다. 지금은 셸로 돌아간다
@@ -207,7 +201,6 @@ private fun TabShell(
     onStoreSearching: (Boolean) -> Unit,
     onWeightLog: () -> Unit,
     onGroupCreate: () -> Unit,
-    onSettings: () -> Unit,
     onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
@@ -255,7 +248,6 @@ private fun TabShell(
                     storeSearching = storeSearching,
                     onStoreSearching = onStoreSearching,
                     onWeightLog = onWeightLog,
-                    onSettings = onSettings,
                     onActivity = onActivity,
                     onStoreItem = onStoreItem,
                     // 홈의 유산소 바로가기 — 세트를 바꾸고 유산소로 바로 들어간다
@@ -317,7 +309,6 @@ private fun BaseTabContent(
     storeSearching: Boolean,
     onStoreSearching: (Boolean) -> Unit,
     onWeightLog: () -> Unit,
-    onSettings: () -> Unit,
     onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
     onCardio: () -> Unit,
@@ -352,7 +343,7 @@ private fun BaseTabContent(
             onCart = onStoreCart,
             onItem = onStoreItem,
         )
-        BaseTab.MY -> MyScreen(onSettings = onSettings)
+        BaseTab.MY -> PlaceholderScreen("Y-01", "마이", "프로필 · 기록 · 설정")
         // 통로라 여기 도달하지 않는다
         BaseTab.WEIGHT -> Unit
     }

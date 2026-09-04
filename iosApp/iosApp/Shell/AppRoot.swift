@@ -160,9 +160,6 @@ struct AppRoot: View {
                                   region: $groupRegion)
             case .groupRegion:
                 RegionSearchScreen(onBack: back, onPick: { groupRegion = $0; back() })
-            case .settings:
-                // TODO(Y-03): 알림 · 공개 범위 · 계정 · 정보 네 무리가 들어온다
-                PlaceholderScreen(id: "Y-03", title: "설정", description: "알림 · 공개 범위 · 계정 · 약관")
             case .groupIntro:
                 // TODO(서버): `모임 만들기` 가 실제로 모임을 만든다. 지금은 셸로 돌아간다
                 GroupIntroScreen(onClose: { back(); back() }, onBack: back,

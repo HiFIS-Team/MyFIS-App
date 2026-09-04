@@ -17,7 +17,6 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_WEIGHT=warmup            웨이트 탭 상태 (week 요일 띠 · warmup 웜업 펼침 · reorder 순서 모드 · picker 고르는 목록)
 /// SIMCTL_CHILD_MYFIS_GROUP_CREATE=filled      모임 개설(G-03)을 채운 채로 (filled · expanded · region)
 /// SIMCTL_CHILD_MYFIS_GROUP_AI=on              모임 소개(G-03 2단계)의 AI 도움받기를 켠 채로
-/// SIMCTL_CHILD_MYFIS_MY=expiring            마이(Y-01) 회원권을 만료 임박으로 (기본 42일)
 /// SIMCTL_CHILD_MYFIS_GROUP_SORT=popular       모임 목록 칩 (popular · rising · thisWeek · order 차례 목록 펼침)
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
@@ -105,16 +104,6 @@ enum MyFisDebug {
         env["MYFIS_WEIGHT"] == "picker"
         #else
         false
-        #endif
-    }
-
-    /// 마이(Y-01) 회원권 남은 날 — `SIMCTL_CHILD_MYFIS_MY=expiring`.
-    /// 만료 경고 줄은 임박했을 때만 뜨는데 시뮬레이터에서 날짜를 못 바꾼다
-    static var myDaysLeft: Int {
-        #if DEBUG
-        env["MYFIS_MY"] == "expiring" ? 5 : MyPlaceholder.daysLeft
-        #else
-        MyPlaceholder.daysLeft
         #endif
     }
 
