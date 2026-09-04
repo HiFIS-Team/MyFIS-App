@@ -451,7 +451,10 @@ data class CardioMission(
     val tab: CardioMissionTab,
     val icon: Int,
     val title: String,
-    /** `0.03Km / 1Km` 처럼 **얼마나 남았는지**를 그대로 적는다 */
+    /**
+     * `0.4 / 2km` 처럼 **얼마나 남았는지**를 적는다.
+     * 단위는 **목표 쪽에 한 번만** 붙인다 — 3열 칸에서 양쪽에 다 붙이면 잘린다 (2026-09-04)
+     */
     val progress: String,
     val ratio: Float,
 )
@@ -478,46 +481,68 @@ enum class CardioTier(val label: String, val badge: Int) {
 /** 🔵 무엇으로 등급이 오르는지는 아직 안 정했다 — 값만 자리를 잡아 둔 것이다 */
 val cardioTierPlaceholder = CardioTier.SILVER
 
+/**
+ * 갈래마다 **앞세우는 지표를 다르게 둔다** 🟢 (2026-09-04).
+ *
+ * 전에는 셋 다 km 였다 — 일간 3km · 주간 5km · 월간 30km. 갈래를 바꿔도 새로운 게 없고,
+ * 숫자도 서로 안 맞았다(하루 3km 면 주간 5km 는 이틀이면 끝난다).
+ *
+ * | 갈래 | 답하는 질문 | 앞세우는 지표 |
+ * |------|------------|--------------|
+ * | 일간 | 오늘 이거 하나만 | **시간** — 거리로 재면 사이클·계단이 손해다 |
+ * | 주간 | 빠지지 않았나 | **일수** — 하루 못 해도 만회된다 |
+ * | 월간 | 지난달보다 나아졌나 | **누적 거리** |
+ *
+ * 갈래마다 **세 칸 고정**이다. 넷이면 두 줄이 되어 갈래를 바꿀 때 화면 높이가 흔들린다.
+ * ⚠️ 제목은 **한 줄이다.** 3열이라 글자 예산이 한글 여섯 자쯤뿐이다 — 넘기면 `…` 로 잘린다.
+ * 같은 지표는 같은 아이콘을 쓴다 — 칸을 안 읽어도 무엇을 재는지 보인다.
+ *
+ * **뺀 것들**: `오늘 출석`(혜택 P-01 과 중복) · `기록 남기기`(C-03 이 자동으로 남긴다) ·
+ * `랭킹 100위`(**남이 안 뛰어야 끝나는 미션이다.** 랭킹은 R-01 이 따로 있고 서버에도 없다) ·
+ * `계단 10분`(그 기구가 차 있으면 못 한다 → `기구 두 대`로 바꿨다)
+ */
 val cardioMissionPlaceholder = listOf(
-    // 일간 — 하루 안에 끝나는 것. `첫 ~` 은 처음 한 번뿐이라 여기 못 온다
+    // 일간 — 오늘 안에 끝난다. 문턱을 낮게 둔다
     CardioMission(
         CardioMissionTab.DAILY, R.drawable.ic_place_cardio,
-        "오늘 3km", "0.4Km / 3Km", 0.13f,
+        "20분 채우기", "0 / 20분", 0f,
     ),
+    CardioMission(
+        CardioMissionTab.DAILY, R.drawable.ic_tab_cardio,
+        "2km 채우기", "0.4 / 2km", 0.2f,
+    ),
+    // 한 기구만 붙잡고 있지 말라는 유도다
     CardioMission(
         CardioMissionTab.DAILY, R.drawable.ic_place_machine,
-        "계단 10분", "0분 / 10분", 0f,
+        "기구 2대 타기", "1 / 2대", 0.5f,
+    ),
+
+    // 주간 — 며칠 나왔나. 일간 목표에서 그대로 곱해 나온 수다
+    CardioMission(
+        CardioMissionTab.WEEKLY, R.drawable.ic_quest_attend,
+        "3일 나오기", "2 / 3일", 0.66f,
     ),
     CardioMission(
-        CardioMissionTab.DAILY, R.drawable.ic_quest_attend,
-        "오늘 출석", "1일 / 1일", 1f,
-    ),
-    CardioMission(
-        CardioMissionTab.DAILY, R.drawable.ic_quest_board,
-        "기록 남기기", "0회 / 1회", 0f,
+        CardioMissionTab.WEEKLY, R.drawable.ic_place_cardio,
+        "100분 채우기", "40 / 100분", 0.4f,
     ),
     CardioMission(
         CardioMissionTab.WEEKLY, R.drawable.ic_tab_cardio,
-        "이번 주 5km", "3.2Km / 5Km", 0.64f,
+        "이번 주 15km", "3.2 / 15km", 0.21f,
     ),
-    CardioMission(
-        CardioMissionTab.WEEKLY, R.drawable.ic_quest_attend,
-        "3일 나오기", "2일 / 3일", 0.66f,
-    ),
-    CardioMission(
-        CardioMissionTab.WEEKLY, R.drawable.ic_place_machine,
-        "계단 20분", "0분 / 20분", 0f,
-    ),
+
+    // 월간 — 누적과 성장. 주간 목표 × 4 다
     CardioMission(
         CardioMissionTab.MONTHLY, R.drawable.ic_tab_cardio,
-        "이번 달 30km", "12.4Km / 30Km", 0.41f,
+        "이번 달 60km", "12.4 / 60km", 0.21f,
     ),
     CardioMission(
         CardioMissionTab.MONTHLY, R.drawable.ic_quest_attend,
-        "12일 채우기", "5일 / 12일", 0.42f,
+        "12일 나오기", "5 / 12일", 0.42f,
     ),
+    // **남이 아니라 나와 견준다** — 누구나 끝낼 수 있고 목표가 매달 저절로 갱신된다
     CardioMission(
-        CardioMissionTab.MONTHLY, R.drawable.ic_tab_ranking,
-        "랭킹 100위", "142위 / 100위", 0.7f,
+        CardioMissionTab.MONTHLY, R.drawable.ic_quest_board,
+        "기록 깨기", "12.4 / 48km", 0.26f,
     ),
 )

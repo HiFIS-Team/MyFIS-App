@@ -15,7 +15,7 @@ struct CardioScreen: View {
     var onStore: () -> Void = {}
     // TODO(C-03): 태그를 읽으면 `운동 중` 으로 넘긴다. 지금은 시스템 시트에서 끝난다
 
-    @State private var tab: CardioMissionTab = .daily
+    @State private var tab: CardioMissionTab = MyFisDebug.initialCardioTab
 
     var body: some View {
         VStack(spacing: 0) {
@@ -412,7 +412,8 @@ struct CardioMission: Identifiable {
     let tab: CardioMissionTab
     let icon: String
     let title: String
-    /// `0.4Km / 1Km` 처럼 **얼마나 남았는지**를 그대로 적는다
+    /// `0.4 / 2km` 처럼 **얼마나 남았는지**를 적는다.
+    /// 단위는 **목표 쪽에 한 번만** 붙인다 — 3열 칸에서 양쪽에 다 붙이면 잘린다 (2026-09-04)
     let progress: String
     let ratio: Double
 }
@@ -424,26 +425,49 @@ enum CardioPlaceholder {
     /// 🔵 무엇으로 등급이 오르는지는 아직 안 정했다 — 값만 자리를 잡아 둔 것이다
     static let tier = CardioTier.silver
 
+    /// 갈래마다 **앞세우는 지표를 다르게 둔다** 🟢 (2026-09-04).
+    ///
+    /// 전에는 셋 다 km 였다 — 일간 3km · 주간 5km · 월간 30km. 갈래를 바꿔도 새로운 게 없고,
+    /// 숫자도 서로 안 맞았다(하루 3km 면 주간 5km 는 이틀이면 끝난다).
+    ///
+    /// | 갈래 | 답하는 질문 | 앞세우는 지표 |
+    /// |------|------------|--------------|
+    /// | 일간 | 오늘 이거 하나만 | **시간** — 거리로 재면 사이클·계단이 손해다 |
+    /// | 주간 | 빠지지 않았나 | **일수** — 하루 못 해도 만회된다 |
+    /// | 월간 | 지난달보다 나아졌나 | **누적 거리** |
+    ///
+    /// 갈래마다 **세 칸 고정**이다. 넷이면 두 줄이 되어 갈래를 바꿀 때 화면 높이가 흔들린다.
+    /// ⚠️ 제목은 **한 줄이다.** 3열이라 글자 예산이 한글 여섯 자쯤뿐이다 — 넘기면 `…` 로 잘린다.
+    /// 같은 지표는 같은 아이콘을 쓴다 — 칸을 안 읽어도 무엇을 재는지 보인다.
+    ///
+    /// **뺀 것들**: `오늘 출석`(혜택 P-01 과 중복) · `기록 남기기`(C-03 이 자동으로 남긴다) ·
+    /// `랭킹 100위`(**남이 안 뛰어야 끝나는 미션이다.** 랭킹은 R-01 이 따로 있고 서버에도 없다) ·
+    /// `계단 10분`(그 기구가 차 있으면 못 한다 → `기구 두 대`로 바꿨다)
     static let missions: [CardioMission] = [
+        // 일간 — 오늘 안에 끝난다. 문턱을 낮게 둔다
         .init(id: 1, tab: .daily, icon: "ic_place_cardio",
-              title: "오늘 3km", progress: "0.4Km / 3Km", ratio: 0.13),
-        .init(id: 2, tab: .daily, icon: "ic_place_machine",
-              title: "계단 10분", progress: "0분 / 10분", ratio: 0),
-        .init(id: 3, tab: .daily, icon: "ic_quest_attend",
-              title: "오늘 출석", progress: "1일 / 1일", ratio: 1),
-        .init(id: 4, tab: .daily, icon: "ic_quest_board",
-              title: "기록 남기기", progress: "0회 / 1회", ratio: 0),
-        .init(id: 5, tab: .monthly, icon: "ic_tab_cardio",
-              title: "이번 달 30km", progress: "12.4Km / 30Km", ratio: 0.41),
-        .init(id: 6, tab: .monthly, icon: "ic_quest_attend",
-              title: "12일 채우기", progress: "5일 / 12일", ratio: 0.42),
-        .init(id: 7, tab: .monthly, icon: "ic_tab_ranking",
-              title: "랭킹 100위", progress: "142위 / 100위", ratio: 0.7),
-        .init(id: 8, tab: .weekly, icon: "ic_tab_cardio",
-              title: "이번 주 5km", progress: "3.2Km / 5Km", ratio: 0.64),
-        .init(id: 9, tab: .weekly, icon: "ic_quest_attend",
-              title: "3일 나오기", progress: "2일 / 3일", ratio: 0.66),
-        .init(id: 10, tab: .weekly, icon: "ic_place_machine",
-              title: "계단 20분", progress: "0분 / 20분", ratio: 0),
+              title: "20분 채우기", progress: "0 / 20분", ratio: 0),
+        .init(id: 2, tab: .daily, icon: "ic_tab_cardio",
+              title: "2km 채우기", progress: "0.4 / 2km", ratio: 0.2),
+        // 한 기구만 붙잡고 있지 말라는 유도다
+        .init(id: 3, tab: .daily, icon: "ic_place_machine",
+              title: "기구 2대 타기", progress: "1 / 2대", ratio: 0.5),
+
+        // 주간 — 며칠 나왔나. 일간 목표에서 그대로 곱해 나온 수다
+        .init(id: 4, tab: .weekly, icon: "ic_quest_attend",
+              title: "3일 나오기", progress: "2 / 3일", ratio: 0.66),
+        .init(id: 5, tab: .weekly, icon: "ic_place_cardio",
+              title: "100분 채우기", progress: "40 / 100분", ratio: 0.4),
+        .init(id: 6, tab: .weekly, icon: "ic_tab_cardio",
+              title: "이번 주 15km", progress: "3.2 / 15km", ratio: 0.21),
+
+        // 월간 — 누적과 성장. 주간 목표 × 4 다
+        .init(id: 7, tab: .monthly, icon: "ic_tab_cardio",
+              title: "이번 달 60km", progress: "12.4 / 60km", ratio: 0.21),
+        .init(id: 8, tab: .monthly, icon: "ic_quest_attend",
+              title: "12일 나오기", progress: "5 / 12일", ratio: 0.42),
+        // **남이 아니라 나와 견준다** — 누구나 끝낼 수 있고 목표가 매달 저절로 갱신된다
+        .init(id: 9, tab: .monthly, icon: "ic_quest_board",
+              title: "기록 깨기", progress: "12.4 / 48km", ratio: 0.26),
     ]
 }
