@@ -46,34 +46,46 @@ struct StoreScreen: View {
     ///
     /// **워드마크를 넣지 않는다** — 마일리지가 왼쪽을 쓰므로 가운데 자리가 없다.
     private var header: some View {
-        ZStack {
+        HStack(spacing: 0) {
+            MileageChip(balance: StorePlaceholder.balance)
+                .padding(.leading, MyFisSpacing.sm)
+
+            Spacer(minLength: MyFisSpacing.md)
+
+            HeaderIcon("ic_header_search", "검색", action: openSearch)
+            HeaderIcon("ic_header_cart", "장바구니", action: onCart)
+            HeaderIcon("ic_header_my", "마이", action: onMy)
+        }
+        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .frame(height: MyFisSize.header)
+    }
+
+    /// 검색 덮개 — **자기 헤더를 들고 다닌다.**
+    ///
+    /// 전에는 헤더 줄과 본문이 **다른 컨테이너**에서 각자 밀려 들어왔다. 들어올 때는 맞아 보였는데
+    /// 나갈 때 **글씨가 늦게 따라 나갔다** (2026-09-04 사용자 지적) — 둘을 맞추는 건
+    /// 두 애니메이션을 맞춘다는 뜻이고, 그건 어느 쪽이든 어긋난다.
+    /// **한 판에 담으면 맞출 것이 없다** — 장바구니·마이 같은 잎이 그렇게 움직인다
+    private var searchOverlay: some View {
+        VStack(spacing: 0) {
             HStack(spacing: 0) {
-                MileageChip(balance: StorePlaceholder.balance)
-                    .padding(.leading, MyFisSpacing.sm)
-
-                Spacer(minLength: MyFisSpacing.md)
-
-                HeaderIcon("ic_header_search", "검색", action: openSearch)
-                HeaderIcon("ic_header_cart", "장바구니", action: onCart)
-                HeaderIcon("ic_header_my", "마이", action: onMy)
+                StoreSearchInput(text: $query)
+                    .padding(.trailing, MyFisSpacing.xs)
+                HeaderIcon("ic_header_close", "검색 닫기", action: closeSearch)
             }
             .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+            .frame(height: MyFisSize.header)
 
-            if searching {
-                HStack(spacing: 0) {
-                    StoreSearchInput(text: $query)
-                        .padding(.trailing, MyFisSpacing.xs)
-                    HeaderIcon("ic_header_close", "검색 닫기", action: closeSearch)
-                }
-                .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-                // 뒤 줄을 덮어야 한다 — 비치면 두 줄이 겹쳐 읽힌다
-                .background(MyFisColor.bgBase)
-                .transition(.move(edge: .trailing))
-            }
+            StoreSearchResults(
+                query: $query,
+                balance: StorePlaceholder.balance,
+                liked: liked,
+                onLike: toggleLike,
+                onItem: onItem
+            )
         }
-        .frame(height: MyFisSize.header)
-        // 밀려 들어오는 줄이 헤더 밖으로 새지 않게 자른다
-        .clipped()
+        // 뒤를 덮어야 한다 — 비치면 두 화면이 겹쳐 읽힌다
+        .background(MyFisColor.bgBase)
     }
 
     /// **옆에서 밀려 들어온다** 🟢 (2026-09-04 개정, 사용자 지정).
@@ -83,42 +95,34 @@ struct StoreScreen: View {
     /// 어디서 왔는지 안 보이면 화면이 튄 것처럼 읽힌다.
     /// 화면이 바뀌는 것이라 `fast` 가 아니라 `base`(200ms) 다 (§7)
     private func openSearch() {
+        // **여기서 지운다.** 닫을 때 지우면 나가는 중인 필드에서 글자가 먼저 사라져
+        // 판과 글씨가 따로 움직이는 것처럼 보인다 (2026-09-04)
+        query = ""
         withAnimation(MyFisMotion.base) { searching = true }
     }
 
-    /// 닫으면 검색어도 지운다 — 다음에 열었을 때 지난 검색어가 남아 있으면 그걸 지우는 일부터 하게 된다
+    /// 닫는 건 **판을 통째로 내보내는 것뿐**이다. 검색어는 다음에 열 때 지운다 (위 `openSearch`)
     private func closeSearch() {
         withAnimation(MyFisMotion.base) { searching = false }
-        query = ""
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-
-            // **헤더 줄과 본문이 같이 들어온다** 🟢 (2026-09-04, 사용자 지정).
-            //
-            // 전에는 헤더만 밀려 들어오고 본문은 제자리에서 갈렸다 — 같은 순간에 **다른 움직임**이
-            // 둘이라 검색이 **두 조각으로 들어오는 것처럼** 보였다.
-            // 본문도 같은 쪽에서 같은 곡선·같은 길이로 밀어 넣으면 **한 장**으로 읽힌다.
-            // 그러려면 세로로 쌓지 말고 **덮어야** 한다 — 아래를 밀어내면 그건 또 다른 움직임이다
-            ZStack {
+        ZStack {
+            VStack(spacing: 0) {
+                header
                 home
-
-                if searching {
-                    StoreSearchResults(
-                        query: $query,
-                        balance: StorePlaceholder.balance,
-                        liked: liked,
-                        onLike: toggleLike,
-                        onItem: onItem
-                    )
-                    .background(MyFisColor.bgBase)
-                    .transition(.move(edge: .trailing))
-                }
             }
-            .clipped()
+
+            // **한 판이 통째로 들어왔다 나간다** 🟢 (2026-09-04, 사용자 지정) —
+            // 장바구니·마이 같은 잎과 같은 움직임이다. 다만 **잎은 아니다**:
+            // 검색 모드는 셸이 들고 있어야 상품을 열었다 돌아와도 남는다 (§6.9)
+            if searching {
+                searchOverlay
+                    .transition(.move(edge: .trailing))
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .clipped()
         .task { MyFisDebug.scheduleAutoSearch(openSearch) }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }

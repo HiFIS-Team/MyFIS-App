@@ -114,29 +114,18 @@ fun StoreScreen(
     // 열면 바로 칠 수 있어야 한다 — 검색하러 누른 사람에게 한 번 더 누르게 하지 않는다
     LaunchedEffect(searching) { if (searching) focus.requestFocus() }
 
+    // 덮개가 화면을 통째로 덮어야 하므로 세로로 쌓지 않고 **포갠다**
+    Box(Modifier.fillMaxSize().clipToBounds()) {
     Column(Modifier.fillMaxSize()) {
+        // **여기서 지운다.** 닫을 때 지우면 나가는 중인 필드에서 글자가 먼저 사라져
+        // 판과 글씨가 따로 움직이는 것처럼 보인다 (2026-09-04)
         StoreHeader(
-            searching = searching,
-            query = query,
-            onQuery = { query = it },
-            focus = focus,
-            onSearch = { onSearching(true) },
-            // 닫으면 검색어도 지운다 — 다음에 열었을 때 지난 검색어를 지우는 일부터 하게 된다
-            onClose = {
-                query = ""
-                onSearching(false)
-            },
+            onSearch = { query = ""; onSearching(true) },
             onCart = onCart,
             onMy = onMy,
         )
 
-        // **헤더 줄과 본문이 같이 들어온다** 🟢 (2026-09-04, 사용자 지정).
-        //
-        // 전에는 헤더만 밀려 들어오고 본문은 제자리에서 갈렸다 — 같은 순간에 **다른 움직임**이
-        // 둘이라 검색이 **두 조각으로 들어오는 것처럼** 보였다.
-        // 본문도 같은 쪽에서 같은 곡선·같은 길이로 밀어 넣으면 **한 장**으로 읽힌다.
-        // 그러려면 세로로 쌓지 말고 **덮어야** 한다 — 아래를 밀어내면 그건 또 다른 움직임이다
-        Box(Modifier.weight(1f).clipToBounds()) {
+        Box(Modifier.weight(1f)) {
             LazyColumn(contentPadding = PaddingValues(bottom = MyFisSpacing.xxxl)) {
                 item { BannerCarousel(storeBannerPlaceholder) }
                 // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
@@ -153,23 +142,52 @@ fun StoreScreen(
                     )
                 }
             }
-
-            androidx.compose.animation.AnimatedVisibility(
-                visible = searching,
-                enter = slideInHorizontally(MyFisMotion.base()) { it },
-                exit = slideOutHorizontally(MyFisMotion.base()) { it },
-            ) {
-                Box(Modifier.fillMaxSize().background(MyFisColor.BgBase)) {
-                    StoreSearchBody(
-                        query = query,
-                        onQuery = { query = it },
-                        liked = liked.filterValues { it }.keys,
-                        onLike = { id -> liked[id] = liked[id] != true },
-                        onItem = onItem,
-                    )
-                }
-            }
         }
+    }
+
+    // **한 판이 통째로 들어왔다 나간다** 🟢 (2026-09-04, 사용자 지정) —
+    // 장바구니·마이 같은 잎과 같은 움직임이다. 다만 **잎은 아니다**:
+    // 검색 모드는 셸이 들고 있어야 상품을 열었다 돌아와도 남는다 (§6.9).
+    //
+    // 덮개가 **자기 헤더를 들고 다닌다** — 헤더 줄과 본문을 다른 컨테이너에 두면
+    // 나갈 때 글씨가 늦게 따라 나간다 (2026-09-04 사용자 지적). 한 판에 담으면 맞출 것이 없다
+    androidx.compose.animation.AnimatedVisibility(
+        visible = searching,
+        enter = slideInHorizontally(MyFisMotion.base()) { it },
+        exit = slideOutHorizontally(MyFisMotion.base()) { it },
+    ) {
+        Column(
+            Modifier
+                .fillMaxSize()
+                // 뒤를 덮어야 한다 — 비치면 두 화면이 겹쳐 읽힌다
+                .background(MyFisColor.BgBase),
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(MyFisSize.header)
+                    .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                StoreSearchInput(
+                    query = query,
+                    onQuery = { query = it },
+                    focus = focus,
+                    modifier = Modifier.weight(1f).padding(end = MyFisSpacing.xs),
+                )
+                // 닫는 건 **판을 통째로 내보내는 것뿐**이다. 검색어는 다음에 열 때 지운다
+                HeaderIcon(R.drawable.ic_header_close, "검색 닫기") { onSearching(false) }
+            }
+
+            StoreSearchBody(
+                query = query,
+                onQuery = { query = it },
+                liked = liked.filterValues { it }.keys,
+                onLike = { id -> liked[id] = liked[id] != true },
+                onItem = onItem,
+            )
+        }
+    }
     }
 }
 
@@ -183,70 +201,31 @@ fun StoreScreen(
  *
  * **워드마크를 넣지 않는다** — 마일리지가 왼쪽을 쓰므로 가운데 자리가 없다.
  *
- * **검색은 옆에서 밀려 들어온다** — 전 규칙은 *그 자리에서 그대로 바꾼다* 였는데,
- * 그때는 필드가 이미 그 자리에 있었다. 지금은 아이콘이라 **없던 것이 생기는 것**이고,
- * 어디서 왔는지 안 보이면 화면이 튄 것처럼 읽힌다
+ * 검색 줄은 여기 없다 — **덮개가 자기 헤더를 들고 다닌다** (위 `StoreScreen`)
  */
 @Composable
 private fun StoreHeader(
-    searching: Boolean,
-    query: String,
-    onQuery: (String) -> Unit,
-    focus: FocusRequester,
     onSearch: () -> Unit,
-    onClose: () -> Unit,
     onCart: () -> Unit,
     onMy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(
+    Row(
         modifier = modifier
             .fillMaxWidth()
             .height(MyFisSize.header)
-            // 밀려 들어오는 줄이 헤더 밖으로 새지 않게 자른다
-            .clipToBounds(),
-        contentAlignment = Alignment.CenterStart,
+            // 아이콘의 터치 영역이 화면 여백만큼 튀어나오므로 그만큼 당겨 준다 (§6.9)
+            .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                // 아이콘의 터치 영역이 화면 여백만큼 튀어나오므로 그만큼 당겨 준다 (§6.9)
-                .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            MileageChip(
-                balance = mileageBalancePlaceholder,
-                modifier = Modifier.padding(start = MyFisSpacing.sm),
-            )
-            Spacer(Modifier.weight(1f))
-            HeaderIcon(R.drawable.ic_header_search, "검색", onSearch)
-            HeaderIcon(R.drawable.ic_header_cart, "장바구니", onCart)
-            HeaderIcon(R.drawable.ic_header_my, "마이", onMy)
-        }
-
-        // 화면이 바뀌는 것이라 `fast` 가 아니라 `base`(200ms) 다 (§7)
-        AnimatedVisibility(
-            visible = searching,
-            enter = slideInHorizontally(MyFisMotion.base()) { it },
-            exit = slideOutHorizontally(MyFisMotion.base()) { it },
-        ) {
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    // 뒤 줄을 덮어야 한다 — 비치면 두 줄이 겹쳐 읽힌다
-                    .background(MyFisColor.BgBase)
-                    .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                StoreSearchInput(
-                    query = query,
-                    onQuery = onQuery,
-                    focus = focus,
-                    modifier = Modifier.weight(1f).padding(end = MyFisSpacing.xs),
-                )
-                HeaderIcon(R.drawable.ic_header_close, "검색 닫기", onClose)
-            }
-        }
+        MileageChip(
+            balance = mileageBalancePlaceholder,
+            modifier = Modifier.padding(start = MyFisSpacing.sm),
+        )
+        Spacer(Modifier.weight(1f))
+        HeaderIcon(R.drawable.ic_header_search, "검색", onSearch)
+        HeaderIcon(R.drawable.ic_header_cart, "장바구니", onCart)
+        HeaderIcon(R.drawable.ic_header_my, "마이", onMy)
     }
 }
 
