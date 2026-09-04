@@ -37,43 +37,59 @@ struct StoreScreen: View {
         if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
     }
 
-    /// 스토어 헤더 (§6.9) — 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이.
-    /// **워드마크를 넣지 않는다** — 검색이 들어오면 가운데 자리가 없다.
+    /// 스토어 헤더 (§6.9) 🟢 (2026-09-04 개정, 사용자 지정) —
+    /// **왼쪽에 마일리지, 오른쪽에 아이콘 셋**(검색 · 장바구니 · 마이).
     ///
-    /// 검색을 누르면 **이 자리에서 그대로 바뀐다** — 필드가 장바구니 자리까지 늘어나고
-    /// 마이가 `X` 가 된다. 화면이 옆에서 밀려 들어오지 않는다 (§6.9).
+    /// 전에는 검색 필드가 폭을 다 먹었다. 스토어에서 **먼저 하는 일은 검색이 아니라 둘러보기**이고,
+    /// 정작 늘 궁금한 값(**얼마 있나**)은 헤더 아래 띠에 따로 있었다 → 값을 헤더로 올리고
+    /// 검색은 아이콘으로 접었다. 띠는 같은 값이 두 번 나오게 되므로 없앴다.
+    ///
+    /// **워드마크를 넣지 않는다** — 마일리지가 왼쪽을 쓰므로 가운데 자리가 없다.
     private var header: some View {
-        HStack(spacing: 0) {
-            if searching {
-                StoreSearchInput(text: $query)
-                    .padding(.trailing, MyFisSpacing.xs)
-                HeaderIcon("ic_header_close", "검색 닫기", action: closeSearch)
-            } else {
-                StoreSearchField(action: openSearch)
-                    .padding(.trailing, MyFisSpacing.xs)
+        ZStack {
+            HStack(spacing: 0) {
+                MileageChip(balance: StorePlaceholder.balance)
+                    .padding(.leading, MyFisSpacing.sm)
+
+                Spacer(minLength: MyFisSpacing.md)
+
+                HeaderIcon("ic_header_search", "검색", action: openSearch)
                 HeaderIcon("ic_header_cart", "장바구니", action: onCart)
                 HeaderIcon("ic_header_my", "마이", action: onMy)
             }
+            .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+
+            if searching {
+                HStack(spacing: 0) {
+                    StoreSearchInput(text: $query)
+                        .padding(.trailing, MyFisSpacing.xs)
+                    HeaderIcon("ic_header_close", "검색 닫기", action: closeSearch)
+                }
+                .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+                // 뒤 줄을 덮어야 한다 — 비치면 두 줄이 겹쳐 읽힌다
+                .background(MyFisColor.bgBase)
+                .transition(.move(edge: .trailing))
+            }
         }
         .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        // 밀려 들어오는 줄이 헤더 밖으로 새지 않게 자른다
+        .clipped()
     }
 
-    /// **애니메이션 없이 바꾼다.** 필드가 옆에서 자라 들어오면 칠 준비가 될 때까지 기다리게 된다
+    /// **옆에서 밀려 들어온다** 🟢 (2026-09-04 개정, 사용자 지정).
+    ///
+    /// ⚠️ 전 규칙은 *애니메이션 없이 그 자리에서 바꾼다* 였다 — 그때는 **필드가 이미 그 자리에 있어서**
+    /// 자라 들어오는 게 기다림으로 읽혔다. 지금은 아이콘이라 **없던 것이 생기는 것**이고,
+    /// 어디서 왔는지 안 보이면 화면이 튄 것처럼 읽힌다.
+    /// 화면이 바뀌는 것이라 `fast` 가 아니라 `base`(200ms) 다 (§7)
     private func openSearch() {
-        var snap = Transaction()
-        snap.disablesAnimations = true
-        withTransaction(snap) { searching = true }
+        withAnimation(MyFisMotion.base) { searching = true }
     }
 
     /// 닫으면 검색어도 지운다 — 다음에 열었을 때 지난 검색어가 남아 있으면 그걸 지우는 일부터 하게 된다
     private func closeSearch() {
-        var snap = Transaction()
-        snap.disablesAnimations = true
-        withTransaction(snap) {
-            searching = false
-            query = ""
-        }
+        withAnimation(MyFisMotion.base) { searching = false }
+        query = ""
     }
 
     var body: some View {
@@ -95,11 +111,10 @@ struct StoreScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// 검색이 아닐 때의 본문 — 마일리지 띠 · 배너 · 카테고리 · 그리드
+    /// 검색이 아닐 때의 본문 — 배너 · 카테고리 · 그리드.
+    /// **마일리지 띠가 없다** (2026-09-04) — 값이 헤더 왼쪽으로 올라가서 두 번 나오게 된다
     private var home: some View {
         VStack(spacing: 0) {
-            MileageBand(balance: StorePlaceholder.balance)
-
             ScrollView {
                 // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {

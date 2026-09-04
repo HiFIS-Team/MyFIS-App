@@ -2,6 +2,9 @@ package com.myfis.app.ui.screens
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -45,6 +48,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
@@ -61,7 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.myfis.app.R
 import com.myfis.app.ui.components.BurstRing
-import com.myfis.app.ui.components.MileageBand
+import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.components.MileageTone
 import com.myfis.app.ui.components.rememberBurst
@@ -70,6 +74,7 @@ import com.myfis.app.ui.components.StoreSearchShell
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
+import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.pressScale
@@ -136,7 +141,6 @@ fun StoreScreen(
             return@Column
         }
 
-        MileageBand(balance = mileageBalancePlaceholder)
 
         LazyColumn(contentPadding = PaddingValues(bottom = MyFisSpacing.xxxl)) {
             item { BannerCarousel(storeBannerPlaceholder) }
@@ -158,13 +162,18 @@ fun StoreScreen(
 }
 
 /**
- * 스토어 헤더 (DESIGN.md §6.9).
+ * 스토어 헤더 (DESIGN.md §6.9) 🟢 (2026-09-04 개정, 사용자 지정) —
+ * **왼쪽에 마일리지, 오른쪽에 아이콘 셋**(검색 · 장바구니 · 마이).
  *
- * 검색이 폭을 다 먹고 오른쪽에 장바구니 · 마이만 둔다.
- * **워드마크를 넣지 않는다** — 검색이 들어오면 가운데 자리가 없다.
+ * 전에는 검색 필드가 폭을 다 먹었다. 스토어에서 **먼저 하는 일은 검색이 아니라 둘러보기**이고,
+ * 정작 늘 궁금한 값(**얼마 있나**)은 헤더 아래 띠에 따로 있었다 → 값을 헤더로 올리고
+ * 검색은 아이콘으로 접었다. 띠는 같은 값이 두 번 나오게 되므로 없앴다.
  *
- * 검색을 누르면 **이 자리에서 그대로 바뀐다** — 필드가 장바구니 자리까지 늘어나고
- * 마이가 `X` 가 된다. 화면이 옆에서 밀려 들어오지 않는다.
+ * **워드마크를 넣지 않는다** — 마일리지가 왼쪽을 쓰므로 가운데 자리가 없다.
+ *
+ * **검색은 옆에서 밀려 들어온다** — 전 규칙은 *그 자리에서 그대로 바꾼다* 였는데,
+ * 그때는 필드가 이미 그 자리에 있었다. 지금은 아이콘이라 **없던 것이 생기는 것**이고,
+ * 어디서 왔는지 안 보이면 화면이 튄 것처럼 읽힌다
  */
 @Composable
 private fun StoreHeader(
@@ -178,36 +187,54 @@ private fun StoreHeader(
     onMy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(56.dp)
-            // 아이콘의 터치 영역이 화면 여백만큼 튀어나오므로 그만큼 당겨 준다 (§6.9)
-            .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
+            .height(MyFisSize.header)
+            // 밀려 들어오는 줄이 헤더 밖으로 새지 않게 자른다
+            .clipToBounds(),
+        contentAlignment = Alignment.CenterStart,
     ) {
-        // 왼쪽은 헤더 여백까지 그대로 쓴다. 여백을 더 주면 필드만 안쪽으로 밀려 짧아 보인다
-        val field = Modifier
-            .weight(1f)
-            .padding(end = MyFisSpacing.xs)
-
-        if (searching) {
-            StoreSearchInput(query = query, onQuery = onQuery, focus = focus, modifier = field)
-            HeaderIcon(R.drawable.ic_header_close, "검색 닫기", onClose)
-        } else {
-            SearchField(onClick = onSearch, modifier = field)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                // 아이콘의 터치 영역이 화면 여백만큼 튀어나오므로 그만큼 당겨 준다 (§6.9)
+                .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            MileageChip(
+                balance = mileageBalancePlaceholder,
+                modifier = Modifier.padding(start = MyFisSpacing.sm),
+            )
+            Spacer(Modifier.weight(1f))
+            HeaderIcon(R.drawable.ic_header_search, "검색", onSearch)
             HeaderIcon(R.drawable.ic_header_cart, "장바구니", onCart)
             HeaderIcon(R.drawable.ic_header_my, "마이", onMy)
         }
-    }
-}
 
-/** 누르면 **이 자리가 입력 필드로 바뀐다** (§6.9). 화면이 따로 뜨지 않는다 */
-@Composable
-private fun SearchField(onClick: () -> Unit, modifier: Modifier = Modifier) {
-    // 판은 검색 모드와 **같은 것**을 쓴다 (§6.9). 전에는 여기서 따로 그렸다 (2026-08-27 이관)
-    StoreSearchShell(modifier = modifier, onClick = onClick) {
-        Text("상품 검색", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
+        // 화면이 바뀌는 것이라 `fast` 가 아니라 `base`(200ms) 다 (§7)
+        AnimatedVisibility(
+            visible = searching,
+            enter = slideInHorizontally(MyFisMotion.base()) { it },
+            exit = slideOutHorizontally(MyFisMotion.base()) { it },
+        ) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    // 뒤 줄을 덮어야 한다 — 비치면 두 줄이 겹쳐 읽힌다
+                    .background(MyFisColor.BgBase)
+                    .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                StoreSearchInput(
+                    query = query,
+                    onQuery = onQuery,
+                    focus = focus,
+                    modifier = Modifier.weight(1f).padding(end = MyFisSpacing.xs),
+                )
+                HeaderIcon(R.drawable.ic_header_close, "검색 닫기", onClose)
+            }
+        }
     }
 }
 
