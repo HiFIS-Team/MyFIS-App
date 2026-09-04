@@ -1,10 +1,12 @@
 package com.myfis.app.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +21,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -42,6 +46,7 @@ import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisIconTile
 import com.myfis.app.ui.theme.MyFisPrimaryButton
+import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
@@ -77,7 +82,8 @@ fun GroupScreen(
 ) {
     var segment by rememberSaveable { mutableStateOf(GroupSegment.BROWSE) }
     var category by rememberSaveable { mutableStateOf(GroupCategory.ALL) }
-    var sort by rememberSaveable { mutableStateOf(GroupSort.RECOMMENDED) }
+    var sort by rememberSaveable { mutableStateOf(GroupSort.NONE) }
+    var order by rememberSaveable { mutableStateOf(GroupOrder.RECOMMENDED) }
 
     val rows = groupPlaceholder.filter { category == GroupCategory.ALL || it.category == category }
 
@@ -109,7 +115,7 @@ fun GroupScreen(
                     modifier = Modifier.padding(top = MyFisSpacing.md),
                 )
 
-                SortChips(sort, { sort = it }, Modifier.padding(top = MyFisSpacing.md))
+                SortChips(sort, order, { sort = it }, { order = it }, Modifier.padding(top = MyFisSpacing.md))
 
                 Spacer(Modifier.height(MyFisSpacing.xs))
                 rows.forEach { group ->
@@ -132,10 +138,11 @@ fun GroupScreen(
 }
 
 /**
- * **어느 지점의 모임인지 밝히는 줄이다** — 유산소 헤더가 이름을 앞에 두는 것과 같은 규칙이다.
+ * **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).
  *
- * 다른 탭(혜택·스토어)은 헤더에 글자를 안 두지만 여기는 다르다 —
- * 모임은 **지점에 매여 있어서**, 어느 지점 것을 보고 있는지가 목록보다 먼저 와야 한다.
+ * 전에는 `{지점}의 모임` 이었다 — 모임이 지점에 매여 있다고 봤기 때문인데,
+ * **활동 지역(§6.30)이 들어오면서 그 전제가 없어졌다.** 지점을 헤더에 계속 걸어 두면
+ * 목록이 지점 것만인 줄 읽힌다.
  * 원본 헤더의 셋(검색·알림·메뉴) 중 알림은 셸이 이미 들고 있고 메뉴는 우리에게 없다 → 검색만 남긴다
  */
 @Composable
@@ -148,7 +155,7 @@ private fun GroupHeader(onSearch: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "${groupBranchPlaceholder}의 모임",
+            "모임",
             style = MyFisTheme.type.titleMd,
             color = MyFisColor.TextPrimary,
         )
@@ -253,30 +260,46 @@ private fun SegmentBar(
     onSelect: (GroupSegment) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier
+    val tabs = GroupSegment.entries
+    val index = tabs.indexOf(selected).coerceAtLeast(0)
+
+    BoxWithConstraints(
+        modifier
             .fillMaxWidth()
             .background(MyFisColor.Surface1, MyFisRadius.full)
             .padding(MyFisSpacing.xs),
     ) {
-        GroupSegment.entries.forEach { item ->
-            val isSelected = item == selected
-            val interaction = remember { MutableInteractionSource() }
-            Box(
-                Modifier
-                    .weight(1f)
-                    .height(MyFisSize.buttonSecondary)
-                    .clip(MyFisRadius.full)
-                    .background(if (isSelected) MyFisColor.BgBase else Color.Transparent)
-                    .tapWithHaptics(interaction) { onSelect(item) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    item.label,
-                    style = MyFisTheme.type.titleSm,
-                    color = if (isSelected) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
-                    maxLines = 1,
-                )
+        val slot = maxWidth / tabs.size
+        // **고른 칸이 미끄러져 간다** 🟢 (2026-09-04, 사용자 지정) — 갈래 줄 밑줄(§6.29)과 같은 규칙.
+        // 칸마다 판을 켰다 끄면 **어디서 어디로 갔는지가 안 보인다.**
+        // 판 하나를 두고 **자리를 옮긴다**. 고르는 동작이라 `fast`(120ms) — §7
+        val x by animateDpAsState(slot * index, MyFisMotion.fast(), label = "segment")
+
+        Box(
+            Modifier
+                .offset(x = x)
+                .width(slot)
+                .height(MyFisSize.buttonSecondary)
+                .background(MyFisColor.BgBase, MyFisRadius.full),
+        )
+
+        Row(Modifier.fillMaxWidth()) {
+            tabs.forEach { item ->
+                val interaction = remember { MutableInteractionSource() }
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(MyFisSize.buttonSecondary)
+                        .tapWithHaptics(interaction) { onSelect(item) },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        item.label,
+                        style = MyFisTheme.type.titleSm,
+                        color = if (item == selected) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }
@@ -285,63 +308,99 @@ private fun SegmentBar(
 /**
  * `추천 ⌄ · 인기 · 요즘 뜨는 · 이번 주 열리는` — 원본의 필터 칩 줄.
  *
+ * **첫 칩만 여는 칩이다** — 나머지는 켜고 끄는 것.
+ * 여는 판은 **네이티브 메뉴 그대로** 쓴다 (§2 원칙 6) — 직접 그리면 두 판이 어긋나고,
+ * 바깥을 눌러 닫는 것부터 다시 만들어야 한다.
+ *
  * 원본은 칩마다 이모지가 붙지만(📈 · 🏪) **우리는 안 붙인다** — 열 줄 남짓한 목록 위에서
  * 이모지 둘은 라임보다 먼저 눈에 띄어 위계를 뒤집는다 (§2 원칙 3)
  */
 @Composable
 private fun SortChips(
     selected: GroupSort,
+    order: GroupOrder,
     onSelect: (GroupSort) -> Unit,
+    onOrder: (GroupOrder) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var open by remember { mutableStateOf(false) }
+
     Row(
         modifier = modifier
             .horizontalScroll(rememberScrollState())
             .padding(horizontal = MyFisSpacing.screenHorizontal),
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
     ) {
-        GroupSort.entries.forEach { item ->
-            val isSelected = item == selected
-            val interaction = remember { MutableInteractionSource() }
-            Row(
-                modifier = Modifier
-                    // 칩은 `36` 이라 그대로 두면 터치 타겟이 `48` 에 못 미친다 (§5.3).
-                    // **보이는 높이는 그대로 두고 누르는 넓이만** 위아래로 벌린다
-                    .height(MyFisSize.minTouchTarget)
-                    .tapWithHaptics(interaction) { onSelect(item) },
-                verticalAlignment = Alignment.CenterVertically,
+        Box {
+            SortChip(order.label, selected = true, chevron = true) { open = true }
+            DropdownMenu(
+                expanded = open,
+                onDismissRequest = { open = false },
+                containerColor = MyFisColor.Surface2,
+                shape = MyFisRadius.md,
             ) {
-                Row(
-                    modifier = Modifier
-                        .height(MyFisSize.chip)
-                        .background(
-                            if (isSelected) MyFisColor.Surface2 else Color.Transparent,
-                            MyFisRadius.full,
-                        )
-                        .then(
-                            if (isSelected) Modifier
-                            else Modifier.border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.full),
-                        )
-                        .padding(horizontal = MyFisSpacing.md),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
-                ) {
-                    Text(
-                        item.label,
-                        style = MyFisTheme.type.bodySm,
-                        color = if (isSelected) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
-                        maxLines = 1,
+                GroupOrder.entries.forEach { item ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                item.label,
+                                style = MyFisTheme.type.body,
+                                color = if (item == order) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+                            )
+                        },
+                        onClick = { onOrder(item); open = false },
                     )
-                    // 첫 칩만 여는 칩이다 — 나머지는 켜고 끄는 것
-                    if (item == GroupSort.RECOMMENDED) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_chevron_down),
-                            contentDescription = null,
-                            tint = if (isSelected) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
-                            modifier = Modifier.size(14.dp),
-                        )
-                    }
                 }
+            }
+        }
+        GroupSort.chips.forEach { item ->
+            SortChip(item.label, selected = item == selected, chevron = false) {
+                onSelect(if (selected == item) GroupSort.NONE else item)
+            }
+        }
+    }
+}
+
+@Composable
+private fun SortChip(label: String, selected: Boolean, chevron: Boolean, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            // 칩은 `36` 이라 그대로 두면 터치 타겟이 `48` 에 못 미친다 (§5.3).
+            // **보이는 높이는 그대로 두고 누르는 넓이만** 위아래로 벌린다
+            .height(MyFisSize.minTouchTarget)
+            .tapWithHaptics(interaction, onClick),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Row(
+            modifier = Modifier
+                .height(MyFisSize.chip)
+                .background(
+                    if (selected) MyFisColor.Surface2 else Color.Transparent,
+                    MyFisRadius.full,
+                )
+                .then(
+                    if (selected) Modifier
+                    else Modifier.border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.full),
+                )
+                .padding(horizontal = MyFisSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+        ) {
+            Text(
+                label,
+                style = MyFisTheme.type.bodySm,
+                color = if (selected) MyFisColor.TextPrimary else MyFisColor.TextTertiary,
+                maxLines = 1,
+            )
+            if (chevron) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_chevron_down),
+                    contentDescription = null,
+                    tint = MyFisColor.TextPrimary,
+                    modifier = Modifier.size(14.dp),
+                )
             }
         }
     }
@@ -492,9 +551,28 @@ enum class GroupCategory(val label: String, val icon: Int) {
     }
 }
 
-/** 정렬·필터 칩 (SPEC G-01) */
+/**
+ * **여는 칩** — 목록을 무슨 차례로 볼지 (SPEC G-01) 🟢 (2026-09-04, 사용자 지정).
+ *
+ * 전에는 `추천` 이 켜고 끄는 칩이었는데, **차례는 켜고 끄는 게 아니라 하나를 고르는 것**이다.
+ * 그래서 여는 칩으로 바꾸고 목록을 달았다
+ */
+enum class GroupOrder(val label: String) {
+    RECOMMENDED("추천"), LATEST("최신순")
+}
+
+/**
+ * **켜고 끄는 칩** — 목록을 좁힌다 (SPEC G-01).
+ * `NONE` 은 아무것도 안 켠 상태다 — 칩은 다시 누르면 꺼진다
+ */
 enum class GroupSort(val label: String) {
-    RECOMMENDED("추천"), POPULAR("인기"), RISING("요즘 뜨는"), THIS_WEEK("이번 주 열리는")
+    NONE(""), POPULAR("인기"), RISING("요즘 뜨는"), THIS_WEEK("이번 주 열리는")
+    ;
+
+    companion object {
+        /** 칩으로 그리는 것만. `NONE` 은 상태이지 칩이 아니다 */
+        val chips get() = listOf(POPULAR, RISING, THIS_WEEK)
+    }
 }
 
 /** 모임 하나 (SPEC G-01) */

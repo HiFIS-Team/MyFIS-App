@@ -26,7 +26,8 @@ struct GroupScreen: View {
 
     @State private var segment: GroupSegment = .browse
     @State private var category: GroupCategory = .all
-    @State private var sort: GroupSort = .recommended
+    @State private var sort: GroupSort = .none
+    @State private var order: GroupOrder = .recommended
 
     private var rows: [GroupItem] {
         GroupPlaceholder.groups.filter { category == .all || $0.category == category }
@@ -53,7 +54,7 @@ struct GroupScreen: View {
                             .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
                             .padding(.top, MyFisSpacing.md)
 
-                        SortChips(selection: $sort)
+                        SortChips(selection: $sort, order: $order)
                             .padding(.top, MyFisSpacing.md)
 
                         ForEach(rows) { group in
@@ -76,14 +77,15 @@ struct GroupScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// **어느 지점의 모임인지 밝히는 줄이다** — 유산소 헤더가 이름을 앞에 두는 것과 같은 규칙이다.
+    /// **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).
     ///
-    /// 다른 탭(혜택·스토어)은 헤더에 글자를 안 두지만 여기는 다르다 —
-    /// 모임은 **지점에 매여 있어서**, 어느 지점 것을 보고 있는지가 목록보다 먼저 와야 한다.
+    /// 전에는 `{지점}의 모임` 이었다 — 모임이 지점에 매여 있다고 봤기 때문인데,
+    /// **활동 지역(§6.30)이 들어오면서 그 전제가 없어졌다.** 지점을 헤더에 계속 걸어 두면
+    /// 목록이 지점 것만인 줄 읽힌다.
     /// 원본 헤더의 셋(검색·알림·메뉴) 중 알림은 셸이 이미 들고 있고 메뉴는 우리에게 없다 → 검색만 남긴다
     private var header: some View {
         HStack(spacing: 0) {
-            Text("\(GroupPlaceholder.branch)의 모임")
+            Text("모임")
                 .font(MyFisFont.titleMd)
                 .foregroundStyle(MyFisColor.textPrimary)
                 .padding(.leading, MyFisSpacing.sm)
@@ -181,24 +183,35 @@ private struct MyGroupRail: View {
 private struct SegmentBar: View {
     @Binding var selection: GroupSegment
 
+    private var index: Int { GroupSegment.allCases.firstIndex(of: selection) ?? 0 }
+
     var body: some View {
         HStack(spacing: 0) {
             ForEach(GroupSegment.allCases, id: \.self) { item in
-                let isSelected = item == selection
                 Button { selection = item } label: {
                     Text(item.title)
                         .font(MyFisFont.titleSm)
-                        .foregroundStyle(isSelected ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                        .foregroundStyle(item == selection ? MyFisColor.textPrimary : MyFisColor.textTertiary)
                         .lineLimit(1)
                         .frame(maxWidth: .infinity)
                         .frame(height: MyFisSize.buttonSecondary)
-                        .background {
-                            if isSelected {
-                                Capsule().fill(MyFisColor.bgBase)
-                            }
-                        }
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.myFisTap)
+            }
+        }
+        // **고른 칸이 미끄러져 간다** 🟢 (2026-09-04, 사용자 지정) — 갈래 줄 밑줄(§6.29)과 같은 규칙.
+        // 칸마다 판을 켰다 끄면 **어디서 어디로 갔는지가 안 보인다.**
+        // 판 하나를 두고 **자리를 옮긴다** — 칸 셋이 폭을 고르게 나눠 가지므로 순번만 알면 자리가 나온다
+        .background(alignment: .leading) {
+            GeometryReader { geo in
+                let slot = geo.size.width / CGFloat(GroupSegment.allCases.count)
+                Capsule()
+                    .fill(MyFisColor.bgBase)
+                    .frame(width: slot)
+                    .offset(x: slot * CGFloat(index))
+                    // 고르는 동작이라 `fast`(120ms) — §7
+                    .animation(MyFisMotion.fast, value: selection)
             }
         }
         .padding(MyFisSpacing.xs)
@@ -214,46 +227,55 @@ private struct SegmentBar: View {
 /// 이모지 둘은 라임보다 먼저 눈에 띄어 위계를 뒤집는다 (§2 원칙 3)
 private struct SortChips: View {
     @Binding var selection: GroupSort
+    @Binding var order: GroupOrder
 
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: MyFisSpacing.sm) {
+                // **첫 칩만 여는 칩이다** — 나머지는 켜고 끄는 것.
+                // 여는 판은 **네이티브 메뉴 그대로** 쓴다 (§2 원칙 6) — 직접 그리면 두 판이 어긋나고,
+                // 바깥을 눌러 닫는 것부터 다시 만들어야 한다
+                Menu {
+                    Picker("", selection: $order) {
+                        ForEach(GroupOrder.allCases, id: \.self) { Text($0.title).tag($0) }
+                    }
+                } label: {
+                    chip(order.title, selected: true, chevron: true)
+                }
+                .buttonStyle(.myFisTap)
+
                 ForEach(GroupSort.allCases, id: \.self) { item in
-                    let isSelected = item == selection
-                    Button { selection = item } label: {
-                        HStack(spacing: MyFisSpacing.xs) {
-                            Text(item.title)
-                                .font(MyFisFont.bodySm)
-                            // 첫 칩만 여는 칩이다 — 나머지는 켜고 끄는 것
-                            if item == .recommended {
-                                Image("ic_chevron_down")
-                                    .resizable()
-                                    .frame(width: 14, height: 14)
-                            }
-                        }
-                        .foregroundStyle(isSelected ? MyFisColor.textPrimary : MyFisColor.textTertiary)
-                        .padding(.horizontal, MyFisSpacing.md)
-                        .frame(height: MyFisSize.chip)
-                        .background(
-                            isSelected ? MyFisColor.surface2 : Color.clear,
-                            in: Capsule()
-                        )
-                        .overlay(
-                            Capsule().strokeBorder(
-                                isSelected ? Color.clear : MyFisColor.borderSubtle,
-                                lineWidth: 1
-                            )
-                        )
-                        // 칩은 `36` 이라 그대로 두면 터치 타겟이 `44` 에 못 미친다 (§5.3).
-                        // **보이는 높이는 그대로 두고 누르는 넓이만** 위아래로 벌린다
-                        .padding(.vertical, (MyFisSize.minTouchTarget - MyFisSize.chip) / 2)
-                        .contentShape(Rectangle())
+                    Button { selection = (selection == item) ? .none : item } label: {
+                        chip(item.title, selected: item == selection, chevron: false)
                     }
                     .buttonStyle(.myFisTap)
                 }
             }
             .padding(.horizontal, MyFisSpacing.screenHorizontal)
         }
+    }
+
+    private func chip(_ title: String, selected: Bool, chevron: Bool) -> some View {
+        HStack(spacing: MyFisSpacing.xs) {
+            Text(title)
+                .font(MyFisFont.bodySm)
+            if chevron {
+                Image("ic_chevron_down")
+                    .resizable()
+                    .frame(width: 14, height: 14)
+            }
+        }
+        .foregroundStyle(selected ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+        .padding(.horizontal, MyFisSpacing.md)
+        .frame(height: MyFisSize.chip)
+        .background(selected ? MyFisColor.surface2 : Color.clear, in: Capsule())
+        .overlay(
+            Capsule().strokeBorder(selected ? Color.clear : MyFisColor.borderSubtle, lineWidth: 1)
+        )
+        // 칩은 `36` 이라 그대로 두면 터치 타겟이 `44` 에 못 미친다 (§5.3).
+        // **보이는 높이는 그대로 두고 누르는 넓이만** 위아래로 벌린다
+        .padding(.vertical, (MyFisSize.minTouchTarget - MyFisSize.chip) / 2)
+        .contentShape(Rectangle())
     }
 }
 
@@ -405,13 +427,32 @@ enum GroupCategory: CaseIterable {
     }
 }
 
-/// 정렬·필터 칩 (SPEC G-01)
-enum GroupSort: CaseIterable {
-    case recommended, popular, rising, thisWeek
+/// **여는 칩** — 목록을 무슨 차례로 볼지 (SPEC G-01) 🟢 (2026-09-04, 사용자 지정).
+///
+/// 전에는 `추천` 이 켜고 끄는 칩이었는데, **차례는 켜고 끄는 게 아니라 하나를 고르는 것**이다.
+/// 그래서 여는 칩으로 바꾸고 목록을 달았다
+enum GroupOrder: CaseIterable {
+    case recommended, latest
 
     var title: String {
         switch self {
         case .recommended: "추천"
+        case .latest: "최신순"
+        }
+    }
+}
+
+/// **켜고 끄는 칩** — 목록을 좁힌다 (SPEC G-01).
+/// `none` 은 아무것도 안 켠 상태다 — 칩은 다시 누르면 꺼진다
+enum GroupSort: CaseIterable {
+    case none, popular, rising, thisWeek
+
+    /// 칩으로 그리는 것만. `none` 은 상태이지 칩이 아니다
+    static var allCases: [GroupSort] { [.popular, .rising, .thisWeek] }
+
+    var title: String {
+        switch self {
+        case .none: ""
         case .popular: "인기"
         case .rising: "요즘 뜨는"
         case .thisWeek: "이번 주 열리는"

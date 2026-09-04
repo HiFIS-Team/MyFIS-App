@@ -49,20 +49,14 @@ struct CardioScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// **누구의 기록인지 밝히는 줄이다.**
+    /// **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).
     ///
-    /// 다른 탭 헤더(§6.9)는 아이콘만 두지만 여기는 **내 몸의 기록**이라 이름이 앞에 온다.
-    /// 사진을 얼굴이 아니라 **색 원 + 첫 글자**로 대신한다 — P-07 레이더와 같은 규칙이다
-    /// (SPEC P-07 프라이버시: 실명·사진을 쓰지 않는다).
+    /// 전에는 `색 원 + 첫 글자 + 이름` 이었다 — *누구의 기록인지* 밝히려던 것인데,
+    /// **혼자 쓰는 앱에서 내 이름은 알려 주는 게 없다.** 웨이트 세트의 다른 탭(모임 §6.29)과
+    /// 같은 꼴로 **화면 이름**을 둔다. 오른쪽 칩은 그대로다 — 유산소는 뛴 만큼 P가 붙는다
     private var header: some View {
         HStack(spacing: MyFisSpacing.md) {
-            Text(CardioPlaceholder.name.prefix(1))
-                .font(MyFisFont.titleSm)
-                .foregroundStyle(MyFisColor.textPrimary)
-                .frame(width: MyFisSize.chip, height: MyFisSize.chip)
-                .background(MyFisColor.surface3, in: Circle())
-
-            Text(CardioPlaceholder.name)
+            Text("유산소")
                 .font(MyFisFont.titleMd)
                 .foregroundStyle(MyFisColor.textPrimary)
 
@@ -422,7 +416,6 @@ struct CardioMission: Identifiable {
 
 // TODO(서버): 이름·누적·미션 달성은 서버가 준다 (SPEC §8). 하드코딩하지 않는다
 enum CardioPlaceholder {
-    static let name = "은후"
     static let monthKm = "12.4"
     /// 🔵 무엇으로 등급이 오르는지는 아직 안 정했다 — 값만 자리를 잡아 둔 것이다
     static let tier = CardioTier.silver

@@ -113,39 +113,22 @@ fun CardioScreen(
 }
 
 /**
- * **누구의 기록인지 밝히는 줄이다.**
+ * **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).
  *
- * 다른 탭 헤더(§6.9)는 아이콘만 두지만 여기는 **내 몸의 기록**이라 이름이 앞에 온다.
- * 사진을 얼굴이 아니라 **색 원 + 첫 글자**로 대신한다 — P-07 레이더와 같은 규칙이다
- * (SPEC P-07 프라이버시: 실명·사진을 쓰지 않는다).
+ * 전에는 `색 원 + 첫 글자 + 이름` 이었다 — *누구의 기록인지* 밝히려던 것인데,
+ * **혼자 쓰는 앱에서 내 이름은 알려 주는 게 없다.** 웨이트 세트의 다른 탭(모임 §6.29)과
+ * 같은 꼴로 **화면 이름**을 둔다. 오른쪽 칩은 그대로다 — 유산소는 뛴 만큼 P가 붙는다
  */
 @Composable
 private fun CardioHeader() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(56.dp) // 헤더 높이 (§6.9) — 혜택·스토어 헤더와 같은 값
+            .height(MyFisSize.header)
             .padding(horizontal = MyFisSpacing.screenHorizontal),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(MyFisSize.chip)
-                .background(MyFisColor.Surface3, MyFisRadius.full),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                cardioNamePlaceholder.take(1),
-                style = MyFisTheme.type.titleSm,
-                color = MyFisColor.TextPrimary,
-            )
-        }
-        Text(
-            cardioNamePlaceholder,
-            style = MyFisTheme.type.titleMd,
-            color = MyFisColor.TextPrimary,
-            modifier = Modifier.padding(start = MyFisSpacing.md),
-        )
+        Text("유산소", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
         Spacer(Modifier.weight(1f))
         MileageChip(balance = benefitBalancePlaceholder)
     }
@@ -460,7 +443,6 @@ data class CardioMission(
 )
 
 // TODO(서버): 이름·누적·미션 달성은 서버가 준다 (SPEC §8). 하드코딩하지 않는다
-const val cardioNamePlaceholder = "은후"
 const val cardioMonthKmPlaceholder = "12.4"
 
 /**
