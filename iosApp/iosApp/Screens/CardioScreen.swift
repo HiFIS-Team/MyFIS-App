@@ -303,23 +303,29 @@ private struct MissionCard: View {
 ///
 /// ⚠️ 원본 GIF 는 **알파가 없어** 흰 바탕이 통째로 들어 있었다. 어두운 판에 얹으면 흰 네모가 된다 —
 /// 모서리에서 번지는 흰 영역만 지우고(잔 안의 흰 하이라이트는 살린다) **알파 있는 WebP** 로 다시 구웠다.
-struct AnimatedDrink: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIImageView {
-        let view = UIImageView(image: Self.image)
-        view.contentMode = .scaleAspectFit
-        // 카드가 폭을 정하므로 이미지가 제 크기를 주장하면 안 된다
-        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        return view
+///
+/// ⚠️⚠️ **유산소 탭에 들어가는 순간이 끊기던 원인이 여기였다** 🟢 (2026-09-04 실측).
+/// `CGImageSourceCreateImageAtIndex` 는 **게으르다** — 돌려주는 그림은 아직 압축된 채고
+/// 픽셀은 `UIImageView` 가 *화면에 그릴 때* 풀린다. 57장이 첫 한 바퀴에 몰려서 풀렸다
+/// (맥에서 재니 프레임 풀기 6ms, **펴는 데 315ms**). 그게 통째로 메인 스레드였다.
+/// 이제 **배경에서 미리 펴 두고**(`flatten`) 앱이 뜰 때 시작한다 — 도착했을 땐 이미 준비돼 있다.
+struct AnimatedDrink: View {
+    @State private var image: UIImage?
+
+    var body: some View {
+        DrinkImage(image: image)
+            // 아직 안 풀렸으면 **빈 자리로 둔다.** 기다리느라 화면을 잡지 않는다
+            .task { image = await Self.ready.value }
     }
 
-    func updateUIView(_ uiView: UIImageView, context: Context) {}
+    /// 앱이 뜰 때 한 번 부른다 — 여기서 배경 작업이 시작된다
+    static func prewarm() { _ = ready }
 
-    /// 프레임을 푸는 건 한 번이면 된다 — 칸이 다시 그려질 때마다 풀지 않는다
-    private static let image: UIImage? = load("ic_order_drink")
+    /// 한 번만 푼다. `Task` 라 여러 곳에서 기다려도 작업은 하나다
+    private static let ready = Task<UIImage?, Never>.detached(priority: .utility) { decode() }
 
-    private static func load(_ name: String) -> UIImage? {
-        guard let url = Bundle.main.url(forResource: name, withExtension: "webp"),
+    private static func decode() -> UIImage? {
+        guard let url = Bundle.main.url(forResource: "ic_order_drink", withExtension: "webp"),
               let data = try? Data(contentsOf: url),
               let source = CGImageSourceCreateWithData(data as CFData, nil)
         else { return nil }
@@ -327,12 +333,27 @@ struct AnimatedDrink: UIViewRepresentable {
         var frames: [UIImage] = []
         var total: TimeInterval = 0
         for index in 0 ..< CGImageSourceGetCount(source) {
-            guard let cg = CGImageSourceCreateImageAtIndex(source, index, nil) else { continue }
-            frames.append(UIImage(cgImage: cg))
+            guard let cg = CGImageSourceCreateImageAtIndex(source, index, nil),
+                  let flat = flatten(cg)
+            else { continue }
+            frames.append(UIImage(cgImage: flat))
             total += delay(source, index)
         }
         guard !frames.isEmpty else { return nil }
         return UIImage.animatedImage(with: frames, duration: total)
+    }
+
+    /// 압축된 그림을 **비트맵으로 한 번 펴 둔다.** 이게 없으면 그리는 순간에 풀린다
+    private static func flatten(_ cg: CGImage) -> CGImage? {
+        guard let ctx = CGContext(
+            data: nil, width: cg.width, height: cg.height,
+            bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
+                | CGBitmapInfo.byteOrder32Little.rawValue
+        ) else { return nil }
+        ctx.draw(cg, in: CGRect(x: 0, y: 0, width: cg.width, height: cg.height))
+        return ctx.makeImage()
     }
 
     /// 프레임 간격은 파일이 들고 있다. 못 읽으면 우리가 구운 값(80ms)으로 둔다
@@ -344,6 +365,25 @@ struct AnimatedDrink: UIViewRepresentable {
               value > 0
         else { return 0.08 }
         return value
+    }
+}
+
+/// 다 편 그림을 받아 돌리는 것만 한다
+private struct DrinkImage: UIViewRepresentable {
+    let image: UIImage?
+
+    func makeUIView(context: Context) -> UIImageView {
+        let view = UIImageView()
+        view.contentMode = .scaleAspectFit
+        // 카드가 폭을 정하므로 이미지가 제 크기를 주장하면 안 된다
+        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        return view
+    }
+
+    func updateUIView(_ uiView: UIImageView, context: Context) {
+        guard uiView.image !== image else { return }
+        uiView.image = image
     }
 }
 

@@ -55,6 +55,9 @@ struct AppRoot: View {
         }
         .ignoresSafeArea(.keyboard)
         .task {
+            // 유산소 `ORDER` 칸의 잔은 프레임 57장이라 **화면에서 풀면 늦는다** (§6.28).
+            // 앱이 뜰 때 배경에서 미리 펴 둔다 — 도착했을 땐 준비돼 있다
+            AnimatedDrink.prewarm()
             MyFisDebug.applySlowMotionIfNeeded()
             MyFisDebug.scheduleAutoNavigation(open: open, back: back)
         }

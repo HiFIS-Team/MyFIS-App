@@ -107,8 +107,10 @@ fun MyFisTabBar(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(start = sidePad, end = sidePad, bottom = liftPad)
+                // 떠 있을 때는 **살짝 비친다** (§6.7) — 바 아래가 칼로 자른 듯 끊기지 않게.
+                // 붙어 있을 때는 화면 끝이라 비칠 것이 없으므로 그대로 둔다
                 .background(
-                    MyFisColor.Surface2,
+                    if (floating) MyFisColor.Surface2Floating else MyFisColor.Surface2,
                     RoundedCornerShape(
                         topStart = 28.dp,
                         topEnd = 28.dp,

@@ -2,6 +2,7 @@ package com.myfis.app.ui.screens
 
 import android.graphics.ImageDecoder
 import android.graphics.drawable.AnimatedImageDrawable
+import android.graphics.drawable.Drawable
 import android.os.Build
 import android.widget.ImageView
 import androidx.compose.foundation.Image
@@ -28,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -37,6 +39,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -53,6 +56,8 @@ import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.tapWithHaptics
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * SPEC.md C-01 유산소 탭 (DESIGN.md §6.28).
@@ -385,25 +390,36 @@ private fun MissionCard(mission: CardioMission, modifier: Modifier = Modifier) {
  *
  * ⚠️ 원본 GIF 는 **알파가 없어** 흰 바탕이 통째로 들어 있었다. 어두운 판에 얹으면 흰 네모가 된다 —
  * 모서리에서 번지는 흰 영역만 지우고(잔 안의 흰 하이라이트는 살린다) **알파 있는 WebP** 로 다시 구웠다.
+ *
+ * ⚠️⚠️ **여는 순간이 끊기던 원인이 여기였다** 🟢 (2026-09-04). 프레임 57장짜리를
+ * `factory` 안에서 풀고 있었는데 그 자리가 **메인 스레드**다. `IO` 로 옮기고,
+ * 다 풀릴 때까지는 **빈 자리로 둔다** — 기다리느라 화면을 잡지 않는다.
  */
 @Composable
 private fun AnimatedDrink(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    var drink by remember { mutableStateOf<Drawable?>(null) }
+
+    LaunchedEffect(Unit) {
+        drink = withContext(Dispatchers.IO) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                ImageDecoder.decodeDrawable(
+                    ImageDecoder.createSource(context.resources, R.drawable.ic_order_drink),
+                )
+            } else {
+                // API 27 이하는 첫 프레임만 나온다 — 안 움직일 뿐 그림은 맞다
+                context.getDrawable(R.drawable.ic_order_drink)
+            }
+        }
+    }
+
     AndroidView(
         modifier = modifier,
-        factory = { ctx ->
-            ImageView(ctx).apply {
-                setImageDrawable(
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                        ImageDecoder
-                            .decodeDrawable(
-                                ImageDecoder.createSource(ctx.resources, R.drawable.ic_order_drink),
-                            )
-                            .also { (it as? AnimatedImageDrawable)?.start() }
-                    } else {
-                        // API 27 이하는 첫 프레임만 나온다 — 안 움직일 뿐 그림은 맞다
-                        ctx.getDrawable(R.drawable.ic_order_drink)
-                    },
-                )
+        factory = { ImageView(it) },
+        update = { view ->
+            if (view.drawable !== drink) {
+                view.setImageDrawable(drink)
+                (drink as? AnimatedImageDrawable)?.start()
             }
         },
     )

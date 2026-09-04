@@ -50,17 +50,20 @@ enum BaseTab: MyFisTab, CaseIterable {
     }
 }
 
-/// 웨이트 세트: 이전 / 웨이트 / 유산소 / 랭킹 / 모임
+/// 웨이트 세트: 이전 / 웨이트 / 유산소 / 모임 / 랭킹
+///
+/// **모임이 랭킹보다 앞이다** 🟢 (2026-09-04, 사용자 지정) — 자주 여는 순서다.
+/// 랭킹은 하루 한 번 보고 마는 자리라 끝으로 민다
 enum WeightTab: MyFisTab, CaseIterable {
-    case back, weight, cardio, ranking, group
+    case back, weight, cardio, group, ranking
 
     var label: String {
         switch self {
         case .back: "이전"
         case .weight: "웨이트"
         case .cardio: "유산소"
-        case .ranking: "랭킹"
         case .group: "모임"
+        case .ranking: "랭킹"
         }
     }
 
@@ -69,8 +72,8 @@ enum WeightTab: MyFisTab, CaseIterable {
         case .back: "ic_tab_back"
         case .weight: "ic_tab_weight"
         case .cardio: "ic_tab_cardio"
-        case .ranking: "ic_tab_ranking"
         case .group: "ic_tab_group"
+        case .ranking: "ic_tab_ranking"
         }
     }
 

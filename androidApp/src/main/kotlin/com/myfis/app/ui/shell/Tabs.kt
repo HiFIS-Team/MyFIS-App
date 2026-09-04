@@ -53,6 +53,8 @@ enum class WeightTab(
     BACK("이전", R.drawable.ic_tab_back, R.drawable.ic_tab_back),
     WEIGHT("웨이트", R.drawable.ic_tab_weight, R.drawable.ic_tab_weight_fill),
     CARDIO("유산소", R.drawable.ic_tab_cardio, R.drawable.ic_tab_cardio_fill),
-    RANKING("랭킹", R.drawable.ic_tab_ranking, R.drawable.ic_tab_ranking_fill),
+    // **모임이 랭킹보다 앞이다** 🟢 (2026-09-04, 사용자 지정) — 자주 여는 순서다.
+    // 랭킹은 하루 한 번 보고 마는 자리라 끝으로 민다
     GROUP("모임", R.drawable.ic_tab_group, R.drawable.ic_tab_group_fill),
+    RANKING("랭킹", R.drawable.ic_tab_ranking, R.drawable.ic_tab_ranking_fill),
 }

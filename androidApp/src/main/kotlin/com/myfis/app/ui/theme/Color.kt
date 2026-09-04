@@ -15,6 +15,16 @@ object MyFisColor {
     val Surface2 = Color(0xFF2B2C31)
     val Surface3 = Color(0xFF35363C)
 
+    /**
+     * 떠 있는 하단 탭 바의 면 (§6.7) — `surface.2` 를 **살짝 비치게** 둔 것 🟢 (2026-09-04).
+     *
+     * 새 색이 아니라 **같은 색의 재질**이다. iOS 는 이 자리를 네이티브 유리로 그려서
+     * 뒤가 비치는데, 안드로이드만 꽉 막힌 판이라 **바 아래가 칼로 자른 듯** 끊겼다.
+     * `bg.base` 위에서는 결과 색이 `surface.2` 와 거의 같아 §5.4 위계는 그대로다 —
+     * 달라지는 건 **뒤에 뭔가 있을 때만** 그게 희미하게 비친다는 것뿐이다.
+     */
+    val Surface2Floating = Surface2.copy(alpha = 0.92f)
+
     // 경계
     val BorderSubtle = Color(0xFF41424B)
     val BorderStrong = Color(0xFF6B7383)
