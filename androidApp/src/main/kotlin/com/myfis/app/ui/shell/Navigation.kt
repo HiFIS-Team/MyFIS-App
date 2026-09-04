@@ -30,6 +30,9 @@ object Route {
     /** G-03 모임 개설 **2단계** — 소개 쓰기 */
     const val GROUP_INTRO = "group_intro"
 
+    /** Y-03 설정 — 마이 헤더의 톱니로 들어온다 */
+    const val SETTINGS = "settings"
+
     /** 적립 활동 랜딩 (DESIGN §6.25) */
     const val ACTIVITY_INTRO = "activity_intro"
 

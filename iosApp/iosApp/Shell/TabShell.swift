@@ -132,7 +132,7 @@ struct TabShell: View {
                         searching: $storeSearching
                     )
                 case .my:
-                    PlaceholderScreen(id: "Y-01", title: "마이", description: "프로필 · 기록 · 설정")
+                    MyScreen(onSettings: { open(.settings) })
                 case .weight:
                     Color.clear // 통로
                 }
