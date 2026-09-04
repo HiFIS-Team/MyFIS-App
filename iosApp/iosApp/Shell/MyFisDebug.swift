@@ -8,11 +8,13 @@ import UIKit
 ///
 /// ```
 /// SIMCTL_CHILD_MYFIS_ROUTE=notifications      잎 화면을 띄운 채로 시작
-///   (notifications · store_my · store_cart · weight_log · activity · store_item · branch)
+///   (notifications · store_my · store_cart · weight_log · activity · store_item · branch
+///    · water · water_time · group_create)
 /// SIMCTL_CHILD_MYFIS_TAB=benefit              그 탭에서 시작 (home · benefit · store · my)
 /// SIMCTL_CHILD_MYFIS_TABSET=weight            웨이트 세트에서 시작
 /// SIMCTL_CHILD_MYFIS_WEIGHTTAB=cardio         웨이트 세트의 어느 탭에서 시작할지
 /// SIMCTL_CHILD_MYFIS_CARDIOTAB=monthly        유산소 미션 갈래 (daily · weekly · monthly)
+/// SIMCTL_CHILD_MYFIS_GROUP_CREATE=filled      모임 개설(G-03)을 채운 채로 (filled · expanded)
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               창 애니메이션을 0.1배로 (전환 프레임 확인)
@@ -36,6 +38,7 @@ enum MyFisDebug {
         case "branch": .branch
         case "water": .water
         case "water_time": .waterTime
+        case "group_create": .groupCreate
         default: nil
         }
     }
@@ -90,6 +93,21 @@ enum MyFisDebug {
         }
         #else
         .daily
+        #endif
+    }
+
+    /// 모임 개설(G-03) 을 채운 채로 — `SIMCTL_CHILD_MYFIS_GROUP_CREATE=filled`.
+    /// 시뮬레이터에는 **글자를 칠 수단이 없어** 채운 뒤 모습(`모이는 때` 칸 · 활성 버튼)을
+    /// 볼 방법이 이것뿐이다. `expanded` 면 갈래 칩까지 펼친다
+    static var groupCreateFill: (name: String, category: GroupCategory, expanded: Bool)? {
+        #if DEBUG
+        switch env["MYFIS_GROUP_CREATE"] {
+        case "filled": ("아침 러닝 크루", .running, false)
+        case "expanded": ("아침 러닝 크루", .running, true)
+        default: nil
+        }
+        #else
+        nil
         #endif
     }
 

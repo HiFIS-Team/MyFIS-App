@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.myfis.app.ui.screens.GroupCreateScreen
 import com.myfis.app.ui.screens.GroupScreen
 import com.myfis.app.ui.screens.ActivityIntroScreen
 import com.myfis.app.ui.screens.BenefitAction
@@ -78,6 +79,7 @@ fun AppShell() {
                 storeSearching = storeSearching,
                 onStoreSearching = { storeSearching = it },
                 onWeightLog = { nav.navigateOnce(Route.WEIGHT_LOG) },
+                onGroupCreate = { nav.navigateOnce(Route.GROUP_CREATE) },
                 onActivity = {
                     // 물 마시기는 **때가 정해진 미션**이라 랜딩을 거치지 않는다 (§6.25, 체중과 같은 처리)
                     if (it.kind == BenefitKind.WATER) {
@@ -111,6 +113,13 @@ fun AppShell() {
                 times = waterTimes,
                 onSave = { waterTimes = it },
                 onBack = { nav.popBackStack() },
+            )
+        }
+        composable(Route.GROUP_CREATE) {
+            // TODO(G-03 2단계): 소개·정원을 묻는 다음 장이 붙으면 `onNext` 를 잇는다
+            GroupCreateScreen(
+                onClose = { nav.popBackStack() },
+                onNext = { _, _, _, _ -> nav.popBackStack() },
             )
         }
         composable(Route.WEIGHT_LOG) {
@@ -162,6 +171,7 @@ private fun TabShell(
     storeSearching: Boolean,
     onStoreSearching: (Boolean) -> Unit,
     onWeightLog: () -> Unit,
+    onGroupCreate: () -> Unit,
     onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
@@ -205,6 +215,7 @@ private fun TabShell(
                         baseTab = BaseTab.STORE
                         tabSet = TabSet.BASE
                     },
+                    onGroupCreate = onGroupCreate,
                 )
             }
         }
@@ -276,13 +287,13 @@ private fun BaseTabContent(
 }
 
 @Composable
-private fun WeightTabContent(tab: WeightTab, onStore: () -> Unit) {
+private fun WeightTabContent(tab: WeightTab, onStore: () -> Unit, onGroupCreate: () -> Unit) {
     when (tab) {
         WeightTab.WEIGHT -> PlaceholderScreen("W-01", "이번 주 루틴", "AI가 보낸 주간 루틴")
         // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
         WeightTab.CARDIO -> CardioScreen(onStore = onStore)
         WeightTab.RANKING -> PlaceholderScreen("R-01", "랭킹", "웨이트 · 유산소 · 마일리지")
-        WeightTab.GROUP -> GroupScreen()
+        WeightTab.GROUP -> GroupScreen(onCreate = onGroupCreate)
         WeightTab.BACK -> Unit
     }
 }

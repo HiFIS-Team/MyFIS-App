@@ -452,19 +452,44 @@ enum class GroupSegment(val label: String) {
 }
 
 /**
- * 모임 갈래 — **운동 종류로 가른다** 🟢 (2026-09-04, 사용자 지정).
+ * 모임 갈래 — **운동 반 · 친목 반** 🟢 (2026-09-04, 사용자 지정).
  *
- * 원본은 `운동 · 동네친구 · 아웃도어/여행 · 자기계발` 인데 그건 동네 전체를 훑을 때 쓰는 잣대다.
- * 우리는 **헬스장 안**이라 그 넷 중 셋이 빈다.
+ * 처음엔 `러닝 · 웨이트 · 클래스 · 대회` 넷이었는데 **운동만 담겼다.**
+ * 이 탭은 *운동 모임*이 아니라 **같은 헬스장 사람들이 친해지는 자리**라
+ * 밥·정보·나들이가 갈 데가 없었다 → 넷을 더했다.
  *
- * 갈래마다 다른 그림을 준다 — 줄 목록에서 **글을 안 읽어도** 종류가 보인다
+ * 원본(당근)은 `운동 · 동네친구 · 아웃도어/여행 · 자기계발 …` 열둘인데,
+ * 그건 **동네 전체**를 훑을 때 쓰는 잣대다. 한 지점 모임은 열 개 남짓이라
+ * 열둘이면 갈래당 한 개도 안 된다 — **여덟이 우리 크기다.**
+ *
+ * 그림은 새로 그리지 않고 **있는 것에서 골랐다** (§8: 28px 에서 뭘로 읽히는지).
+ *
+ * ⚠️ **이 목록이 앱의 유일한 갈래 벌이다.** 모임 개설(G-03) 칩도 이걸 그대로 쓴다
  */
 enum class GroupCategory(val label: String, val icon: Int) {
     ALL("전체", R.drawable.ic_tab_group),
-    RUNNING("러닝", R.drawable.ic_tab_cardio),
     WEIGHT("웨이트", R.drawable.ic_tab_weight),
-    CLASS("클래스", R.drawable.ic_tab_group),
+    RUNNING("러닝", R.drawable.ic_tab_cardio),
+    /**
+     * ⚠️ `ic_place_stretch`(요가 매트)는 **원색 두 톤 지도용**이라
+     * 한 색으로 누르면 둥근 덩어리가 된다 (2026-09-04 확인, §8)
+     */
+    CLASS("클래스", R.drawable.ic_benefit_stretch),
+
+    /** 밖으로 나간다 — 핀이 그 뜻을 제일 짧게 낸다 */
+    OUTDOOR("아웃도어", R.drawable.ic_place_pin),
+
+    /** 잔 두 개. 밥·커피 모임이라 먹는 그림이어야 한다 */
+    SOCIAL("친목", R.drawable.ic_tab_store),
+    DIET("식단", R.drawable.ic_home_diet),
+    INFO("정보공유", R.drawable.ic_quest_board),
     CONTEST("대회", R.drawable.ic_tab_ranking),
+    ;
+
+    companion object {
+        /** 만들 때 고를 수 있는 것 — `전체` 는 목록 갈래 줄에만 있는 자리다 */
+        val pickable get() = entries.filter { it != ALL }
+    }
 }
 
 /** 정렬·필터 칩 (SPEC G-01) */
@@ -495,11 +520,13 @@ val groupPlaceholder = listOf(
     GroupItem(1, GroupCategory.RUNNING, "아침 러닝 크루", "출근 전에 한 바퀴 돌고 가요", "매일 06:00", 24, joined = true, unread = true),
     GroupItem(2, GroupCategory.WEIGHT, "스쿼트 100개 클럽", "하루 100개, 인증만 하면 끝", "매일 자유", 51, joined = true),
     GroupItem(3, GroupCategory.CLASS, "필라테스 같이 들어요", "3인 이상 모이면 그룹 할인", "화·목 20:00", 12),
-    GroupItem(4, GroupCategory.RUNNING, "주말 장거리", "10km 이상 뛰는 사람만", "토 08:00", 18),
-    GroupItem(5, GroupCategory.CONTEST, "가을 바디 챌린지", "8주 뒤 인바디로 순위 가려요", "10월 1일 시작", 87),
-    GroupItem(6, GroupCategory.WEIGHT, "3대 500 가자", "스쿼트·벤치·데드 합계 올리기", "월·수·금 19:00", 33),
-    GroupItem(7, GroupCategory.CLASS, "초보 요가", "처음 오신 분 환영해요", "일 10:00", 9),
-    GroupItem(8, GroupCategory.CONTEST, "10월 마일리지 왕", "이번 달 P 제일 많이 모으기", "10월 한 달", 142),
+    GroupItem(4, GroupCategory.SOCIAL, "운동 끝나고 한 잔", "단백질 쉐이크든 맥주든", "금 21:00", 37),
+    GroupItem(5, GroupCategory.DIET, "도시락 같이 싸요", "일요일에 한 주치 준비", "일 14:00", 19),
+    GroupItem(6, GroupCategory.OUTDOOR, "주말 등산", "무등산부터 시작해요", "토 07:00", 26),
+    GroupItem(7, GroupCategory.WEIGHT, "3대 500 가자", "스쿼트·벤치·데드 합계 올리기", "월·수·금 19:00", 33),
+    GroupItem(8, GroupCategory.CONTEST, "가을 바디 챌린지", "8주 뒤 인바디로 순위 가려요", "10월 1일 시작", 87),
+    GroupItem(9, GroupCategory.INFO, "보충제·장비 정보방", "뭐 살지 물어보는 곳", "아무 때나", 64),
+    GroupItem(10, GroupCategory.CLASS, "초보 요가", "처음 오신 분 환영해요", "일 10:00", 9),
 )
 
 /** 가로 줄 — **든 모임이 앞**, 그다음이 추천이다 */

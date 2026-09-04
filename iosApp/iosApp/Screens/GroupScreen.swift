@@ -353,29 +353,53 @@ enum GroupSegment: CaseIterable {
     }
 }
 
-/// 모임 갈래 — **운동 종류로 가른다** 🟢 (2026-09-04, 사용자 지정).
+/// 모임 갈래 — **운동 반 · 친목 반** 🟢 (2026-09-04, 사용자 지정).
 ///
-/// 원본은 `운동 · 동네친구 · 아웃도어/여행 · 자기계발` 인데 그건 동네 전체를 훑을 때 쓰는 잣대다.
-/// 우리는 **헬스장 안**이라 그 넷 중 셋이 빈다
+/// 처음엔 `러닝 · 웨이트 · 클래스 · 대회` 넷이었는데 **운동만 담겼다.**
+/// 이 탭은 *운동 모임*이 아니라 **같은 헬스장 사람들이 친해지는 자리**라
+/// 밥·정보·나들이가 갈 데가 없었다 → 넷을 더했다.
+///
+/// 원본(당근)은 `운동 · 동네친구 · 아웃도어/여행 · 자기계발 …` 열둘인데,
+/// 그건 **동네 전체**를 훑을 때 쓰는 잣대다. 한 지점 모임은 열 개 남짓이라
+/// 열둘이면 갈래당 한 개도 안 된다 — **여덟이 우리 크기다.**
+///
+/// ⚠️ **이 목록이 앱의 유일한 갈래 벌이다.** 모임 개설(G-03) 칩도 이걸 그대로 쓴다
 enum GroupCategory: CaseIterable {
-    case all, running, weight, classRoom, contest
+    case all, weight, running, classRoom, outdoor, social, diet, info, contest
+
+    /// 만들 때 고를 수 있는 것 — `전체` 는 목록 갈래 줄에만 있는 자리다
+    static var pickable: [GroupCategory] { allCases.filter { $0 != .all } }
 
     var title: String {
         switch self {
         case .all: "전체"
-        case .running: "러닝"
         case .weight: "웨이트"
+        case .running: "러닝"
         case .classRoom: "클래스"
+        case .outdoor: "아웃도어"
+        case .social: "친목"
+        case .diet: "식단"
+        case .info: "정보공유"
         case .contest: "대회"
         }
     }
 
-    /// 갈래마다 다른 그림을 준다 — 줄 목록에서 **글을 안 읽어도** 종류가 보인다
+    /// 갈래마다 다른 그림을 준다 — 줄 목록에서 **글을 안 읽어도** 종류가 보인다.
+    /// 새 그림을 그리지 않고 **있는 것에서 골랐다** (§8: 28px 에서 뭘로 읽히는지)
     var icon: String {
         switch self {
-        case .all, .classRoom: "ic_tab_group"
-        case .running: "ic_tab_cardio"
+        case .all: "ic_tab_group"
         case .weight: "ic_tab_weight"
+        case .running: "ic_tab_cardio"
+        // ⚠️ `ic_place_stretch`(요가 매트)는 **원색 두 톤 지도용**이라
+        // 한 색으로 누르면 둥근 덩어리가 된다 (2026-09-04 확인, §8)
+        case .classRoom: "ic_benefit_stretch"
+        // 밖으로 나간다 — 핀이 그 뜻을 제일 짧게 낸다
+        case .outdoor: "ic_place_pin"
+        // 잔 두 개. 밥·커피 모임이라 먹는 그림이어야 한다
+        case .social: "ic_tab_store"
+        case .diet: "ic_home_diet"
+        case .info: "ic_quest_board"
         case .contest: "ic_tab_ranking"
         }
     }
@@ -423,16 +447,20 @@ enum GroupPlaceholder {
               summary: "하루 100개, 인증만 하면 끝", schedule: "매일 자유", members: 51, joined: true),
         .init(id: 3, category: .classRoom, name: "필라테스 같이 들어요",
               summary: "3인 이상 모이면 그룹 할인", schedule: "화·목 20:00", members: 12),
-        .init(id: 4, category: .running, name: "주말 장거리",
-              summary: "10km 이상 뛰는 사람만", schedule: "토 08:00", members: 18),
-        .init(id: 5, category: .contest, name: "가을 바디 챌린지",
-              summary: "8주 뒤 인바디로 순위 가려요", schedule: "10월 1일 시작", members: 87),
-        .init(id: 6, category: .weight, name: "3대 500 가자",
+        .init(id: 4, category: .social, name: "운동 끝나고 한 잔",
+              summary: "단백질 쉐이크든 맥주든", schedule: "금 21:00", members: 37),
+        .init(id: 5, category: .diet, name: "도시락 같이 싸요",
+              summary: "일요일에 한 주치 준비", schedule: "일 14:00", members: 19),
+        .init(id: 6, category: .outdoor, name: "주말 등산",
+              summary: "무등산부터 시작해요", schedule: "토 07:00", members: 26),
+        .init(id: 7, category: .weight, name: "3대 500 가자",
               summary: "스쿼트·벤치·데드 합계 올리기", schedule: "월·수·금 19:00", members: 33),
-        .init(id: 7, category: .classRoom, name: "초보 요가",
+        .init(id: 8, category: .contest, name: "가을 바디 챌린지",
+              summary: "8주 뒤 인바디로 순위 가려요", schedule: "10월 1일 시작", members: 87),
+        .init(id: 9, category: .info, name: "보충제·장비 정보방",
+              summary: "뭐 살지 물어보는 곳", schedule: "아무 때나", members: 64),
+        .init(id: 10, category: .classRoom, name: "초보 요가",
               summary: "처음 오신 분 환영해요", schedule: "일 10:00", members: 9),
-        .init(id: 8, category: .contest, name: "10월 마일리지 왕",
-              summary: "이번 달 P 제일 많이 모으기", schedule: "10월 한 달", members: 142),
     ]
 
     /// 가로 줄 — **든 모임이 앞**, 그다음이 추천이다

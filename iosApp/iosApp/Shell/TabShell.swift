@@ -150,7 +150,7 @@ struct TabShell: View {
                 case .ranking:
                     PlaceholderScreen(id: "R-01", title: "랭킹", description: "웨이트 · 유산소 · 마일리지")
                 case .group:
-                    GroupScreen()
+                    GroupScreen(onCreate: { open(.groupCreate) })
                 case .back:
                     Color.clear // 통로
                 }

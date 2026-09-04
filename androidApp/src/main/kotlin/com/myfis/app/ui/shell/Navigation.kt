@@ -21,6 +21,9 @@ object Route {
     /** P-08 체중 기록 */
     const val WEIGHT_LOG = "weight_log"
 
+    /** G-03 모임 개설 — 모임 탭(G-01)의 `＋ 모임 만들기` 로 들어온다 */
+    const val GROUP_CREATE = "group_create"
+
     /** 적립 활동 랜딩 (DESIGN §6.25) */
     const val ACTIVITY_INTRO = "activity_intro"
 
