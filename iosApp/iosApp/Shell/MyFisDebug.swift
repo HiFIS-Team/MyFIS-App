@@ -23,6 +23,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               상품 검색 잎(MYFIS_ROUTE=store_search)을 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_GROUP_SEARCH=러닝        모임 검색 잎(MYFIS_ROUTE=group_search)을 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_RECENTS=음료,타월          최근 검색을 이 목록으로 채운 채 시작
+/// SIMCTL_CHILD_MYFIS_TOAST=모임을 만들었어요   토스트를 띄운 채로 시작 (MYFIS_MOTION 으로 늘려서 본다)
 /// SIMCTL_CHILD_MYFIS_MOTION=15                우리 전환을 15배 느리게 (중간 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               **창** 애니메이션만 0.1배 (잎 밀어넣기 등)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
@@ -282,6 +283,17 @@ enum MyFisDebug {
         env["MYFIS_GROUP_SEARCH"] ?? ""
         #else
         ""
+        #endif
+    }
+
+    /// 토스트를 띄운 채로 시작한다 — `SIMCTL_CHILD_MYFIS_TOAST=모임을 만들었어요`.
+    /// 시뮬레이터에는 버튼을 누를 수단이 없어 **뜬 모습**을 볼 방법이 이것뿐이다.
+    /// 머무는 시간도 `MYFIS_MOTION` 배율을 타므로 같이 쓰면 넉넉히 찍을 수 있다
+    static var initialToast: String? {
+        #if DEBUG
+        env["MYFIS_TOAST"]
+        #else
+        nil
         #endif
     }
 

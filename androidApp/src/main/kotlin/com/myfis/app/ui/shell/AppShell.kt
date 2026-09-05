@@ -14,6 +14,8 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import com.myfis.app.ui.components.ToastLayer
+import com.myfis.app.ui.components.ToastState
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
@@ -72,6 +74,8 @@ fun AppShell() {
     var waterTimes by rememberSaveable { mutableStateOf(waterDefaultTimes) }
     // 찜 — 스토어 홈과 검색 잎(S-07)이 나눠 쓴다. TODO(서버): 계정에 붙는다
     val liked = remember { mutableStateMapOf<Int, Boolean>() }
+    // 토스트 — **셸이 든다.** 잎에서 한 일도 잎이 걷힌 뒤에 알려야 한다 (§6.35)
+    val toasts = remember { ToastState() }
     // 최근 검색 — 잎이 열렸다 닫혀도 남아야 하므로 셸이 든다. TODO(서버): 계정에 붙는다
     val storeRecents = remember { SearchRecents() }
     val groupRecents = remember { SearchRecents() }
@@ -80,6 +84,8 @@ fun AppShell() {
     // 개설 화면과 지역 설정이 나눠 쓴다 — 잎이 둘이라 셸이 들고 있는다 (상품 상세와 같다)
     var groupRegion by rememberSaveable { mutableStateOf<String?>(null) }
 
+    // **잎보다도 위다** — 잎에서 한 일을 잎이 걷히면서 알려야 한다
+    Box(Modifier.fillMaxSize()) {
     NavHost(
         navController = nav,
         startDestination = Route.SHELL,
@@ -150,7 +156,10 @@ fun AppShell() {
             GroupIntroScreen(
                 onClose = { nav.popBackStack(Route.SHELL, false) },
                 onBack = { nav.popBackStack() },
-                onCreate = { nav.popBackStack(Route.SHELL, false) },
+                onCreate = {
+                    nav.popBackStack(Route.SHELL, false)
+                    toasts.show("모임을 만들었어요")
+                },
             )
         }
         composable(Route.GROUP_REGION) {
@@ -205,6 +214,9 @@ fun AppShell() {
                 )
             }
         }
+    }
+
+    ToastLayer(toasts)
     }
 }
 

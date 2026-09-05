@@ -28,6 +28,8 @@ struct AppRoot: View {
     @State private var waterTimes = WaterSlot.defaultTimes
     // 개설 화면과 지역 설정이 나눠 쓴다 — 잎이 둘이라 셸이 들고 있는다 (상품 상세와 같다)
     @State private var groupRegion: String? = MyFisDebug.groupCreateRegion
+    /// 토스트 — **셸이 든다.** 잎에서 한 일도 잎이 걷힌 뒤에 알려야 한다 (§6.35)
+    @State private var toasts = ToastCenter()
     /// 가장자리 스와이프로 끌고 있는 거리
     @State private var drag: CGFloat = 0
 
@@ -54,12 +56,17 @@ struct AppRoot: View {
                         .transition(.move(edge: .trailing))
                         .gesture(isTop ? edgeBack(width: proxy.size.width) : nil)
                 }
+
+                // **잎보다도 위다** — 잎에서 한 일을 잎이 걷히면서 알려야 한다
+                ToastLayer(center: toasts)
+                    .zIndex(Double(pages.count + 1))
             }
         }
         .ignoresSafeArea(.keyboard)
         .task {
             // 유산소 `ORDER` 칸의 잔은 프레임 57장이라 **화면에서 풀면 늦는다** (§6.28).
             // 앱이 뜰 때 배경에서 미리 펴 둔다 — 도착했을 땐 준비돼 있다
+            if let toast = MyFisDebug.initialToast { toasts.show(toast) }
             AnimatedDrink.prewarm()
             MyFisDebug.applySlowMotionIfNeeded()
             MyFisDebug.scheduleAutoNavigation(open: open, back: back)
@@ -177,7 +184,10 @@ struct AppRoot: View {
             case .groupIntro:
                 // TODO(서버): `모임 만들기` 가 실제로 모임을 만든다. 지금은 셸로 돌아간다
                 GroupIntroScreen(onClose: { back(); back() }, onBack: back,
-                                 onCreate: { _ in back(); back() })
+                                 onCreate: { _ in
+                                     back(); back()
+                                     toasts.show("모임을 만들었어요")
+                                 })
             }
         }
     }

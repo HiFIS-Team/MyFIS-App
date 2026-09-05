@@ -73,6 +73,10 @@ enum MyFisMotion {
     /// 바텀시트, 화면 전환
     static let slow = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.32 * scale)
 
+    /// 토스트가 **머무는 시간** (§6.35) — 들어오고 나가는 `base` 와 별개다.
+    /// 한 줄을 읽고도 남을 만큼이면 된다. 길면 화면을 가리고, 짧으면 못 읽는다
+    static let toastHold: Double = 2.0 * scale
+
     /// 전환을 늦춰 **중간 프레임**을 본다 — `SIMCTL_CHILD_MYFIS_MOTION=15` (디버그 빌드 전용).
     ///
     /// ⚠️ `MYFIS_SLOWMO` 로는 안 된다 (2026-09-04 확인) — 그건 `window.layer.speed` 라
