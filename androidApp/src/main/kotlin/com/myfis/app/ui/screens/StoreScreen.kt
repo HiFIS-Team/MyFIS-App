@@ -16,6 +16,9 @@ import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -41,7 +44,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -342,6 +344,9 @@ private fun ItemRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            // **한 줄의 카드는 높이가 같다** — 제목이 한 줄인 카드도 두 줄짜리에 맞춘다.
+            // 이래야 카드 안에서 `weight` 로 남는 세로를 먹을 수 있다 (iOS 와 같은 방식)
+            .height(IntrinsicSize.Max)
             .padding(horizontal = MyFisSpacing.screenHorizontal, vertical = MyFisSpacing.sm),
         horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
     ) {
@@ -352,7 +357,7 @@ private fun ItemRow(
                 liked = liked[item.id] == true,
                 onLike = { onLike(item.id) },
                 onClick = { onItem(item) },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             )
         }
         // 홀수로 끝나면 왼쪽 카드가 폭을 다 먹지 않도록 빈자리를 남긴다
@@ -421,13 +426,13 @@ fun ItemCard(
 
         // 제목이 한 줄인 카드는 두 줄째가 빈다. 그 **빈 줄을 가격 위로 보낸다** —
         // 제목 바로 밑에 두면 제목과 조회수가 남처럼 떨어져 보인다 (2026-09-04).
-        // 카드 높이는 그대로 서로 같다 — 빈 줄을 없앤 게 아니라 자리만 옮긴 것이다
-        var titleLines by remember(item.id) { mutableIntStateOf(TitleLines) }
-        val slack = with(LocalDensity.current) {
-            if (titleLines < TitleLines) TitleLineHeight.toDp() else 0.dp
-        }
-
-        Column(Modifier.padding(MyFisSpacing.md)) {
+        //
+        // ⚠️⚠️ **글자를 재서 자리를 잡지 않는다** 🟢 (2026-09-05 버그, 사용자 지적).
+        // 전에는 `onTextLayout` 으로 줄 수를 재서 여백을 더했는데, 그건 **재고 나서 다시 배치**하는
+        // 되먹임이라 한 프레임 늦게 고쳐진다. 칸이 재활용되면(`item.id` 가 바뀌면) 값이 되돌아갔다가
+        // 다음 프레임에 잡혀서 **제목이 깜빡인다.**
+        // iOS 는 처음부터 `Spacer` 로 먹고 있었다 — 같은 방식으로 맞춘다
+        Column(Modifier.padding(MyFisSpacing.md).weight(1f)) {
             Text(
                 item.name,
                 // 행간은 토큰(24)보다 좁힌다 — 상품 이름은 두 줄이 붙어 한 덩어리로 읽혀야 한다
@@ -435,14 +440,15 @@ fun ItemCard(
                 color = if (dimmed) MyFisColor.TextTertiary else MyFisColor.TextPrimary,
                 maxLines = TitleLines,
                 overflow = TextOverflow.Ellipsis,
-                onTextLayout = { titleLines = it.lineCount },
             )
             // 제목과 한 덩어리다 — 무엇을 파는지 다음에 얼마나 팔렸는지가 붙어 읽힌다
             MetaRow(item, Modifier.padding(top = MyFisSpacing.xs))
+
+            // **남는 세로는 여기서 먹는다** — 빈 줄이 가격 위로 간다
+            Spacer(Modifier.weight(1f).heightIn(min = MyFisSpacing.sm))
+
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = MyFisSpacing.sm + slack),
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 MileageText(
