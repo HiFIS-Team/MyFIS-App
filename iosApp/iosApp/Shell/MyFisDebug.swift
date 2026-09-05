@@ -19,6 +19,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_GROUP_AI=on              모임 소개(G-03 2단계)의 AI 도움받기를 켠 채로
 /// SIMCTL_CHILD_MYFIS_GROUP_SORT=popular       모임 목록 칩 (popular · rising · thisWeek · order 차례 목록 펼침)
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
+/// SIMCTL_CHILD_MYFIS_STORE_CATEGORY=drink     스토어를 이 갈래로 시작 (all · drink · caffeine · protein · goods)
 /// SIMCTL_CHILD_MYFIS_SEARCH=음료               상품 검색 잎(MYFIS_ROUTE=store_search)을 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_GROUP_SEARCH=러닝        모임 검색 잎(MYFIS_ROUTE=group_search)을 이 검색어로 시작
 /// SIMCTL_CHILD_MYFIS_RECENTS=음료,타월          최근 검색을 이 목록으로 채운 채 시작
@@ -242,6 +243,16 @@ enum MyFisDebug {
         #if DEBUG
         guard let delay = env["MYFIS_AUTOPLAY"].flatMap(Double.init) else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: play)
+        #endif
+    }
+
+    /// 스토어 시작 갈래 — `SIMCTL_CHILD_MYFIS_STORE_CATEGORY=drink`.
+    /// 시뮬레이터에는 칩을 누를 수단이 없어 **고른 상태**를 볼 방법이 이것뿐이다
+    static var initialStoreCategory: StoreCategory {
+        #if DEBUG
+        StoreCategory(rawValue: env["MYFIS_STORE_CATEGORY"] ?? "") ?? .all
+        #else
+        .all
         #endif
     }
 

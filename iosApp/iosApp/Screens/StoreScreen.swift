@@ -20,7 +20,7 @@ struct StoreScreen: View {
     /// 찜 — 검색 잎(S-07)과 나눠 쓰므로 셸이 들고 있다
     @Binding var liked: Set<Int>
 
-    @State private var category: StoreCategory = .all
+    @State private var category: StoreCategory = MyFisDebug.initialStoreCategory
 
     private var items: [StoreItem] {
         StorePlaceholder.items.filter { category == .all || $0.category == category }
@@ -250,9 +250,22 @@ private struct CategoryFilter: View {
                         // 상품이 한 장씩 제각각 나타난다 (Android 는 그냥 갈린다).
                         selected = category
                     } label: {
+                        // ⚠️⚠️ **자리는 늘 굵은 쪽 기준으로 잡는다** 🟢 (2026-09-05 버그, 사용자 지적).
+                        // 고른 글자는 `title.sm`(17), 나머지는 `body`(16) 라 **크기가 다르다.**
+                        // 글꼴을 그대로 갈아 끼우면 고를 때마다 두 라벨의 폭이 동시에 바뀌면서
+                        // **줄 전체가 밀린다** — 그게 "지지직" 이다. 밑줄도 움직이는 자리를 쫓게 된다.
+                        // 안 보이는 굵은 글씨로 자리를 잡고, 보이는 글자만 갈아 끼운다.
+                        // (안드로이드는 애초에 `title.sm` 한 크기에서 굵기만 바꿔 이 문제가 없다)
                         Text(category.label)
-                            .font(isSelected ? MyFisFont.titleSm : MyFisFont.body)
-                            .foregroundStyle(isSelected ? MyFisColor.textPrimary : MyFisColor.textTertiary)
+                            .font(MyFisFont.titleSm)
+                            .opacity(0)
+                            .overlay {
+                                Text(category.label)
+                                    .font(isSelected ? MyFisFont.titleSm : MyFisFont.body)
+                                    .foregroundStyle(isSelected ? MyFisColor.textPrimary
+                                                     : MyFisColor.textTertiary)
+                                    .fixedSize()
+                            }
                             // 글자 자체를 잰다 — 패딩까지 재면 밑줄이 글자보다 넓어진다
                             .background {
                                 GeometryReader { geo in
