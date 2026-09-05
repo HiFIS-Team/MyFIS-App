@@ -110,7 +110,10 @@ fun MyFisTabBar(
                 // 떠 있을 때는 **살짝 비친다** (§6.7) — 바 아래가 칼로 자른 듯 끊기지 않게.
                 // 붙어 있을 때는 화면 끝이라 비칠 것이 없으므로 그대로 둔다
                 .background(
-                    if (floating) MyFisColor.Surface2Floating else MyFisColor.Surface2,
+                    // ⚠️ 떠 있을 때 **살짝 비치게** 뒀다가 되돌렸다 🟢 (2026-09-06, 사용자 지정) —
+                    // 바 안에서 뒤 글자가 비쳐 **바가 더러워 보였다.** 바는 불투명하다.
+                    // 콘텐츠가 바 **밑으로 흐르는 것**(§6.7)은 그대로다 — 그게 "떠 있음"을 낸다
+                    MyFisColor.Surface2,
                     RoundedCornerShape(
                         topStart = 28.dp,
                         topEnd = 28.dp,
