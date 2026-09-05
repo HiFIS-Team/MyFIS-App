@@ -12,17 +12,15 @@ import SwiftUI
 /// 헤더 아래(카테고리·마일리지)는 **스크롤해도 남는다** (S 공통 규칙 — 살 수 있는지 매번 계산하게 하지 않는다).
 struct StoreScreen: View {
     /// 헤더는 **이 화면이 직접 그린다** (§6.9) — 검색 · 장바구니 · 마이
+    var onSearch: () -> Void = {}
     var onCart: () -> Void = {}
     var onMy: () -> Void = {}
     var onItem: (StoreItem) -> Void = { _ in }
 
-    /// 검색 모드. **셸이 들고 있다** — 상품 상세의 검색 버튼도 이 모드를 켠다
-    @Binding var searching: Bool
+    /// 찜 — 검색 잎(S-07)과 나눠 쓰므로 셸이 들고 있다
+    @Binding var liked: Set<Int>
 
-    @State private var query = MyFisDebug.initialSearchQuery
     @State private var category: StoreCategory = .all
-    /// TODO(서버): 찜은 계정에 붙는다. 지금은 화면이 들고 있다
-    @State private var liked: Set<Int> = []
 
     private var items: [StoreItem] {
         StorePlaceholder.items.filter { category == .all || $0.category == category }
@@ -52,7 +50,7 @@ struct StoreScreen: View {
 
             Spacer(minLength: MyFisSpacing.md)
 
-            HeaderIcon("ic_header_search", "검색", action: openSearch)
+            HeaderIcon("ic_header_search", "검색", action: onSearch)
             HeaderIcon("ic_header_cart", "장바구니", action: onCart)
             HeaderIcon("ic_header_my", "마이", action: onMy)
         }
@@ -60,86 +58,15 @@ struct StoreScreen: View {
         .frame(height: MyFisSize.header)
     }
 
-    /// 검색 덮개 — **자기 헤더를 들고 다닌다.**
-    ///
-    /// 전에는 헤더 줄과 본문이 **다른 컨테이너**에서 각자 밀려 들어왔다. 들어올 때는 맞아 보였는데
-    /// 나갈 때 **글씨가 늦게 따라 나갔다** (2026-09-04 사용자 지적) — 둘을 맞추는 건
-    /// 두 애니메이션을 맞춘다는 뜻이고, 그건 어느 쪽이든 어긋난다.
-    /// **한 판에 담으면 맞출 것이 없다** — 장바구니·마이 같은 잎이 그렇게 움직인다
-    private var searchOverlay: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: 0) {
-                StoreSearchInput(text: $query, active: searching)
-                    .padding(.trailing, MyFisSpacing.xs)
-                HeaderIcon("ic_header_close", "검색 닫기", action: closeSearch)
-            }
-            .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-            .frame(height: MyFisSize.header)
-
-            StoreSearchResults(
-                query: $query,
-                balance: StorePlaceholder.balance,
-                liked: liked,
-                onLike: toggleLike,
-                onItem: onItem
-            )
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 뒤를 덮어야 한다 — 비치면 두 화면이 겹쳐 읽힌다
-        .background(MyFisColor.bgBase)
-    }
-
-    /// **옆에서 밀려 들어온다** 🟢 (2026-09-04 개정, 사용자 지정).
-    ///
-    /// ⚠️ 전 규칙은 *애니메이션 없이 그 자리에서 바꾼다* 였다 — 그때는 **필드가 이미 그 자리에 있어서**
-    /// 자라 들어오는 게 기다림으로 읽혔다. 지금은 아이콘이라 **없던 것이 생기는 것**이고,
-    /// 어디서 왔는지 안 보이면 화면이 튄 것처럼 읽힌다.
-    /// 화면이 바뀌는 것이라 `fast` 가 아니라 `base`(200ms) 다 (§7)
-    private func openSearch() {
-        // **여기서 지운다.** 닫을 때 지우면 나가는 중인 필드에서 글자가 먼저 사라져
-        // 판과 글씨가 따로 움직이는 것처럼 보인다 (2026-09-04)
-        query = ""
-        withAnimation(MyFisMotion.base) { searching = true }
-    }
-
-    /// 닫는 건 **판을 통째로 내보내는 것뿐**이다. 검색어는 다음에 열 때 지운다 (위 `openSearch`)
-    private func closeSearch() {
-        withAnimation(MyFisMotion.base) { searching = false }
-    }
-
     var body: some View {
-        ZStack(alignment: .top) {
-            VStack(spacing: 0) {
-                header
-                home
-            }
-
-            // **판은 늘 여기 있다. 자리만 옮긴다** 🟢 (2026-09-04, 사용자 지정).
-            //
-            // `transition` 으로 붙였다 떼면 **들어오는 순간에야 안쪽이 만들어진다** —
-            // 특히 `TextField` 는 UIKit 뷰라 뒤늦게 그려져서
-            // **판은 들어왔는데 글씨가 따라 들어오는 것처럼** 보인다 (2026-09-04 사용자 지적).
-            // 화면 밖에 세워 두면 안쪽이 **이미 그려져 있어** 판과 같이 움직인다
-            //
-            // ⚠️ **`GeometryReader` 로 화면 전체를 감싸면 안 된다** 🟢 (2026-09-04 버그, 사용자 지적).
-            // 전에는 이 자리에서 뿌리를 통째로 감싸고 `frame(height:)` + `clipped()` 로 잘랐는데,
-            // `geo.size` 는 **안전 영역을 뺀 크기**라 본문이 **하단 탭 바 윗선에서 잘렸다.**
-            // 다른 탭은 콘텐츠가 유리 밑으로 흘러 들어가는데 스토어만 거기서 끊겨서
-            // **바가 회색 판 위에 얹힌 것처럼** 보였다. 재는 것은 **판 하나만** 감싼다
-            GeometryReader { geo in
-                searchOverlay
-                    .frame(width: geo.size.width, height: geo.size.height)
-                    // 화면 밖으로 밀어 두면 그릴 것이 없다 — 따로 잘라낼 필요가 없다
-                    .offset(x: searching ? 0 : geo.size.width)
-            }
-            // 밖에 서 있는 동안에는 없는 셈 쳐야 한다 — 보이스오버가 읽으면 안 된다
-            .accessibilityHidden(!searching)
+        VStack(spacing: 0) {
+            header
+            home
         }
-        .task { MyFisDebug.scheduleAutoSearch(openSearch) }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// 검색이 아닐 때의 본문 — 배너 · 카테고리 · 그리드.
+    /// 본문 — 배너 · 카테고리 · 그리드.
     /// **마일리지 띠가 없다** (2026-09-04) — 값이 헤더 왼쪽으로 올라가서 두 번 나오게 된다
     private var home: some View {
         VStack(spacing: 0) {
@@ -512,26 +439,3 @@ struct LikeButton: View {
     }
 }
 
-/// 스토어 헤더의 검색 자리 — 누르면 검색 화면(S-07)이 열린다.
-///
-/// 여기서 바로 입력받지 않는다: 헤더에서 키보드가 올라오면 목록이 반쯤 가린 채로 타이핑하게 된다.
-/// (안드로이드와 같은 방식이다.)
-struct StoreSearchField: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            // 판은 검색 모드와 **같은 것**을 쓴다 (§6.9). 전에는 여기서 따로 그렸다 (2026-08-27 이관)
-            StoreSearchShell {
-                Text("상품 검색")
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textTertiary)
-                Spacer(minLength: 0)
-            }
-            .contentShape(Rectangle())
-        }
-        // 판을 누르는 것에는 축소를 주지 않는다 — 진동만 (§6.7)
-        .buttonStyle(.myFisTap)
-        .accessibilityLabel("상품 검색")
-    }
-}

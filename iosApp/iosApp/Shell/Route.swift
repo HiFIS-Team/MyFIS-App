@@ -11,6 +11,10 @@ enum Route: Hashable {
     case storeMy
     /// S-06 장바구니
     case storeCart
+    /// S-07 상품 검색 — 스토어 헤더의 돋보기로 들어온다
+    case storeSearch
+    /// G-01 모임 검색 — 모임 헤더의 돋보기로 들어온다
+    case groupSearch
     /// 적립 활동 랜딩 (§6.25)
     case activity(BenefitAction)
     /// P-08 체중 기록
@@ -37,6 +41,8 @@ enum Route: Hashable {
         case .notifications: "알림"
         case .storeMy: "내 교환"
         case .storeCart: "장바구니"
+        case .storeSearch: "상품 검색"
+        case .groupSearch: "모임 검색"
         case .activity(let action): action.title
         case .weightLog: "체중 기록"
         case .storeItem(let item): item.name

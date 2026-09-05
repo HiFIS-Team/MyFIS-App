@@ -444,7 +444,7 @@ private fun SortChip(label: String, selected: Boolean, chevron: Boolean, onClick
  * 들어갈지 말지를 가르는 건 거리가 아니라 **요일·시간**이다
  */
 @Composable
-private fun GroupRow(group: GroupItem, onClick: () -> Unit) {
+fun GroupRow(group: GroupItem, onClick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
 
     Row(

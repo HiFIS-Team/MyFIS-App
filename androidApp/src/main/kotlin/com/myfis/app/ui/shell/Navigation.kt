@@ -18,6 +18,12 @@ object Route {
     const val STORE_MY = "store_my"
     const val STORE_CART = "store_cart"
 
+    /** S-07 상품 검색 — 스토어 헤더의 돋보기로 들어온다 */
+    const val STORE_SEARCH = "store_search"
+
+    /** G-01 모임 검색 — 모임 헤더의 돋보기로 들어온다 */
+    const val GROUP_SEARCH = "group_search"
+
     /** P-08 체중 기록 */
     const val WEIGHT_LOG = "weight_log"
 

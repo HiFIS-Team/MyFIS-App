@@ -32,7 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
-import com.myfis.app.ui.components.StoreSearchShell
+import com.myfis.app.ui.components.SearchField
 import com.myfis.app.ui.shell.DetailHeader
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisSize
@@ -62,38 +62,15 @@ fun RegionSearchScreen(onBack: () -> Unit = {}, onPick: (String) -> Unit = {}) {
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         DetailHeader(title = "활동 지역 설정", onBack = onBack)
 
-        // 스토어 검색과 **같은 판**이다 (§6.9) — 두 화면이 각자 그리면 그날로 어긋난다
-        StoreSearchShell(Modifier.padding(horizontal = MyFisSpacing.screenHorizontal)) {
-            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                BasicTextField(
-                    value = query,
-                    onValueChange = { query = it },
-                    singleLine = true,
-                    textStyle = MyFisTheme.type.body.copy(color = MyFisColor.TextPrimary),
-                    cursorBrush = SolidColor(MyFisColor.Accent),
-                    modifier = Modifier.fillMaxWidth(),
-                    decorationBox = { field ->
-                        if (query.isEmpty()) {
-                            Text(
-                                "동명(읍,면)으로 검색 (ex. 치평동)",
-                                style = MyFisTheme.type.body,
-                                color = MyFisColor.TextTertiary,
-                            )
-                        }
-                        field()
-                    },
-                )
-            }
-            if (query.isNotEmpty()) {
-                val clear = remember { MutableInteractionSource() }
-                Icon(
-                    painter = painterResource(R.drawable.ic_header_clear),
-                    contentDescription = "지우기",
-                    tint = MyFisColor.TextTertiary,
-                    modifier = Modifier.size(18.dp).tapWithHaptics(clear) { query = "" },
-                )
-            }
-        }
+        // 앱의 **하나뿐인 검색칸**을 쓴다 (§6.9). 여기서는 목록이 먼저라 키보드를 자동으로 올리지 않는다
+        SearchField(
+            query = query,
+            onQuery = { query = it },
+            placeholder = "동명(읍,면)으로 검색 (ex. 치평동)",
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = MyFisSpacing.screenHorizontal),
+        )
 
         // **찾는 것보다 빠른 길이다.** 대개 지금 서 있는 동네가 답이라 목록보다 위에 둔다
         val here = remember { MutableInteractionSource() }

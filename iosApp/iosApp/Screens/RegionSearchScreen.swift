@@ -53,28 +53,9 @@ struct RegionSearchScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// 스토어 검색과 **같은 판**이다 (§6.9) — 두 화면이 각자 그리면 그날로 어긋난다
+    /// 앱의 **하나뿐인 검색칸**을 쓴다 (§6.9). 여기서는 목록이 먼저라 키보드를 자동으로 올리지 않는다
     private var searchField: some View {
-        StoreSearchShell {
-            TextField("", text: $query,
-                      prompt: Text("동명(읍,면)으로 검색 (ex. 치평동)")
-                        .foregroundColor(MyFisColor.textTertiary))
-                .font(MyFisFont.body)
-                .foregroundStyle(MyFisColor.textPrimary)
-                .tint(MyFisColor.accent)
-                .submitLabel(.search)
-
-            if !query.isEmpty {
-                Button { query = "" } label: {
-                    Image("ic_header_clear")
-                        .renderingMode(.template)
-                        .resizable()
-                        .frame(width: 18, height: 18)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                }
-                .buttonStyle(.myFisIcon)
-            }
-        }
+        SearchField(text: $query, placeholder: "동명(읍,면)으로 검색 (ex. 치평동)")
     }
 
     private var list: some View {

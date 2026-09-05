@@ -22,6 +22,8 @@ struct GroupScreen: View {
     var onCreate: () -> Void = {}
     /// TODO: G-02 모임 상세가 붙으면 연결한다
     var onGroup: (GroupItem) -> Void = { _ in }
+    /// 헤더 돋보기 → **검색 잎(G-01 검색)** 을 연다.
+    /// ⚠️ 전에는 셸이 이걸 아무 데도 안 이어 줘서 **눌러도 아무 일이 없었다**
     var onSearch: () -> Void = {}
 
     @State private var segment: GroupSegment = .browse
@@ -315,7 +317,8 @@ private struct SortChips: View {
 /// **메타가 원본과 다르다.** 원본은 `📍동네 · 👤122명` 인데, 같은 지점 사람들끼리는
 /// 동네가 전부 같아 알려 주는 게 없다 → **언제 모이는지**를 그 자리에 넣었다.
 /// 들어갈지 말지를 가르는 건 거리가 아니라 **요일·시간**이다
-private struct GroupRow: View {
+/// 목록 한 줄. **검색 결과도 이 줄을 쓴다** (`GroupSearchScreen`) — 두 곳이 각자 그리면 그날로 어긋난다
+struct GroupRow: View {
     let group: GroupItem
     let onTap: () -> Void
 

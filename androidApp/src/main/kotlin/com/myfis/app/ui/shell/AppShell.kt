@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -38,6 +39,9 @@ import com.myfis.app.ui.screens.BranchScreen
 import com.myfis.app.ui.screens.CardioScreen
 import com.myfis.app.ui.screens.HomeScreen
 import com.myfis.app.ui.screens.NotificationScreen
+import com.myfis.app.ui.components.SearchRecents
+import com.myfis.app.ui.screens.GroupSearchScreen
+import com.myfis.app.ui.screens.StoreSearchScreen
 import com.myfis.app.ui.screens.StoreCartScreen
 import com.myfis.app.ui.screens.StoreItem
 import com.myfis.app.ui.screens.StoreItemScreen
@@ -66,8 +70,11 @@ fun AppShell() {
     var storeItem by remember { mutableStateOf<StoreItem?>(null) }
     // 물 마시기 미션 시각 — 두 화면이 나눠 쓴다. TODO(서버): 회원 설정으로 옮긴다 (SPEC P-05)
     var waterTimes by rememberSaveable { mutableStateOf(waterDefaultTimes) }
-    // 검색은 잎이 아니라 **스토어의 모드**다 (§6.9). 상품 상세의 검색 버튼도 이걸 켠다
-    var storeSearching by rememberSaveable { mutableStateOf(false) }
+    // 찜 — 스토어 홈과 검색 잎(S-07)이 나눠 쓴다. TODO(서버): 계정에 붙는다
+    val liked = remember { mutableStateMapOf<Int, Boolean>() }
+    // 최근 검색 — 잎이 열렸다 닫혀도 남아야 하므로 셸이 든다. TODO(서버): 계정에 붙는다
+    val storeRecents = remember { SearchRecents() }
+    val groupRecents = remember { SearchRecents() }
     // 랜딩에 띄울 활동. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다 (상품 상세와 같다)
     var benefitAction by remember { mutableStateOf<BenefitAction?>(null) }
     // 개설 화면과 지역 설정이 나눠 쓴다 — 잎이 둘이라 셸이 들고 있는다 (상품 상세와 같다)
@@ -88,8 +95,9 @@ fun AppShell() {
                 onNotification = { nav.navigateOnce(Route.NOTIFICATIONS) },
                 onStoreMy = { nav.navigateOnce(Route.STORE_MY) },
                 onStoreCart = { nav.navigateOnce(Route.STORE_CART) },
-                storeSearching = storeSearching,
-                onStoreSearching = { storeSearching = it },
+                liked = liked,
+                onStoreSearch = { nav.navigateOnce(Route.STORE_SEARCH) },
+                onGroupSearch = { nav.navigateOnce(Route.GROUP_SEARCH) },
                 onWeightLog = { nav.navigateOnce(Route.WEIGHT_LOG) },
                 onGroupCreate = { nav.navigateOnce(Route.GROUP_CREATE) },
                 onActivity = {
@@ -172,17 +180,27 @@ fun AppShell() {
                 onStore = { nav.popBackStack() },
             )
         }
+        composable(Route.STORE_SEARCH) {
+            StoreSearchScreen(
+                liked = liked,
+                recents = storeRecents,
+                onLike = { id -> liked[id] = liked[id] != true },
+                onBack = { nav.popBackStack() },
+                onItem = { storeItem = it; nav.navigateOnce(Route.STORE_ITEM) },
+            )
+        }
+        composable(Route.GROUP_SEARCH) {
+            // TODO(G-02): 모임 상세가 붙으면 결과 줄을 잇는다
+            GroupSearchScreen(recents = groupRecents, onBack = { nav.popBackStack() })
+        }
         composable(Route.STORE_ITEM) {
             // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
             storeItem?.let {
                 StoreItemScreen(
                     item = it,
                     onBack = { nav.popBackStack() },
-                    // 검색은 스토어의 모드라, 상세에서 누르면 **스토어로 돌아가 검색을 켠다**
-                    onSearch = {
-                        storeSearching = true
-                        nav.popBackStack(Route.SHELL, false)
-                    },
+                    // 검색은 잎이다 — 상세 위에 얹는다. 닫으면 상세로 돌아온다
+                    onSearch = { nav.navigateOnce(Route.STORE_SEARCH) },
                     onCart = { nav.navigateOnce(Route.STORE_CART) },
                 )
             }
@@ -197,8 +215,9 @@ private fun TabShell(
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
-    storeSearching: Boolean,
-    onStoreSearching: (Boolean) -> Unit,
+    liked: MutableMap<Int, Boolean>,
+    onStoreSearch: () -> Unit,
+    onGroupSearch: () -> Unit,
     onWeightLog: () -> Unit,
     onGroupCreate: () -> Unit,
     onActivity: (BenefitAction) -> Unit,
@@ -245,8 +264,8 @@ private fun TabShell(
                     onNotification = onNotification,
                     onStoreMy = onStoreMy,
                     onStoreCart = onStoreCart,
-                    storeSearching = storeSearching,
-                    onStoreSearching = onStoreSearching,
+                    liked = liked,
+                    onStoreSearch = onStoreSearch,
                     onWeightLog = onWeightLog,
                     onActivity = onActivity,
                     onStoreItem = onStoreItem,
@@ -265,6 +284,7 @@ private fun TabShell(
                 )
                 TabSet.WEIGHT -> WeightTabContent(
                     tab = weightTab,
+                    onGroupSearch = onGroupSearch,
                     // 유산소의 `주문` 칸 — 세트를 되돌리고 스토어로 보낸다
                     onStore = {
                         baseTab = BaseTab.STORE
@@ -306,8 +326,8 @@ private fun BaseTabContent(
     onNotification: () -> Unit,
     onStoreMy: () -> Unit,
     onStoreCart: () -> Unit,
-    storeSearching: Boolean,
-    onStoreSearching: (Boolean) -> Unit,
+    liked: MutableMap<Int, Boolean>,
+    onStoreSearch: () -> Unit,
     onWeightLog: () -> Unit,
     onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
@@ -337,8 +357,8 @@ private fun BaseTabContent(
         )
         // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
         BaseTab.STORE -> StoreScreen(
-            searching = storeSearching,
-            onSearching = onStoreSearching,
+            liked = liked,
+            onSearch = onStoreSearch,
             onMy = onStoreMy,
             onCart = onStoreCart,
             onItem = onStoreItem,
@@ -350,13 +370,18 @@ private fun BaseTabContent(
 }
 
 @Composable
-private fun WeightTabContent(tab: WeightTab, onStore: () -> Unit, onGroupCreate: () -> Unit) {
+private fun WeightTabContent(
+    tab: WeightTab,
+    onGroupSearch: () -> Unit,
+    onStore: () -> Unit,
+    onGroupCreate: () -> Unit,
+) {
     when (tab) {
         WeightTab.WEIGHT -> WeightScreen()
         // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
         WeightTab.CARDIO -> CardioScreen(onStore = onStore)
         WeightTab.RANKING -> PlaceholderScreen("R-01", "랭킹", "웨이트 · 유산소 · 마일리지")
-        WeightTab.GROUP -> GroupScreen(onCreate = onGroupCreate)
+        WeightTab.GROUP -> GroupScreen(onCreate = onGroupCreate, onSearch = onGroupSearch)
         WeightTab.BACK -> Unit
     }
 }

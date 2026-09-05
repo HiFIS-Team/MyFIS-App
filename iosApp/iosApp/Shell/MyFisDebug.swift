@@ -19,8 +19,9 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_GROUP_AI=on              모임 소개(G-03 2단계)의 AI 도움받기를 켠 채로
 /// SIMCTL_CHILD_MYFIS_GROUP_SORT=popular       모임 목록 칩 (popular · rising · thisWeek · order 차례 목록 펼침)
 /// SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom       홈을 아래로 스크롤한 채 시작
-/// SIMCTL_CHILD_MYFIS_SEARCH=음료               스토어를 검색 모드로, 이 검색어로 시작
-/// SIMCTL_CHILD_MYFIS_AUTOSEARCH=2             2초 뒤 스토어 검색을 스스로 연다 (전환 프레임 확인)
+/// SIMCTL_CHILD_MYFIS_SEARCH=음료               상품 검색 잎(MYFIS_ROUTE=store_search)을 이 검색어로 시작
+/// SIMCTL_CHILD_MYFIS_GROUP_SEARCH=러닝        모임 검색 잎(MYFIS_ROUTE=group_search)을 이 검색어로 시작
+/// SIMCTL_CHILD_MYFIS_RECENTS=음료,타월          최근 검색을 이 목록으로 채운 채 시작
 /// SIMCTL_CHILD_MYFIS_MOTION=15                우리 전환을 15배 느리게 (중간 프레임 확인)
 /// SIMCTL_CHILD_MYFIS_SLOWMO=0.1               **창** 애니메이션만 0.1배 (잎 밀어넣기 등)
 /// SIMCTL_CHILD_MYFIS_AUTOPUSH=notifications   2초 뒤 잎을 스스로 연다
@@ -37,6 +38,8 @@ enum MyFisDebug {
         case "notifications": .notifications
         case "store_my": .storeMy
         case "store_cart": .storeCart
+        case "store_search": .storeSearch
+        case "group_search": .groupSearch
         case "weight_log": .weightLog
         case "activity": .activity(activityAction)
         case "store_item": .storeItem(StorePlaceholder.items[0])
@@ -63,7 +66,7 @@ enum MyFisDebug {
     static var initialBaseTab: BaseTab {
         #if DEBUG
         let storeRoute = (env["MYFIS_ROUTE"] ?? "").hasPrefix("store")
-        if storeRoute || startsInSearch { return .store }
+        if storeRoute { return .store }
         switch env["MYFIS_TAB"] {
         case "benefit": return .benefit
         case "store": return .store
@@ -242,18 +245,9 @@ enum MyFisDebug {
         #endif
     }
 
-    /// 검색 모드로 시작할지 — 검색은 잎이 아니라 **스토어의 모드**라 라우트가 아니다 (§6.9)
-    static var startsInSearch: Bool {
-        #if DEBUG
-        env["MYFIS_SEARCH"] != nil
-        #else
-        false
-        #endif
-    }
-
-    /// 시뮬레이터에는 키보드를 칠 수단이 없다. 검색 결과를 보려면
-    /// `SIMCTL_CHILD_MYFIS_SEARCH=음료` (스토어 탭이 검색 모드로 열린다)
-    static var initialSearchQuery: String {
+    /// 시뮬레이터에는 키보드를 칠 수단이 없다 — 검색 잎을 이 검색어로 열어 준다.
+    /// `SIMCTL_CHILD_MYFIS_ROUTE=store_search MYFIS_SEARCH=음료` (비우면 최근/추천)
+    static var searchQuery: String {
         #if DEBUG
         env["MYFIS_SEARCH"] ?? ""
         #else
@@ -261,13 +255,22 @@ enum MyFisDebug {
         #endif
     }
 
-    /// 스스로 검색을 연다 — `SIMCTL_CHILD_MYFIS_AUTOSEARCH=2`.
-    /// 시뮬레이터에는 아이콘을 누를 수단이 없어 **들어오는 중간 프레임**을 볼 방법이 이것뿐이다.
-    /// `MYFIS_SLOWMO` 와 같이 쓴다
-    static func scheduleAutoSearch(_ open: @escaping () -> Void) {
+    /// 최근 검색을 채운 채 시작한다 — `SIMCTL_CHILD_MYFIS_RECENTS=음료,타월`.
+    /// 시뮬레이터에는 검색어를 칠 수단이 없어 **최근 검색 모양**을 볼 방법이 이것뿐이다
+    static var initialRecents: [String] {
         #if DEBUG
-        guard let delay = env["MYFIS_AUTOSEARCH"].flatMap(Double.init) else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: open)
+        (env["MYFIS_RECENTS"] ?? "").split(separator: ",").map(String.init)
+        #else
+        []
+        #endif
+    }
+
+    /// `SIMCTL_CHILD_MYFIS_ROUTE=group_search MYFIS_GROUP_SEARCH=러닝`
+    static var groupSearchQuery: String {
+        #if DEBUG
+        env["MYFIS_GROUP_SEARCH"] ?? ""
+        #else
+        ""
         #endif
     }
 

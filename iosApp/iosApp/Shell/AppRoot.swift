@@ -19,8 +19,11 @@ import SwiftUI
 /// 셸이 같이 움직이면 하단 바가 왕복하는 게 눈에 걸린다.
 struct AppRoot: View {
     @State private var pages: [Route] = MyFisDebug.initialRoutes
-    /// 스토어 검색 모드. **잎이 아니라 셸의 상태다** — 상품 상세의 검색 버튼도 이걸 켠다 (§6.9)
-    @State private var storeSearching = MyFisDebug.startsInSearch
+    /// 찜 — 스토어 홈과 검색 잎(S-07)이 나눠 쓴다. TODO(서버): 계정에 붙는다
+    @State private var liked: Set<Int> = []
+    /// 최근 검색 — 잎이 열렸다 닫혀도 남아야 하므로 셸이 든다. TODO(서버): 계정에 붙는다
+    @State private var storeRecents = SearchRecents()
+    @State private var groupRecents = SearchRecents()
     /// 물 마시기 미션 시각 — 두 화면이 나눠 쓴다. TODO(서버): 회원 설정으로 옮긴다 (SPEC P-05)
     @State private var waterTimes = WaterSlot.defaultTimes
     // 개설 화면과 지역 설정이 나눠 쓴다 — 잎이 둘이라 셸이 들고 있는다 (상품 상세와 같다)
@@ -39,7 +42,7 @@ struct AppRoot: View {
                 // 잎이 반투명하면 뒤가 비치므로, 바탕은 여기서 한 번만 깐다
                 MyFisColor.bgBase.ignoresSafeArea()
 
-                TabShell(open: open, storeSearching: $storeSearching)
+                TabShell(open: open, liked: $liked)
                     // 덮인 셸에는 손이 닿지 않는다
                     .allowsHitTesting(pages.isEmpty)
 
@@ -114,6 +117,10 @@ struct AppRoot: View {
     }
 
     /// 셸까지 한 번에 돌아간다 (예: 장바구니에서 "상품 보러 가기")
+    private func toggleLike(_ id: Int) {
+        if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
+    }
+
     private func backToShell() {
         withAnimation(MyFisMotion.slow) { pages.removeAll() }
     }
@@ -131,8 +138,8 @@ struct AppRoot: View {
                 StoreItemScreen(
                     item: item,
                     onBack: back,
-                    // 검색은 스토어의 모드라, 상세에서 누르면 **스토어로 돌아가 검색을 켠다**
-                    onSearch: { backToShell(); storeSearching = true },
+                    // 검색은 잎이다 — 상세 위에 얹는다. 닫으면 상세로 돌아온다
+                    onSearch: { open(.storeSearch) },
                     onCart: { open(.storeCart) }
                 )
             case .activity(let action):
@@ -141,6 +148,13 @@ struct AppRoot: View {
                 WeightLogScreen(onBack: back)
             case .storeCart:
                 StoreCartScreen(onBack: back, onStore: backToShell)
+            case .storeSearch:
+                StoreSearchScreen(liked: $liked, recents: $storeRecents, onBack: back,
+                                  onItem: { open(.storeItem($0)) },
+                                  onLike: toggleLike)
+            case .groupSearch:
+                // TODO(G-02): 모임 상세가 붙으면 결과 줄을 잇는다
+                GroupSearchScreen(recents: $groupRecents, onBack: back)
             case .storeMy:
                 StoreMyScreen(onBack: back, onCart: { open(.storeCart) })
             case .branch:
