@@ -78,6 +78,7 @@ import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
+import com.myfis.app.ui.theme.rememberMeasuredSpec
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.pressScale
 import com.myfis.app.ui.theme.tapWithHaptics
@@ -276,12 +277,14 @@ private fun CategoryFilter(
     var containerX by remember { mutableFloatStateOf(0f) }
     val bars = remember { mutableStateMapOf<StoreCategory, Pair<Float, Float>>() }
     val bar = bars[selected]
-    // 고르는 동작이라 `fast`(120ms) 다. `base`(200ms) 는 감속 커브 때문에 끝이 끌린다
+    // 고르는 동작이라 `fast`(120ms) 다. `base`(200ms) 는 감속 커브 때문에 끝이 끌린다.
+    // **처음 잰 값에는 안 움직인다** — 안 그러면 들어올 때 선이 왼쪽에서 오른쪽으로 자란다
+    val spec = rememberMeasuredSpec<Dp>(bar != null)
     val barX by animateDpAsState(
-        with(density) { (bar?.first ?: 0f).toDp() }, MyFisMotion.fast(), label = "barX",
+        with(density) { (bar?.first ?: 0f).toDp() }, spec, label = "barX",
     )
     val barWidth by animateDpAsState(
-        with(density) { (bar?.second ?: 0f).toDp() }, MyFisMotion.fast(), label = "barWidth",
+        with(density) { (bar?.second ?: 0f).toDp() }, spec, label = "barWidth",
     )
 
     Box(
