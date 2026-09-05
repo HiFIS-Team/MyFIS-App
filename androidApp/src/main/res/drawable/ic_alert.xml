@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 느낌표 — 토스트의 주의·오류 (§6.35). 동그란 색 판 안에 넣어 쓴다.
+     테두리 원을 그리지 않는다 — 판이 이미 원이라 원이 둘로 겹친다 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <path
+        android:pathData="M12,5.5 L12,14"
+        android:strokeWidth="2.6"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+    <path
+        android:pathData="M12,18.4 L12,18.4"
+        android:strokeWidth="2.8"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round" />
+</vector>

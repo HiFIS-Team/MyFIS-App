@@ -6,6 +6,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.core.tween
+import androidx.annotation.DrawableRes
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
+import com.myfis.app.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -43,16 +51,41 @@ import com.myfis.app.ui.theme.MyFisTheme
  * **라임을 쓰지 않는다** (§3.2) — 2초 뜨는 것이 화면당 두 곳뿐인 액센트 예산을 먹으면 안 된다.
  * **Material `Snackbar` 를 쓰지 않는다** — 바닥에서 올라오고 표면·모서리가 우리 것과 다르다 (§10)
  */
+/**
+ * **앞에 동그란 색 아이콘이 붙는다** 🟢 (2026-09-06, 레퍼런스: 토스) —
+ * 글자를 읽기 전에 *됐다/안 됐다*가 먼저 전해진다.
+ *
+ * 색은 **시맨틱 토큰**이다 (§3.1) — `accent`(라임)를 쓰지 않는다.
+ * 라임은 *지금 눌러야 할 것*의 색이고, 토스트는 이미 끝난 일이다.
+ */
+enum class ToastKind(val tint: Color, @DrawableRes val icon: Int) {
+    /** 만들었다 · 담았다 · 저장했다 */
+    DONE(MyFisColor.Success, R.drawable.ic_check),
+
+    /** 주의 — 되돌릴 수 없거나 조건이 안 맞는다 */
+    WARN(MyFisColor.Warning, R.drawable.ic_alert),
+
+    /** 못 했다. **흐름이 막히는 오류는 토스트로 끝내지 않는다** (SPEC §7.3) */
+    FAIL(MyFisColor.Danger, R.drawable.ic_alert),
+
+    /** 그냥 알려 주는 것 */
+    INFO(MyFisColor.Info, R.drawable.ic_info),
+}
+
 class ToastState {
     var text by mutableStateOf<String?>(null)
+        private set
+
+    var kind by mutableStateOf(ToastKind.DONE)
         private set
 
     /** 늦게 도착한 예약이 새 토스트를 지우면 안 된다 */
     var token by mutableIntStateOf(0)
         private set
 
-    fun show(message: String) {
+    fun show(message: String, kind: ToastKind = ToastKind.DONE) {
         text = message
+        this.kind = kind
         token += 1
     }
 
@@ -90,19 +123,36 @@ fun ToastLayer(state: ToastState, modifier: Modifier = Modifier) {
                 .padding(top = MyFisSize.header + MyFisSpacing.sm)
                 .wrapContentHeight(),
         ) {
-            Text(
-                message.orEmpty(),
-                style = MyFisTheme.type.bodySm,
-                color = MyFisColor.TextPrimary,
-                textAlign = TextAlign.Center,
+            Row(
                 modifier = Modifier
-                    // 위계는 **표면 밝기**로 낸다 (§5.4) — 그림자를 쓰지 않는다
+                    // 위계는 **표면 밝기**로 낸다 (§5.4) — 그림자를 쓰지 않는다.
+                    // 머리카락 테두리는 남긴다 — 카드(`surface.1`) 위에 뜰 때 판이 녹지 않게
                     .background(MyFisColor.Surface3, MyFisRadius.full)
                     .border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.full)
                     .height(MyFisSize.buttonSecondary)
-                    .wrapContentHeight()
-                    .padding(horizontal = MyFisSpacing.lg),
-            )
+                    .padding(start = MyFisSpacing.md, end = MyFisSpacing.lg),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+            ) {
+                // 색 원 안에 **어두운 글리프** — 시맨틱 색이 밝은 쪽이라 검정이 읽힌다
+                Box(
+                    Modifier.size(MyFisSpacing.xxl).background(state.kind.tint, MyFisRadius.full),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(state.kind.icon),
+                        contentDescription = null,
+                        tint = MyFisColor.OnAccent,
+                        modifier = Modifier.size(14.dp),
+                    )
+                }
+                Text(
+                    message.orEmpty(),
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextPrimary,
+                    textAlign = TextAlign.Center,
+                )
+            }
         }
     }
 }

@@ -297,6 +297,20 @@ enum MyFisDebug {
         #endif
     }
 
+    /// 토스트 종류 — `SIMCTL_CHILD_MYFIS_TOAST_KIND=warn` (done · warn · fail · info)
+    static var initialToastKind: ToastKind {
+        #if DEBUG
+        switch env["MYFIS_TOAST_KIND"] {
+        case "warn": .warn
+        case "fail": .fail
+        case "info": .info
+        default: .done
+        }
+        #else
+        .done
+        #endif
+    }
+
     /// 창 전체 애니메이션을 늦춘다. 전환 중간을 스크린샷으로 봐야 할 때만 쓴다.
     ///
     /// ⚠️ **`withAnimation` 은 안 늦는다** (2026-09-04 확인) — `layer.speed` 는 CoreAnimation 만 탄다.
