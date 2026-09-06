@@ -35,8 +35,6 @@ enum WorkoutSessionPlaceholder {
         }
         return warmup + workout
     }()
-
-    static let warmupCount = RoutinePlaceholder.warmup.count
 }
 
 private func mmss(_ seconds: Int) -> String {
@@ -93,18 +91,6 @@ struct WorkoutSessionScreen: View {
                 // 운동 중에는 손이 젖어 있고, 필요한 것이 전부 한 판에 있어야 한다
                 demoStage
                     .padding(.top, MyFisSpacing.lg)
-
-                // 자리를 **늘 잡아 둔다.** 웜업이 끝날 때 버튼만 사라지면 아래가 통째로 들썩인다
-                HStack {
-                    Spacer(minLength: 0)
-                    if step.stage == .warmup {
-                        MyFisSmallButton(title: "웜업 생략") {
-                            move(to: WorkoutSessionPlaceholder.warmupCount)
-                        }
-                    }
-                }
-                .frame(height: MyFisSize.chip)
-                .padding(.top, MyFisSpacing.md)
 
                 stepPanel
                     .padding(.top, MyFisSpacing.lg)

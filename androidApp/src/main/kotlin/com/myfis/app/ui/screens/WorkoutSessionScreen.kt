@@ -37,7 +37,6 @@ import com.myfis.app.ui.theme.MyFisPrimaryButton
 import com.myfis.app.ui.theme.MyFisRadius
 import com.myfis.app.ui.theme.MyFisSecondaryButton
 import com.myfis.app.ui.theme.MyFisSize
-import com.myfis.app.ui.theme.MyFisSmallButton
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
 import com.myfis.app.ui.theme.tapWithHaptics
@@ -173,22 +172,6 @@ fun WorkoutSessionScreen(
             // 시연 그림은 **남는 자리를 다 쓴다.** 이 화면은 스크롤하지 않는다 —
             // 운동 중에는 손이 젖어 있고, 필요한 것이 전부 한 판에 있어야 한다
             DemoStage(Modifier.weight(1f).padding(top = MyFisSpacing.lg))
-
-            // 자리를 **늘 잡아 둔다.** 웜업이 끝날 때 버튼만 사라지면 아래가 통째로 들썩인다
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(top = MyFisSpacing.md)
-                    .height(MyFisSize.chip),
-                contentAlignment = Alignment.CenterEnd,
-            ) {
-                if (step.stage == SessionStage.WARMUP) {
-                    MyFisSmallButton(
-                        text = "웜업 생략",
-                        onClick = { moveTo(routineWarmupPlaceholder.size) },
-                    )
-                }
-            }
 
             StepPanel(step, remain, Modifier.padding(top = MyFisSpacing.lg))
             NextCard(next, Modifier.padding(top = MyFisSpacing.lg))
