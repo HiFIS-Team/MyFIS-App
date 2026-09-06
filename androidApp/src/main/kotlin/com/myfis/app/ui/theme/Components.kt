@@ -156,7 +156,9 @@ fun MyFisSmallButton(text: String, onClick: () -> Unit, modifier: Modifier = Mod
             contentColor = MyFisColor.TextPrimary,
         ),
     ) {
-        Text(text = text, style = MyFisTheme.type.bodySm)
+        // **줄바꿈하지 않는다** — 좁은 칸(§6.38 락커·운동복)에 들어가면
+        // 글자가 두 줄로 접혀 버튼이 세로로 늘어난다 (2026-09-07 실측, iOS 에서 드러났다)
+        Text(text = text, style = MyFisTheme.type.bodySm, maxLines = 1, softWrap = false)
     }
 }
 

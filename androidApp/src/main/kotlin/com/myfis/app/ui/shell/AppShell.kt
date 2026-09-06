@@ -40,6 +40,7 @@ import com.myfis.app.ui.screens.BenefitScreen
 import com.myfis.app.ui.screens.BranchScreen
 import com.myfis.app.ui.screens.CardioScreen
 import com.myfis.app.ui.screens.HomeScreen
+import com.myfis.app.ui.screens.MyScreen
 import com.myfis.app.ui.screens.NotificationScreen
 import com.myfis.app.ui.components.SearchRecents
 import com.myfis.app.ui.screens.GroupSearchScreen
@@ -405,7 +406,7 @@ private fun BaseTabContent(
             onCart = onStoreCart,
             onItem = onStoreItem,
         )
-        BaseTab.MY -> PlaceholderScreen("Y-01", "마이", "프로필 · 기록 · 설정")
+        BaseTab.MY -> MyScreen()
         // 통로라 여기 도달하지 않는다
         BaseTab.WEIGHT -> Unit
     }

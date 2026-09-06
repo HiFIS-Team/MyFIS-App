@@ -117,6 +117,10 @@ struct MyFisSmallButton: View {
         Button(action: action) {
             Text(title)
                 .font(MyFisFont.bodySm)
+                // **줄바꿈하지 않는다** — 좁은 칸(§6.38 락커·운동복)에 들어가면
+                // 글자가 두 줄로 접혀 버튼이 세로로 늘어난다 (2026-09-07 실측)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
                 .padding(.horizontal, MyFisSpacing.lg)
                 .frame(minHeight: MyFisSize.buttonSmall)
         }
