@@ -42,7 +42,10 @@ struct MyFisPrimaryButton: View {
                    minHeight: pill ? MyFisSize.buttonSecondary : MyFisSize.buttonPrimary)
         }
         .accessibilityLabel(title)
-        .buttonStyle(.myFisTap)
+        // 아이콘 속일 때는 **아이콘 버튼 규격**으로 누름을 알린다 (§6.7) —
+        // 면은 `.background` 라 스타일 밖에 있어서 **속만** 줄어든다.
+        // 글자 버튼은 예전 그대로 (`myFisTap` 은 크기 변화가 없다)
+        .buttonStyle(icon == nil ? .myFisTap : .myFisIcon)
         .disabled(!isEnabled)
         // 비활성에 opacity 를 쓰지 않는다 (§9 의도된 이탈 #2) — 색 토큰 자체를 바꾼다.
         .foregroundStyle(isEnabled ? onFill
@@ -84,7 +87,7 @@ struct MyFisSecondaryButton: View {
                    minHeight: tall ? MyFisSize.buttonPrimary : MyFisSize.buttonSecondary)
         }
         .accessibilityLabel(title)
-        .buttonStyle(.myFisTap)
+        .buttonStyle(icon == nil ? .myFisTap : .myFisIcon)
         .foregroundStyle(MyFisColor.textPrimary)
         .background(MyFisColor.surface2)
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))

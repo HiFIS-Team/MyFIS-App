@@ -68,7 +68,9 @@ struct WorkoutSessionScreen: View {
     /// TODO(W-04): 음성 렙 카운트가 붙으면 이 스위치가 그걸 끈다
     @State private var voice = true
 
-    private let tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    /// ⚠️ `let` 으로 두면 **부모가 다시 그릴 때마다 새 퍼블리셔**가 생겨 구독이 갈아 끼워지고,
+    /// 1초 간격이 그때마다 처음부터 다시 시작한다. `@State` 는 처음 값만 남긴다
+    @State private var tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     private var step: SessionStep { steps[index] }
     private var next: SessionStep? { index + 1 < steps.count ? steps[index + 1] : nil }
@@ -176,9 +178,11 @@ struct WorkoutSessionScreen: View {
             .foregroundStyle(voice ? MyFisColor.textPrimary : MyFisColor.textTertiary)
             .padding(.horizontal, MyFisSpacing.md)
             .frame(height: MyFisSize.chip)
-            .background(voice ? MyFisColor.surface2 : MyFisColor.surface1, in: Capsule())
         }
-        .buttonStyle(.myFisTap)
+        // **면은 스타일 밖에 둔다** — 그래야 판은 가만히 있고 속만 줄어든다 (§6.7).
+        // 누르는 동안 아무 변화가 없으면 손을 뗄 때까지 아무 일도 안 한 것처럼 느껴진다
+        .buttonStyle(.myFisIcon)
+        .background(voice ? MyFisColor.surface2 : MyFisColor.surface1, in: Capsule())
         .accessibilityLabel(voice ? "음성 가이드 끄기" : "음성 가이드 켜기")
     }
 
