@@ -15,16 +15,18 @@ struct MyScreen: View {
     var onProfile: () -> Void = {}
     var onMembership: () -> Void = {}
     var onPurchase: () -> Void = {}
+    var onSettings: () -> Void = {}
 
     private let profile = MyPlaceholder.profile
     private let membership = MyPlaceholder.membership
 
     var body: some View {
         VStack(spacing: 0) {
+            header
+
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ProfileRow(profile: profile, action: onProfile)
-                        .padding(.top, MyFisSpacing.sm)
 
                     SectionTitle("멤버십", trailing: profile.branch)
                         .padding(.top, MyFisSpacing.xxl)
@@ -77,20 +79,19 @@ struct MyScreen: View {
 
                     MyFisDivider().padding(.vertical, MyFisSpacing.md)
 
-                    GroupLabel("안내 · 설정")
-                    // TODO: 공지·문의(🔵) · 알림 설정(Y-03) · 약관(Y-03) 이 붙으면 연결한다
+                    // **설정 항목은 여기 없다** — 헤더 톱니(Y-03)가 가져갔다 (§6.38).
+                    // 알림 설정 · 약관 · 공개 범위 · 회원 탈퇴가 전부 그쪽이다
+                    GroupLabel("센터 안내")
+                    // TODO: 공지사항 · 고객 의견(🔵)이 붙으면 연결한다
                     MyFisListRow("공지사항", chevron: true, action: {})
                     MyFisListRow("고객 의견", chevron: true, action: {})
-                    MyFisListRow("알림 설정", chevron: true, action: {})
-                    MyFisListRow("약관 · 개인정보", chevron: true, action: {})
                     MyFisListRow("앱 버전", value: MyPlaceholder.appVersion, chevron: false)
 
                     MyFisDivider().padding(.vertical, MyFisSpacing.md)
 
-                    // 물러난 줄이라 `text.secondary` 다. 원본은 로그아웃 하나지만
-                    // **탈퇴는 앱 안에서 끝나야 한다** (스토어 심사 요구, SPEC Y-03)
+                    // 물러난 줄이라 `text.secondary` 다. **원본과 같이 한 줄만 남는다** —
+                    // 회원 탈퇴는 설정(Y-03)이 맡는다
                     MyFisListRow("로그아웃", titleColor: MyFisColor.textSecondary, action: {})
-                    MyFisListRow("회원 탈퇴", titleColor: MyFisColor.textSecondary, action: {})
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
@@ -98,6 +99,20 @@ struct MyScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
+    /// 마이 헤더 (§6.9) — **이름을 적지 않는다.** 프로필 줄이 곧 머리다.
+    ///
+    /// 오른쪽 톱니 하나뿐이다 🟢 (2026-09-07, 사용자 지정). 알림(H-02)은 홈 헤더가 이미 들고 있고,
+    /// 마이는 목록 화면이라 헤더가 시끄러울 이유가 없다.
+    private var header: some View {
+        HStack(spacing: 0) {
+            Spacer(minLength: 0)
+            // TODO(Y-03): 설정 화면이 붙으면 연결한다
+            HeaderIcon("ic_header_settings", "설정", action: onSettings)
+        }
+        .frame(height: MyFisSize.header)
+        // 아이콘 터치 영역만큼 빼서 글리프가 화면 여백(20) 선에 선다 (§6.9)
+        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+    }
 }
 
 /// 아바타 + 닉네임 ↔ `프로필 수정`. 원본과 같이 **꺾쇠를 두지 않는다** — 오른쪽 글자가 그 구실을 한다
