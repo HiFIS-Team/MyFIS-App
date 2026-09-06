@@ -1,5 +1,8 @@
 package com.myfis.app.ui.theme
 
+import androidx.annotation.DrawableRes
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
@@ -44,6 +47,13 @@ fun MyFisPrimaryButton(
      * 탭 바와 **같은 `radius.full`** 로 맞추고 폭은 글자에 맡긴다.
      */
     pill: Boolean = false,
+    /**
+     * **글자 대신 아이콘**(24)을 그린다 — 재생 조작 3버튼(§6.1 · §6.37) 자리다.
+     *
+     * 새 버튼 종류가 아니다. 면·높이·라운딩이 Primary 그대로고 **속만 바뀐다.**
+     * ⚠️ 글자가 없어져도 `text` 는 계속 받는다 — **음성 이름**으로 쓴다 (§6.1)
+     */
+    @DrawableRes icon: Int? = null,
 ) {
     Button(
         onClick = onClick,
@@ -65,7 +75,15 @@ fun MyFisPrimaryButton(
             disabledContentColor = if (light) MyFisColor.LightTextTertiary else MyFisColor.TextTertiary,
         ),
     ) {
-        Text(text = text, style = MyFisTheme.type.titleSm)
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = text,
+                modifier = Modifier.size(24.dp),
+            )
+        } else {
+            Text(text = text, style = MyFisTheme.type.titleSm)
+        }
     }
 }
 
@@ -83,6 +101,8 @@ fun MyFisSecondaryButton(
      * **둘이 다른 종류의 버튼처럼** 보인다 (§6.32 모임 소개에서 두 번 다 드러났다)
      */
     tall: Boolean = false,
+    /** Primary 와 같다 — 글자 대신 아이콘(24). `text` 는 음성 이름으로 남는다 (§6.1) */
+    @DrawableRes icon: Int? = null,
 ) {
     Button(
         onClick = onClick,
@@ -95,7 +115,15 @@ fun MyFisSecondaryButton(
             contentColor = MyFisColor.TextPrimary,
         ),
     ) {
-        Text(text = text, style = if (tall) MyFisTheme.type.titleSm else MyFisTheme.type.bodySm)
+        if (icon != null) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = text,
+                modifier = Modifier.size(24.dp),
+            )
+        } else {
+            Text(text = text, style = if (tall) MyFisTheme.type.titleSm else MyFisTheme.type.bodySm)
+        }
     }
 }
 

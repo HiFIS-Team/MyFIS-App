@@ -101,6 +101,8 @@ enum RoutinePlaceholder {
 struct WeightScreen: View {
     /// 행을 누르면 W-03 운동 상세로 간다
     var onExercise: (RoutineExercise) -> Void = { _ in }
+    /// `운동 시작` — W-04 세션으로 간다
+    var onSession: () -> Void = {}
     /// 순서를 바꾸므로 화면이 들고 있는다. TODO(서버): 바뀐 순서를 올린다
     @State private var exercises = RoutinePlaceholder.exercises
     /// 요일 띠는 **접힌 채로 시작한다** 🟢 (2026-09-04, 사용자 지정)
@@ -138,7 +140,7 @@ struct WeightScreen: View {
 
                 // 이 화면의 액션은 이 하나뿐 (§2 원칙 5). 폭을 다 쓰면 떠 있는 탭 바와
                 // 둥근 덩어리가 둘로 겹치므로 **알약**으로 맞춘다 (§6.28)
-                MyFisPrimaryButton(title: "운동 시작", pill: true, action: {})
+                MyFisPrimaryButton(title: "운동 시작", pill: true, action: onSession)
                     .frame(maxWidth: .infinity, alignment: .trailing)
                     .padding(.trailing, MyFisSpacing.screenHorizontal)
                     .padding(.bottom, MyFisSpacing.md)

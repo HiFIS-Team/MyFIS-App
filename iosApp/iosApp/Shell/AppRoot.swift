@@ -155,6 +155,10 @@ struct AppRoot: View {
                 WeightLogScreen(onBack: back)
             case .workoutDetail(let exercise):
                 WorkoutDetailScreen(exercise: exercise, onBack: back)
+            case .workoutSession:
+                // TODO(W-05): 완료 화면이 붙으면 그리로 간다. 지금은 셸로 돌아가며 알린다
+                WorkoutSessionScreen(onExit: back,
+                                     onFinish: { back(); toasts.show("오늘 운동을 마쳤어요") })
             case .storeCart:
                 StoreCartScreen(onBack: back, onStore: backToShell)
             case .storeSearch:

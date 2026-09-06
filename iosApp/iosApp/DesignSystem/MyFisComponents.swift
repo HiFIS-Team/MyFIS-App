@@ -17,16 +17,31 @@ struct MyFisPrimaryButton: View {
     /// **둥근 덩어리가 둘로 겹쳐** 보이고 뒤 카드가 모서리에 반쯤 잘린다.
     /// 탭 바와 **같은 캡슐 모양**으로 맞추고 폭은 글자에 맡긴다.
     var pill: Bool = false
+    /// **글자 대신 아이콘**(24)을 그린다 — 재생 조작 3버튼(§6.1 · §6.37) 자리다.
+    ///
+    /// 새 버튼 종류가 아니다. 면·높이·라운딩이 Primary 그대로고 **속만 바뀐다.**
+    /// ⚠️ 글자가 없어져도 `title` 은 계속 받는다 — **음성 이름**으로 쓴다 (§6.1)
+    var icon: String?
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(MyFisFont.titleSm)
-                .padding(.horizontal, pill ? MyFisSpacing.xxl : 0)
-                .frame(maxWidth: pill ? nil : .infinity,
-                       minHeight: pill ? MyFisSize.buttonSecondary : MyFisSize.buttonPrimary)
+            Group {
+                if let icon {
+                    Image(icon)
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                } else {
+                    Text(title)
+                        .font(MyFisFont.titleSm)
+                        .padding(.horizontal, pill ? MyFisSpacing.xxl : 0)
+                }
+            }
+            .frame(maxWidth: pill ? nil : .infinity,
+                   minHeight: pill ? MyFisSize.buttonSecondary : MyFisSize.buttonPrimary)
         }
+        .accessibilityLabel(title)
         .buttonStyle(.myFisTap)
         .disabled(!isEnabled)
         // 비활성에 opacity 를 쓰지 않는다 (§9 의도된 이탈 #2) — 색 토큰 자체를 바꾼다.
@@ -48,15 +63,27 @@ struct MyFisSecondaryButton: View {
     /// 44/52 든 `body.sm`/`title.sm` 이든, 한 줄에 선 두 버튼이 어느 하나라도 다르면
     /// **둘이 다른 종류의 버튼처럼** 보인다 (§6.32 모임 소개에서 두 번 다 드러났다)
     var tall: Bool = false
+    /// Primary 와 같다 — 글자 대신 아이콘(24). `title` 은 음성 이름으로 남는다 (§6.1)
+    var icon: String?
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
-            Text(title)
-                .font(tall ? MyFisFont.titleSm : MyFisFont.bodySm)
-                .frame(maxWidth: .infinity,
-                       minHeight: tall ? MyFisSize.buttonPrimary : MyFisSize.buttonSecondary)
+            Group {
+                if let icon {
+                    Image(icon)
+                        .renderingMode(.template)
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                } else {
+                    Text(title)
+                        .font(tall ? MyFisFont.titleSm : MyFisFont.bodySm)
+                }
+            }
+            .frame(maxWidth: .infinity,
+                   minHeight: tall ? MyFisSize.buttonPrimary : MyFisSize.buttonSecondary)
         }
+        .accessibilityLabel(title)
         .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.textPrimary)
         .background(MyFisColor.surface2)

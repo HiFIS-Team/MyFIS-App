@@ -140,8 +140,8 @@ struct TabShell: View {
             } else {
                 switch Self.weightTabs[slot] {
                 case .weight:
-                    // TODO(W-04): `운동 시작` 이 세션으로 넘어간다
-                    WeightScreen(onExercise: { open(.workoutDetail($0)) })
+                    WeightScreen(onExercise: { open(.workoutDetail($0)) },
+                                 onSession: { open(.workoutSession) })
                 case .cardio:
                     // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
                     CardioScreen(onStore: {

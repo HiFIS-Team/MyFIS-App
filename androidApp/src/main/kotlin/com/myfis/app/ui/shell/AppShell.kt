@@ -56,6 +56,7 @@ import com.myfis.app.ui.screens.WeightLogScreen
 import com.myfis.app.ui.screens.RoutineExercise
 import com.myfis.app.ui.screens.WeightScreen
 import com.myfis.app.ui.screens.WorkoutDetailScreen
+import com.myfis.app.ui.screens.WorkoutSessionScreen
 import com.myfis.app.ui.theme.MyFisColor
 
 /**
@@ -114,6 +115,7 @@ fun AppShell() {
                     workoutExercise = it
                     nav.navigateOnce(Route.WORKOUT_DETAIL)
                 },
+                onSession = { nav.navigateOnce(Route.WORKOUT_SESSION) },
                 onActivity = {
                     // 물 마시기는 **때가 정해진 미션**이라 랜딩을 거치지 않는다 (§6.25, 체중과 같은 처리)
                     if (it.kind == BenefitKind.WATER) {
@@ -178,6 +180,16 @@ fun AppShell() {
         }
         composable(Route.WEIGHT_LOG) {
             WeightLogScreen(onBack = { nav.popBackStack() })
+        }
+        composable(Route.WORKOUT_SESSION) {
+            WorkoutSessionScreen(
+                onExit = { nav.popBackStack() },
+                // TODO(W-05): 완료 화면이 붙으면 그리로 간다. 지금은 셸로 돌아가며 알린다
+                onFinish = {
+                    nav.popBackStack()
+                    toasts.show("오늘 운동을 마쳤어요")
+                },
+            )
         }
         composable(Route.WORKOUT_DETAIL) {
             // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
@@ -247,6 +259,7 @@ private fun TabShell(
     onWeightLog: () -> Unit,
     onGroupCreate: () -> Unit,
     onExercise: (RoutineExercise) -> Unit,
+    onSession: () -> Unit,
     onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
@@ -319,6 +332,7 @@ private fun TabShell(
                     },
                     onGroupCreate = onGroupCreate,
                     onExercise = onExercise,
+                    onSession = onSession,
                 )
             }
         }
@@ -404,9 +418,10 @@ private fun WeightTabContent(
     onStore: () -> Unit,
     onGroupCreate: () -> Unit,
     onExercise: (RoutineExercise) -> Unit,
+    onSession: () -> Unit,
 ) {
     when (tab) {
-        WeightTab.WEIGHT -> WeightScreen(onExercise = onExercise)
+        WeightTab.WEIGHT -> WeightScreen(onExercise = onExercise, onSession = onSession)
         // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
         WeightTab.CARDIO -> CardioScreen(onStore = onStore)
         WeightTab.RANKING -> PlaceholderScreen("R-01", "랭킹", "웨이트 · 유산소 · 마일리지")

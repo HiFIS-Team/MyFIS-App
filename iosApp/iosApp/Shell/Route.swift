@@ -21,6 +21,8 @@ enum Route: Hashable {
     case weightLog
     /// W-03 운동 상세 — 오늘의 루틴(W-01) 행을 누르면 들어온다
     case workoutDetail(RoutineExercise)
+    /// W-04 운동 세션 — 오늘의 루틴(W-01)의 `운동 시작` 으로 들어온다
+    case workoutSession
     /// S-02 상품 상세
     case storeItem(StoreItem)
     /// M-01 지점 선택 — 홈 헤더의 핀으로 들어온다
@@ -48,6 +50,7 @@ enum Route: Hashable {
         case .activity(let action): action.title
         case .weightLog: "체중 기록"
         case .workoutDetail(let exercise): exercise.name
+        case .workoutSession: "운동 세션"
         case .storeItem(let item): item.name
         case .branch: "지점"
         case .water, .waterTime: "물 마시기"

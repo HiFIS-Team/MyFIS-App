@@ -100,11 +100,12 @@ private val routineWeekPlaceholder = listOf(
     RoutineDay("토", "팔", rest = false, done = false, today = false),
 )
 
-private val routineWarmupPlaceholder =
+/** W-04 세션도 같은 목록을 쓴다 — 두 벌로 두지 않는다 (금지 6) */
+val routineWarmupPlaceholder =
     listOf("목 돌리기", "어깨 돌리기", "가슴 열기", "팔 돌리기", "손목 풀기")
-private const val ROUTINE_WARMUP_MINUTES = 6
+const val ROUTINE_WARMUP_MINUTES = 6
 
-private val routineExercisesPlaceholder = listOf(
+val routineExercisesPlaceholder = listOf(
     RoutineExercise(1, "스미스 머신 벤치 프레스", RoutineGear.MACHINE, 4, "20kg", 12),
     RoutineExercise(2, "인클라인 덤벨 프레스", RoutineGear.FREE, 3, "10kg", 12),
     RoutineExercise(3, "체스트 프레스 머신", RoutineGear.MACHINE, 3, "25kg", 15),
@@ -140,6 +141,8 @@ private val routineConditionOptions = listOf(100, 80, 60, 40)
 fun WeightScreen(
     /** 행을 누르면 W-03 운동 상세로 간다 */
     onExercise: (RoutineExercise) -> Unit = {},
+    /** `운동 시작` — W-04 세션으로 간다 */
+    onSession: () -> Unit = {},
 ) {
     // 순서를 바꾸므로 화면이 들고 있는다. TODO(서버): 바뀐 순서를 올린다
     val exercises = remember { mutableStateListOf(*routineExercisesPlaceholder.toTypedArray()) }
@@ -218,13 +221,12 @@ fun WeightScreen(
             // 둥근 덩어리가 둘로 겹치므로 **알약**으로 맞춘다 (§6.28)
             MyFisPrimaryButton(
                 text = "운동 시작",
-                onClick = {},
+                onClick = onSession,
                 pill = true,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(end = MyFisSpacing.screenHorizontal, bottom = MyFisSpacing.md + tabBar),
             )
-            // TODO(W-04): `운동 시작` 이 세션으로 넘어간다
         }
     }
 }

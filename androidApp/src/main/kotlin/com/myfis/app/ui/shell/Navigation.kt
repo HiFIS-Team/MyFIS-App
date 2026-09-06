@@ -30,6 +30,9 @@ object Route {
     /** W-03 운동 상세 — 오늘의 루틴(W-01) 행을 누르면 들어온다 */
     const val WORKOUT_DETAIL = "workout_detail"
 
+    /** W-04 운동 세션 — 오늘의 루틴(W-01)의 `운동 시작` 으로 들어온다 */
+    const val WORKOUT_SESSION = "workout_session"
+
     /** G-03 모임 개설 — 모임 탭(G-01)의 `＋ 모임 만들기` 로 들어온다 */
     const val GROUP_CREATE = "group_create"
 
