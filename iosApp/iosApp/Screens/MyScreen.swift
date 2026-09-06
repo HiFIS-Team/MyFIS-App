@@ -26,10 +26,8 @@ struct MyScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    ProfileRow(profile: profile, action: onProfile)
-
                     SectionTitle("멤버십", trailing: profile.branch)
-                        .padding(.top, MyFisSpacing.xxl)
+                        .padding(.top, MyFisSpacing.lg)
 
                     if membership.daysLeft <= MyPlaceholder.expirySoonDays {
                         ExpiryRow(action: onPurchase)
@@ -99,46 +97,36 @@ struct MyScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// 마이 헤더 (§6.9) — **이름을 적지 않는다.** 프로필 줄이 곧 머리다.
+    /// 마이 헤더 (§6.9) — **왼쪽이 프로필, 오른쪽이 톱니**다 🟢 (2026-09-07, 사용자 지정).
     ///
-    /// 오른쪽 톱니 하나뿐이다 🟢 (2026-09-07, 사용자 지정). 알림(H-02)은 홈 헤더가 이미 들고 있고,
-    /// 마이는 목록 화면이라 헤더가 시끄러울 이유가 없다.
+    /// 화면 이름을 적지 않는다. 대신 왼쪽 자리를 **"누구인지"** 가 쓴다 —
+    /// 스토어·혜택의 마일리지 칩이 그 자리에서 하는 일과 같다.
+    /// 톱니 하나만 두니 왼쪽이 통째로 비어 **줄로 안 읽혔다** (사용자 지적).
+    ///
+    /// 알림(H-02)은 넣지 않는다 — 홈 헤더가 이미 들고 있어 길만 둘이 된다.
     private var header: some View {
         HStack(spacing: 0) {
-            Spacer(minLength: 0)
+            // TODO(Y-02): 프로필 수정 화면이 붙으면 연결한다
+            MyFisTappable(label: "\(profile.nickname) 프로필 수정", action: onProfile) {
+                HStack(spacing: 0) {
+                    Avatar(nickname: profile.nickname)
+                    Text(profile.nickname)
+                        .font(MyFisFont.titleSm)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                        .padding(.leading, MyFisSpacing.sm)
+                    Chevron(size: 16).padding(.leading, 2)
+                }
+                .padding(.horizontal, MyFisSpacing.sm)
+                .padding(.vertical, MyFisSpacing.xs)
+            }
+
+            Spacer(minLength: MyFisSpacing.md)
             // TODO(Y-03): 설정 화면이 붙으면 연결한다
             HeaderIcon("ic_header_settings", "설정", action: onSettings)
         }
         .frame(height: MyFisSize.header)
         // 아이콘 터치 영역만큼 빼서 글리프가 화면 여백(20) 선에 선다 (§6.9)
         .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
-    }
-}
-
-/// 아바타 + 닉네임 ↔ `프로필 수정`. 원본과 같이 **꺾쇠를 두지 않는다** — 오른쪽 글자가 그 구실을 한다
-private struct ProfileRow: View {
-    let profile: MyProfile
-    let action: () -> Void
-
-    var body: some View {
-        MyFisTappable(label: "\(profile.nickname) 프로필 수정", action: action) {
-            HStack(spacing: 0) {
-                Avatar(nickname: profile.nickname)
-                Text(profile.nickname)
-                    .font(MyFisFont.titleMd)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                    .padding(.leading, MyFisSpacing.md)
-
-                Spacer(minLength: MyFisSpacing.md)
-
-                Text("프로필 수정")
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textSecondary)
-            }
-            .frame(minHeight: MyFisSize.listRowMin)
-            .padding(.horizontal, MyFisSpacing.screenHorizontal)
-            .frame(maxWidth: .infinity)
-        }
     }
 }
 
@@ -152,7 +140,7 @@ private struct Avatar: View {
             .frame(width: MyPlaceholder.avatar, height: MyPlaceholder.avatar)
             .overlay(
                 Text(nickname.prefix(1))
-                    .font(MyFisFont.titleSm)
+                    .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
             )
     }
@@ -326,8 +314,8 @@ enum MyPlaceholder {
     /// 며칠 남았을 때부터 `만료 임박` 인가
     static let expirySoonDays = 7
 
-    /// 프로필 아바타 — 목록 줄 왼쪽에 서므로 `40` 이다. 더 키우면 이 줄이 화면 주인공이 된다
-    static let avatar: CGFloat = 40
+    /// 프로필 아바타 — **헤더 줄(56) 안**에 서므로 `32` 다. 톱니(24)와 무게가 맞는 크기
+    static let avatar: CGFloat = 32
 
     /// 느낌표 판 안의 글리프 — 토스트(§6.35)와 같은 값이다
     static let alertGlyph: CGFloat = 14

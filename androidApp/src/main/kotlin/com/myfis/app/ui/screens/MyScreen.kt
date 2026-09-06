@@ -66,7 +66,7 @@ fun MyScreen(
     val membership = myMembershipPlaceholder
 
     Column(Modifier.fillMaxSize()) {
-        MyHeader(onSettings)
+        MyHeader(profile, onProfile, onSettings)
 
         Column(
             Modifier
@@ -74,9 +74,7 @@ fun MyScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = MyFisSpacing.xxxl),
         ) {
-            ProfileRow(profile, onProfile)
-
-            SectionTitle("멤버십", profile.branch, Modifier.padding(top = MyFisSpacing.xxl))
+            SectionTitle("멤버십", profile.branch, Modifier.padding(top = MyFisSpacing.lg))
 
             if (membership.daysLeft <= EXPIRY_SOON_DAYS) {
                 ExpiryRow(onExtend = onPurchase)
@@ -157,13 +155,18 @@ fun MyScreen(
 }
 
 /**
- * 마이 헤더 (§6.9) — **이름을 적지 않는다.** 프로필 줄이 곧 머리다.
+ * 마이 헤더 (§6.9) — **왼쪽이 프로필, 오른쪽이 톱니**다 🟢 (2026-09-07, 사용자 지정).
  *
- * 오른쪽 톱니 하나뿐이다 🟢 (2026-09-07, 사용자 지정). 알림(H-02)은 홈 헤더가 이미 들고 있고,
- * 마이는 목록 화면이라 헤더가 시끄러울 이유가 없다.
+ * 화면 이름을 적지 않는다. 대신 왼쪽 자리를 **"누구인지"** 가 쓴다 —
+ * 스토어·혜택의 마일리지 칩이 그 자리에서 하는 일과 같다.
+ * 톱니 하나만 두니 왼쪽이 통째로 비어 **줄로 안 읽혔다** (사용자 지적).
+ *
+ * 알림(H-02)은 넣지 않는다 — 홈 헤더가 이미 들고 있어 길만 둘이 된다.
  */
 @Composable
-private fun MyHeader(onSettings: () -> Unit) {
+private fun MyHeader(profile: MyProfile, onProfile: () -> Unit, onSettings: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -172,34 +175,27 @@ private fun MyHeader(onSettings: () -> Unit) {
             .padding(horizontal = MyFisSpacing.screenHorizontal - MyFisSpacing.sm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Row(
+            modifier = Modifier
+                .clip(MyFisRadius.full)
+                // TODO(Y-02): 프로필 수정 화면이 붙으면 연결한다
+                .tapWithHaptics(interaction, onProfile)
+                .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.xs),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Avatar(profile.nickname)
+            Text(
+                profile.nickname,
+                style = MyFisTheme.type.titleSm,
+                color = MyFisColor.TextPrimary,
+                modifier = Modifier.padding(start = MyFisSpacing.sm),
+            )
+            Chevron(Modifier.padding(start = 2.dp), size = 16.dp)
+        }
+
         Spacer(Modifier.weight(1f))
         // TODO(Y-03): 설정 화면이 붙으면 연결한다
         HeaderIcon(R.drawable.ic_header_settings, "설정", onSettings)
-    }
-}
-
-/** 아바타 + 닉네임 ↔ `프로필 수정`. 원본과 같이 **꺾쇠를 두지 않는다** — 오른쪽 글자가 그 구실을 한다 */
-@Composable
-private fun ProfileRow(profile: MyProfile, onClick: () -> Unit) {
-    val interaction = remember { MutableInteractionSource() }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = MyFisSize.listRowMin)
-            .tapWithHaptics(interaction, onClick)
-            .padding(horizontal = MyFisSpacing.screenHorizontal),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Avatar(profile.nickname)
-        Text(
-            profile.nickname,
-            style = MyFisTheme.type.titleMd,
-            color = MyFisColor.TextPrimary,
-            modifier = Modifier.padding(start = MyFisSpacing.md),
-        )
-        Spacer(Modifier.weight(1f))
-        Text("프로필 수정", style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
     }
 }
 
@@ -215,7 +211,7 @@ private fun Avatar(nickname: String) {
     ) {
         Text(
             nickname.take(1),
-            style = MyFisTheme.type.titleSm,
+            style = MyFisTheme.type.bodySm,
             color = MyFisColor.TextSecondary,
         )
     }
@@ -358,8 +354,8 @@ private fun AddonSlot(label: String, state: String?, modifier: Modifier = Modifi
     }
 }
 
-/** 프로필 아바타 — 목록 줄 왼쪽에 서므로 `40` 이다. 더 키우면 이 줄이 화면 주인공이 된다 */
-private val AVATAR = 40.dp
+/** 프로필 아바타 — **헤더 줄(56) 안**에 서므로 `32` 다. 톱니(24)와 무게가 맞는 크기 */
+private val AVATAR = 32.dp
 
 /** 느낌표 판 안의 글리프 — 토스트(§6.35)와 같은 값이다 */
 private val ALERT_GLYPH = 14.dp
