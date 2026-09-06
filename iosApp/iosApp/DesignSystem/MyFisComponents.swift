@@ -24,29 +24,26 @@ struct MyFisPrimaryButton: View {
     var icon: String?
     var action: () -> Void = {}
 
-    var body: some View {
-        Button(action: action) {
-            Group {
-                if let icon {
-                    Image(icon)
-                        .renderingMode(.template)
-                        .resizable()
-                        .frame(width: 24, height: 24)
-                } else {
-                    Text(title)
-                        .font(MyFisFont.titleSm)
-                        .padding(.horizontal, pill ? MyFisSpacing.xxl : 0)
-                }
+    private var inner: some View {
+        Group {
+            if let icon {
+                Image(icon)
+                    .renderingMode(.template)
+                    .resizable()
+                    .frame(width: 24, height: 24)
+            } else {
+                Text(title)
+                    .font(MyFisFont.titleSm)
+                    .padding(.horizontal, pill ? MyFisSpacing.xxl : 0)
             }
-            .frame(maxWidth: pill ? nil : .infinity,
-                   minHeight: pill ? MyFisSize.buttonSecondary : MyFisSize.buttonPrimary)
         }
-        .accessibilityLabel(title)
-        // 아이콘 속일 때는 **아이콘 버튼 규격**으로 누름을 알린다 (§6.7) —
-        // 면은 `.background` 라 스타일 밖에 있어서 **속만** 줄어든다.
-        // 글자 버튼은 예전 그대로 (`myFisTap` 은 크기 변화가 없다)
-        .buttonStyle(icon == nil ? .myFisTap : .myFisIcon)
-        .disabled(!isEnabled)
+        .frame(maxWidth: pill ? nil : .infinity,
+               minHeight: pill ? MyFisSize.buttonSecondary : MyFisSize.buttonPrimary)
+    }
+
+    var body: some View {
+        MyFisTappable(isEnabled: isEnabled, label: title, action: action) { inner }
+            .accessibilityLabel(title)
         // 비활성에 opacity 를 쓰지 않는다 (§9 의도된 이탈 #2) — 색 토큰 자체를 바꾼다.
         .foregroundStyle(isEnabled ? onFill
                          : (light ? MyFisColor.lightTextTertiary : MyFisColor.textTertiary))
@@ -71,7 +68,7 @@ struct MyFisSecondaryButton: View {
     var action: () -> Void = {}
 
     var body: some View {
-        Button(action: action) {
+        MyFisTappable(label: title, action: action) {
             Group {
                 if let icon {
                     Image(icon)
@@ -87,7 +84,6 @@ struct MyFisSecondaryButton: View {
                    minHeight: tall ? MyFisSize.buttonPrimary : MyFisSize.buttonSecondary)
         }
         .accessibilityLabel(title)
-        .buttonStyle(icon == nil ? .myFisTap : .myFisIcon)
         .foregroundStyle(MyFisColor.textPrimary)
         .background(MyFisColor.surface2)
         .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))

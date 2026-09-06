@@ -166,7 +166,10 @@ struct WorkoutSessionScreen: View {
 
     /// 끈 상태는 **색으로 죽인다** — 투명도를 쓰지 않는다 (§9 이탈 #2)
     private var voiceChip: some View {
-        Button { voice.toggle() } label: {
+        // `Button` 이 아니라 **탭만 받는 판**이다 (안드로이드 `tapWithHaptics` 와 같다) —
+        // `Button` 의 눌림 트랜잭션에 색 변화가 실려 스르륵 어두워졌다 (§6.1)
+        MyFisTappable(label: voice ? "음성 가이드 끄기" : "음성 가이드 켜기",
+                      action: { voice.toggle() }) {
             HStack(spacing: MyFisSpacing.sm) {
                 Image("ic_session_voice")
                     .renderingMode(.template)
@@ -179,11 +182,9 @@ struct WorkoutSessionScreen: View {
             .padding(.horizontal, MyFisSpacing.md)
             .frame(height: MyFisSize.chip)
         }
-        // **면은 스타일 밖에 둔다** — 그래야 판은 가만히 있고 속만 줄어든다 (§6.7).
-        // 누르는 동안 아무 변화가 없으면 손을 뗄 때까지 아무 일도 안 한 것처럼 느껴진다
-        .buttonStyle(.myFisIcon)
         .background(voice ? MyFisColor.surface2 : MyFisColor.surface1, in: Capsule())
-        .accessibilityLabel(voice ? "음성 가이드 끄기" : "음성 가이드 켜기")
+        // **켜짐/꺼짐은 즉시 바뀐다** — 흘러든 애니메이션에 색이 실리면 스르륵 어두워진다
+        .animation(nil, value: voice)
     }
 
     /// 시연 그림 자리 — W-03(§6.36)과 **같은 자리 표시**다.
@@ -271,6 +272,8 @@ struct WorkoutSessionScreen: View {
                                icon: playing ? "ic_session_pause" : "ic_session_play") {
                 playing.toggle()
             }
+            // ▶↔⏸ 는 **즉시** 갈린다. 애니메이션이 실리면 두 글리프가 겹쳐 보여 굼뜨다
+            .animation(nil, value: playing)
             MyFisSecondaryButton(title: "다음", tall: true, icon: "ic_session_next") {
                 move(to: index + 1)
             }
