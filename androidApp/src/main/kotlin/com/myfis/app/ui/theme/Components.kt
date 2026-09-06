@@ -22,6 +22,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
@@ -145,20 +146,44 @@ fun MyFisGhostButton(text: String, onClick: () -> Unit, modifier: Modifier = Mod
  * 전체 폭을 먹지 않는다. 카드 머리 줄처럼 다른 글자와 나란히 서는 자리용이다.
  */
 @Composable
-fun MyFisSmallButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Button(
-        onClick = onClick,
-        modifier = modifier.height(MyFisSize.buttonSmall),
-        shape = MyFisRadius.md,
-        contentPadding = PaddingValues(horizontal = MyFisSpacing.lg),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MyFisColor.Surface2,
-            contentColor = MyFisColor.TextPrimary,
-        ),
-    ) {
-        // **줄바꿈하지 않는다** — 좁은 칸(§6.38 락커·운동복)에 들어가면
-        // 글자가 두 줄로 접혀 버튼이 세로로 늘어난다 (2026-09-07 실측, iOS 에서 드러났다)
+fun MyFisSmallButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    /**
+     * **테두리형으로 그린다** 🟢 (2026-09-07, 사용자 지정 레퍼런스 — §6.1 · §6.38).
+     *
+     * 새 버튼 종류가 아니다. 높이(36)·라운딩·글꼴이 그대로고 **면이 테두리로 바뀐다.**
+     * `surface.2` 판 안에서는 `surface.2` 버튼이 판에 녹아 사라진다 — 거기 쓰는 변형이다.
+     */
+    outlined: Boolean = false,
+) {
+    // **줄바꿈하지 않는다** — 좁은 칸(§6.38 락커·운동복)에 들어가면
+    // 글자가 두 줄로 접혀 버튼이 세로로 늘어난다 (2026-09-07 실측, iOS 에서 드러났다)
+    val label = @Composable {
         Text(text = text, style = MyFisTheme.type.bodySm, maxLines = 1, softWrap = false)
+    }
+
+    if (outlined) {
+        OutlinedButton(
+            onClick = onClick,
+            modifier = modifier.height(MyFisSize.buttonSmall),
+            shape = MyFisRadius.md,
+            contentPadding = PaddingValues(horizontal = MyFisSpacing.lg),
+            border = BorderStroke(1.dp, MyFisColor.BorderStrong),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = MyFisColor.TextPrimary),
+        ) { label() }
+    } else {
+        Button(
+            onClick = onClick,
+            modifier = modifier.height(MyFisSize.buttonSmall),
+            shape = MyFisRadius.md,
+            contentPadding = PaddingValues(horizontal = MyFisSpacing.lg),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MyFisColor.Surface2,
+                contentColor = MyFisColor.TextPrimary,
+            ),
+        ) { label() }
     }
 }
 

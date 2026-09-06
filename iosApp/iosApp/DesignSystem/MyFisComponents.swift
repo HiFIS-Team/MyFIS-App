@@ -111,7 +111,16 @@ struct MyFisGhostButton: View {
 /// 전체 폭을 먹지 않는다. 카드 머리 줄처럼 다른 글자와 나란히 서는 자리용이다.
 struct MyFisSmallButton: View {
     let title: String
+    /// **테두리형으로 그린다** 🟢 (2026-09-07, 사용자 지정 레퍼런스 — §6.1 · §6.38).
+    ///
+    /// 새 버튼 종류가 아니다. 높이(36)·라운딩·글꼴이 그대로고 **면이 테두리로 바뀐다.**
+    /// `surface.2` 판 안에서는 `surface.2` 버튼이 판에 녹아 사라진다 — 거기 쓰는 변형이다.
+    var outlined: Bool = false
     var action: () -> Void = {}
+
+    private var shape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+    }
 
     var body: some View {
         Button(action: action) {
@@ -126,8 +135,9 @@ struct MyFisSmallButton: View {
         }
         .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.textPrimary)
-        .background(MyFisColor.surface2)
-        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+        .background(outlined ? Color.clear : MyFisColor.surface2)
+        .clipShape(shape)
+        .overlay(outlined ? shape.stroke(MyFisColor.borderStrong, lineWidth: 1) : nil)
     }
 }
 

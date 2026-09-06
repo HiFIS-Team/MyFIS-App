@@ -2,6 +2,7 @@ package com.myfis.app.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -63,13 +64,11 @@ fun MyScreen(
     val membership = myMembershipPlaceholder
 
     Column(Modifier.fillMaxSize()) {
-        MyHeader()
-
         Column(
             Modifier
                 .fillMaxWidth()
                 .verticalScroll(rememberScrollState())
-                .padding(bottom = MyFisSpacing.xxxl),
+                .padding(top = MyFisSpacing.sm, bottom = MyFisSpacing.xxxl),
         ) {
             ProfileRow(profile, onProfile)
 
@@ -151,20 +150,6 @@ fun MyScreen(
             MyFisListRow("로그아웃", titleColor = MyFisColor.TextSecondary, onClick = {})
             MyFisListRow("회원 탈퇴", titleColor = MyFisColor.TextSecondary, onClick = {})
         }
-    }
-}
-
-/** 화면 이름은 왼쪽 `title.lg` — 웨이트·유산소·모임과 같은 줄이다 (§6.9) */
-@Composable
-private fun MyHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(MyFisSize.header)
-            .padding(horizontal = MyFisSpacing.screenHorizontal),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text("마이", style = MyFisTheme.type.titleLg, color = MyFisColor.TextPrimary)
     }
 }
 
@@ -308,48 +293,40 @@ private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifi
             )
         }
 
-        // 가운데 실선이 두 칸 높이를 그대로 타야 해서 **줄 높이를 내용에 맞춰 고정**한다.
-        // `fillMaxHeight` 만으로는 기준 높이가 없어 선이 안 그려진다
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(IntrinsicSize.Min)
                 .padding(top = MyFisSpacing.lg),
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
         ) {
-            AddonSlot(
-                "락커",
-                membership.locker,
-                Modifier.weight(1f).padding(end = MyFisSpacing.md),
-            )
-            Box(
-                Modifier
-                    .width(1.dp)
-                    .fillMaxHeight()
-                    .background(MyFisColor.BorderSubtle),
-            )
-            AddonSlot(
-                "운동복",
-                membership.apparel,
-                Modifier.weight(1f).padding(start = MyFisSpacing.md),
-            )
+            AddonSlot("락커", membership.locker, Modifier.weight(1f))
+            AddonSlot("운동복", membership.apparel, Modifier.weight(1f))
         }
     }
 }
 
-/** 산 것은 상태를 보여 주고, 안 산 것은 판다 (M-03 으로 간다) */
+/**
+ * 산 것은 상태를 보여 주고, 안 산 것은 판다 (M-03 으로 간다).
+ *
+ * **카드 안의 `surface.2` 블록**이다 (§6.2 — 카드 안에 카드를 넣지 않는다).
+ * 그래서 버튼은 `Small` 의 **테두리 변형**이다 — 같은 면끼리면 버튼이 판에 녹는다
+ */
 @Composable
 private fun AddonSlot(label: String, state: String?, modifier: Modifier = Modifier) {
     Row(
-        modifier = modifier.heightIn(min = MyFisSize.buttonSmall),
+        modifier = modifier
+            .clip(MyFisRadius.md)
+            .background(MyFisColor.Surface2)
+            .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
+        Text(label, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
         Spacer(Modifier.weight(1f))
         if (state == null) {
             // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
-            MyFisSmallButton("구매하기", onClick = {})
+            MyFisSmallButton("구매하기", onClick = {}, outlined = true)
         } else {
-            Text(state, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+            Text(state, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
         }
     }
 }

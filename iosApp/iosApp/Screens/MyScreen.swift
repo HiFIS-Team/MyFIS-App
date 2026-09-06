@@ -21,11 +21,10 @@ struct MyScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     ProfileRow(profile: profile, action: onProfile)
+                        .padding(.top, MyFisSpacing.sm)
 
                     SectionTitle("멤버십", trailing: profile.branch)
                         .padding(.top, MyFisSpacing.xxl)
@@ -99,17 +98,6 @@ struct MyScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
-    /// 화면 이름은 왼쪽 `title.lg` — 웨이트·유산소·모임과 같은 줄이다 (§6.9)
-    private var header: some View {
-        HStack(spacing: 0) {
-            Text("마이")
-                .font(MyFisFont.titleLg)
-                .foregroundStyle(MyFisColor.textPrimary)
-            Spacer(minLength: 0)
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
-    }
 }
 
 /// 아바타 + 닉네임 ↔ `프로필 수정`. 원본과 같이 **꺾쇠를 두지 않는다** — 오른쪽 글자가 그 구실을 한다
@@ -256,23 +244,19 @@ private struct MembershipCard: View {
                                      ? MyFisColor.danger : MyFisColor.textSecondary)
             }
 
-            HStack(spacing: 0) {
+            HStack(spacing: MyFisSpacing.cardGap) {
                 AddonSlot(label: "락커", state: membership.locker)
-                    .padding(.trailing, MyFisSpacing.md)
-                Rectangle()
-                    .fill(MyFisColor.borderSubtle)
-                    .frame(width: 1)
                 AddonSlot(label: "운동복", state: membership.apparel)
-                    .padding(.leading, MyFisSpacing.md)
             }
-            // 가운데 실선이 두 칸 높이를 그대로 탄다
-            .fixedSize(horizontal: false, vertical: true)
             .padding(.top, MyFisSpacing.lg)
         }
     }
 }
 
-/// 산 것은 상태를 보여 주고, 안 산 것은 판다 (M-03 으로 간다)
+/// 산 것은 상태를 보여 주고, 안 산 것은 판다 (M-03 으로 간다).
+///
+/// **카드 안의 `surface.2` 블록**이다 (§6.2 — 카드 안에 카드를 넣지 않는다).
+/// 그래서 버튼은 `Small` 의 **테두리 변형**이다 — 같은 면끼리면 버튼이 판에 녹는다
 private struct AddonSlot: View {
     let label: String
     var state: String?
@@ -280,20 +264,22 @@ private struct AddonSlot: View {
     var body: some View {
         HStack(spacing: 0) {
             Text(label)
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(MyFisColor.textSecondary)
+                .font(MyFisFont.titleSm)
+                .foregroundStyle(MyFisColor.textPrimary)
             Spacer(minLength: MyFisSpacing.sm)
             if let state {
                 Text(state)
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textSecondary)
             } else {
                 // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
-                MyFisSmallButton(title: "구매하기", action: {})
+                MyFisSmallButton(title: "구매하기", outlined: true, action: {})
             }
         }
-        .frame(minHeight: MyFisSize.buttonSmall)
         .frame(maxWidth: .infinity)
+        .padding(MyFisSpacing.md)
+        .background(MyFisColor.surface2)
+        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
     }
 }
 
