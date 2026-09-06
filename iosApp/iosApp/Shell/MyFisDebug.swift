@@ -43,6 +43,7 @@ enum MyFisDebug {
         case "store_search": .storeSearch
         case "group_search": .groupSearch
         case "weight_log": .weightLog
+        case "workout_detail": .workoutDetail(RoutinePlaceholder.exercises[0])
         case "activity": .activity(activityAction)
         case "store_item": .storeItem(StorePlaceholder.items[0])
         case "branch": .branch

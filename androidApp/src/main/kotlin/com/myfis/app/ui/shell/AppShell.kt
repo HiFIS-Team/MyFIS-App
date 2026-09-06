@@ -53,7 +53,9 @@ import com.myfis.app.ui.screens.WaterScreen
 import com.myfis.app.ui.screens.waterDefaultTimes
 import com.myfis.app.ui.screens.WaterTimeScreen
 import com.myfis.app.ui.screens.WeightLogScreen
+import com.myfis.app.ui.screens.RoutineExercise
 import com.myfis.app.ui.screens.WeightScreen
+import com.myfis.app.ui.screens.WorkoutDetailScreen
 import com.myfis.app.ui.theme.MyFisColor
 
 /**
@@ -83,6 +85,8 @@ fun AppShell() {
     var benefitAction by remember { mutableStateOf<BenefitAction?>(null) }
     // 개설 화면과 지역 설정이 나눠 쓴다 — 잎이 둘이라 셸이 들고 있는다 (상품 상세와 같다)
     var groupRegion by rememberSaveable { mutableStateOf<String?>(null) }
+    // 상세로 넘길 운동. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다 (상품 상세와 같다)
+    var workoutExercise by remember { mutableStateOf<RoutineExercise?>(null) }
 
     // **잎보다도 위다** — 잎에서 한 일을 잎이 걷히면서 알려야 한다
     Box(Modifier.fillMaxSize()) {
@@ -106,6 +110,10 @@ fun AppShell() {
                 onGroupSearch = { nav.navigateOnce(Route.GROUP_SEARCH) },
                 onWeightLog = { nav.navigateOnce(Route.WEIGHT_LOG) },
                 onGroupCreate = { nav.navigateOnce(Route.GROUP_CREATE) },
+                onExercise = {
+                    workoutExercise = it
+                    nav.navigateOnce(Route.WORKOUT_DETAIL)
+                },
                 onActivity = {
                     // 물 마시기는 **때가 정해진 미션**이라 랜딩을 거치지 않는다 (§6.25, 체중과 같은 처리)
                     if (it.kind == BenefitKind.WATER) {
@@ -171,6 +179,12 @@ fun AppShell() {
         composable(Route.WEIGHT_LOG) {
             WeightLogScreen(onBack = { nav.popBackStack() })
         }
+        composable(Route.WORKOUT_DETAIL) {
+            // 뒤로 간 직후 한 프레임 동안 null 이 될 수 있어 방어한다
+            workoutExercise?.let {
+                WorkoutDetailScreen(exercise = it, onBack = { nav.popBackStack() })
+            }
+        }
         composable(Route.BRANCH) {
             BranchScreen(onBack = { nav.popBackStack() })
         }
@@ -232,6 +246,7 @@ private fun TabShell(
     onGroupSearch: () -> Unit,
     onWeightLog: () -> Unit,
     onGroupCreate: () -> Unit,
+    onExercise: (RoutineExercise) -> Unit,
     onActivity: (BenefitAction) -> Unit,
     onStoreItem: (StoreItem) -> Unit,
 ) {
@@ -303,6 +318,7 @@ private fun TabShell(
                         tabSet = TabSet.BASE
                     },
                     onGroupCreate = onGroupCreate,
+                    onExercise = onExercise,
                 )
             }
         }
@@ -387,9 +403,10 @@ private fun WeightTabContent(
     onGroupSearch: () -> Unit,
     onStore: () -> Unit,
     onGroupCreate: () -> Unit,
+    onExercise: (RoutineExercise) -> Unit,
 ) {
     when (tab) {
-        WeightTab.WEIGHT -> WeightScreen()
+        WeightTab.WEIGHT -> WeightScreen(onExercise = onExercise)
         // TODO(C-02): `유산소 시작하기` 는 기기 NFC 스캔이 붙으면 연결한다
         WeightTab.CARDIO -> CardioScreen(onStore = onStore)
         WeightTab.RANKING -> PlaceholderScreen("R-01", "랭킹", "웨이트 · 유산소 · 마일리지")

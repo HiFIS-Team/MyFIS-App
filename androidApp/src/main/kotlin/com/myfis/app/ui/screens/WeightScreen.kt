@@ -137,7 +137,10 @@ private val routineConditionOptions = listOf(100, 80, 60, 40)
  * 주차는 맨 위 **요일 일곱 칸 띠**로 압축하고 본문은 오늘 할 것에 준다.
  */
 @Composable
-fun WeightScreen() {
+fun WeightScreen(
+    /** 행을 누르면 W-03 운동 상세로 간다 */
+    onExercise: (RoutineExercise) -> Unit = {},
+) {
     // 순서를 바꾸므로 화면이 들고 있는다. TODO(서버): 바뀐 순서를 올린다
     val exercises = remember { mutableStateListOf(*routineExercisesPlaceholder.toTypedArray()) }
     // 요일 띠는 **접힌 채로 시작한다** 🟢 (2026-09-04, 사용자 지정)
@@ -204,6 +207,7 @@ fun WeightScreen() {
                                     exercises.add(index + 1, exercises.removeAt(index))
                                 }
                             },
+                            onOpen = { onExercise(item) },
                         )
                         if (index < exercises.lastIndex) RowDivider()
                     }
@@ -535,10 +539,15 @@ private fun ExerciseRow(
     last: Boolean,
     onUp: () -> Unit,
     onDown: () -> Unit,
+    onOpen: () -> Unit,
 ) {
+    val interaction = remember { MutableInteractionSource() }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            // 순서를 바꾸는 동안에는 행이 목적지가 아니다 — 화살표만 받는다
+            .then(if (reordering) Modifier else Modifier.tapWithHaptics(interaction, onOpen))
             .padding(vertical = MyFisSpacing.md)
             .defaultMinSize(minHeight = MyFisSize.listRowMin),
         verticalAlignment = Alignment.CenterVertically,
@@ -584,7 +593,8 @@ private fun ExerciseRow(
             MoveArrow(180f, enabled = index > 0, onClick = onUp)
             MoveArrow(0f, enabled = !last, onClick = onDown)
         }
-        // TODO(W-03): 행을 누르면 시연 영상이 있는 운동 상세로 간다
+        // 🔵 행 왼쪽 타일은 아직 **기구 갈래** 그림이다. WorkoutX 가 붙으면 그 운동 그림으로
+        // 바꾼다 (SPEC W-01 · §7.7) — 갈래 셋으로는 어떤 운동인지 구별이 안 된다
     }
 }
 

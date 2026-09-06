@@ -27,6 +27,9 @@ object Route {
     /** P-08 체중 기록 */
     const val WEIGHT_LOG = "weight_log"
 
+    /** W-03 운동 상세 — 오늘의 루틴(W-01) 행을 누르면 들어온다 */
+    const val WORKOUT_DETAIL = "workout_detail"
+
     /** G-03 모임 개설 — 모임 탭(G-01)의 `＋ 모임 만들기` 로 들어온다 */
     const val GROUP_CREATE = "group_create"
 

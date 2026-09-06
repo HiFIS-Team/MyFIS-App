@@ -153,6 +153,8 @@ struct AppRoot: View {
                 ActivityIntroScreen(action: action, onClose: back)
             case .weightLog:
                 WeightLogScreen(onBack: back)
+            case .workoutDetail(let exercise):
+                WorkoutDetailScreen(exercise: exercise, onBack: back)
             case .storeCart:
                 StoreCartScreen(onBack: back, onStore: backToShell)
             case .storeSearch:

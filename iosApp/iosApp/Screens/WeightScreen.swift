@@ -18,7 +18,7 @@ enum RoutineGear {
 }
 
 /// 오늘 루틴의 운동 한 줄
-struct RoutineExercise: Identifiable, Equatable {
+struct RoutineExercise: Identifiable, Hashable {
     let id: Int
     let name: String
     let gear: RoutineGear
@@ -99,6 +99,8 @@ enum RoutinePlaceholder {
 /// 주간 목록만 있는 화면은 §6.28 유산소에서 이미 한 번 걸린 함정이다. *다 본 뒤에 할 일이 없다.*
 /// 주차는 맨 위 **요일 일곱 칸 띠**로 압축하고 본문은 오늘 할 것에 준다.
 struct WeightScreen: View {
+    /// 행을 누르면 W-03 운동 상세로 간다
+    var onExercise: (RoutineExercise) -> Void = { _ in }
     /// 순서를 바꾸므로 화면이 들고 있는다. TODO(서버): 바뀐 순서를 올린다
     @State private var exercises = RoutinePlaceholder.exercises
     /// 요일 띠는 **접힌 채로 시작한다** 🟢 (2026-09-04, 사용자 지정)
@@ -241,7 +243,8 @@ struct WeightScreen: View {
                 ExerciseRow(item: item, index: index, reordering: reordering,
                             last: index == exercises.count - 1,
                             onUp: { move(index, by: -1) },
-                            onDown: { move(index, by: 1) })
+                            onDown: { move(index, by: 1) },
+                            onOpen: { onExercise(item) })
                 if index < exercises.count - 1 { divider }
             }
         }
@@ -442,8 +445,16 @@ private struct ExerciseRow: View {
     var last = false
     var onUp: () -> Void = {}
     var onDown: () -> Void = {}
+    var onOpen: () -> Void = {}
 
     var body: some View {
+        // 순서를 바꾸는 동안에는 행이 목적지가 아니다 — 화살표만 받는다
+        Button(action: onOpen) { row }
+            .buttonStyle(.myFisTap)
+            .disabled(reordering)
+    }
+
+    private var row: some View {
         HStack(spacing: MyFisSpacing.md) {
             if reordering {
                 Text("\(index + 1)")
@@ -483,7 +494,8 @@ private struct ExerciseRow: View {
         }
         .padding(.vertical, MyFisSpacing.md)
         .frame(minHeight: MyFisSize.listRowMin)
-        // TODO(W-03): 행을 누르면 시연 영상이 있는 운동 상세로 간다
+        // 🔵 행 왼쪽 타일은 아직 **기구 갈래** 그림이다. WorkoutX 가 붙으면 그 운동 그림으로
+        // 바꾼다 (SPEC W-01 · §7.7) — 갈래 셋으로는 어떤 운동인지 구별이 안 된다
     }
 
     private func arrow(degrees: Double, enabled: Bool, action: @escaping () -> Void) -> some View {
