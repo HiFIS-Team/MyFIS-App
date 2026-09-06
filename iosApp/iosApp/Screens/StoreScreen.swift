@@ -69,11 +69,12 @@ struct StoreScreen: View {
     /// 본문 — 배너 · 카테고리 · 그리드.
     /// **마일리지 띠가 없다** (2026-09-04) — 값이 헤더 왼쪽으로 올라가서 두 번 나오게 된다
     private var home: some View {
-        VStack(spacing: 0) {
+        ScrollViewReader { proxy in
             ScrollView {
                 // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
                 LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
                     BannerCarousel(banners: StorePlaceholder.banners)
+                        .id(Self.topAnchor)
                         .padding(.top, MyFisSpacing.sm)
                         .padding(.bottom, MyFisSpacing.lg)
 
@@ -97,8 +98,23 @@ struct StoreScreen: View {
                 }
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
+            // **갈래를 바꾸면 맨 위로 되돌린다** 🟢 (2026-09-06, 사용자 지정 — 안드로이드 실측).
+            //
+            // 안드로이드 `LazyColumn` 은 목록이 짧아지면 **새 목록의 최대 스크롤로 잘라낸다.**
+            // 다 들어가는 길이면 그 최대가 0 이라 맨 위로 간다 (에뮬레이터에서 확인).
+            // iOS `ScrollView` 는 이 잘라내기를 안 해서, 끝까지 내려간 상태로 갈래를 바꾸면
+            // **상품이 화면 위로 넘어가고 빈 화면만 남았다.** 같은 결과가 되도록 되돌린다
+            .onChange(of: category) { _, _ in
+                proxy.scrollTo(Self.topAnchor, anchor: .top)
+                // 짧아진 내용으로 **다시 그려진 뒤**에 한 번 더 — 배너가 아직 안 만들어져 있으면
+                // 첫 호출이 헛돈다 (`LazyVStack` 은 필요한 것만 만든다)
+                DispatchQueue.main.async { proxy.scrollTo(Self.topAnchor, anchor: .top) }
+            }
         }
     }
+
+    /// 갈래를 바꿨을 때 되돌아갈 자리 — 배너 맨 위
+    private static let topAnchor = "store.top"
 }
 
 /// 배너 — 옆 장이 살짝 보이게 두고 넘긴다. 몇 장 중 몇 번째인지 오른쪽 아래에 적는다.
