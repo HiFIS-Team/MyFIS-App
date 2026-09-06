@@ -280,7 +280,9 @@ private fun ExpiryRow(onExtend: () -> Unit) {
 private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifier) {
     MyFisCard(modifier) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(membership.name, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+            // 카드에서 제일 먼저 읽혀야 하는 값이라 **한 단계 키운다** (§4.2 title.md,
+            // 2026-09-07 사용자 지정). `title.sm` 이면 옆 `5일 남음` 과 무게가 비슷해 보였다
+            Text(membership.name, style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
             Spacer(Modifier.weight(1f))
             Text(
                 "${membership.daysLeft}일 남음",

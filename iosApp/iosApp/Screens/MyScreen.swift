@@ -234,8 +234,10 @@ private struct MembershipCard: View {
     var body: some View {
         MyFisCard {
             HStack(spacing: 0) {
+                // 카드에서 제일 먼저 읽혀야 하는 값이라 **한 단계 키운다** (§4.2 title.md,
+                // 2026-09-07 사용자 지정). `title.sm` 이면 옆 `5일 남음` 과 무게가 비슷해 보였다
                 Text(membership.name)
-                    .font(MyFisFont.titleSm)
+                    .font(MyFisFont.titleMd)
                     .foregroundStyle(MyFisColor.textPrimary)
                 Spacer(minLength: MyFisSpacing.md)
                 Text("\(membership.daysLeft)일 남음")
