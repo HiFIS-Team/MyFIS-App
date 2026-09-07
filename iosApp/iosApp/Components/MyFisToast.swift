@@ -66,8 +66,11 @@ struct MyFisToast: View {
         // 위계는 **표면 밝기**로 낸다 (§5.4) — 그림자를 쓰지 않는다.
         // `surface.3` 이 최상위 표면이라 헤더(불투명 검정) 위에서 떠 보인다.
         // 머리카락 테두리는 남긴다 — 카드(`surface.1`) 위에 뜰 때 판이 녹지 않게
+        // ⚠️ 머리카락 테두리를 **없앴다** 🟢 (2026-09-08) — 사다리를 내리면서
+        // `border.subtle`(#383941)이 `surface.3`(#35363C) 바로 옆에 오게 되어
+        // **제 판 위에서 1.049:1**, 즉 안 보이는 선이 됐다. 원래 목적(카드 위에서
+        // 판이 녹지 않게)은 판 자체가 한다 — 카드 대비 `1.430:1`
         .background(MyFisColor.surface3, in: Capsule())
-        .overlay(Capsule().strokeBorder(MyFisColor.borderSubtle, lineWidth: 1))
     }
 }
 

@@ -38,8 +38,13 @@ object MyFisColor {
     val BorderStrong = Color(0xFF6B7383)
 
     // 텍스트 — TextTertiary 가 AA 하한선(Surface.3 위 4.69:1). 이보다 어둡게 쓰지 않는다.
+    //
+    // 🟢 **`TextSecondary` 를 올렸다** (`#A3A9B5` → `#BCC1CB`, 2026-09-08).
+    // 둘이 서로 **1.088:1** 이라 사실상 같은 색이었다 — 토큰만 둘이고 눈에는 하나였다.
+    // `TextTertiary` 는 AA 하한에 묶여 못 내리므로 **`TextSecondary` 를 올려서** 벌린다.
+    // 결과: primary↔secondary `1.81`, secondary↔tertiary `1.42` — 세 단이 처음 갈린다.
     val TextPrimary = Color(0xFFFFFFFF)
-    val TextSecondary = Color(0xFFA3A9B5)
+    val TextSecondary = Color(0xFFBCC1CB)
     val TextTertiary = Color(0xFF9BA2AF)
 
     // ── 라이트 면 (혜택·활동 화면) 🟢 (2026-08-28 사용자 지정) ──

@@ -36,8 +36,12 @@ enum MyFisColor {
     static let borderStrong = Color(hex: 0x6B7383)
 
     // 텍스트 — textTertiary 가 AA 하한선(surface.3 위 4.69:1). 이보다 어둡게 쓰지 않는다.
+    // 🟢 **`textSecondary` 를 올렸다** (`#A3A9B5` → `#BCC1CB`, 2026-09-08).
+    // 둘이 서로 **1.088:1** 이라 사실상 같은 색이었다 — 토큰만 둘이고 눈에는 하나였다.
+    // `textTertiary` 는 AA 하한에 묶여 못 내리므로 **`textSecondary` 를 올려서** 벌린다.
+    // 결과: primary↔secondary `1.81`, secondary↔tertiary `1.42` — 세 단이 처음 갈린다.
     static let textPrimary = Color(hex: 0xFFFFFF)
-    static let textSecondary = Color(hex: 0xA3A9B5)
+    static let textSecondary = Color(hex: 0xBCC1CB)
     static let textTertiary = Color(hex: 0x9BA2AF)
 
     // ── 라이트 면 (혜택·활동 화면) 🟢 (2026-08-28 사용자 지정) ──
