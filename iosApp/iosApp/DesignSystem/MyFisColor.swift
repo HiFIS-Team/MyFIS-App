@@ -13,10 +13,17 @@ enum MyFisColor {
     // `bg ↔ surface.1` 계단이 **1.098:1** 밖에 안 됐다 (iOS 시스템은 1.234:1).
     // §5.4 가 "위계는 표면 밝기" 라고 정해 놓고 정작 카드가 배경에 녹아,
     // 구분선으로 위계를 만드는 원래 안 하려던 방식으로 돌아가고 있었다.
-    // 바닥만 내리니 계단이 **1.240:1** 이 되고 **다른 대비는 하나도 안 바뀐다** (회귀 0).
-    static let bgBase = Color(hex: 0x0D0D0F)
-    static let surface1 = Color(hex: 0x232327)
-    static let surface2 = Color(hex: 0x2B2C31)
+    // 바닥만 내리니 계단이 1.240:1 이 됐지만 위쪽 둘(1.124 · 1.157)은 그대로였다.
+    //
+    // 🟢 **2026-09-08 2차 — 사다리를 통째로 내렸다** (사용자 지정, 레퍼런스: 버핏그라운드).
+    // 대비비는 **낮은 밝기에서 더 적은 RGB 차이로 같은 비율**이 나온다. 그래서 바닥을
+    // 순검정까지 내리고 카드를 같이 내리면, `Surface3` 를 **그대로 둔 채로**
+    // 위쪽 좁은 계단 둘이 저절로 벌어진다 — 세 계단이 처음으로 `1.19` 이상으로 고르게 섰다.
+    // ⚠️ 8/26 의 "순검정을 쓰지 않는다" 는 **뒤집혔다** (§3.1 에 경위를 적었다).
+    static let bgBase = Color(hex: 0x000000)
+    static let surface1 = Color(hex: 0x1A1B1E)
+    static let surface2 = Color(hex: 0x292A2F)
+    // **`surface3` 만 그대로 둔다** — `text.tertiary` 의 AA 하한(4.69:1)이 여기 걸려 있다
     static let surface3 = Color(hex: 0x35363C)
 
     // 경계
