@@ -7,8 +7,14 @@ import SwiftUI
 ///
 /// 다크 전용이라 Asset Catalog 대신 상수로 둔다 (라이트/다크 변형이 필요 없다).
 enum MyFisColor {
-    // 배경 (surface) — **순검정이 아니다** (2026-08-26). 카카오뱅크처럼 **중립 회색** 바탕에 카드를 얹는다
-    static let bgBase = Color(hex: 0x1B1B1D)
+    // 배경 (surface) — **순검정도, 중립 회색도 아니다** 🟢 (2026-09-08 실측으로 정정).
+    //
+    // 2026-08-26 에 `#000` → `#1B1B1D` 로 올렸는데, **그 위 면들을 같이 올리지 않아서**
+    // `bg ↔ surface.1` 계단이 **1.098:1** 밖에 안 됐다 (iOS 시스템은 1.234:1).
+    // §5.4 가 "위계는 표면 밝기" 라고 정해 놓고 정작 카드가 배경에 녹아,
+    // 구분선으로 위계를 만드는 원래 안 하려던 방식으로 돌아가고 있었다.
+    // 바닥만 내리니 계단이 **1.240:1** 이 되고 **다른 대비는 하나도 안 바뀐다** (회귀 0).
+    static let bgBase = Color(hex: 0x0D0D0F)
     static let surface1 = Color(hex: 0x232327)
     static let surface2 = Color(hex: 0x2B2C31)
     static let surface3 = Color(hex: 0x35363C)
