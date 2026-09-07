@@ -34,6 +34,7 @@ import com.myfis.app.R
 import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.shell.HeaderIcon
+import com.myfis.app.ui.components.MyFisSectionTitle
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisIconTile
@@ -69,7 +70,17 @@ fun BenefitScreen(
             BenefitGroup.entries.forEach { group ->
                 val rows = benefitActionPlaceholder.filter { it.kind.group == group }
                 if (rows.isEmpty()) return@forEach
-                item { SectionTitle(group.title) }
+                item {
+                    MyFisSectionTitle(
+                        group.title,
+                        Modifier.padding(
+                            start = MyFisSpacing.screenHorizontal,
+                            end = MyFisSpacing.screenHorizontal,
+                            top = MyFisSpacing.sectionGap,
+                            bottom = MyFisSpacing.sm,
+                        ),
+                    )
+                }
                 items(rows) { ActionRow(it) { onAction(it) } }
             }
         }
@@ -105,20 +116,6 @@ private fun BenefitHeader(onHistory: () -> Unit, modifier: Modifier = Modifier) 
     }
 }
 
-@Composable
-private fun SectionTitle(title: String) {
-    Text(
-        title,
-        style = MyFisTheme.type.titleMd,
-        color = MyFisColor.TextPrimary,
-        modifier = Modifier.padding(
-            start = MyFisSpacing.screenHorizontal,
-            end = MyFisSpacing.screenHorizontal,
-            top = MyFisSpacing.sectionGap,
-            bottom = MyFisSpacing.sm,
-        ),
-    )
-}
 
 /**
  * 적립 경로 한 줄 — 둥근 네모 아이콘 판 + `~하고` / `~받기`.

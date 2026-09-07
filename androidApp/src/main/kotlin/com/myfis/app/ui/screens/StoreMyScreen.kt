@@ -31,8 +31,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
+import com.myfis.app.ui.components.Chevron
 import com.myfis.app.ui.components.MileageBand
 import com.myfis.app.ui.components.MileageText
+import com.myfis.app.ui.components.StoreSuggestionCard
 import com.myfis.app.ui.components.MileageTone
 import com.myfis.app.ui.components.mileageAnnotated
 import com.myfis.app.ui.shell.DetailHeader
@@ -142,7 +144,7 @@ private fun RecentRow(count: Int, modifier: Modifier = Modifier) {
             Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs)) {
                 repeat(count) { Thumbnail(size = 36.dp) }
             }
-            Chevron(Modifier.padding(start = MyFisSpacing.sm))
+            Chevron(Modifier.padding(start = MyFisSpacing.sm), size = 18.dp)
         }
     }
 }
@@ -253,7 +255,7 @@ private fun InviteRow(modifier: Modifier = Modifier) {
                 style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextTertiary,
             )
-            Chevron(Modifier.padding(start = MyFisSpacing.xs))
+            Chevron(Modifier.padding(start = MyFisSpacing.xs), size = 18.dp)
         }
     }
 }
@@ -281,7 +283,7 @@ private fun SuggestionGrid(items: List<StoreItem>, modifier: Modifier = Modifier
                 horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
             ) {
                 row.forEach { item ->
-                    SuggestionCard(item, Modifier.weight(1f))
+                    StoreSuggestionCard(item.name, item.price, Modifier.weight(1f))
                 }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
             }
@@ -289,42 +291,7 @@ private fun SuggestionGrid(items: List<StoreItem>, modifier: Modifier = Modifier
     }
 }
 
-@Composable
-private fun SuggestionCard(item: StoreItem, modifier: Modifier = Modifier) {
-    val interaction = remember { MutableInteractionSource() }
 
-    Column(modifier = modifier.tapWithHaptics(interaction, {})) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(MyFisRadius.md)
-                .background(MyFisColor.Surface2),
-            contentAlignment = Alignment.Center,
-        ) {
-            // TODO(서버): 상품 이미지가 오면 교체한다
-            Icon(
-                painter = painterResource(R.drawable.ic_tab_store),
-                contentDescription = null,
-                tint = MyFisColor.Surface3,
-                modifier = Modifier.size(44.dp),
-            )
-        }
-        Text(
-            item.name,
-            style = MyFisTheme.type.bodySm,
-            color = MyFisColor.TextPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = MyFisSpacing.sm),
-        )
-        MileageText(
-            item.price,
-            style = MyFisTheme.type.titleSm,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-    }
-}
 
 /** 상품 자리값. TODO(서버): 이미지가 오면 교체한다 */
 @Composable
@@ -345,17 +312,6 @@ private fun Thumbnail(size: androidx.compose.ui.unit.Dp) {
     }
 }
 
-@Composable
-private fun Chevron(modifier: Modifier = Modifier) {
-    Icon(
-        painter = painterResource(R.drawable.ic_chevron_down),
-        contentDescription = null,
-        tint = MyFisColor.TextTertiary,
-        modifier = modifier
-            .size(18.dp)
-            .graphicsLayer { rotationZ = -90f },
-    )
-}
 
 /** TODO(서버): 교환 내역 API 가 붙으면 지운다 (SPEC S-05) */
 private data class MyExchange(

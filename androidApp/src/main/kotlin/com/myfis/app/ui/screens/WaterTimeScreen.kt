@@ -155,7 +155,7 @@ private fun SlotCard(
             verticalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
         ) {
             slot.times.forEach { time ->
-                TimeChip(time = time, selected = time == picked, onPick = { onPick(time) })
+                PickTimeChip(time = time, selected = time == picked, onPick = { onPick(time) })
             }
         }
     }
@@ -168,7 +168,7 @@ private fun SlotCard(
  * 이건 **누르는 칩**이라 §5.3 최소치를 지켜야 한다
  */
 @Composable
-private fun TimeChip(time: String, selected: Boolean, onPick: () -> Unit) {
+private fun PickTimeChip(time: String, selected: Boolean, onPick: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
 
     Box(

@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.myfis.app.R
+import com.myfis.app.ui.components.Chevron
 import com.myfis.app.ui.shell.LocalTabBarInset
 import com.myfis.app.ui.components.MileageChip
 import com.myfis.app.ui.theme.MyFisCard
@@ -94,7 +95,7 @@ fun CardioScreen(
                     .padding(horizontal = MyFisSpacing.screenHorizontal),
             ) {
                 MonthCard()
-                ShortcutRow(onStore = onStore, modifier = Modifier.padding(top = MyFisSpacing.cardGap))
+                TierOrderRow(onStore = onStore, modifier = Modifier.padding(top = MyFisSpacing.cardGap))
                 MissionTabs(tab, { tab = it }, Modifier.padding(top = MyFisSpacing.sectionGap))
                 // 알약이 마지막 줄을 가리지 않게 그만큼 비워 둔다
                 MissionGrid(
@@ -206,7 +207,7 @@ private fun MonthCard() {
 
 /** 등급 · 주문 — 원본의 `BADGE` / `ORDER` 두 칸. 좁은 칸 하나 + 넓은 칸 하나다 */
 @Composable
-private fun ShortcutRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
+private fun TierOrderRow(onStore: () -> Unit, modifier: Modifier = Modifier) {
     val storeInteraction = remember { MutableInteractionSource() }
 
     Row(
@@ -430,17 +431,6 @@ private fun AnimatedDrink(modifier: Modifier = Modifier) {
 }
 
 /** 오른쪽 꺾쇠 — 아래 꺾쇠를 돌려 쓴다 (§6.28 구안과 같은 방법) */
-@Composable
-private fun Chevron() {
-    Icon(
-        painter = painterResource(R.drawable.ic_chevron_down),
-        contentDescription = null,
-        tint = MyFisColor.TextTertiary,
-        modifier = Modifier
-            .size(20.dp)
-            .rotate(-90f),
-    )
-}
 
 /** 미션 갈래 (SPEC C-01) */
 enum class CardioMissionTab(val title: String) {

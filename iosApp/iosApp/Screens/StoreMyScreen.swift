@@ -207,44 +207,11 @@ private struct SuggestionGrid: View {
                 .padding(.top, 2)
 
             LazyVGrid(columns: columns, spacing: MyFisSpacing.lg) {
-                ForEach(items) { SuggestionCard(item: $0) }
+                ForEach(items) { StoreSuggestionCard(name: $0.name, price: $0.price) }
             }
             .padding(.top, MyFisSpacing.md)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-private struct SuggestionCard: View {
-    let item: StoreItem
-
-    var body: some View {
-        Button {} label: {
-            VStack(alignment: .leading, spacing: 0) {
-                // TODO(서버): 상품 이미지가 오면 교체한다
-                Color.clear
-                    .aspectRatio(1, contentMode: .fit)
-                    .frame(maxWidth: .infinity)
-                    .background(MyFisColor.surface2)
-                    .overlay {
-                        Image("ic_tab_store")
-                            .resizable()
-                            .frame(width: 44, height: 44)
-                            .foregroundStyle(MyFisColor.surface3)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
-                Text(item.name)
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                    .lineLimit(1)
-                    .padding(.top, MyFisSpacing.sm)
-                MileageText(item.price)
-                    .font(MyFisFont.titleSm)
-                    .padding(.top, 2)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.myFisTap)
     }
 }
 

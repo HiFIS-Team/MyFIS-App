@@ -172,13 +172,13 @@ private fun Head(onChangeTime: () -> Unit) {
             color = MyFisColor.LightTextSecondary,
             modifier = Modifier.padding(top = MyFisSpacing.sm),
         )
-        TimeChip(onChangeTime, Modifier.padding(top = MyFisSpacing.xl))
+        AlarmTimeChip(onChangeTime, Modifier.padding(top = MyFisSpacing.xl))
     }
 }
 
 /** `시간 바꾸기` — 알약 칩 (§5.2 `size.chip`). 액센트를 쓰지 않는다 */
 @Composable
-private fun TimeChip(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AlarmTimeChip(onClick: () -> Unit, modifier: Modifier = Modifier) {
     val interaction = remember { MutableInteractionSource() }
 
     Row(

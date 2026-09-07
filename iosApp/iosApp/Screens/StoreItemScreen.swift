@@ -229,7 +229,7 @@ struct StoreItemScreen: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(alignment: .top, spacing: MyFisSpacing.cardGap) {
-                    ForEach(recommendations) { SuggestionCard(item: $0) }
+                    ForEach(recommendations) { StoreSuggestionCard(name: $0.name, price: $0.price, width: 108) }
                 }
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
             }
@@ -539,43 +539,6 @@ private struct Stars: View {
                     .foregroundStyle(index < filled ? MyFisColor.rating : MyFisColor.surface3)
             }
         }
-    }
-}
-
-private struct SuggestionCard: View {
-    let item: StoreItem
-
-    /// 카드 폭. **다음 장이 살짝 걸치도록** 잡는다 — 딱 떨어지면 더 있는 줄 모른다
-    private static let width: CGFloat = 108
-
-    var body: some View {
-        // TODO: 상세 → 상세 이동이 붙으면 연결한다
-        Button {} label: {
-            VStack(alignment: .leading, spacing: 0) {
-                Color.clear
-                    .aspectRatio(1, contentMode: .fit)
-                    .frame(maxWidth: .infinity)
-                    .background(MyFisColor.surface2)
-                    .overlay {
-                        // TODO(서버): 상품 이미지가 오면 교체한다
-                        Image("ic_tab_store")
-                            .resizable()
-                            .frame(width: 40, height: 40)
-                            .foregroundStyle(MyFisColor.surface3)
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
-                Text(item.name)
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                    .lineLimit(1)
-                    .padding(.top, MyFisSpacing.sm)
-                MileageText(item.price)
-                    .font(MyFisFont.titleSm)
-                    .padding(.top, 2)
-            }
-            .frame(width: Self.width, alignment: .leading)
-        }
-        .buttonStyle(.myFisTap)
     }
 }
 

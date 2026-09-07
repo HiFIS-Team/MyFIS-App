@@ -32,6 +32,7 @@ import com.myfis.app.ui.components.Chevron
 import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.components.MyFisDivider
 import com.myfis.app.ui.components.MyFisListRow
+import com.myfis.app.ui.components.MyFisSectionTitle
 import com.myfis.app.ui.shell.HeaderIcon
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
@@ -74,7 +75,13 @@ fun MyScreen(
                 .verticalScroll(rememberScrollState())
                 .padding(bottom = MyFisSpacing.xxxl),
         ) {
-            SectionTitle("멤버십", profile.branch, Modifier.padding(top = MyFisSpacing.lg))
+            MyFisSectionTitle(
+                "멤버십",
+                Modifier
+                    .padding(top = MyFisSpacing.lg)
+                    .padding(horizontal = MyFisSpacing.screenHorizontal),
+                trailing = profile.branch,
+            )
 
             if (membership.daysLeft <= EXPIRY_SOON_DAYS) {
                 ExpiryRow(onExtend = onPurchase)
@@ -217,22 +224,6 @@ private fun Avatar(nickname: String) {
     }
 }
 
-/** 묶음 제목 ↔ 오른쪽 곁말 (`멤버십` ↔ 지점 이름) */
-@Composable
-private fun SectionTitle(title: String, trailing: String?, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = MyFisSpacing.screenHorizontal),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(title, style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
-        Spacer(Modifier.weight(1f))
-        if (trailing != null) {
-            Text(trailing, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
-        }
-    }
-}
 
 /** 글자 줄 묶음의 머리 — 제목이 아니라 **꼬리표**라 `label` 이다 (§4.2) */
 @Composable

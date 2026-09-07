@@ -26,7 +26,8 @@ struct MyScreen: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    SectionTitle("멤버십", trailing: profile.branch)
+                    MyFisSectionTitle("멤버십", trailing: profile.branch)
+                        .padding(.horizontal, MyFisSpacing.screenHorizontal)
                         .padding(.top, MyFisSpacing.lg)
 
                     if membership.daysLeft <= MyPlaceholder.expirySoonDays {
@@ -143,32 +144,6 @@ private struct Avatar: View {
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
             )
-    }
-}
-
-/// 묶음 제목 ↔ 오른쪽 곁말 (`멤버십` ↔ 지점 이름)
-private struct SectionTitle: View {
-    let title: String
-    var trailing: String?
-
-    init(_ title: String, trailing: String? = nil) {
-        self.title = title
-        self.trailing = trailing
-    }
-
-    var body: some View {
-        HStack(spacing: 0) {
-            Text(title)
-                .font(MyFisFont.titleMd)
-                .foregroundStyle(MyFisColor.textPrimary)
-            Spacer(minLength: MyFisSpacing.md)
-            if let trailing {
-                Text(trailing)
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textSecondary)
-            }
-        }
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
     }
 }
 

@@ -25,6 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.shell.DetailHeader
+import com.myfis.app.ui.components.MyFisSectionTitle
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisIconTile
@@ -219,7 +220,7 @@ fun WorkoutDetailScreen(
                     .padding(top = MyFisSpacing.lg),
             )
 
-            SectionTitle(
+            MyFisSectionTitle(
                 "사용법",
                 Modifier
                     .padding(horizontal = MyFisSpacing.screenHorizontal)
@@ -235,7 +236,7 @@ fun WorkoutDetailScreen(
             }
 
             if (guide.cautions.isNotEmpty()) {
-                SectionTitle(
+                MyFisSectionTitle(
                     "주의할 점",
                     Modifier
                         .padding(horizontal = MyFisSpacing.screenHorizontal)
@@ -308,10 +309,6 @@ private fun EquipmentCard(gear: RoutineGear, guide: WorkoutGuide, modifier: Modi
 }
 
 /** 섹션 제목 — `title.md` (§4.2) */
-@Composable
-private fun SectionTitle(text: String, modifier: Modifier = Modifier) {
-    Text(text, style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary, modifier = modifier)
-}
 
 /**
  * 사용법 한 줄. 번호는 **동그라미를 그리지 않는다** — 순서 변경 모드(§6.33)의 번호와

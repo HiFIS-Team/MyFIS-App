@@ -207,7 +207,7 @@ struct WorkoutDetailScreen: View {
 
     private func steps(_ guide: WorkoutGuide) -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionTitle("사용법")
+            MyFisSectionTitle("사용법")
 
             VStack(alignment: .leading, spacing: MyFisSpacing.md) {
                 ForEach(Array(guide.steps.enumerated()), id: \.offset) { index, step in
@@ -224,7 +224,7 @@ struct WorkoutDetailScreen: View {
     private func cautions(_ guide: WorkoutGuide) -> some View {
         if !guide.cautions.isEmpty {
             VStack(alignment: .leading, spacing: 0) {
-                SectionTitle("주의할 점")
+                MyFisSectionTitle("주의할 점")
                 CautionCard(cautions: guide.cautions)
                     .padding(.top, MyFisSpacing.md)
             }
@@ -235,19 +235,6 @@ struct WorkoutDetailScreen: View {
 }
 
 // MARK: - 조각
-
-/// 섹션 제목 — `title.md` (§4.2)
-private struct SectionTitle: View {
-    let text: String
-
-    init(_ text: String) { self.text = text }
-
-    var body: some View {
-        Text(text)
-            .font(MyFisFont.titleMd)
-            .foregroundStyle(MyFisColor.textPrimary)
-    }
-}
 
 /// 이 운동에 쓰는 기구 — 타일 + 이름 + 어디 있나.
 ///

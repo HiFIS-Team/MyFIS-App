@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.BurstRing
 import com.myfis.app.ui.components.MileageText
+import com.myfis.app.ui.components.StoreSuggestionCard
 import com.myfis.app.ui.components.rememberBurst
 import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
@@ -670,53 +671,15 @@ private fun ItemSuggestions(items: List<StoreItem>) {
             contentPadding = PaddingValues(horizontal = MyFisSpacing.screenHorizontal),
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
         ) {
-            items(items, key = { it.id }) { SuggestionCard(it) }
+            // TODO: 상세 → 상세 이동이 붙으면 연결한다 (지금은 셸이 상품 하나만 들고 있다)
+            items(items, key = { it.id }) {
+                StoreSuggestionCard(it.name, it.price, Modifier.width(SuggestionWidth))
+            }
         }
     }
 }
 
-@Composable
-private fun SuggestionCard(item: StoreItem) {
-    val interaction = remember { MutableInteractionSource() }
 
-    // TODO: 상세 → 상세 이동이 붙으면 연결한다 (지금은 셸이 상품 하나만 들고 있다)
-    Column(
-        Modifier
-            .width(SuggestionWidth)
-            .clip(MyFisRadius.md)
-            .tapWithHaptics(interaction, {}),
-    ) {
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-                .clip(MyFisRadius.md)
-                .background(MyFisColor.Surface2),
-            contentAlignment = Alignment.Center,
-        ) {
-            // TODO(서버): 상품 이미지가 오면 교체한다
-            Icon(
-                painter = painterResource(R.drawable.ic_tab_store),
-                contentDescription = null,
-                tint = MyFisColor.Surface3,
-                modifier = Modifier.size(40.dp),
-            )
-        }
-        Text(
-            item.name,
-            style = MyFisTheme.type.bodySm,
-            color = MyFisColor.TextPrimary,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = MyFisSpacing.sm),
-        )
-        MileageText(
-            item.price,
-            style = MyFisTheme.type.titleSm,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-    }
-}
 
 /** 카드 폭. **다음 장이 살짝 걸치도록** 잡는다 — 딱 떨어지면 더 있는 줄 모른다 */
 private val SuggestionWidth = 108.dp
