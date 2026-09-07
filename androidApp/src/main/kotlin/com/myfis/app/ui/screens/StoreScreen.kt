@@ -73,6 +73,7 @@ import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.components.MileageTone
 import com.myfis.app.ui.components.rememberBurst
 import com.myfis.app.ui.shell.HeaderIcon
+import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
@@ -209,47 +210,47 @@ private fun BannerCarousel(banners: List<StoreBanner>, modifier: Modifier = Modi
     ) { page ->
         val index = page % banners.size
         val banner = banners[index]
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .height(BannerHeight)
-                .clip(MyFisRadius.lg)
-                .background(MyFisColor.Surface1),
+        MyFisCard(
+            modifier = Modifier.height(BannerHeight),
+            shape = MyFisRadius.lg,
+            padded = false,
         ) {
-            // 사진이 없으므로 우리 벡터를 크게 깔아 자리를 잡는다.
-            // TODO(서버): 배너 이미지가 오면 교체한다.
-            Icon(
-                painter = painterResource(banner.icon),
-                contentDescription = null,
-                tint = MyFisColor.Surface3,
-                modifier = Modifier
-                    .size(144.dp)
-                    .align(Alignment.CenterEnd)
-                    .offset(x = 18.dp),
-            )
-            Column(
-                Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(MyFisSpacing.cardPadding),
-            ) {
-                Text(banner.title, style = MyFisTheme.type.titleLg, color = MyFisColor.TextPrimary)
+            Box(Modifier.fillMaxSize()) {
+                // 사진이 없으므로 우리 벡터를 크게 깔아 자리를 잡는다.
+                // TODO(서버): 배너 이미지가 오면 교체한다.
+                Icon(
+                    painter = painterResource(banner.icon),
+                    contentDescription = null,
+                    tint = MyFisColor.Surface3,
+                    modifier = Modifier
+                        .size(144.dp)
+                        .align(Alignment.CenterEnd)
+                        .offset(x = 18.dp),
+                )
+                Column(
+                    Modifier
+                        .align(Alignment.CenterStart)
+                        .padding(MyFisSpacing.cardPadding),
+                ) {
+                    Text(banner.title, style = MyFisTheme.type.titleLg, color = MyFisColor.TextPrimary)
+                    Text(
+                        banner.body,
+                        style = MyFisTheme.type.bodySm,
+                        color = MyFisColor.TextSecondary,
+                        modifier = Modifier.padding(top = MyFisSpacing.sm),
+                    )
+                }
                 Text(
-                    banner.body,
-                    style = MyFisTheme.type.bodySm,
+                    "${index + 1} / ${banners.size}",
+                    style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
                     color = MyFisColor.TextSecondary,
-                    modifier = Modifier.padding(top = MyFisSpacing.sm),
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(MyFisSpacing.md)
+                        .background(MyFisColor.Surface3, MyFisRadius.full)
+                        .padding(horizontal = MyFisSpacing.sm, vertical = 2.dp),
                 )
             }
-            Text(
-                "${index + 1} / ${banners.size}",
-                style = MyFisTheme.type.caption.copy(fontFeatureSettings = "tnum"),
-                color = MyFisColor.TextSecondary,
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(MyFisSpacing.md)
-                    .background(MyFisColor.Surface3, MyFisRadius.full)
-                    .padding(horizontal = MyFisSpacing.sm, vertical = 2.dp),
-            )
         }
     }
 }
@@ -392,12 +393,10 @@ fun ItemCard(
     val short = (item.price - balance).coerceAtLeast(0)
     val dimmed = item.soldOut
 
-    Column(
-        // 누름 축소는 **아이콘에만** 준다 (§6.7). 카드가 통째로 움찔거리면 그리드가 흔들려 보인다
-        modifier = modifier
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
-            .tapWithHaptics(interaction, onClick),
+    // 누름 축소는 **아이콘에만** 준다 (§6.7). 카드가 통째로 움찔거리면 그리드가 흔들려 보인다
+    MyFisCard(
+        modifier = modifier.tapWithHaptics(interaction, onClick),
+        padded = false,
     ) {
         Box(
             Modifier

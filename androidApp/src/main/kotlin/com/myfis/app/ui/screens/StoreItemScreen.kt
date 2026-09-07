@@ -47,6 +47,7 @@ import com.myfis.app.R
 import com.myfis.app.ui.components.BurstRing
 import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.components.rememberBurst
+import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisPrimaryButton
@@ -288,27 +289,26 @@ private fun Chip(label: String, dot: Color? = null, chevron: Boolean = false) {
  */
 @Composable
 private fun ItemFacts(item: StoreItem) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = MyFisSpacing.screenHorizontal)
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
-            .padding(vertical = MyFisSpacing.sm),
+    MyFisCard(
+        modifier = Modifier.padding(horizontal = MyFisSpacing.screenHorizontal),
+        padded = false,
     ) {
-        FactRow(
-            R.drawable.ic_store_rating,
-            "리뷰",
-            "%.1f".format(item.rating),
-            sub = "(%,d)".format(item.reviewCount),
-            // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
-            iconTint = MyFisColor.Rating,
-            chevron = true,
-        )
-        FactRow(R.drawable.ic_store_views, "조회", item.views.toViewCount())
-        // TODO(서버): 지점은 선택한 지점을 따라간다
-        FactRow(R.drawable.ic_header_branch, "수령", "강남점 데스크", chevron = true)
-        FactRow(R.drawable.ic_my_coupon, "교환권", "발급 후 7일 안에 수령")
+        // 여백은 카드가 아니라 **줄이 갖는다** — 위아래만 조금 띄운다
+        Column(Modifier.padding(vertical = MyFisSpacing.sm)) {
+            FactRow(
+                R.drawable.ic_store_rating,
+                "리뷰",
+                "%.1f".format(item.rating),
+                sub = "(%,d)".format(item.reviewCount),
+                // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
+                iconTint = MyFisColor.Rating,
+                chevron = true,
+            )
+            FactRow(R.drawable.ic_store_views, "조회", item.views.toViewCount())
+            // TODO(서버): 지점은 선택한 지점을 따라간다
+            FactRow(R.drawable.ic_header_branch, "수령", "강남점 데스크", chevron = true)
+            FactRow(R.drawable.ic_my_coupon, "교환권", "발급 후 7일 안에 수령")
+        }
     }
 }
 
@@ -487,12 +487,7 @@ private fun ItemReviews(item: StoreItem, reviews: List<StoreReview>) {
             )
         }
 
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .clip(MyFisRadius.md)
-                .background(MyFisColor.Surface1),
-        ) {
+        MyFisCard(padded = false) {
             RatingSummary(item)
             reviews.forEach {
                 CardDivider()

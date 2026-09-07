@@ -220,13 +220,29 @@ fun MyFisCard(
      * `16` 여백이면 글자보다 빈칸이 더 커 보인다
      */
     compact: Boolean = false,
+    /**
+     * **안쪽 여백을 카드가 갖지 않는다** 🟢 (2026-09-08).
+     *
+     * 줄이 여럿 들어가고 **구분선이 판 끝까지** 가야 하는 카드(장바구니 §6.22 · 상품 정보 §6.21 ·
+     * 내 교환 §6.20)는 여백을 **행이 각자** 갖는다. 그런 판을 화면이 직접 그리고 있었는데,
+     * 그러면 카드의 면·라운딩이 화면마다 흩어진다 — 여백만 빼고 나머지는 여기서 준다.
+     *
+     * ⚠️ **새 카드 종류가 아니다.** 면(`surface.1`) · 라운딩 · 테두리 없음이 그대로다
+     */
+    padded: Boolean = true,
     content: @Composable ColumnScopeAlias.() -> Unit,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
             .background(if (light) MyFisColor.LightSurface1 else MyFisColor.Surface1, shape)
-            .padding(if (compact) MyFisSpacing.md else MyFisSpacing.cardPadding),
+            .then(
+                when {
+                    !padded -> Modifier
+                    compact -> Modifier.padding(MyFisSpacing.md)
+                    else -> Modifier.padding(MyFisSpacing.cardPadding)
+                },
+            ),
         content = content,
     )
 }

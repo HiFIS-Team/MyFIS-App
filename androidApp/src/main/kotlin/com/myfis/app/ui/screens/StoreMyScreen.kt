@@ -90,19 +90,18 @@ fun StoreMyScreen(onBack: () -> Unit, onCart: () -> Unit = {}) {
 /** 네 갈래 바로가기. **네 개로 고정한다** — 다섯 개가 되면 한 줄에 안 들어가 글자가 줄어든다 */
 @Composable
 private fun QuickMenu(modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = MyFisSpacing.screenHorizontal)
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
-            .padding(vertical = MyFisSpacing.lg),
+    MyFisCard(
+        modifier = modifier.padding(horizontal = MyFisSpacing.screenHorizontal),
+        padded = false,
     ) {
-        // TODO: 각 화면(S-04 · S-07 찜 · S-05 · 문의)이 붙으면 연결한다
-        QuickItem(R.drawable.ic_my_coupon, "교환권", Modifier.weight(1f))
-        QuickItem(R.drawable.ic_store_like_fill, "찜", Modifier.weight(1f))
-        QuickItem(R.drawable.ic_quest_board, "교환 내역", Modifier.weight(1f))
-        QuickItem(R.drawable.ic_my_ask, "문의", Modifier.weight(1f))
+        // 여백은 카드가 아니라 **줄이 갖는다**
+        Row(Modifier.padding(vertical = MyFisSpacing.lg)) {
+            // TODO: 각 화면(S-04 · S-07 찜 · S-05 · 문의)이 붙으면 연결한다
+            QuickItem(R.drawable.ic_my_coupon, "교환권", Modifier.weight(1f))
+            QuickItem(R.drawable.ic_store_like_fill, "찜", Modifier.weight(1f))
+            QuickItem(R.drawable.ic_quest_board, "교환 내역", Modifier.weight(1f))
+            QuickItem(R.drawable.ic_my_ask, "문의", Modifier.weight(1f))
+        }
     }
 }
 
@@ -156,12 +155,9 @@ private fun RecentRow(count: Int, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun ExchangeCard(exchange: MyExchange, modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = MyFisSpacing.screenHorizontal)
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1),
+    MyFisCard(
+        modifier = modifier.padding(horizontal = MyFisSpacing.screenHorizontal),
+        padded = false,
     ) {
         Row(
             modifier = Modifier

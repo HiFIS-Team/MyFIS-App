@@ -45,19 +45,17 @@ struct StoreMyScreen: View {
 /// 네 갈래 바로가기. **네 개로 고정한다** — 다섯 개가 되면 한 줄에 안 들어가 글자가 줄어든다
 private struct QuickMenu: View {
     var body: some View {
-        HStack(spacing: 0) {
-            // TODO: 각 화면(S-04 · S-07 찜 · S-05 · 문의)이 붙으면 연결한다
-            QuickItem(icon: "ic_my_coupon", label: "교환권")
-            QuickItem(icon: "ic_store_like_fill", label: "찜")
-            QuickItem(icon: "ic_quest_board", label: "교환 내역")
-            QuickItem(icon: "ic_my_ask", label: "문의")
+        MyFisCard(padded: false) {
+            HStack(spacing: 0) {
+                // TODO: 각 화면(S-04 · S-07 찜 · S-05 · 문의)이 붙으면 연결한다
+                QuickItem(icon: "ic_my_coupon", label: "교환권")
+                QuickItem(icon: "ic_store_like_fill", label: "찜")
+                QuickItem(icon: "ic_quest_board", label: "교환 내역")
+                QuickItem(icon: "ic_my_ask", label: "문의")
+            }
+            .padding(.vertical, MyFisSpacing.lg)
+            .frame(maxWidth: .infinity)
         }
-        .padding(.vertical, MyFisSpacing.lg)
-        .frame(maxWidth: .infinity)
-        .background(
-            MyFisColor.surface1,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
     }
 }
 
@@ -115,57 +113,55 @@ private struct ExchangeCard: View {
     let exchange: MyExchange
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(spacing: MyFisSpacing.sm) {
-                Text(exchange.status)
-                    .font(MyFisFont.titleSm)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                Text(exchange.deadline)
-                    .font(MyFisFont.bodySm)
-                    .foregroundStyle(MyFisColor.textSecondary)
-                Spacer(minLength: 0)
-                MyFisSmallButton(title: "교환권 보기")
-            }
-            .padding(MyFisSpacing.cardPadding)
-
-            Rectangle()
-                .fill(MyFisColor.borderSubtle)
-                .frame(height: 1)
-
-            HStack(alignment: .top, spacing: MyFisSpacing.md) {
-                Thumbnail(size: 64)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(exchange.date)
-                        .font(MyFisFont.caption)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                    Text(exchange.item)
-                        .font(MyFisFont.body)
+        MyFisCard(padded: false) {
+            VStack(spacing: 0) {
+                HStack(spacing: MyFisSpacing.sm) {
+                    Text(exchange.status)
+                        .font(MyFisFont.titleSm)
                         .foregroundStyle(MyFisColor.textPrimary)
-                        .lineLimit(1)
-                    (
-                        MileageText.text(exchange.price, tone: .secondary)
-                            + Text(" · \(exchange.count)개")
-                            .foregroundStyle(MyFisColor.textSecondary)
-                    )
-                    .font(MyFisFont.bodySm.monospacedDigit())
+                    Text(exchange.deadline)
+                        .font(MyFisFont.bodySm)
+                        .foregroundStyle(MyFisColor.textSecondary)
+                    Spacer(minLength: 0)
+                    MyFisSmallButton(title: "교환권 보기")
                 }
-                Spacer(minLength: 0)
-            }
-            .padding(MyFisSpacing.cardPadding)
+                .padding(MyFisSpacing.cardPadding)
 
-            // TODO: 문의(🔵) · 리뷰(🔵) 화면이 붙으면 연결한다.
-            // 리뷰가 우리가 바라는 행동이라 Secondary, 문의는 Ghost (§6.1)
-            HStack(spacing: MyFisSpacing.sm) {
-                MyFisGhostButton(title: "문의하기")
-                MyFisSecondaryButton(title: "리뷰 쓰기")
+                Rectangle()
+                    .fill(MyFisColor.borderSubtle)
+                    .frame(height: 1)
+
+                HStack(alignment: .top, spacing: MyFisSpacing.md) {
+                    Thumbnail(size: 64)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(exchange.date)
+                            .font(MyFisFont.caption)
+                            .foregroundStyle(MyFisColor.textTertiary)
+                        Text(exchange.item)
+                            .font(MyFisFont.body)
+                            .foregroundStyle(MyFisColor.textPrimary)
+                            .lineLimit(1)
+                        (
+                            MileageText.text(exchange.price, tone: .secondary)
+                                + Text(" · \(exchange.count)개")
+                                .foregroundStyle(MyFisColor.textSecondary)
+                        )
+                        .font(MyFisFont.bodySm.monospacedDigit())
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(MyFisSpacing.cardPadding)
+
+                // TODO: 문의(🔵) · 리뷰(🔵) 화면이 붙으면 연결한다.
+                // 리뷰가 우리가 바라는 행동이라 Secondary, 문의는 Ghost (§6.1)
+                HStack(spacing: MyFisSpacing.sm) {
+                    MyFisGhostButton(title: "문의하기")
+                    MyFisSecondaryButton(title: "리뷰 쓰기")
+                }
+                .padding(.horizontal, MyFisSpacing.cardPadding)
+                .padding(.bottom, MyFisSpacing.cardPadding)
             }
-            .padding(.horizontal, MyFisSpacing.cardPadding)
-            .padding(.bottom, MyFisSpacing.cardPadding)
         }
-        .background(
-            MyFisColor.surface1,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
     }
 }
 

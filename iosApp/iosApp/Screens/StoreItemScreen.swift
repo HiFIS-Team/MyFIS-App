@@ -132,26 +132,24 @@ struct StoreItemScreen: View {
     /// **카드로 담는다.** 위아래 선만 그으면 표처럼 보인다 (§6.19 · 리뷰와 같은 판단).
     /// 줄마다 아이콘을 둬 네 줄이 회색 덩어리로 뭉치지 않게 한다.
     private var facts: some View {
-        VStack(spacing: 0) {
-            FactRow(
-                icon: "ic_store_rating",
-                label: "리뷰",
-                value: String(format: "%.1f", item.rating),
-                sub: "(\(item.reviewCount.decimal))",
-                // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
-                iconTint: MyFisColor.rating,
-                chevron: true
-            )
-            FactRow(icon: "ic_store_views", label: "조회", value: item.views.viewCount)
-            // TODO(서버): 지점은 선택한 지점을 따라간다
-            FactRow(icon: "ic_header_branch", label: "수령", value: "강남점 데스크", chevron: true)
-            FactRow(icon: "ic_my_coupon", label: "교환권", value: "발급 후 7일 안에 수령")
+        MyFisCard(padded: false) {
+            VStack(spacing: 0) {
+                FactRow(
+                    icon: "ic_store_rating",
+                    label: "리뷰",
+                    value: String(format: "%.1f", item.rating),
+                    sub: "(\(item.reviewCount.decimal))",
+                    // 별만 색을 가진다 — `rating` 은 상태가 아니라 평점 전용 색이다 (§3.1)
+                    iconTint: MyFisColor.rating,
+                    chevron: true
+                )
+                FactRow(icon: "ic_store_views", label: "조회", value: item.views.viewCount)
+                // TODO(서버): 지점은 선택한 지점을 따라간다
+                FactRow(icon: "ic_header_branch", label: "수령", value: "강남점 데스크", chevron: true)
+                FactRow(icon: "ic_my_coupon", label: "교환권", value: "발급 후 7일 안에 수령")
+            }
+            .padding(.vertical, MyFisSpacing.sm)
         }
-        .padding(.vertical, MyFisSpacing.sm)
-        .background(
-            MyFisColor.surface1,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
         .padding(.horizontal, MyFisSpacing.screenHorizontal)
     }
 
@@ -178,35 +176,33 @@ struct StoreItemScreen: View {
                     .padding(.bottom, 2)
             }
 
-            VStack(spacing: 0) {
-                RatingSummary(item: item)
-                ForEach(StorePlaceholder.reviews) { review in
-                    cardDivider
-                    ReviewRow(review: review)
-                }
-                cardDivider
-
-                // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
-                Button {} label: {
-                    HStack(spacing: 0) {
-                        Text("리뷰 \(item.reviewCount.decimal)개 모두 보기")
-                            .font(MyFisFont.bodySm.monospacedDigit())
-                        Image("ic_chevron_down")
-                            .resizable()
-                            .frame(width: 18, height: 18)
-                            .rotationEffect(.degrees(-90))
+            MyFisCard(padded: false) {
+                VStack(spacing: 0) {
+                    RatingSummary(item: item)
+                    ForEach(StorePlaceholder.reviews) { review in
+                        cardDivider
+                        ReviewRow(review: review)
                     }
-                    .foregroundStyle(MyFisColor.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, MyFisSpacing.md)
-                    .contentShape(Rectangle())
+                    cardDivider
+
+                    // TODO: 전체 리뷰 목록(🔵)이 붙으면 연결한다
+                    Button {} label: {
+                        HStack(spacing: 0) {
+                            Text("리뷰 \(item.reviewCount.decimal)개 모두 보기")
+                                .font(MyFisFont.bodySm.monospacedDigit())
+                            Image("ic_chevron_down")
+                                .resizable()
+                                .frame(width: 18, height: 18)
+                                .rotationEffect(.degrees(-90))
+                        }
+                        .foregroundStyle(MyFisColor.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, MyFisSpacing.md)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.myFisTap)
                 }
-                .buttonStyle(.myFisTap)
             }
-            .background(
-                MyFisColor.surface1,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MyFisSpacing.screenHorizontal)

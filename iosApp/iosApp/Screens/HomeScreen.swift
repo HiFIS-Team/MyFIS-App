@@ -258,29 +258,25 @@ private struct ShortcutCard: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: MyFisSpacing.md) {
-                Image(icon)
-                    .resizable()
-                    .frame(width: 26, height: 26)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(title)
-                        .font(MyFisFont.titleSm)
+            MyFisCard {
+                HStack(spacing: MyFisSpacing.md) {
+                    Image(icon)
+                        .resizable()
+                        .frame(width: 26, height: 26)
                         .foregroundStyle(MyFisColor.textPrimary)
-                        .lineLimit(1)
-                    Text(subtitle)
-                        .font(MyFisFont.bodySm)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                        .lineLimit(1)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(title)
+                            .font(MyFisFont.titleSm)
+                            .foregroundStyle(MyFisColor.textPrimary)
+                            .lineLimit(1)
+                        Text(subtitle)
+                            .font(MyFisFont.bodySm)
+                            .foregroundStyle(MyFisColor.textTertiary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
                 }
-                Spacer(minLength: 0)
             }
-            .padding(MyFisSpacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                MyFisColor.surface1,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-            )
         }
         .buttonStyle(.myFisTap)
     }
@@ -313,64 +309,60 @@ private struct RoutineCard: View {
     var body: some View {
         // 카드 전체가 웨이트로 가는 길이다. 아래 [웨이트 하러 가기] 는 그 길을 보여주는 표시다
         Button(action: onStart) {
-            VStack(alignment: .leading, spacing: MyFisSpacing.lg) {
-                HStack(spacing: MyFisSpacing.sm) {
-                    Text(routine.name)
-                        .font(MyFisFont.titleSm)
-                        .foregroundStyle(MyFisColor.textPrimary)
-                        .lineLimit(1)
-                    Spacer(minLength: 0)
-                    Text(routine.week)
-                        .font(MyFisFont.caption)
-                        .foregroundStyle(MyFisColor.textTertiary)
-                }
-
-                HStack(spacing: MyFisSpacing.md) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        HStack(spacing: MyFisSpacing.sm) {
-                            Text("Day \(routine.day)")
-                                .font(MyFisFont.titleSm.monospacedDigit())
-                                .foregroundStyle(MyFisColor.textPrimary)
-                            Text(routine.focus)
-                                .font(MyFisFont.body)
-                                .foregroundStyle(MyFisColor.textSecondary)
-                                .lineLimit(1)
-                        }
-                        HStack(spacing: 0) {
-                            Text("\(routine.exerciseCount)개")
-                                .font(MyFisFont.bodySm.monospacedDigit())
-                            // 구분은 점이 아니라 **세로선**이다 (§6.12 상품 메타와 같은 규칙)
-                            Rectangle()
-                                .fill(MyFisColor.borderStrong)
-                                .frame(width: 1, height: 10)
-                                .padding(.horizontal, MyFisSpacing.sm)
-                            Text("\(routine.firstExercise) 외")
-                                .font(MyFisFont.bodySm)
-                                .lineLimit(1)
-                        }
-                        .foregroundStyle(MyFisColor.textTertiary)
+            MyFisCard {
+                VStack(alignment: .leading, spacing: MyFisSpacing.lg) {
+                    HStack(spacing: MyFisSpacing.sm) {
+                        Text(routine.name)
+                            .font(MyFisFont.titleSm)
+                            .foregroundStyle(MyFisColor.textPrimary)
+                            .lineLimit(1)
+                        Spacer(minLength: 0)
+                        Text(routine.week)
+                            .font(MyFisFont.caption)
+                            .foregroundStyle(MyFisColor.textTertiary)
                     }
-                    Spacer(minLength: 0)
-                    WeekProgressRing(done: routine.doneDays, total: routine.totalDays)
-                }
 
-                HStack(spacing: 2) {
-                    Text("웨이트 하러 가기")
-                        .font(MyFisFont.titleSm)
-                    // 오른쪽 화살표는 따로 두지 않고 아래 화살표를 돌려 쓴다 (같은 획, 같은 굵기)
-                    Image("ic_chevron_down")
-                        .resizable()
-                        .frame(width: 18, height: 18)
-                        .rotationEffect(.degrees(-90))
+                    HStack(spacing: MyFisSpacing.md) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            HStack(spacing: MyFisSpacing.sm) {
+                                Text("Day \(routine.day)")
+                                    .font(MyFisFont.titleSm.monospacedDigit())
+                                    .foregroundStyle(MyFisColor.textPrimary)
+                                Text(routine.focus)
+                                    .font(MyFisFont.body)
+                                    .foregroundStyle(MyFisColor.textSecondary)
+                                    .lineLimit(1)
+                            }
+                            HStack(spacing: 0) {
+                                Text("\(routine.exerciseCount)개")
+                                    .font(MyFisFont.bodySm.monospacedDigit())
+                                // 구분은 점이 아니라 **세로선**이다 (§6.12 상품 메타와 같은 규칙)
+                                Rectangle()
+                                    .fill(MyFisColor.borderStrong)
+                                    .frame(width: 1, height: 10)
+                                    .padding(.horizontal, MyFisSpacing.sm)
+                                Text("\(routine.firstExercise) 외")
+                                    .font(MyFisFont.bodySm)
+                                    .lineLimit(1)
+                            }
+                            .foregroundStyle(MyFisColor.textTertiary)
+                        }
+                        Spacer(minLength: 0)
+                        WeekProgressRing(done: routine.doneDays, total: routine.totalDays)
+                    }
+
+                    HStack(spacing: 2) {
+                        Text("웨이트 하러 가기")
+                            .font(MyFisFont.titleSm)
+                        // 오른쪽 화살표는 따로 두지 않고 아래 화살표를 돌려 쓴다 (같은 획, 같은 굵기)
+                        Image("ic_chevron_down")
+                            .resizable()
+                            .frame(width: 18, height: 18)
+                            .rotationEffect(.degrees(-90))
+                    }
+                    .foregroundStyle(MyFisColor.accent)
                 }
-                .foregroundStyle(MyFisColor.accent)
             }
-            .padding(MyFisSpacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                MyFisColor.surface1,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-            )
         }
         .buttonStyle(.myFisTap)
     }
@@ -516,50 +508,46 @@ private struct CongestionCard: View {
 
     var body: some View {
         // TODO: 시간대별 혼잡도 상세(🔵)가 생기면 카드를 누를 수 있게 한다
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: MyFisSpacing.sm) {
-                Text(congestion.branch)
-                    .font(MyFisFont.bodySm)
-                    .lineLimit(1)
-                Spacer(minLength: 0)
-                Text(congestion.updatedLabel)
-                    .font(MyFisFont.caption)
-            }
-            .foregroundStyle(MyFisColor.textTertiary)
-            .padding(.bottom, MyFisSpacing.xs)
-
-            // **판단을 먼저 준다.** 숫자는 그 판단의 근거로 밑에 깐다
-            HStack(spacing: MyFisSpacing.sm) {
-                Text(congestion.level.headline)
-                    .font(MyFisFont.titleMd)
-                    .foregroundStyle(MyFisColor.textPrimary)
-                // 상태는 **색과 글자 둘 다**로 낸다. 색만으로 구분하면 색각 이상에서 읽히지 않는다
-                Text(congestion.level.label)
-                    .font(MyFisFont.label)
-                    .foregroundStyle(congestion.level.color)
-                    .padding(.horizontal, MyFisSpacing.sm)
-                    .padding(.vertical, 2)
-                    .background(congestion.level.color.opacity(0.14), in: Capsule())
-            }
-
-            Text("\(congestion.people) / \(congestion.capacity)명")
-                .font(MyFisFont.bodySm.monospacedDigit())
+        MyFisCard {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: MyFisSpacing.sm) {
+                    Text(congestion.branch)
+                        .font(MyFisFont.bodySm)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text(congestion.updatedLabel)
+                        .font(MyFisFont.caption)
+                }
                 .foregroundStyle(MyFisColor.textTertiary)
+                .padding(.bottom, MyFisSpacing.xs)
 
-            HourlyChart(congestion: congestion, color: congestion.level.color)
-                .padding(.top, MyFisSpacing.lg)
+                // **판단을 먼저 준다.** 숫자는 그 판단의 근거로 밑에 깐다
+                HStack(spacing: MyFisSpacing.sm) {
+                    Text(congestion.level.headline)
+                        .font(MyFisFont.titleMd)
+                        .foregroundStyle(MyFisColor.textPrimary)
+                    // 상태는 **색과 글자 둘 다**로 낸다. 색만으로 구분하면 색각 이상에서 읽히지 않는다
+                    Text(congestion.level.label)
+                        .font(MyFisFont.label)
+                        .foregroundStyle(congestion.level.color)
+                        .padding(.horizontal, MyFisSpacing.sm)
+                        .padding(.vertical, 2)
+                        .background(congestion.level.color.opacity(0.14), in: Capsule())
+                }
 
-            Text(congestion.hint)
-                .font(MyFisFont.bodySm)
-                .foregroundStyle(MyFisColor.textSecondary)
-                .padding(.top, MyFisSpacing.md)
+                Text("\(congestion.people) / \(congestion.capacity)명")
+                    .font(MyFisFont.bodySm.monospacedDigit())
+                    .foregroundStyle(MyFisColor.textTertiary)
+
+                HourlyChart(congestion: congestion, color: congestion.level.color)
+                    .padding(.top, MyFisSpacing.lg)
+
+                Text(congestion.hint)
+                    .font(MyFisFont.bodySm)
+                    .foregroundStyle(MyFisColor.textSecondary)
+                    .padding(.top, MyFisSpacing.md)
+            }
         }
-        .padding(MyFisSpacing.cardPadding)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            MyFisColor.surface1,
-            in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-        )
     }
 }
 
@@ -716,20 +704,18 @@ private struct NewsSection: View {
                 .font(MyFisFont.titleMd)
                 .foregroundStyle(MyFisColor.textPrimary)
 
-            VStack(spacing: MyFisSpacing.md) {
-                NewsCarousel(banners: banners, onOpen: onOpen)
+            MyFisCard {
+                VStack(spacing: MyFisSpacing.md) {
+                    NewsCarousel(banners: banners, onOpen: onOpen)
 
-                Rectangle()
-                    .fill(MyFisColor.borderSubtle)
-                    .frame(height: 1)
+                    Rectangle()
+                        .fill(MyFisColor.borderSubtle)
+                        .frame(height: 1)
 
-                NoticeRow(notice: notice, action: onOpen)
+                    NoticeRow(notice: notice, action: onOpen)
+                }
+                .padding(MyFisSpacing.cardPadding)
             }
-            .padding(MyFisSpacing.cardPadding)
-            .background(
-                MyFisColor.surface1,
-                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-            )
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, MyFisSpacing.screenHorizontal)

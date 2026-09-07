@@ -48,6 +48,7 @@ import com.myfis.app.R
 import com.myfis.app.ui.components.HomeCalendar
 import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.shell.AppHeader
+import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisMotion
 import com.myfis.app.ui.theme.MyFisRadius
@@ -188,37 +189,34 @@ private fun ShortcutCard(
 ) {
     val interaction = remember { MutableInteractionSource() }
 
-    Row(
-        // 누름 축소는 **아이콘에만** 준다 (§6.7). 카드가 통째로 움찔거리면 화면이 흔들려 보인다
-        modifier = modifier
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
-            .tapWithHaptics(interaction, onClick)
-            .padding(MyFisSpacing.cardPadding),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = null, // 옆 제목이 이름 역할을 한다
-            tint = MyFisColor.TextPrimary,
-            modifier = Modifier.size(26.dp),
-        )
-        Column {
-            Text(
-                title,
-                style = MyFisTheme.type.titleSm,
-                color = MyFisColor.TextPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+    // 누름 축소는 **아이콘에만** 준다 (§6.7). 카드가 통째로 움찔거리면 화면이 흔들려 보인다
+    MyFisCard(modifier = modifier.tapWithHaptics(interaction, onClick)) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
+        ) {
+            Icon(
+                painter = painterResource(icon),
+                contentDescription = null, // 옆 제목이 이름 역할을 한다
+                tint = MyFisColor.TextPrimary,
+                modifier = Modifier.size(26.dp),
             )
-            Text(
-                subtitle,
-                style = MyFisTheme.type.bodySm,
-                color = MyFisColor.TextTertiary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
+            Column {
+                Text(
+                    title,
+                    style = MyFisTheme.type.titleSm,
+                    color = MyFisColor.TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    subtitle,
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextTertiary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }
@@ -352,15 +350,8 @@ private fun TodayRoutineSection(
 private fun RoutineCard(routine: TodayRoutine, onStart: () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
 
-    Column(
-        // 카드 전체가 웨이트로 가는 길이다. 아래 [웨이트 하러 가기] 는 그 길을 보여주는 표시다
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
-            .tapWithHaptics(interaction, onStart)
-            .padding(MyFisSpacing.cardPadding),
-    ) {
+    // 카드 전체가 웨이트로 가는 길이다. 아래 [웨이트 하러 가기] 는 그 길을 보여주는 표시다
+    MyFisCard(modifier = Modifier.tapWithHaptics(interaction, onStart)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 routine.name,
@@ -535,13 +526,7 @@ private fun CongestionCard(congestion: BranchCongestion) {
     val level = congestion.level
 
     // TODO: 시간대별 혼잡도 상세(🔵)가 생기면 카드를 누를 수 있게 한다
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(MyFisRadius.md)
-            .background(MyFisColor.Surface1)
-            .padding(MyFisSpacing.cardPadding),
-    ) {
+    MyFisCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 congestion.branch,
@@ -847,13 +832,7 @@ private fun NewsSection(
         Text("이벤트 · 새소식", style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
         Spacer(Modifier.height(MyFisSpacing.md))
 
-        Column(
-            Modifier
-                .fillMaxWidth()
-                .clip(MyFisRadius.md)
-                .background(MyFisColor.Surface1)
-                .padding(MyFisSpacing.cardPadding),
-        ) {
+        MyFisCard {
             NewsCarousel(banners = banners, onOpen = onOpen)
 
             Box(

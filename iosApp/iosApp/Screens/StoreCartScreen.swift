@@ -30,21 +30,19 @@ struct StoreCartScreen: View {
 
                             // 줄마다 카드를 떼지 않고 **한 장 안에서 구분선**으로 가른다
                             // (§6.21 리뷰와 같은 판단)
-                            VStack(spacing: 0) {
-                                ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
-                                    if index > 0 { divider }
-                                    CartRow(
-                                        line: line,
-                                        onToggle: { lines[index].checked.toggle() },
-                                        onCount: { lines[index].count = $0 },
-                                        onDelete: { lines.remove(at: index) }
-                                    )
+                            MyFisCard(padded: false) {
+                                VStack(spacing: 0) {
+                                    ForEach(Array(lines.enumerated()), id: \.element.id) { index, line in
+                                        if index > 0 { divider }
+                                        CartRow(
+                                            line: line,
+                                            onToggle: { lines[index].checked.toggle() },
+                                            onCount: { lines[index].count = $0 },
+                                            onDelete: { lines.remove(at: index) }
+                                        )
+                                    }
                                 }
                             }
-                            .background(
-                                MyFisColor.surface1,
-                                in: RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
-                            )
                             .padding(.horizontal, MyFisSpacing.screenHorizontal)
 
                             notice

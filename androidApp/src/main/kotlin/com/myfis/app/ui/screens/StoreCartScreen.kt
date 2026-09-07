@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.MileageText
 import com.myfis.app.ui.shell.DetailHeader
+import com.myfis.app.ui.theme.MyFisCard
 import com.myfis.app.ui.theme.MyFisColor
 import com.myfis.app.ui.theme.MyFisPrimaryButton
 import com.myfis.app.ui.theme.MyFisRadius
@@ -94,11 +95,9 @@ fun StoreCartScreen(
             )
 
             // 줄마다 카드를 떼지 않고 **한 장 안에서 구분선**으로 가른다 (§6.21 리뷰와 같은 판단)
-            Column(
-                Modifier
-                    .padding(horizontal = MyFisSpacing.screenHorizontal)
-                    .clip(MyFisRadius.md)
-                    .background(MyFisColor.Surface1),
+            MyFisCard(
+                modifier = Modifier.padding(horizontal = MyFisSpacing.screenHorizontal),
+                padded = false,
             ) {
                 lines.forEachIndexed { index, line ->
                     if (index > 0) CartDivider()

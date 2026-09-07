@@ -173,6 +173,14 @@ struct MyFisCard<Content: View>: View {
     /// 웨이트의 조건 두 칸(§6.33)처럼 라벨 한 줄 + 값 한 줄뿐인 카드는
     /// `16` 여백이면 글자보다 빈칸이 더 커 보인다
     var compact: Bool = false
+    /// **안쪽 여백을 카드가 갖지 않는다** 🟢 (2026-09-08).
+    ///
+    /// 줄이 여럿 들어가고 **구분선이 판 끝까지** 가야 하는 카드(장바구니 §6.22 · 상품 정보 §6.21 ·
+    /// 내 교환 §6.20)는 여백을 **행이 각자** 갖는다. 그런 판을 화면이 직접 그리고 있었는데,
+    /// 그러면 카드의 면·라운딩이 화면마다 흩어진다 — 여백만 빼고 나머지는 여기서 준다.
+    ///
+    /// ⚠️ **새 카드 종류가 아니다.** 면(`surface.1`) · 라운딩 · 테두리 없음이 그대로다
+    var padded: Bool = true
     @ViewBuilder var content: Content
 
     var body: some View {
@@ -180,7 +188,7 @@ struct MyFisCard<Content: View>: View {
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(compact ? MyFisSpacing.md : MyFisSpacing.cardPadding)
+        .padding(padded ? (compact ? MyFisSpacing.md : MyFisSpacing.cardPadding) : 0)
         .background(light ? MyFisColor.lightSurface1 : MyFisColor.surface1)
         .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
     }
