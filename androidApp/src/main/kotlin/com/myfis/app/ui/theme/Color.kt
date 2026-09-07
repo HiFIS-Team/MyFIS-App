@@ -22,7 +22,12 @@ object MyFisColor {
     val Surface3 = Color(0xFF35363C)
 
     // 경계
-    val BorderSubtle = Color(0xFF41424B)
+    //
+    // ⚠️ `BorderSubtle` 은 **바탕을 내리면서 같이 내렸다** 🟢 (2026-09-08).
+    // 색을 안 건드렸는데 바탕이 `#1B1B1D` → `#0D0D0F` 로 가면서 세기가
+    // `1.724` → `1.947:1` 로 **13% 세졌다.** 면이 스스로 갈리게 만들어 놓고
+    // 선까지 세지면 위계를 두 번 말하는 셈이라, 예전 세기(`1.692:1`)로 되돌린다.
+    val BorderSubtle = Color(0xFF383941)
     val BorderStrong = Color(0xFF6B7383)
 
     // 텍스트 — TextTertiary 가 AA 하한선(Surface.3 위 4.69:1). 이보다 어둡게 쓰지 않는다.
