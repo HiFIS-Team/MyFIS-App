@@ -380,7 +380,8 @@ private fun RoutineCard(routine: TodayRoutine, onStart: () -> Unit) {
                     )
                     Text(
                         routine.focus,
-                        style = MyFisTheme.type.body,
+                        // `Day 3` 과 **한 문장**이라 같은 단을 쓴다 — 무게는 색으로 가른다 (§4.2 3종)
+                        style = MyFisTheme.type.titleSm,
                         color = MyFisColor.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -538,7 +539,7 @@ private fun CongestionCard(congestion: BranchCongestion) {
             Spacer(Modifier.weight(1f))
             Text(
                 congestion.updatedLabel,
-                style = MyFisTheme.type.caption,
+                style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextTertiary,
             )
         }

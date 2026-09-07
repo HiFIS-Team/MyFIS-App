@@ -135,7 +135,7 @@ private struct ExchangeCard: View {
                     Thumbnail(size: 64)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(exchange.date)
-                            .font(MyFisFont.caption)
+                            .font(MyFisFont.bodySm)
                             .foregroundStyle(MyFisColor.textTertiary)
                         Text(exchange.item)
                             .font(MyFisFont.body)

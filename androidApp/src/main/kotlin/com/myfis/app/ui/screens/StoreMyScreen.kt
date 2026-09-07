@@ -193,7 +193,7 @@ private fun ExchangeCard(exchange: MyExchange, modifier: Modifier = Modifier) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     exchange.date,
-                    style = MyFisTheme.type.caption,
+                    style = MyFisTheme.type.bodySm,
                     color = MyFisColor.TextTertiary,
                 )
                 Text(

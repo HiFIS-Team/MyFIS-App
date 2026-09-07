@@ -329,7 +329,8 @@ private struct RoutineCard: View {
                                     .font(MyFisFont.titleSm.monospacedDigit())
                                     .foregroundStyle(MyFisColor.textPrimary)
                                 Text(routine.focus)
-                                    .font(MyFisFont.body)
+                                    // `Day 3` 과 **한 문장**이라 같은 단을 쓴다 — 무게는 색으로 가른다
+                                    .font(MyFisFont.titleSm)
                                     .foregroundStyle(MyFisColor.textSecondary)
                                     .lineLimit(1)
                             }
@@ -516,7 +517,7 @@ private struct CongestionCard: View {
                         .lineLimit(1)
                     Spacer(minLength: 0)
                     Text(congestion.updatedLabel)
-                        .font(MyFisFont.caption)
+                        .font(MyFisFont.bodySm)
                 }
                 .foregroundStyle(MyFisColor.textTertiary)
                 .padding(.bottom, MyFisSpacing.xs)
