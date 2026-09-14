@@ -4,7 +4,7 @@ import SwiftUI
 ///
 /// ```
 /// ZStack
-/// ├── TabShell     ← 헤더 + 탭 콘텐츠 + 하단 유리 탭 바. 잎이 덮어도 **안 움직인다**
+/// ├── TabShell     ← 헤더 + 탭 콘텐츠 + 하단 유리 탭 바. 잎이 들어오면 **폭 1/4 만큼 왼쪽으로 밀린다**
 /// └── pages[…]     ← 오른쪽에서 밀려 들어와 셸을 통째로 덮는다 (탭 바까지)
 /// ```
 ///
@@ -15,8 +15,13 @@ import SwiftUI
 ///   그러면 툭 사라지고 툭 생긴다
 /// - 헤더를 화면이 그리면 헤더는 화면과 **함께** 움직인다. 따로 노는 것이 없다
 ///
-/// **셸은 밀려 나가지 않는다.** 안드로이드도 그렇다 (`exitTransition = None`) —
-/// 셸이 같이 움직이면 하단 바가 왕복하는 게 눈에 걸린다.
+/// **뒤 화면은 폭의 `1/parallax` 만큼 같이 밀린다** 🟢 (2026-09-15 사용자 지정 —
+/// *"대부분 앱들이 저래서 우리도 그렇게 해야돼"*). 시스템 push 의 패럴랙스를 우리 덮개에서 다시 낸다.
+/// 안드로이드 `PARALLAX` 와 같은 값이다. 하단 유리 탭 바도 셸과 같이 밀린다.
+/// - 밀리는 건 **맨 위 잎 바로 밑 한 장**뿐이다 (잎이 하나면 셸). 더 밑은 이미 가려져 있어 밀린 자리에 둔다
+/// - 가장자리 스와이프 중에는 끄는 거리의 1/4 만큼 같이 돌아온다 — 놓는 순간 튀지 않는다
+/// - 가려진 잎은 **걷힐 때 움직이지 않고 사라진다** (`removal: .identity`). 셸까지 한 번에 돌아갈 때
+///   중간 잎이 맨 위 잎 뒤에서 따라 미끄러지는 띠가 보이지 않게 한다
 struct AppRoot: View {
     @State private var pages: [Route] = MyFisDebug.initialRoutes
     /// 찜 — 스토어 홈과 검색 잎(S-07)이 나눠 쓴다. TODO(서버): 계정에 붙는다
@@ -37,6 +42,19 @@ struct AppRoot: View {
     private static let edge: CGFloat = 24
     /// 이만큼 끌었으면 손을 떼도 닫는다
     private static let closeDistance: CGFloat = 90
+    /// 잎이 들어올 때 뒤 화면이 밀리는 몫 — 폭의 `1/4` (안드로이드 `PARALLAX` 와 같다. iOS 기본 push 는 약 `0.3`)
+    private static let parallax: CGFloat = 4
+
+    /// 뒤 화면이 밀린 거리. `depth` 는 이 층 **위에** 얹힌 잎 수다
+    private func underOffset(depth: Int, width: CGFloat) -> CGFloat {
+        switch depth {
+        case 0: return 0
+        // 맨 위 잎 바로 밑 — 가장자리 스와이프로 끄는 만큼 같이 돌아온다
+        case 1: return -(width - drag) / Self.parallax
+        // 더 밑은 이미 가려져 있다. 밀린 자리에 둔다
+        default: return -width / Self.parallax
+        }
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -45,15 +63,18 @@ struct AppRoot: View {
                 MyFisColor.bgBase.ignoresSafeArea()
 
                 TabShell(open: open, liked: $liked)
+                    .offset(x: underOffset(depth: pages.count, width: proxy.size.width))
                     // 덮인 셸에는 손이 닿지 않는다
                     .allowsHitTesting(pages.isEmpty)
 
                 ForEach(Array(pages.enumerated()), id: \.offset) { index, route in
                     let isTop = index == pages.count - 1
                     leaf(route)
-                        .offset(x: isTop ? drag : 0)
+                        .offset(x: isTop ? drag : underOffset(depth: pages.count - 1 - index,
+                                                              width: proxy.size.width))
                         .zIndex(Double(index + 1))
-                        .transition(.move(edge: .trailing))
+                        .transition(.asymmetric(insertion: .move(edge: .trailing),
+                                                removal: isTop ? .move(edge: .trailing) : .identity))
                         .gesture(isTop ? edgeBack(width: proxy.size.width) : nil)
                 }
 
