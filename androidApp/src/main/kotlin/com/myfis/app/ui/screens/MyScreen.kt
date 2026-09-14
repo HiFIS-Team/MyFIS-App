@@ -290,8 +290,16 @@ private fun ExpiryRow(onExtend: () -> Unit) {
  */
 @Composable
 private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifier) {
-    MyFisCard(modifier) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    // 여백을 카드가 아니라 **줄마다** 준다 — 머리 줄은 `16`, 두 칸은 카드를 거의 꽉 채우게 `4` (아래)
+    MyFisCard(modifier, padded = false) {
+        Row(
+            modifier = Modifier.padding(
+                start = MyFisSpacing.cardPadding,
+                end = MyFisSpacing.cardPadding,
+                top = MyFisSpacing.cardPadding,
+            ),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             // 카드에서 제일 먼저 읽혀야 하는 값이라 **한 단계 키운다** (§4.2 title.md,
             // 2026-09-07 사용자 지정). `title.sm` 이면 옆 `5일 남음` 과 무게가 비슷해 보였다
             Text(membership.name, style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary)
@@ -307,11 +315,20 @@ private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifi
             )
         }
 
+        // ⚠️ **두 칸이 카드를 거의 꽉 채운다** 🟢 (2026-09-14, 사용자 지정 · 레퍼런스 실측).
+        // 카드 여백 16 · 칸 사이 12 로는 393pt(iPhone 15 Pro)에서 `운동복` 이 접혔다.
+        // 레퍼런스(버핏그라운드)는 카드 가장자리·칸 사이가 약 6 이다 → 우리 토큰 `4` 로 따른다.
+        // 그래야 `title.sm` + `구매하기` 를 그대로 두고 360dp(갤럭시 S)에서도 한 줄로 선다
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = MyFisSpacing.lg),
-            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.cardGap),
+                .padding(
+                    start = MyFisSpacing.xs,
+                    end = MyFisSpacing.xs,
+                    top = MyFisSpacing.lg,
+                    bottom = MyFisSpacing.xs,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
         ) {
             AddonSlot("락커", membership.locker, Modifier.weight(1f))
             AddonSlot("운동복", membership.apparel, Modifier.weight(1f))
@@ -329,19 +346,25 @@ private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifi
 private fun AddonSlot(label: String, state: String?, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
-            .clip(MyFisRadius.md)
+            // 카드(`radius.md` 12)에서 `4` 안쪽이라 **한 단 작은 `radius.sm`** — 같은 12 면 모서리가 어긋나 보인다
+            .clip(MyFisRadius.sm)
             .background(MyFisColor.Surface2)
-            .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.md),
+            // 좌우 `8` — 칸 폭을 라벨·버튼에 돌려준다 (위아래는 `12` 그대로)
+            .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // ⚠️ 칸이 좁다 🟢 (2026-09-14 실측) — `title.sm` + `구매하기` 는 360dp(갤럭시 S)에서 12dp 모자라
-        // 라벨이 접힌다. 라벨 `body.sm` + 버튼 `구매` 로 **모든 기종에서 10dp 이상** 남긴다
-        Text(label, style = MyFisTheme.type.bodySm, color = MyFisColor.TextPrimary, maxLines = 1)
+        Text(
+            label,
+            style = MyFisTheme.type.titleSm,
+            color = MyFisColor.TextPrimary,
+            maxLines = 1,
+            // iOS `Spacer(minLength: 8)` 과 같은 최소 간격
+            modifier = Modifier.padding(end = MyFisSpacing.sm),
+        )
         Spacer(Modifier.weight(1f))
         if (state == null) {
-            // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다.
-            // `구매하기` 가 아니라 `구매` — 바로 아래 줄이 `멤버십 구매하기` 라 뜻이 통한다
-            MyFisSmallButton("구매", onClick = {}, outlined = true)
+            // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
+            MyFisSmallButton("구매하기", onClick = {}, outlined = true)
         } else {
             Text(state, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
         }

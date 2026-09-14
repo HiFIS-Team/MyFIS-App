@@ -210,7 +210,8 @@ private struct MembershipCard: View {
     let membership: MyMembership
 
     var body: some View {
-        MyFisCard {
+        // 여백을 카드가 아니라 **줄마다** 준다 — 머리 줄은 `16`, 두 칸은 카드를 거의 꽉 채우게 `4` (아래)
+        MyFisCard(padded: false) {
             HStack(spacing: 0) {
                 // 카드에서 제일 먼저 읽혀야 하는 값이라 **한 단계 키운다** (§4.2 title.md,
                 // 2026-09-07 사용자 지정). `title.sm` 이면 옆 `5일 남음` 과 무게가 비슷해 보였다
@@ -223,12 +224,18 @@ private struct MembershipCard: View {
                     .foregroundStyle(membership.daysLeft <= MyPlaceholder.expirySoonDays
                                      ? MyFisColor.danger : MyFisColor.textSecondary)
             }
+            .padding([.horizontal, .top], MyFisSpacing.cardPadding)
 
-            HStack(spacing: MyFisSpacing.cardGap) {
+            // ⚠️ **두 칸이 카드를 거의 꽉 채운다** 🟢 (2026-09-14, 사용자 지정 · 레퍼런스 실측).
+            // 카드 여백 16 · 칸 사이 12 로는 393pt(iPhone 15 Pro)에서 `운동복` 이 접혔다.
+            // 레퍼런스(버핏그라운드)는 카드 가장자리·칸 사이가 약 6 이다 → 우리 토큰 `4` 로 따른다.
+            // 그래야 `title.sm` + `구매하기` 를 그대로 두고 360dp(갤럭시 S)에서도 한 줄로 선다
+            HStack(spacing: MyFisSpacing.xs) {
                 AddonSlot(label: "락커", state: membership.locker)
                 AddonSlot(label: "운동복", state: membership.apparel)
             }
             .padding(.top, MyFisSpacing.lg)
+            .padding([.horizontal, .bottom], MyFisSpacing.xs)
         }
     }
 }
@@ -243,11 +250,8 @@ private struct AddonSlot: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            // ⚠️ 칸이 좁다 🟢 (2026-09-14 실측) — `title.sm` + `구매하기` 는 393pt(iPhone 15 Pro)에서
-            // 2.5pt 모자라 `운동복` 이 접혔다. 375pt(SE·mini) · 360dp(갤럭시 S)는 더 모자란다.
-            // 라벨 `body.sm` + 버튼 `구매` 로 **모든 기종에서 10pt 이상** 남긴다
             Text(label)
-                .font(MyFisFont.bodySm)
+                .font(MyFisFont.titleSm)
                 .foregroundStyle(MyFisColor.textPrimary)
                 .lineLimit(1)
             Spacer(minLength: MyFisSpacing.sm)
@@ -256,15 +260,17 @@ private struct AddonSlot: View {
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
             } else {
-                // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다.
-                // `구매하기` 가 아니라 `구매` — 바로 아래 줄이 `멤버십 구매하기` 라 뜻이 통한다
-                MyFisSmallButton(title: "구매", outlined: true, action: {})
+                // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
+                MyFisSmallButton(title: "구매하기", outlined: true, action: {})
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(MyFisSpacing.md)
+        // 좌우 `8` — 칸 폭을 라벨·버튼에 돌려준다 (위아래는 `12` 그대로)
+        .padding(.horizontal, MyFisSpacing.sm)
+        .padding(.vertical, MyFisSpacing.md)
         .background(MyFisColor.surface2)
-        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
+        // 카드(`radius.md` 12)에서 `4` 안쪽이라 **한 단 작은 `radius.sm`** — 같은 12 면 모서리가 어긋나 보인다
+        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous))
     }
 }
 
