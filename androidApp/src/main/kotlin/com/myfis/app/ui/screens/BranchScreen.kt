@@ -8,13 +8,25 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.runtime.key
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -48,6 +60,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
@@ -118,14 +131,19 @@ fun BranchScreen(onBack: () -> Unit = {}) {
             Column(
                 Modifier
                     .fillMaxWidth()
+                    // ⚠️ **펼침은 화면의 56% 까지다** (DESIGN §6.26) 🟢 (2026-09-14 버그).
+                    // 이 시트는 안에 든 만큼 커지므로, `많이 찾는 기구` 가 들어오자 끝까지 올라가
+                    // **헤더와 지도를 통째로 덮었다.** 높이를 막고 안에서 굴린다 (iOS 는 `full` 로 이미 막혀 있다)
+                    .heightIn(max = (LocalConfiguration.current.screenHeightDp * SHEET_EXPANDED_RATIO).dp)
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = MyFisSpacing.screenHorizontal)
                     .padding(bottom = MyFisSpacing.xxxl)
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(MyFisSpacing.xxl),
             ) {
-                PlaceQuickPick()
-                FavoriteMachines()
+                PlaceQuickPick(Modifier.padding(horizontal = MyFisSpacing.screenHorizontal))
+                FavoriteMachines(Modifier.padding(horizontal = MyFisSpacing.screenHorizontal))
+                // 옆으로 넘기는 목록이라 **화면 끝까지** 간다 — 다음 장이 오른쪽 끝에 걸쳐 보여야 한다
+                PopularMachines()
             }
         },
     ) {
@@ -571,5 +589,293 @@ private fun EmptyPinSlot(modifier: Modifier = Modifier) {
         }
 
         Text("추가", style = MyFisTheme.type.label, color = MyFisColor.TextTertiary, maxLines = 1)
+    }
+}
+
+// ── 이 지점 많이 찾는 기구 ──
+
+/**
+ * 순위를 **무엇으로 셌는지** — 칩 하나가 하나다 (DESIGN §6.27 · SPEC M-08).
+ *
+ * 레퍼런스(네이버 지도)의 `리뷰 많은` 은 **`많이 쓰는`** 으로 바꿨다 — 기구에는 리뷰가 없고,
+ * 대신 우리는 **세트를 끝낸 기록**을 갖고 있다. 찾기만 한 것보다 실제로 쓴 것이 더 정확하다
+ */
+private enum class PopularSort(val title: String) {
+    NOW("지금 인기"),
+    SAVED("저장 많은"),
+    USED("많이 쓰는"),
+    ROUTINE("루틴에 많은"),
+}
+
+/** TODO(서버): 지점별 기록을 세서 받는다 (SPEC M-08). 지금은 보여 주기용이다 */
+private data class PopularMachine(
+    val name: String,
+    val icon: Int,
+    val zone: String,
+    /** SPEC M-08 거리 표기 — `바로 옆` · `조금 걸어요` · `건너편` (미터를 안 쓴다) */
+    val distance: String,
+    /** 한 줄 태그 — 레퍼런스의 `# 김치보쌈 맛집` 자리 */
+    val tag: String,
+)
+
+private val popularMachines = mapOf(
+    "smith" to PopularMachine("스미스 머신", R.drawable.ic_place_free, "프리웨이트존", "조금 걸어요", "스쿼트 대기 적어요"),
+    "bench" to PopularMachine("벤치프레스", R.drawable.ic_place_free, "프리웨이트존", "바로 옆", "저녁 7시에 붐벼요"),
+    "latpull" to PopularMachine("랫풀다운", R.drawable.ic_place_machine, "머신존", "건너편", "등 운동 입문용"),
+    "treadmill" to PopularMachine("러닝머신", R.drawable.ic_place_cardio, "유산소존", "건너편", "창가 자리 있어요"),
+    "legpress" to PopularMachine("레그프레스", R.drawable.ic_place_machine, "머신존", "조금 걸어요", "원판 넉넉해요"),
+    "foam" to PopularMachine("폼롤러", R.drawable.ic_place_stretch, "스트레칭존", "바로 옆", "운동 끝나고 많이 찾아요"),
+)
+
+private fun rankedMachines(sort: PopularSort): List<PopularMachine> {
+    val order = when (sort) {
+        PopularSort.NOW -> listOf("smith", "bench", "latpull", "treadmill", "legpress", "foam")
+        PopularSort.SAVED -> listOf("bench", "treadmill", "smith", "legpress", "latpull", "foam")
+        PopularSort.USED -> listOf("treadmill", "bench", "legpress", "smith", "foam", "latpull")
+        PopularSort.ROUTINE -> listOf("latpull", "legpress", "bench", "smith", "foam", "treadmill")
+    }
+    return order.mapNotNull { popularMachines[it] }
+}
+
+/** 시트 펼침 높이 — 화면의 56% (DESIGN §6.26). iOS `full` 과 같은 값 */
+private const val SHEET_EXPANDED_RATIO = 0.56f
+
+private const val POPULAR_UPDATED = "12분 전 업데이트"
+private const val POPULAR_UPDATED_SHORT = "12분 전"
+private const val POPULAR_PER_PAGE = 3
+
+/** 레퍼런스 사진 칸 `84 × 112` (3:4) */
+private val PopularThumbWidth = 84.dp
+private val PopularThumbHeight = 112.dp
+
+/** 장 폭 = 쓸 수 있는 폭(왼쪽 `20` 을 뺀 것) − 장 사이 `24` − **다음 장이 걸치는 `32`** */
+private val PopularPageSize = object : PageSize {
+    override fun Density.calculateMainAxisPageSize(availableSpace: Int, pageSpacing: Int): Int =
+        availableSpace - pageSpacing - MyFisSpacing.xxxl.roundToPx()
+}
+
+/**
+ * 이 지점 많이 찾는 기구 (DESIGN §6.27) — 레퍼런스: **네이버 지도 `이 주변 많이 찾는 장소`** (사용자 지정).
+ *
+ * 머리 줄 → 칩 줄 → **한 장에 셋씩 옆으로 넘기는 순위**. 다음 장이 오른쪽 끝에 걸쳐 보여야
+ * 넘길 수 있다는 게 보인다 (레퍼런스 그대로).
+ */
+@Composable
+private fun PopularMachines(modifier: Modifier = Modifier) {
+    var sort by remember { mutableStateOf(PopularSort.NOW) }
+    val pages = rankedMachines(sort).chunked(POPULAR_PER_PAGE)
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(MyFisSpacing.lg),
+    ) {
+        PopularHeader(Modifier.padding(horizontal = MyFisSpacing.screenHorizontal))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
+                .padding(horizontal = MyFisSpacing.screenHorizontal),
+            horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm),
+        ) {
+            PopularSort.entries.forEach { item ->
+                PopularSortChip(item.title, selected = item == sort) { sort = item }
+            }
+        }
+
+        // 칩을 바꾸면 **첫 장으로** 돌아간다 — 다른 순위의 둘째 장부터 보이면 1등을 놓친다
+        key(sort) {
+            val pager = rememberPagerState { pages.size }
+            HorizontalPager(
+                state = pager,
+                contentPadding = PaddingValues(start = MyFisSpacing.screenHorizontal),
+                pageSpacing = MyFisSpacing.xxl,
+                pageSize = PopularPageSize,
+                verticalAlignment = Alignment.Top,
+            ) { pageIndex ->
+                Column(verticalArrangement = Arrangement.spacedBy(MyFisSpacing.md)) {
+                    pages[pageIndex].forEachIndexed { index, item ->
+                        PopularMachineRow(rank = pageIndex * POPULAR_PER_PAGE + index + 1, item = item)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** 머리 줄 — 제목 + ⓘ ↔ `• n분 전 업데이트`. 좁은 폰에서는 `업데이트` 를 뗀다 */
+@Composable
+private fun PopularHeader(modifier: Modifier = Modifier) {
+    val title = "이 지점 많이 찾는 기구"
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val infoInteraction = remember { MutableInteractionSource() }
+
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        // 글자 폭을 **재서** 정한다 — iOS `ViewThatFits` 와 같은 판단. 제목이 잘리는 것보다 `업데이트` 를 떼는 게 낫다
+        val need = with(density) {
+            measurer.measure(title, MyFisTheme.type.titleMd).size.width.toDp() +
+                MyFisSpacing.xs + 18.dp + MyFisSpacing.sm + 6.dp + MyFisSpacing.xs +
+                measurer.measure(POPULAR_UPDATED, MyFisTheme.type.bodySm).size.width.toDp()
+        }
+        val updated = if (maxWidth >= need) POPULAR_UPDATED else POPULAR_UPDATED_SHORT
+
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text(title, style = MyFisTheme.type.titleMd, color = MyFisColor.TextPrimary, maxLines = 1)
+            // TODO: 누르면 순위를 무엇으로 셌는지 설명한다 (M-08)
+            // ⚠️ `ic_info` 는 **글리프만** 있다 (토스트 원 안에 넣는 용도, §6.35) —
+            // 레퍼런스처럼 **동그라미 안의 i** 가 되게 원을 직접 두른다
+            Box(
+                modifier = Modifier
+                    .padding(start = MyFisSpacing.xs)
+                    .size(18.dp)
+                    .border(1.5.dp, MyFisColor.TextTertiary, CircleShape)
+                    .tapWithHaptics(infoInteraction) {},
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_info),
+                    contentDescription = "순위 기준",
+                    tint = MyFisColor.TextTertiary,
+                    modifier = Modifier.size(10.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            // 갱신 시각을 알리는 **안내** 점 — 레퍼런스의 파란 점 자리 (`info`)
+            Box(
+                Modifier
+                    .size(6.dp)
+                    .clip(CircleShape)
+                    .background(MyFisColor.Info),
+            )
+            Text(
+                updated,
+                style = MyFisTheme.type.bodySm,
+                color = MyFisColor.TextTertiary,
+                maxLines = 1,
+                modifier = Modifier.padding(start = MyFisSpacing.xs),
+            )
+        }
+    }
+}
+
+/**
+ * 순위 기준 칩. **고른 칩만 `#` 을 붙이고 판을 칠한다** (레퍼런스 그대로).
+ *
+ * 레퍼런스는 파랑으로 칠하지만 이 화면의 라임은 이미 둘(찾기 줄 · 내 위치)이라
+ * **판 밝기**로 고른 것을 알린다 — 시트(`surface.1`) 위라 한 단 더 올린 `surface.3` 이다
+ */
+@Composable
+private fun PopularSortChip(title: String, selected: Boolean, onClick: () -> Unit) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Box(
+        modifier = Modifier
+            .height(MyFisSize.chip)
+            .clip(MyFisRadius.full)
+            .background(if (selected) MyFisColor.Surface3 else Color.Transparent)
+            .then(
+                if (selected) Modifier
+                else Modifier.border(1.dp, MyFisColor.BorderSubtle, MyFisRadius.full),
+            )
+            .tapWithHaptics(interaction, onClick)
+            .padding(horizontal = MyFisSpacing.lg),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            if (selected) "# $title" else title,
+            style = MyFisTheme.type.bodySm,
+            color = if (selected) MyFisColor.TextPrimary else MyFisColor.TextSecondary,
+            maxLines = 1,
+        )
+    }
+}
+
+/** 순위 한 줄 — **사진 자리 · 순번 + 이름 · 구역 · 거리 · 저장 · `#` 태그** (레퍼런스 그대로) */
+@Composable
+private fun PopularMachineRow(rank: Int, item: PopularMachine) {
+    val interaction = remember { MutableInteractionSource() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(PopularThumbHeight)
+            // TODO: 누르면 지도에서 그 기구를 강조한다 (M-08)
+            .tapWithHaptics(interaction) {},
+        horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
+    ) {
+        // TODO(서버): 기구 사진이 오면 교체한다. 지금은 그 구역 그림
+        Box(
+            Modifier
+                .size(PopularThumbWidth, PopularThumbHeight)
+                .clip(MyFisRadius.sm)
+                .background(MyFisColor.Surface2),
+            contentAlignment = Alignment.Center,
+        ) {
+            // ⚠️ 원색 벌은 **`Image`** 로 그린다 — `Icon` 은 tint 로 한 색을 덮어씌운다
+            Image(painter = painterResource(item.icon), contentDescription = null, modifier = Modifier.size(32.dp))
+        }
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(top = MyFisSpacing.xs),
+            verticalArrangement = Arrangement.spacedBy(MyFisSpacing.md),
+        ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.sm)) {
+                Text(
+                    "$rank",
+                    style = MyFisTheme.type.titleSm.copy(fontStyle = FontStyle.Italic),
+                    color = MyFisColor.TextPrimary,
+                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+                ) {
+                    Text(
+                        item.name,
+                        style = MyFisTheme.type.titleSm,
+                        color = MyFisColor.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        "${item.zone} · ${item.distance}",
+                        style = MyFisTheme.type.bodySm,
+                        color = MyFisColor.TextTertiary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                // 저장 = `자주 쓰는 기구` 에 꽂기. 레퍼런스의 별 자리에 **같은 압정**을 쓴다
+                // TODO: 누르면 자주 쓰는 기구에 꽂는다 (M-08)
+                Icon(
+                    painter = painterResource(R.drawable.ic_place_pin),
+                    contentDescription = "자주 쓰는 기구에 꽂기",
+                    tint = MyFisColor.TextSecondary,
+                    modifier = Modifier.size(24.dp),
+                )
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(MyFisSize.chip)
+                    .clip(MyFisRadius.sm)
+                    .background(MyFisColor.Surface2)
+                    .padding(horizontal = MyFisSpacing.md),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
+            ) {
+                Text("#", style = MyFisTheme.type.bodySm, color = MyFisColor.TextTertiary)
+                Text(
+                    item.tag,
+                    style = MyFisTheme.type.bodySm,
+                    color = MyFisColor.TextSecondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
     }
 }

@@ -224,10 +224,14 @@ enum MyFisDebug {
         #endif
     }
 
-    /// 홈처럼 긴 화면의 아래쪽을 보려면 `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom`
+    /// 홈처럼 긴 화면의 아래쪽을 보려면 `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom` (가운데는 `center`)
     static var homeScrollAnchor: UnitPoint {
         #if DEBUG
-        env["MYFIS_HOME_SCROLL"] == "bottom" ? .bottom : .top
+        switch env["MYFIS_HOME_SCROLL"] {
+        case "bottom": .bottom
+        case "center": .center
+        default: .top
+        }
         #else
         .top
         #endif

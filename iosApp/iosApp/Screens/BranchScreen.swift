@@ -336,12 +336,20 @@ private struct BranchSheet: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: MyFisSpacing.xxl) {
-                    PlaceQuickPick()
-                    FavoriteMachines()
+                    VStack(spacing: MyFisSpacing.xxl) {
+                        PlaceQuickPick()
+                        FavoriteMachines()
+                    }
+                    .padding(.horizontal, MyFisSpacing.screenHorizontal)
+
+                    // 옆으로 넘기는 목록이라 **화면 끝까지** 간다 — 다음 장이 오른쪽 끝에 걸쳐 보여야 한다
+                    PopularMachines()
                 }
-                .padding(.horizontal, MyFisSpacing.screenHorizontal)
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
+            // 시뮬레이터에는 굴릴 수단이 없다 — 시트 아래쪽(많이 찾는 기구)은
+            // `SIMCTL_CHILD_MYFIS_HOME_SCROLL=bottom` 으로 띄워 확인한다 (디버그 빌드에서만)
+            .defaultScrollAnchor(MyFisDebug.homeScrollAnchor)
             // 접혀 있을 땐 시트를 못 굴린다. 굴리면 첫 줄이 위로 사라져 빈 판만 남는다
             .disabled(!expanded)
         }
@@ -552,6 +560,283 @@ private struct EmptyPinSlot: View {
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.myFisTap)
+    }
+}
+
+// MARK: - 이 지점 많이 찾는 기구
+
+/// 순위를 **무엇으로 셌는지** — 칩 하나가 하나다 (DESIGN §6.27 · SPEC M-08).
+///
+/// 레퍼런스(네이버 지도)의 `리뷰 많은` 은 **`많이 쓰는`** 으로 바꿨다 — 기구에는 리뷰가 없고,
+/// 대신 우리는 **세트를 끝낸 기록**을 갖고 있다. 찾기만 한 것보다 실제로 쓴 것이 더 정확하다
+enum PopularSort: String, CaseIterable, Identifiable {
+    case now, saved, used, routine
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .now: "지금 인기"
+        case .saved: "저장 많은"
+        case .used: "많이 쓰는"
+        case .routine: "루틴에 많은"
+        }
+    }
+}
+
+/// TODO(서버): 지점별 기록을 세서 받는다 (SPEC M-08). 지금은 보여 주기용이다
+struct PopularMachine: Identifiable {
+    let id: String
+    let name: String
+    let icon: String
+    let zone: String
+    /// SPEC M-08 거리 표기 — `바로 옆` · `조금 걸어요` · `건너편` (미터를 안 쓴다)
+    let distance: String
+    /// 한 줄 태그 — 레퍼런스의 `# 김치보쌈 맛집` 자리
+    let tag: String
+}
+
+enum PopularPlaceholder {
+    static let updated = "12분 전 업데이트"
+    static let updatedShort = "12분 전"
+
+    private static let all: [String: PopularMachine] = Dictionary(uniqueKeysWithValues: [
+        PopularMachine(id: "smith", name: "스미스 머신", icon: "ic_place_free",
+                       zone: "프리웨이트존", distance: "조금 걸어요", tag: "스쿼트 대기 적어요"),
+        PopularMachine(id: "bench", name: "벤치프레스", icon: "ic_place_free",
+                       zone: "프리웨이트존", distance: "바로 옆", tag: "저녁 7시에 붐벼요"),
+        PopularMachine(id: "latpull", name: "랫풀다운", icon: "ic_place_machine",
+                       zone: "머신존", distance: "건너편", tag: "등 운동 입문용"),
+        PopularMachine(id: "treadmill", name: "러닝머신", icon: "ic_place_cardio",
+                       zone: "유산소존", distance: "건너편", tag: "창가 자리 있어요"),
+        PopularMachine(id: "legpress", name: "레그프레스", icon: "ic_place_machine",
+                       zone: "머신존", distance: "조금 걸어요", tag: "원판 넉넉해요"),
+        PopularMachine(id: "foam", name: "폼롤러", icon: "ic_place_stretch",
+                       zone: "스트레칭존", distance: "바로 옆", tag: "운동 끝나고 많이 찾아요"),
+    ].map { ($0.id, $0) })
+
+    static func ranked(by sort: PopularSort) -> [PopularMachine] {
+        let order: [String] = switch sort {
+        case .now: ["smith", "bench", "latpull", "treadmill", "legpress", "foam"]
+        case .saved: ["bench", "treadmill", "smith", "legpress", "latpull", "foam"]
+        case .used: ["treadmill", "bench", "legpress", "smith", "foam", "latpull"]
+        case .routine: ["latpull", "legpress", "bench", "smith", "foam", "treadmill"]
+        }
+        return order.compactMap { all[$0] }
+    }
+}
+
+/// 이 지점 많이 찾는 기구 (DESIGN §6.27) — 레퍼런스: **네이버 지도 `이 주변 많이 찾는 장소`** (사용자 지정).
+///
+/// 머리 줄 → 칩 줄 → **한 장에 셋씩 옆으로 넘기는 순위**. 다음 장이 오른쪽 끝에 걸쳐 보여야
+/// 넘길 수 있다는 게 보인다 (레퍼런스 그대로).
+private struct PopularMachines: View {
+    @State private var sort: PopularSort = .now
+
+    /// 한 장 = 줄 셋 — 줄 높이 `112` × 3 + 줄 사이 `12` × 2
+    private static let pageHeight = PopularMachineRow.thumbHeight * 3 + MyFisSpacing.md * 2
+    private static let perPage = 3
+
+    private var pages: [[PopularMachine]] {
+        let ranked = PopularPlaceholder.ranked(by: sort)
+        return stride(from: 0, to: ranked.count, by: Self.perPage).map {
+            Array(ranked[$0..<min($0 + Self.perPage, ranked.count)])
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: MyFisSpacing.lg) {
+            PopularHeader()
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: MyFisSpacing.sm) {
+                    ForEach(PopularSort.allCases) { item in
+                        Button { sort = item } label: {
+                            PopularSortChip(title: item.title, selected: item == sort)
+                        }
+                        .buttonStyle(.myFisTap)
+                    }
+                }
+                .padding(.horizontal, MyFisSpacing.screenHorizontal)
+            }
+
+            GeometryReader { geo in
+                // 장 폭 = 화면 − 왼쪽 `20` − 장 사이 `24` − **다음 장이 걸치는 `32`**
+                let pageWidth = geo.size.width - MyFisSpacing.screenHorizontal
+                    - MyFisSpacing.xxl - MyFisSpacing.xxxl
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(alignment: .top, spacing: MyFisSpacing.xxl) {
+                        ForEach(Array(pages.enumerated()), id: \.offset) { pageIndex, page in
+                            VStack(spacing: MyFisSpacing.md) {
+                                ForEach(Array(page.enumerated()), id: \.element.id) { index, item in
+                                    PopularMachineRow(rank: pageIndex * Self.perPage + index + 1, item: item)
+                                }
+                            }
+                            .frame(width: pageWidth, alignment: .top)
+                        }
+                    }
+                    .scrollTargetLayout()
+                }
+                .contentMargins(.leading, MyFisSpacing.screenHorizontal, for: .scrollContent)
+                .scrollTargetBehavior(.viewAligned)
+                // 칩을 바꾸면 **첫 장으로** 돌아간다 — 다른 순위의 둘째 장부터 보이면 1등을 놓친다
+                .id(sort)
+            }
+            .frame(height: Self.pageHeight)
+        }
+    }
+}
+
+/// 머리 줄 — 제목 + ⓘ ↔ `• n분 전 업데이트`.
+private struct PopularHeader: View {
+    var body: some View {
+        HStack(spacing: MyFisSpacing.sm) {
+            HStack(spacing: MyFisSpacing.xs) {
+                Text("이 지점 많이 찾는 기구")
+                    .font(MyFisFont.titleMd)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
+                // TODO: 누르면 순위를 무엇으로 셌는지 설명한다 (M-08)
+                Button {} label: {
+                    // ⚠️ `ic_info` 는 **글리프만** 있다 (토스트 원 안에 넣는 용도, §6.35) —
+                    // 레퍼런스처럼 **동그라미 안의 i** 가 되게 원을 직접 두른다
+                    Image("ic_info")
+                        .resizable()
+                        .renderingMode(.template)
+                        .frame(width: 10, height: 10)
+                        .frame(width: 18, height: 18)
+                        .overlay(Circle().strokeBorder(MyFisColor.textTertiary, lineWidth: 1.5))
+                        .foregroundStyle(MyFisColor.textTertiary)
+                }
+                .buttonStyle(.myFisTap)
+            }
+
+            Spacer(minLength: 0)
+
+            // 좁은 폰(375pt 이하)에서는 `업데이트` 를 뗀다 — 제목이 잘리는 것보다 낫다
+            ViewThatFits(in: .horizontal) {
+                updated(PopularPlaceholder.updated)
+                updated(PopularPlaceholder.updatedShort)
+            }
+        }
+    }
+
+    private func updated(_ text: String) -> some View {
+        HStack(spacing: MyFisSpacing.xs) {
+            // 갱신 시각을 알리는 **안내** 점 — 레퍼런스의 파란 점 자리 (`info`)
+            Circle()
+                .fill(MyFisColor.info)
+                .frame(width: 6, height: 6)
+            Text(text)
+                .font(MyFisFont.bodySm)
+                .foregroundStyle(MyFisColor.textTertiary)
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+        }
+    }
+}
+
+/// 순위 기준 칩. **고른 칩만 `#` 을 붙이고 판을 칠한다** (레퍼런스 그대로).
+///
+/// 레퍼런스는 파랑으로 칠하지만 이 화면의 라임은 이미 둘(찾기 줄 · 내 위치)이라
+/// **판 밝기**로 고른 것을 알린다 — 시트(`surface.1`) 위라 한 단 더 올린 `surface.3` 이다
+private struct PopularSortChip: View {
+    let title: String
+    let selected: Bool
+
+    var body: some View {
+        Text(selected ? "# \(title)" : title)
+            .font(MyFisFont.bodySm)
+            .foregroundStyle(selected ? MyFisColor.textPrimary : MyFisColor.textSecondary)
+            .lineLimit(1)
+            .padding(.horizontal, MyFisSpacing.lg)
+            .frame(height: MyFisSize.chip)
+            .background(selected ? MyFisColor.surface3 : Color.clear, in: Capsule())
+            .overlay(Capsule().strokeBorder(selected ? Color.clear : MyFisColor.borderSubtle, lineWidth: 1))
+            .contentShape(Capsule())
+    }
+}
+
+/// 순위 한 줄 — **사진 자리 · 순번 + 이름 · 구역 · 거리 · 저장 · `#` 태그** (레퍼런스 그대로).
+private struct PopularMachineRow: View {
+    let rank: Int
+    let item: PopularMachine
+
+    /// 레퍼런스 사진 칸 `84 × 112` (3:4)
+    static let thumbWidth: CGFloat = 84
+    static let thumbHeight: CGFloat = 112
+
+    var body: some View {
+        // TODO: 누르면 지도에서 그 기구를 강조한다 (M-08)
+        Button {} label: {
+            HStack(alignment: .top, spacing: MyFisSpacing.md) {
+                // TODO(서버): 기구 사진이 오면 교체한다. 지금은 그 구역 그림
+                RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
+                    .fill(MyFisColor.surface2)
+                    .frame(width: Self.thumbWidth, height: Self.thumbHeight)
+                    .overlay {
+                        Image(item.icon)
+                            .resizable()
+                            .renderingMode(.original)
+                            .frame(width: 32, height: 32)
+                    }
+
+                VStack(alignment: .leading, spacing: MyFisSpacing.md) {
+                    HStack(alignment: .top, spacing: MyFisSpacing.sm) {
+                        Text("\(rank)")
+                            .font(MyFisFont.titleSm.monospacedDigit())
+                            .foregroundStyle(MyFisColor.textPrimary)
+                            // 레퍼런스의 **기울인 순번**. ⚠️ 우리 글꼴(Pretendard)에는 기울임꼴이 없어
+                            // `.italic()` 이 안 먹는다 (2026-09-14 실측) — 글자를 직접 비스듬히 민다
+                            .transformEffect(CGAffineTransform(a: 1, b: 0, c: -0.2, d: 1, tx: 2, ty: 0))
+
+                        VStack(alignment: .leading, spacing: MyFisSpacing.xs) {
+                            Text(item.name)
+                                .font(MyFisFont.titleSm)
+                                .foregroundStyle(MyFisColor.textPrimary)
+                                .lineLimit(1)
+                            Text("\(item.zone) · \(item.distance)")
+                                .font(MyFisFont.bodySm)
+                                .foregroundStyle(MyFisColor.textTertiary)
+                                .lineLimit(1)
+                        }
+
+                        Spacer(minLength: 0)
+
+                        // 저장 = `자주 쓰는 기구` 에 꽂기. 레퍼런스의 별 자리에 **같은 압정**을 쓴다
+                        // TODO: 누르면 자주 쓰는 기구에 꽂는다 (M-08)
+                        Image("ic_place_pin")
+                            .resizable()
+                            .renderingMode(.template)
+                            .frame(width: 24, height: 24)
+                            .foregroundStyle(MyFisColor.textSecondary)
+                    }
+
+                    HStack(spacing: MyFisSpacing.xs) {
+                        Text("#")
+                            .font(MyFisFont.bodySm)
+                            .foregroundStyle(MyFisColor.textTertiary)
+                        Text(item.tag)
+                            .font(MyFisFont.bodySm)
+                            .foregroundStyle(MyFisColor.textSecondary)
+                            .lineLimit(1)
+                    }
+                    .padding(.horizontal, MyFisSpacing.md)
+                    .frame(maxWidth: .infinity, minHeight: MyFisSize.chip, alignment: .leading)
+                    .background(
+                        MyFisColor.surface2,
+                        in: RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous)
+                    )
+                }
+                .padding(.top, MyFisSpacing.xs)
+            }
+            .frame(height: Self.thumbHeight, alignment: .top)
             .contentShape(Rectangle())
         }
         .buttonStyle(.myFisTap)
