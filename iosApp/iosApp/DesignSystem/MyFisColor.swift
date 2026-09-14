@@ -7,32 +7,30 @@ import SwiftUI
 ///
 /// 다크 전용이라 Asset Catalog 대신 상수로 둔다 (라이트/다크 변형이 필요 없다).
 enum MyFisColor {
-    // 배경 (surface) — **짙은 회색 바탕 + 사다리 전체를 같이 올렸다** 🟢 (2026-09-14 사용자 지정,
-    // 레퍼런스: PITZ 홈 화면에서 잰 값).
+    // 배경 (surface) — **8/26 톤(`#1B1B1D` 계열)으로 되돌렸다** 🟢 (2026-09-14 사용자 지정 —
+    // *"그때 톤으로 해봐"*. 혜택 홈을 꾸미던 8/26 저녁에 정해 9/07 까지 쓰던 사다리다).
     //
-    // 경위: 8/26 `#1B1B1D` (바닥만 올려 계단 1.098 — 카드가 바탕에 녹았다)
+    // 경위: 8/26 `#1B1B1D` (토스 → 카카오뱅크 다크, 계단 1.098 / 1.124 / 1.157)
     //    → 9/08 `#000000` (사다리를 통째로 내려 계단 1.219 / 1.203 / 1.189)
-    //    → **9/14 `#18191C`** — 순검정이 실기에서 너무 어둡다는 판단으로 다시 올렸다.
-    // 8/26 과 다른 점은 **카드도 같이 올렸다는 것**이다. 계단이 1.148 / 1.143 / 1.145 로 고르게 선다.
-    // §5.4 목표(1.2)보다 얕은 건 **알고 고른 값**이다 (§3.1 에 경위를 적었다).
-    static let bgBase = Color(hex: 0x18191C)
-    static let surface1 = Color(hex: 0x23252B)
-    static let surface2 = Color(hex: 0x2C2F36)
-    // ⚠️ PITZ(`#3E434D`)보다 **낮다** — `textTertiary` 가 여기서 AA(4.5)를 넘는 가장 밝은 값이
-    // `#36383F`(4.56:1)다. PITZ 값을 그대로 쓰면 3.87:1 로 떨어진다
-    static let surface3 = Color(hex: 0x36383F)
+    //    → 9/14 `#18191C` (PITZ, 계단 1.148 / 1.143 / 1.145)
+    //    → **9/14 `#1B1B1D`** — 8/26 사다리로 복귀.
+    // ⚠️ 바탕↔카드 1.098 은 §5.4 바닥선(1.10) 바로 밑이다 — **사용자가 알고 고른 값**이다.
+    static let bgBase = Color(hex: 0x1B1B1D)
+    static let surface1 = Color(hex: 0x232327)
+    static let surface2 = Color(hex: 0x2B2C31)
+    // `textTertiary` AA 하한(4.5)이 여기 걸려 있다 — 이 위에서 4.69:1. 더 밝히지 않는다
+    static let surface3 = Color(hex: 0x35363C)
 
     // 경계
     //
-    // ⚠️ **바탕을 옮기면 경계 둘도 같이 다시 잰다** (§3.1) 🟢 (2026-09-14).
-    // `borderSubtle` — 거의 전부 카드 *안* 구분선·bg 위 그룹 구분선이다. **카드 위 세기
-    //   (`surface.1` 위 1.50:1)** 를 그대로 지키는 값으로 올렸다 (`#383941` → `#404148`).
-    // `borderStrong` — 그대로 두면 새 `surface.2` 위에서 2.81:1 로 WCAG 1.4.11(3:1) 밑이 된다.
-    //   테두리형 Small 버튼이 `surface.2` 블록 위에 있어서 한 칸 올렸다 (3.02:1)
-    static let borderSubtle = Color(hex: 0x404148)
+    // ⚠️ **바탕을 옮기면 경계 둘도 같이 다시 잰다** (§3.1).
+    // `borderSubtle` — 8/26 값 그대로. 바탕 위 1.72:1 · 카드 위 1.57:1
+    // `borderStrong` — 8/26 값(`#6B7383`)이면 `surface.2` 위 2.92:1 로 WCAG 1.4.11(3:1) 밑이다.
+    //   테두리형 Small 버튼이 `surface.2` 블록 위에 있어서 9/14 값을 그대로 둔다 (3.14:1)
+    static let borderSubtle = Color(hex: 0x41424B)
     static let borderStrong = Color(hex: 0x707888)
 
-    // 텍스트 — textTertiary 가 AA 하한선(surface.3 위 4.56:1). 이보다 어둡게 쓰지 않는다.
+    // 텍스트 — textTertiary 가 AA 하한선(surface.3 위 4.69:1). 이보다 어둡게 쓰지 않는다.
     // 🟢 **`textSecondary` 를 올렸다** (`#A3A9B5` → `#BCC1CB`, 2026-09-08).
     // 둘이 서로 **1.088:1** 이라 사실상 같은 색이었다 — 토큰만 둘이고 눈에는 하나였다.
     // `textTertiary` 는 AA 하한에 묶여 못 내리므로 **`textSecondary` 를 올려서** 벌린다.

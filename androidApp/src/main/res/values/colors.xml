@@ -4,5 +4,5 @@
     <color name="ic_launcher_background">#000000</color>
     <!-- DESIGN.md §3 bg.base — 시작 화면 배경용. Color.kt 의 BgBase 와 같이 바꾼다
          (9/08 에 코드만 #000000 으로 바꾸고 여기는 #1B1B1D 로 남아 있었다) -->
-    <color name="bg_base">#18191C</color>
+    <color name="bg_base">#1B1B1D</color>
 </resources>
