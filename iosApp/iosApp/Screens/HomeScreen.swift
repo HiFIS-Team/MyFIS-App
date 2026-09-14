@@ -715,7 +715,6 @@ private struct NewsSection: View {
 
                     NoticeRow(notice: notice, action: onOpen)
                 }
-                .padding(MyFisSpacing.cardPadding)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
