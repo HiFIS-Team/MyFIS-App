@@ -14,6 +14,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
@@ -117,6 +120,14 @@ fun BranchScreen(onBack: () -> Unit = {}) {
         ),
     )
 
+    // 펼침은 **헤더 바로 밑까지** 올라간다 🟢 (2026-09-14, 사용자 지정).
+    // 화면의 56% 에서 멈추니 `많이 찾는 기구` 를 보려면 시트 안을 굴려야 했고 3등이 잘렸다.
+    // ⚠️ 한 번 "그 섹션이 딱 들어가는 높이"로 잘라 헤더 밑에서 멈추게 했다가 *"끝까지 안 올라간다"* 로 되돌렸다.
+    // 이 시트는 안에 든 만큼 커지므로 **위 한도를 직접 준다** — 화면 − 상태바 − 헤더 − 손잡이
+    val screenHeight = LocalConfiguration.current.screenHeightDp.dp
+    val statusInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val sheetMax = screenHeight - statusInset - MyFisSize.header - SHEET_DRAG_HANDLE
+
     BottomSheetScaffold(
         scaffoldState = state,
         // 접혔을 때 **빠른 고르기 두 줄이 다 보인다.** 한 줄만 보이게 하면 나머지 넷이
@@ -131,10 +142,10 @@ fun BranchScreen(onBack: () -> Unit = {}) {
             Column(
                 Modifier
                     .fillMaxWidth()
-                    // ⚠️ **펼침은 화면의 56% 까지다** (DESIGN §6.26) 🟢 (2026-09-14 버그).
-                    // 이 시트는 안에 든 만큼 커지므로, `많이 찾는 기구` 가 들어오자 끝까지 올라가
-                    // **헤더와 지도를 통째로 덮었다.** 높이를 막고 안에서 굴린다 (iOS 는 `full` 로 이미 막혀 있다)
-                    .heightIn(max = (LocalConfiguration.current.screenHeightDp * SHEET_EXPANDED_RATIO).dp)
+                    // ⚠️ **높이를 막는다** 🟢 (2026-09-14 버그). 이 시트는 안에 든 만큼 커지므로,
+                    // `많이 찾는 기구` 가 들어오자 끝까지 올라가 **헤더와 지도를 통째로 덮었다.**
+                    // 막는 높이는 위 `sheetMax` — **헤더 바로 밑**까지다. 넘치는 건 안에서 굴린다
+                    .heightIn(max = sheetMax)
                     .verticalScroll(rememberScrollState())
                     .padding(bottom = MyFisSpacing.xxxl)
                     .navigationBarsPadding(),
@@ -637,8 +648,8 @@ private fun rankedMachines(sort: PopularSort): List<PopularMachine> {
     return order.mapNotNull { popularMachines[it] }
 }
 
-/** 시트 펼침 높이 — 화면의 56% (DESIGN §6.26). iOS `full` 과 같은 값 */
-private const val SHEET_EXPANDED_RATIO = 0.56f
+/** 시트 손잡이 자리 — Material3 기본 손잡이는 위아래 `22` + 막대 `4` 다 */
+private val SHEET_DRAG_HANDLE = 48.dp
 
 private const val POPULAR_UPDATED = "12분 전 업데이트"
 private const val POPULAR_UPDATED_SHORT = "12분 전"

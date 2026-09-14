@@ -30,7 +30,10 @@ struct BranchScreen: View {
             // ⚠️ 더 키우면 `자주 쓰는 기구` 제목이 **반만 걸쳐** 고장 난 것처럼 보인다 —
             // 다음 칸을 보여 주려면 **글자 없는 빈 자리**만 내민다
             let peek: CGFloat = 248
-            let full = max(geo.size.height * 0.56, peek + 160)
+            // 펼침은 **헤더 바로 밑까지** 올라간다 🟢 (2026-09-14, 사용자 지정).
+            // 화면의 56% 에서 멈추니 `많이 찾는 기구` 를 보려면 시트 안을 굴려야 했고 3등이 잘렸다.
+            // ⚠️ 한 번 "그 섹션이 딱 들어가는 높이"로 잘라 헤더 밑에서 멈추게 했다가 *"끝까지 안 올라간다"* 로 되돌렸다
+            let full = geo.size.height - MyFisSize.header
 
             ZStack {
                 VStack(spacing: 0) {
