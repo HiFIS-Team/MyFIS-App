@@ -41,7 +41,11 @@ struct StoreSuggestionCard: View {
                     .font(MyFisFont.titleSm)
                     .padding(.top, 2)
             }
-            .frame(maxWidth: width ?? .infinity, alignment: .leading)
+            // ⚠️ 폭을 받으면 **정확히** 그 폭이다 (`width:`), `maxWidth:` 가 아니다 🟢 (2026-09-14 버그).
+            // 가로 스크롤 안에서는 부모가 폭을 안 주므로 `maxWidth` 는 상한만 걸고 **글자 폭으로 줄어든다** —
+            // 카드 폭이 이름마다 달라지고, 크기가 없는 정사각 자리(`Color.clear`)가 막대로 찌그러졌다
+            .frame(width: width, alignment: .leading)
+            .frame(maxWidth: width == nil ? .infinity : nil, alignment: .leading)
         }
         .buttonStyle(.myFisTap)
     }
