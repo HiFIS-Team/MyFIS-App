@@ -7,8 +7,6 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import com.myfis.app.ui.theme.MyFisSpacing
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
@@ -60,13 +58,17 @@ import com.myfis.app.ui.screens.WorkoutDetailScreen
 import com.myfis.app.ui.screens.WorkoutSessionScreen
 import com.myfis.app.ui.theme.MyFisColor
 
+/** 잎이 들어올 때 뒤 화면이 밀리는 몫 — 화면 폭의 `1/4` (iOS 기본 push 는 약 `0.3`) */
+private const val PARALLAX = 4
+
 /**
  * 앱의 뿌리.
  *
  * 탭 셸 위로 잎 화면이 **오른쪽에서 왼쪽으로 들어와 셸을 덮는다.**
  *
- * 셸은 움직이지 않는다 — 하단 탭 바가 같이 밀려 나갔다 돌아오면 그 왕복이 눈에 걸린다.
- * 덮개만 움직이면 돌아왔을 때 바가 원래 자리에 그대로 있다.
+ * 🟡 **뒤 화면은 `1/PARALLAX` 만큼 왼쪽으로 같이 밀린다** (2026-09-15 시험, 사용자 지정 — iOS 기본 push 의 패럴랙스).
+ * 8/24 에 한 번 넣었다가 *"하단 바가 같이 움직인다"* 로 뺐던 것을 다시 넣어 보는 중이다 (DESIGN §7.1).
+ * 대상 SDK 37 이라 예측형 뒤로가기에서도 뒤 화면이 손가락을 따라 돌아온다.
  * (`NavHost` 기본 전환은 700ms 크로스페이드라 직접 지정한다)
  */
 @Composable
@@ -97,8 +99,8 @@ fun AppShell() {
         startDestination = Route.SHELL,
         modifier = Modifier.fillMaxSize().background(MyFisColor.BgBase),
         enterTransition = { slideInHorizontally(pushSpec) { it } },
-        exitTransition = { ExitTransition.None },
-        popEnterTransition = { EnterTransition.None },
+        exitTransition = { slideOutHorizontally(pushSpec) { -it / PARALLAX } },
+        popEnterTransition = { slideInHorizontally(pushSpec) { -it / PARALLAX } },
         popExitTransition = { slideOutHorizontally(pushSpec) { it } },
     ) {
         composable(Route.SHELL) {
