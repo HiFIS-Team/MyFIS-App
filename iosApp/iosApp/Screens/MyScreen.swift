@@ -243,17 +243,22 @@ private struct AddonSlot: View {
 
     var body: some View {
         HStack(spacing: 0) {
+            // ⚠️ 칸이 좁다 🟢 (2026-09-14 실측) — `title.sm` + `구매하기` 는 393pt(iPhone 15 Pro)에서
+            // 2.5pt 모자라 `운동복` 이 접혔다. 375pt(SE·mini) · 360dp(갤럭시 S)는 더 모자란다.
+            // 라벨 `body.sm` + 버튼 `구매` 로 **모든 기종에서 10pt 이상** 남긴다
             Text(label)
-                .font(MyFisFont.titleSm)
+                .font(MyFisFont.bodySm)
                 .foregroundStyle(MyFisColor.textPrimary)
+                .lineLimit(1)
             Spacer(minLength: MyFisSpacing.sm)
             if let state {
                 Text(state)
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
             } else {
-                // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
-                MyFisSmallButton(title: "구매하기", outlined: true, action: {})
+                // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다.
+                // `구매하기` 가 아니라 `구매` — 바로 아래 줄이 `멤버십 구매하기` 라 뜻이 통한다
+                MyFisSmallButton(title: "구매", outlined: true, action: {})
             }
         }
         .frame(maxWidth: .infinity)

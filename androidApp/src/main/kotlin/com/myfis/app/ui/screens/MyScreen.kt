@@ -334,11 +334,14 @@ private fun AddonSlot(label: String, state: String?, modifier: Modifier = Modifi
             .padding(horizontal = MyFisSpacing.md, vertical = MyFisSpacing.md),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, style = MyFisTheme.type.titleSm, color = MyFisColor.TextPrimary)
+        // ⚠️ 칸이 좁다 🟢 (2026-09-14 실측) — `title.sm` + `구매하기` 는 360dp(갤럭시 S)에서 12dp 모자라
+        // 라벨이 접힌다. 라벨 `body.sm` + 버튼 `구매` 로 **모든 기종에서 10dp 이상** 남긴다
+        Text(label, style = MyFisTheme.type.bodySm, color = MyFisColor.TextPrimary, maxLines = 1)
         Spacer(Modifier.weight(1f))
         if (state == null) {
-            // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
-            MyFisSmallButton("구매하기", onClick = {}, outlined = true)
+            // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다.
+            // `구매하기` 가 아니라 `구매` — 바로 아래 줄이 `멤버십 구매하기` 라 뜻이 통한다
+            MyFisSmallButton("구매", onClick = {}, outlined = true)
         } else {
             Text(state, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
         }
