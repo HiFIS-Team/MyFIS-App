@@ -46,6 +46,8 @@ enum MyFisSize {
     static let progressHeight: CGFloat = 8
     /// 카드 안 보조 버튼 (§6.1)
     static let buttonSmall: CGFloat = 36
+    /// Small 의 **테두리형** 높이 (§6.1 · §6.38) 🟢 (2026-09-14) — 레퍼런스(버핏그라운드 MY)의 작은 테두리 버튼
+    static let buttonOutlined: CGFloat = 32
 
     /// 알약 칩·뱃지 높이 (§5.2) — 마일리지 칩 · 연속 출석 · 펼쳐보기 · 도움 됐어요.
     ///

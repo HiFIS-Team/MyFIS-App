@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,7 +26,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.myfis.app.R
 import com.myfis.app.ui.components.Chevron
@@ -285,18 +288,17 @@ private fun ExpiryRow(onExtend: () -> Unit) {
  * 회원권 한 장 (원본의 `1일 이용권` 카드).
  *
  * 머리 줄이 **무엇을 얼마나** 남겼는지 말하고, 아래 두 칸이 **아직 안 산 것**을 판다.
- * 원본은 두 칸이 따로 판이고 버튼이 테두리형인데, 우리는 **테두리 버튼이 없다** (§6.1 5종) —
- * 카드 위에 세로 실선으로 나누고 `Small`(surface.2) 을 쓴다. 면이 하나 줄어 더 조용하다.
+ * **레퍼런스(버핏그라운드 MY) 사진대로다** 🟢 (2026-09-14, 사용자 지정) — 치수는 §6.38.
  */
 @Composable
 private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifier) {
-    // 여백을 카드가 아니라 **줄마다** 준다 — 머리 줄은 `16`, 두 칸은 카드를 거의 꽉 채우게 `4` (아래)
+    // 여백을 카드가 아니라 **줄마다** 준다 — 머리 줄은 `20`, 두 판은 카드를 거의 꽉 채우게 `4` (아래)
     MyFisCard(modifier, padded = false) {
         Row(
             modifier = Modifier.padding(
-                start = MyFisSpacing.cardPadding,
-                end = MyFisSpacing.cardPadding,
-                top = MyFisSpacing.cardPadding,
+                start = MyFisSpacing.xl,
+                end = MyFisSpacing.xl,
+                top = MyFisSpacing.xl,
             ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -315,18 +317,15 @@ private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifi
             )
         }
 
-        // ⚠️ **두 칸이 카드를 거의 꽉 채운다** 🟢 (2026-09-14, 사용자 지정 · 레퍼런스 실측).
-        // 카드 여백 16 · 칸 사이 12 로는 393pt(iPhone 15 Pro)에서 `운동복` 이 접혔다.
-        // 레퍼런스(버핏그라운드)는 카드 가장자리·칸 사이가 약 6 이다 → 우리 토큰 `4` 로 따른다.
-        // 그래야 `title.sm` + `구매하기` 를 그대로 두고 360dp(갤럭시 S)에서도 한 줄로 선다
+        // 레퍼런스: 카드 가장자리·판 사이 약 6, 아래 약 10 → 토큰 `4` · `8`
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
                     start = MyFisSpacing.xs,
                     end = MyFisSpacing.xs,
-                    top = MyFisSpacing.lg,
-                    bottom = MyFisSpacing.xs,
+                    top = MyFisSpacing.xxl,
+                    bottom = MyFisSpacing.sm,
                 ),
             horizontalArrangement = Arrangement.spacedBy(MyFisSpacing.xs),
         ) {
@@ -339,37 +338,59 @@ private fun MembershipCard(membership: MyMembership, modifier: Modifier = Modifi
 /**
  * 산 것은 상태를 보여 주고, 안 산 것은 판다 (M-03 으로 간다).
  *
- * **카드 안의 `surface.2` 블록**이다 (§6.2 — 카드 안에 카드를 넣지 않는다).
- * 그래서 버튼은 `Small` 의 **테두리 변형**이다 — 같은 면끼리면 버튼이 판에 녹는다
+ * 레퍼런스처럼 **카드보다 어두운 판**(`bg.base`) 안에 라벨 ↔ 작은 테두리 버튼.
  */
 @Composable
 private fun AddonSlot(label: String, state: String?, modifier: Modifier = Modifier) {
-    Row(
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+
+    BoxWithConstraints(
         modifier = modifier
-            // 카드(`radius.md` 12)에서 `4` 안쪽이라 **한 단 작은 `radius.sm`** — 같은 12 면 모서리가 어긋나 보인다
             .clip(MyFisRadius.sm)
-            .background(MyFisColor.Surface2)
-            // 좌우 `8` — 칸 폭을 라벨·버튼에 돌려준다 (위아래는 `12` 그대로)
-            .padding(horizontal = MyFisSpacing.sm, vertical = MyFisSpacing.md),
-        verticalAlignment = Alignment.CenterVertically,
+            .background(MyFisColor.BgBase),
     ) {
-        Text(
-            label,
-            style = MyFisTheme.type.titleSm,
-            color = MyFisColor.TextPrimary,
-            maxLines = 1,
-            // iOS `Spacer(minLength: 8)` 과 같은 최소 간격
-            modifier = Modifier.padding(end = MyFisSpacing.sm),
-        )
-        Spacer(Modifier.weight(1f))
-        if (state == null) {
-            // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
-            MyFisSmallButton("구매하기", onClick = {}, outlined = true)
-        } else {
-            Text(state, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
+        // 레퍼런스 배치는 판 안 좌우 `20` 이다. **그게 안 들어가는 좁은 폰**(360dp 갤럭시 S)에서만
+        // `12` 로 줄여 `운동복` 이 접히지 않게 한다 — iOS `ViewThatFits` 와 같은 판단.
+        // 글자 폭을 **재서** 정한다 — 폰 글자 크기 설정이 바뀌어도 맞는다.
+        // ⚠️ 버튼 폭은 `MyFisSmallButton(outlined)` 의 글꼴(`label`)·좌우 여백(`md`)과 같이 가야 한다
+        val need = with(density) {
+            val labelWidth = measurer.measure(label, MyFisTheme.type.titleSm).size.width.toDp()
+            val trailingWidth = if (state == null) {
+                measurer.measure(BUY, MyFisTheme.type.label).size.width.toDp() + MyFisSpacing.md * 2
+            } else {
+                measurer.measure(state, MyFisTheme.type.bodySm).size.width.toDp()
+            }
+            MyFisSpacing.xl * 2 + labelWidth + MyFisSpacing.sm + trailingWidth
+        }
+        val inset = if (maxWidth >= need) MyFisSpacing.xl else MyFisSpacing.md
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = inset, vertical = MyFisSpacing.md),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                label,
+                style = MyFisTheme.type.titleSm,
+                color = MyFisColor.TextPrimary,
+                maxLines = 1,
+                // iOS `Spacer(minLength: 8)` 과 같은 최소 간격
+                modifier = Modifier.padding(end = MyFisSpacing.sm),
+            )
+            Spacer(Modifier.weight(1f))
+            if (state == null) {
+                // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
+                MyFisSmallButton(BUY, onClick = {}, outlined = true)
+            } else {
+                Text(state, style = MyFisTheme.type.bodySm, color = MyFisColor.TextSecondary)
+            }
         }
     }
 }
+
+private const val BUY = "구매하기"
 
 /** 프로필 아바타 — **헤더 줄(56) 안**에 서므로 `32` 다. 톱니(24)와 무게가 맞는 크기 */
 private val AVATAR = 32.dp

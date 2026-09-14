@@ -204,13 +204,12 @@ private struct ExpiryRow: View {
 /// 회원권 한 장 (원본의 `1일 이용권` 카드).
 ///
 /// 머리 줄이 **무엇을 얼마나** 남겼는지 말하고, 아래 두 칸이 **아직 안 산 것**을 판다.
-/// 원본은 두 칸이 따로 판이고 버튼이 테두리형인데, 우리는 **테두리 버튼이 없다** (§6.1 5종) —
-/// 카드 위에 세로 실선으로 나누고 `Small`(surface.2) 을 쓴다. 면이 하나 줄어 더 조용하다.
+/// **레퍼런스(버핏그라운드 MY) 사진대로다** 🟢 (2026-09-14, 사용자 지정) — 치수는 §6.38.
 private struct MembershipCard: View {
     let membership: MyMembership
 
     var body: some View {
-        // 여백을 카드가 아니라 **줄마다** 준다 — 머리 줄은 `16`, 두 칸은 카드를 거의 꽉 채우게 `4` (아래)
+        // 여백을 카드가 아니라 **줄마다** 준다 — 머리 줄은 `20`, 두 판은 카드를 거의 꽉 채우게 `4` (아래)
         MyFisCard(padded: false) {
             HStack(spacing: 0) {
                 // 카드에서 제일 먼저 읽혀야 하는 값이라 **한 단계 키운다** (§4.2 title.md,
@@ -224,53 +223,59 @@ private struct MembershipCard: View {
                     .foregroundStyle(membership.daysLeft <= MyPlaceholder.expirySoonDays
                                      ? MyFisColor.danger : MyFisColor.textSecondary)
             }
-            .padding([.horizontal, .top], MyFisSpacing.cardPadding)
+            .padding([.horizontal, .top], MyFisSpacing.xl)
 
-            // ⚠️ **두 칸이 카드를 거의 꽉 채운다** 🟢 (2026-09-14, 사용자 지정 · 레퍼런스 실측).
-            // 카드 여백 16 · 칸 사이 12 로는 393pt(iPhone 15 Pro)에서 `운동복` 이 접혔다.
-            // 레퍼런스(버핏그라운드)는 카드 가장자리·칸 사이가 약 6 이다 → 우리 토큰 `4` 로 따른다.
-            // 그래야 `title.sm` + `구매하기` 를 그대로 두고 360dp(갤럭시 S)에서도 한 줄로 선다
+            // 레퍼런스: 카드 가장자리·판 사이 약 6, 아래 약 10 → 토큰 `4` · `8`
             HStack(spacing: MyFisSpacing.xs) {
                 AddonSlot(label: "락커", state: membership.locker)
                 AddonSlot(label: "운동복", state: membership.apparel)
             }
-            .padding(.top, MyFisSpacing.lg)
-            .padding([.horizontal, .bottom], MyFisSpacing.xs)
+            .padding(.top, MyFisSpacing.xxl)
+            .padding(.horizontal, MyFisSpacing.xs)
+            .padding(.bottom, MyFisSpacing.sm)
         }
     }
 }
 
 /// 산 것은 상태를 보여 주고, 안 산 것은 판다 (M-03 으로 간다).
 ///
-/// **카드 안의 `surface.2` 블록**이다 (§6.2 — 카드 안에 카드를 넣지 않는다).
-/// 그래서 버튼은 `Small` 의 **테두리 변형**이다 — 같은 면끼리면 버튼이 판에 녹는다
+/// 레퍼런스처럼 **카드보다 어두운 판**(`bg.base`) 안에 라벨 ↔ 작은 테두리 버튼.
 private struct AddonSlot: View {
     let label: String
     var state: String?
 
     var body: some View {
+        // 레퍼런스 배치는 판 안 좌우 `20` 이다. **그게 안 들어가는 좁은 폰**(375pt SE·mini)에서만
+        // `12` 로 줄여 `운동복` 이 접히지 않게 한다 — 들어가는 폰에서는 사진 그대로다
+        ViewThatFits(in: .horizontal) {
+            row(inset: MyFisSpacing.xl)
+            row(inset: MyFisSpacing.md)
+        }
+        .frame(maxWidth: .infinity)
+        .background(MyFisColor.bgBase)
+        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous))
+    }
+
+    private func row(inset: CGFloat) -> some View {
         HStack(spacing: 0) {
             Text(label)
                 .font(MyFisFont.titleSm)
                 .foregroundStyle(MyFisColor.textPrimary)
                 .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
             Spacer(minLength: MyFisSpacing.sm)
             if let state {
                 Text(state)
                     .font(MyFisFont.bodySm)
                     .foregroundStyle(MyFisColor.textSecondary)
+                    .fixedSize(horizontal: true, vertical: false)
             } else {
                 // TODO(M-03): 멤버십 구성 화면이 붙으면 연결한다
                 MyFisSmallButton(title: "구매하기", outlined: true, action: {})
             }
         }
-        .frame(maxWidth: .infinity)
-        // 좌우 `8` — 칸 폭을 라벨·버튼에 돌려준다 (위아래는 `12` 그대로)
-        .padding(.horizontal, MyFisSpacing.sm)
+        .padding(.horizontal, inset)
         .padding(.vertical, MyFisSpacing.md)
-        .background(MyFisColor.surface2)
-        // 카드(`radius.md` 12)에서 `4` 안쪽이라 **한 단 작은 `radius.sm`** — 같은 12 면 모서리가 어긋나 보인다
-        .clipShape(RoundedRectangle(cornerRadius: MyFisRadius.sm, style: .continuous))
     }
 }
 

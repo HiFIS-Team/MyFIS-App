@@ -111,33 +111,36 @@ struct MyFisGhostButton: View {
 /// 전체 폭을 먹지 않는다. 카드 머리 줄처럼 다른 글자와 나란히 서는 자리용이다.
 struct MyFisSmallButton: View {
     let title: String
-    /// **테두리형으로 그린다** 🟢 (2026-09-07, 사용자 지정 레퍼런스 — §6.1 · §6.38).
+    /// **테두리형** 🟢 (2026-09-07 추가 → 2026-09-14 레퍼런스대로 다시 그림, 사용자 지정 — §6.1 · §6.38).
     ///
-    /// 새 버튼 종류가 아니다. 높이(36)·라운딩·글꼴이 그대로고 **면이 테두리로 바뀐다.**
-    /// `surface.2` 판 안에서는 `surface.2` 버튼이 판에 녹아 사라진다 — 거기 쓰는 변형이다.
+    /// 새 버튼 종류가 아니라 Small 의 **작은 테두리 판**이다. 레퍼런스(버핏그라운드 MY) 버튼을 따른다 —
+    /// **각진 모서리 · 밝은 테두리(`text.primary`) · 글자 `label`(13) · 좌우 `12` · 높이 `32`**.
+    /// 지금은 마이 회원권 칸(§6.38)에서만 쓴다
     var outlined: Bool = false
     var action: () -> Void = {}
 
-    private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous)
+    private var shape: AnyShape {
+        outlined
+            ? AnyShape(Rectangle())
+            : AnyShape(RoundedRectangle(cornerRadius: MyFisRadius.md, style: .continuous))
     }
 
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(MyFisFont.bodySm)
+                .font(outlined ? MyFisFont.label : MyFisFont.bodySm)
                 // **줄바꿈하지 않는다** — 좁은 칸(§6.38 락커·운동복)에 들어가면
                 // 글자가 두 줄로 접혀 버튼이 세로로 늘어난다 (2026-09-07 실측)
                 .lineLimit(1)
                 .fixedSize(horizontal: true, vertical: false)
-                .padding(.horizontal, MyFisSpacing.lg)
-                .frame(minHeight: MyFisSize.buttonSmall)
+                .padding(.horizontal, outlined ? MyFisSpacing.md : MyFisSpacing.lg)
+                .frame(minHeight: outlined ? MyFisSize.buttonOutlined : MyFisSize.buttonSmall)
         }
         .buttonStyle(.myFisTap)
         .foregroundStyle(MyFisColor.textPrimary)
         .background(outlined ? Color.clear : MyFisColor.surface2)
         .clipShape(shape)
-        .overlay(outlined ? shape.stroke(MyFisColor.borderStrong, lineWidth: 1) : nil)
+        .overlay(outlined ? shape.stroke(MyFisColor.textPrimary, lineWidth: 1) : nil)
     }
 }
 
