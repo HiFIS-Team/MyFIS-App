@@ -157,7 +157,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFF000000, heightDp = 1400)
+@Preview(showBackground = true, backgroundColor = 0xFF18191C, heightDp = 1400)
 @Composable
 private fun DesignTokensPreview() {
     MyFisTheme { DesignTokensScreen() }

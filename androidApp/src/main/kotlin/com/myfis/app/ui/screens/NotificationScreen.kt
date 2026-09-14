@@ -244,7 +244,7 @@ private fun EmptyState() {
     }
 }
 
-@Preview(backgroundColor = 0xFF000000, showBackground = true)
+@Preview(backgroundColor = 0xFF18191C, showBackground = true)
 @Composable
 private fun NotificationScreenPreview() {
     MyFisTheme { NotificationScreen(onBack = {}) }

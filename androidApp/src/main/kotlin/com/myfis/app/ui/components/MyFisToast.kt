@@ -127,9 +127,10 @@ fun ToastLayer(state: ToastState, modifier: Modifier = Modifier) {
                 modifier = Modifier
                     // 위계는 **표면 밝기**로 낸다 (§5.4) — 그림자를 쓰지 않는다.
                     // ⚠️ 머리카락 테두리를 **없앴다** 🟢 (2026-09-08) — 사다리를 내리면서
-                    // `border.subtle`(#383941)이 `surface.3`(#35363C) 바로 옆에 오게 되어
-                    // **제 판 위에서 1.049:1**, 즉 안 보이는 선이 됐다. 원래 목적(카드 위에서
-                    // 판이 녹지 않게)은 판 자체가 한다 — 카드 대비 `1.430:1`
+                    // `border.subtle` 이 `surface.3` 바로 옆에 오게 되어 **제 판 위에서 1.049:1**,
+                    // 즉 안 보이는 선이 됐다. 원래 목적(카드 위에서 판이 녹지 않게)은 판 자체가 한다.
+                    // 2026-09-14 PITZ 톤으로 옮긴 뒤에도 선은 판 위 `1.152:1` 로 여전히 흐리고,
+                    // 판은 카드 대비 `1.309:1` 로 떠 있어 없는 채로 둔다
                     .background(MyFisColor.Surface3, MyFisRadius.full)
                     .height(MyFisSize.buttonSecondary)
                     .padding(start = MyFisSpacing.md, end = MyFisSpacing.lg),
