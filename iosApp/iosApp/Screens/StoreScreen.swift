@@ -11,11 +11,17 @@ import SwiftUI
 ///
 /// 헤더 아래(카테고리·마일리지)는 **스크롤해도 남는다** (S 공통 규칙 — 살 수 있는지 매번 계산하게 하지 않는다).
 struct StoreScreen: View {
-    // 헤더(마일리지 칩 · 검색 · 장바구니 · 마이)는 `TabShell` 이 시스템 툴바로 올린다 (§6.9 · §7.1)
+    // 헤더 — 왼쪽 **시스템 검색 입력칸**(`ToolbarSearchField`)과 오른쪽(장바구니 · 마이 ↔ `취소`)을
+    // `TabShell` 이 툴바로 올린다 (§6.9 · §7.1)
     var onItem: (StoreItem) -> Void = { _ in }
 
     /// 찜 — 검색 잎(S-07)과 나눠 쓰므로 셸이 들고 있다
     @Binding var liked: Set<Int>
+    /// 머리 검색 — 검색어 · 켜짐은 **셸이 든다** (오른쪽 `취소` 가 셸의 툴바에 있다)
+    @Binding var query: String
+    @Binding var searching: Bool
+    /// 최근 검색 — 검색 잎과 나눠 쓴다 (뿌리가 들고 있다)
+    @Binding var recents: SearchRecents
 
     @State private var category: StoreCategory = MyFisDebug.initialStoreCategory
 
@@ -33,12 +39,25 @@ struct StoreScreen: View {
     }
 
     var body: some View {
-        home
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // **검색은 제자리에서 켜진다** 🟢 (2026-09-15, 크림) — 잎으로 밀어 넣지 않는다. 본문만 검색 판으로 겹쳐 바뀌고
+        // 머리는 그대로다. 홈은 **걷지 않고 숨긴다** — 취소하면 보던 스크롤 자리로 돌아온다
+        ZStack {
+            home
+                .opacity(searching ? 0 : 1)
+                .allowsHitTesting(!searching)
+            if searching {
+                StoreSearchResults(query: $query, recents: $recents, liked: liked,
+                                   onItem: onItem, onLike: toggleLike)
+                    .transition(.opacity)
+            }
+        }
+        .animation(MyFisMotion.base, value: searching)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     /// 본문 — 배너 · 카테고리 · 그리드.
-    /// **마일리지 띠가 없다** (2026-09-04) — 값이 헤더 왼쪽으로 올라가서 두 번 나오게 된다
+    /// **마일리지 띠가 없다** (2026-09-04 — 그땐 값이 헤더 왼쪽 칩에 있었다).
+    /// 🔵 그 칩도 뺐다 (2026-09-15, 사용자 — *"스토어에서 마일리지 표기는 일단 없애버려 어디에 둘지 같이 고민해보게"*) — 자리 미정
     private var home: some View {
         ScrollViewReader { proxy in
             ScrollView {

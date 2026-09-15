@@ -284,6 +284,27 @@ enum MyFisDebug {
     }
 
     /// `SIMCTL_CHILD_MYFIS_ROUTE=group_search MYFIS_GROUP_SEARCH=러닝`
+    /// 스토어 머리 검색을 **켠 채로** 띄운다 — `MYFIS_STORE_SEARCH=1` (2026-09-15). 검색어는 `MYFIS_SEARCH`
+    static var storeSearchOpen: Bool {
+        #if DEBUG
+        env["MYFIS_STORE_SEARCH"] == "1"
+        #else
+        false
+        #endif
+    }
+
+    /// 스토어 머리 검색을 2초 뒤 켜고, 초를 주면 그만큼 뒤 `취소` 한다 — `MYFIS_STORE_SEARCH_AUTO=4.5`.
+    /// 켜고 끄는 전환(오른쪽 알약이 `취소` 로 녹아 바뀌는 것)을 녹화하려고 둔다. 누르는 것과 같은 선택값을 바꾼다
+    static func scheduleStoreSearch(open: @escaping () -> Void, cancel: @escaping () -> Void) {
+        #if DEBUG
+        guard let value = env["MYFIS_STORE_SEARCH_AUTO"] else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: open)
+        if let seconds = Double(value), seconds > 2 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: cancel)
+        }
+        #endif
+    }
+
     static var groupSearchQuery: String {
         #if DEBUG
         env["MYFIS_GROUP_SEARCH"] ?? ""

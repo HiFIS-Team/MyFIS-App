@@ -33,7 +33,7 @@ struct AppRoot: View {
     @State private var toasts = ToastCenter()
 
     var body: some View {
-        TabShell(open: open, liked: $liked, activeSlot: $slot, paths: $paths) { route in
+        TabShell(open: open, liked: $liked, storeRecents: $storeRecents, activeSlot: $slot, paths: $paths) { route in
             leaf(route)
         }
         // 툴바 아이콘 · 시스템 뒤로 버튼 색 — 라임은 콘텐츠 몫이다 (§6.7 탭 바와 같다)

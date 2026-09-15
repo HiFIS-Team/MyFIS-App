@@ -20,6 +20,8 @@ struct TabShell<Leaf: View>: View {
     let open: (Route) -> Void
     /// 찜 — 스토어 홈과 검색 잎이 나눠 쓴다 (뿌리가 들고 있다)
     @Binding var liked: Set<Int>
+    /// 최근 검색 — 스토어 머리 검색과 검색 잎이 나눠 쓴다 (뿌리가 들고 있다)
+    @Binding var storeRecents: SearchRecents
     /// 지금 선택된 자리 — 뿌리가 잎을 **어느 스택에** 쌓을지 여기서 안다
     @Binding var activeSlot: Int
     /// 자리마다 스택
@@ -36,6 +38,23 @@ struct TabShell<Leaf: View>: View {
     @State private var weightTab: WeightTab = MyFisDebug.initialWeightTab
     /// 웨이트 요일 띠 — 여닫는 칩이 툴바에 있어서 셸이 든다
     @State private var weekOpen = MyFisDebug.weightWeekOpen
+    /// 스토어 머리 검색 — **셸이 든다.** 검색창은 스토어 화면이 제목 자리에 달고, `취소` 는 이 셸의 툴바에 있다 (§6.9)
+    @State private var storeQuery = MyFisDebug.storeSearchOpen ? MyFisDebug.searchQuery : ""
+    @State private var storeSearching = MyFisDebug.storeSearchOpen
+    /// 화면 폭 — 스토어 검색칸 폭을 계산한다 (`storeSearchWidth`)
+    @State private var shellWidth: CGFloat = 0
+
+    /// 스토어 검색칸 폭 — **내비 바가 왼쪽 항목에 남는 폭을 주지 않는다** (`maxWidth: .infinity` → 36pt 돋보기 원만 남았다).
+    /// 화면 폭 − 양끝 여백 − 알약 사이 − 오른쪽 알약(장바구니 · 마이). 알약 치수는 iOS 26 시스템 값이라 **실측해서 토큰으로 뒀다** (DESIGN §6.9)
+    ///
+    /// **검색 중에도 폭을 바꾸지 않는다** — `취소` 가 좁은 만큼 넓히면(크림) 알약이 커지고 줄어드는 동안
+    /// **돋보기 · 글자가 옆으로 튀었다** (60fps: 켤 때 오른쪽으로 밀림 · 끌 때 돋보기 잘림). 왼쪽 정렬로도, 애니메이션 없이 바꿔도
+    /// 끌 때는 그대로였고, 폭을 두면 켤 때 · 끌 때 둘 다 제자리였다
+    private var storeSearchWidth: CGFloat {
+        let width = shellWidth - MyFisSize.toolbarEdge * 2 - MyFisSize.toolbarPlatterGap - MyFisSize.toolbarPairPlatter
+            - MyFisSize.toolbarFieldInset * 2
+        return max(MyFisSize.minTouchTarget, width)
+    }
 
     var body: some View {
         TabView(selection: selection) {
@@ -63,6 +82,7 @@ struct TabShell<Leaf: View>: View {
         // 선택은 **색이 아니라 채움**으로 알린다 (§6.7).
         // 라임은 화면 콘텐츠 몫이다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
         .tint(MyFisColor.textPrimary)
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { shellWidth = $0 }
         .onChange(of: currentSlot, initial: true) { _, now in
             activeSlot = now
             labelTabs()
@@ -70,6 +90,9 @@ struct TabShell<Leaf: View>: View {
         // 세트를 바꾸면 자리는 같아도 화면이 다르다 — 쌓아 둔 잎을 비운다
         .onChange(of: tabSet) { _, _ in
             paths = Array(repeating: [], count: paths.count)
+            // 스택을 새로 만들므로 머리 검색도 닫는다 — 돌아왔을 때 키보드가 불쑥 올라오지 않게
+            storeQuery = ""
+            storeSearching = false
             // **탭 바 아이콘도 페이지처럼 겹쳐 바꾼다** (2026-09-15, 사용자 — 3번 "거슬리는거 있으면 그것도 해").
             // 그냥 두면 아이콘 다섯 개가 누르는 순간 한꺼번에 갈리고, 페이지는 시스템 전환이라 겹쳐 흐려진다
             UITabBarController.myFisCrossfadeTabBar(duration: MyFisMotion.baseDuration)
@@ -87,6 +110,13 @@ struct TabShell<Leaf: View>: View {
             MyFisDebug.scheduleAutoTab { baseTab = $0 }
             MyFisDebug.scheduleAutoSlot { selection.wrappedValue = $0 }
             MyFisDebug.scheduleAutoTap()
+            MyFisDebug.scheduleStoreSearch(
+                open: { withAnimation(MyFisMotion.slow) { storeSearching = true } },
+                cancel: {
+                    storeQuery = ""
+                    withAnimation(MyFisMotion.slow) { storeSearching = false }
+                }
+            )
         }
     }
 
@@ -147,15 +177,30 @@ struct TabShell<Leaf: View>: View {
     /// `마이` 는 **마이 탭이 아니다** — 교환에 관한 나(S-08)로 간다
     @ToolbarContentBuilder
     private var storeToolbar: some ToolbarContent {
+        // **마일리지 칩은 뺐다** 🟢 (2026-09-15, 사용자 — *"스토어에서 마일리지 표기는 일단 없애버려 어디에 둘지 같이 고민해보게"*).
+        // 🔵 어디에 둘지 미정
+        //
+        // **왼쪽은 시스템 검색 입력칸** — 오른쪽 아이콘과 **같은 툴바 유리 알약**에 담는다 (`ToolbarSearchField`, 크림).
+        // ❌ 제목 자리에 두니 알약보다 5pt 아래였고, 잎에 다녀오면 유리 판만 사라졌다 (사용자 지적)
         ToolbarItem(placement: .topBarLeading) {
-            MileageChip(balance: StorePlaceholder.balance)
-                .fixedSize()
+            ToolbarSearchField(text: $storeQuery, active: $storeSearching, placeholder: "상품 검색",
+                               onSubmit: { storeRecents.add($0) })
+                .frame(width: storeSearchWidth)
         }
-        .withoutGlass()
+        // 오른쪽은 **항목 그룹** — 장바구니 · 마이 ↔ `취소`. 시스템이 알약을 녹여 바꾼다 (60fps 확인)
+        // ⚠️ 항목 하나 안에 아이콘 둘을 넣었다가 **간격이 시스템보다 좁아졌다** (알약 104 → 84pt, 사용자 지적) — 그룹이면 시스템이 잡는다
+        // `마이` 는 **마이 탭이 아니다** — 교환에 관한 나(S-08)로 간다
         ToolbarItemGroup(placement: .topBarTrailing) {
-            ToolbarIcon("ic_header_search", "검색") { open(.storeSearch) }
-            ToolbarIcon("ic_header_cart", "장바구니") { open(.storeCart) }
-            ToolbarIcon("ic_header_my", "마이") { open(.storeMy) }
+            if storeSearching {
+                Button("취소") {
+                    storeQuery = ""
+                    withAnimation(MyFisMotion.slow) { storeSearching = false }
+                }
+                .font(MyFisFont.body)
+            } else {
+                ToolbarIcon("ic_header_cart", "장바구니") { open(.storeCart) }
+                ToolbarIcon("ic_header_my", "마이") { open(.storeMy) }
+            }
         }
     }
 
@@ -320,7 +365,10 @@ struct TabShell<Leaf: View>: View {
                     // 스토어 헤더의 '마이' 는 **마이 탭이 아니다.** 교환에 관한 나(S-08)로 간다.
                     StoreScreen(
                         onItem: { open(.storeItem($0)) },
-                        liked: $liked
+                        liked: $liked,
+                        query: $storeQuery,
+                        searching: $storeSearching,
+                        recents: $storeRecents
                     )
                 case .my:
                     MyScreen()
