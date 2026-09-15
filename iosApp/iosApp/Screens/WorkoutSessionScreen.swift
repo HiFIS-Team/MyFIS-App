@@ -1,3 +1,4 @@
+import SharedKit
 import SwiftUI
 
 // MARK: - 모델
@@ -41,6 +42,11 @@ private func mmss(_ seconds: Int) -> String {
     String(format: "%02d:%02d", seconds / 60, seconds % 60)
 }
 
+/// 지금 시각 (epoch ms) — `SessionClock` 은 시각을 밖에서 받는다
+private func nowMillis() -> Int64 {
+    Int64(Date().timeIntervalSince1970 * 1000)
+}
+
 // MARK: - 화면
 
 /// SPEC.md W-04 **운동 세션** 🟡 틀 (DESIGN.md §6.37)
@@ -61,17 +67,26 @@ struct WorkoutSessionScreen: View {
 
     private let steps = WorkoutSessionPlaceholder.steps
 
-    @State private var index = 0
-    @State private var remain = WorkoutSessionPlaceholder.steps[0].seconds ?? 0
-    @State private var elapsed = 0
-    @State private var playing = true
+    /// 세션 시계 — **시각으로 계산한다** (`shared` 의 `SessionClock`, 두 플랫폼 한 벌).
+    ///
+    /// ⚠️ 전에는 1초 틱마다 `elapsed += 1` 이었다. 폰을 잠그거나 앱을 내리면 틱이 오지 않아
+    /// 돌아왔을 때 **경과 시간이 덜 흘러 있었다.** 이제 틱은 *다시 그리라는 신호*일 뿐이다
+    @State private var clock = SessionClock.companion.start(
+        stepSeconds: WorkoutSessionPlaceholder.steps.map { KotlinInt(int: Int32($0.seconds ?? 0)) },
+        now: nowMillis()
+    )
+    /// 마지막으로 그린 시각 — 틱마다 갱신해서 숫자를 다시 그린다
+    @State private var now = nowMillis()
     /// TODO(W-04): 음성 렙 카운트가 붙으면 이 스위치가 그걸 끈다
     @State private var voice = true
 
-    /// ⚠️ `let` 으로 두면 **부모가 다시 그릴 때마다 새 퍼블리셔**가 생겨 구독이 갈아 끼워지고,
-    /// 1초 간격이 그때마다 처음부터 다시 시작한다. `@State` 는 처음 값만 남긴다
-    @State private var tick = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    /// ⚠️ `let` 으로 두면 **부모가 다시 그릴 때마다 새 퍼블리셔**가 생겨 구독이 갈아 끼워진다.
+    /// `@State` 는 처음 값만 남긴다.
+    /// 1초가 아니라 **`0.25` 초**다 — 틱이 초 경계와 어긋나도 숫자가 늦게 넘어가는 폭을 줄인다
+    /// (잠금화면 시계는 시스템이 초 경계에 맞춰 흘린다)
+    @State private var tick = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
 
+    private var index: Int { Int(clock.index) }
     private var step: SessionStep { steps[index] }
     private var next: SessionStep? { index + 1 < steps.count ? steps[index + 1] : nil }
 
@@ -115,22 +130,21 @@ struct WorkoutSessionScreen: View {
 
     // MARK: - 흐름
 
-    /// 재생 중일 때만 흐른다. 웜업은 남은 시간이 0 이 되면 **스스로 넘어간다**
+    /// 틱마다 부른다. 시간이 다 된 웜업은 **스스로 넘어간다** — 잠겨 있던 사이 끝난 것까지 한 번에
     private func advance() {
-        guard playing else { return }
-        elapsed += 1
-        guard step.seconds != nil else { return }
-        if remain > 1 { remain -= 1 } else { move(to: index + 1) }
+        update(clock.catchUp(now: nowMillis()))
     }
 
     private func move(to target: Int) {
-        guard target <= steps.count - 1 else {
-            onFinish()
-            return
-        }
-        let safe = max(0, target)
-        index = safe
-        remain = steps[safe].seconds ?? 0
+        update(clock.moveTo(target: Int32(target), now: nowMillis()))
+    }
+
+    /// 새 시계로 갈아 끼우고 다시 그린다. **마지막을 막 넘겼을 때 한 번만** 끝낸다
+    private func update(_ updated: SessionClock) {
+        let justFinished = updated.finished && !clock.finished
+        clock = updated
+        now = nowMillis()
+        if justFinished { onFinish() }
     }
 
     /// `웜업 스트레칭 1 / 5` · `운동 2 / 6` — 지금 몇 번째인지 (마디 안에서 센다)
@@ -151,7 +165,7 @@ struct WorkoutSessionScreen: View {
         HStack(spacing: 0) {
             HeaderIcon("ic_tab_back", "세션 나가기", action: onExit)
             // 자릿수가 늘어도(`59:59` → `1:00:00`) 안 흔들려야 한다 — metric 은 tnum 이다
-            Text(mmss(elapsed))
+            Text(mmss(Int(clock.elapsedSeconds(now: now))))
                 .font(MyFisFont.metricMd)
                 .foregroundStyle(MyFisColor.textPrimary)
                 .padding(.leading, MyFisSpacing.sm)
@@ -213,7 +227,7 @@ struct WorkoutSessionScreen: View {
         MyFisCard {
             VStack(spacing: MyFisSpacing.xs) {
                 if step.stage == .warmup {
-                    Text(mmss(remain))
+                    Text(mmss(Int(clock.remainSeconds(now: now))))
                         .font(MyFisFont.metricXl)
                         .foregroundStyle(MyFisColor.textPrimary)
                 } else {
@@ -268,12 +282,12 @@ struct WorkoutSessionScreen: View {
             MyFisSecondaryButton(title: "이전", tall: true, icon: "ic_session_prev") {
                 move(to: index - 1)
             }
-            MyFisPrimaryButton(title: playing ? "일시정지" : "이어서 하기",
-                               icon: playing ? "ic_session_pause" : "ic_session_play") {
-                playing.toggle()
+            MyFisPrimaryButton(title: clock.isPlaying ? "일시정지" : "이어서 하기",
+                               icon: clock.isPlaying ? "ic_session_pause" : "ic_session_play") {
+                update(clock.toggle(now: nowMillis()))
             }
             // ▶↔⏸ 는 **즉시** 갈린다. 애니메이션이 실리면 두 글리프가 겹쳐 보여 굼뜨다
-            .animation(nil, value: playing)
+            .animation(nil, value: clock.isPlaying)
             MyFisSecondaryButton(title: "다음", tall: true, icon: "ic_session_next") {
                 move(to: index + 1)
             }

@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -39,6 +40,7 @@ import com.myfis.app.ui.theme.MyFisSecondaryButton
 import com.myfis.app.ui.theme.MyFisSize
 import com.myfis.app.ui.theme.MyFisSpacing
 import com.myfis.app.ui.theme.MyFisTheme
+import com.myfis.app.shared.workout.SessionClock
 import com.myfis.app.ui.theme.tapWithHaptics
 import kotlinx.coroutines.delay
 
@@ -98,24 +100,26 @@ fun WorkoutSessionScreen(
     onFinish: () -> Unit = onExit,
 ) {
     val steps = workoutSessionSteps
-    var index by remember { mutableStateOf(0) }
-    var remain by remember { mutableStateOf(steps[0].seconds ?: 0) }
-    var elapsed by remember { mutableStateOf(0) }
-    var playing by remember { mutableStateOf(true) }
+    // 세션 시계 — **시각으로 계산한다** (`shared` 의 [SessionClock], 두 플랫폼 한 벌).
+    // ⚠️ 전에는 1초마다 `elapsed += 1` 이었다. 폰을 잠그거나 앱을 내리면 그 사이가 빠져서
+    // 돌아왔을 때 **경과 시간이 덜 흘러 있었다.** 이제 틱은 *다시 그리라는 신호*일 뿐이다
+    var clock by remember {
+        mutableStateOf(SessionClock.start(steps.map { it.seconds ?: 0 }, System.currentTimeMillis()))
+    }
+    // 마지막으로 그린 시각 — 틱마다 갱신해서 숫자를 다시 그린다
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     // TODO(W-04): 음성 렙 카운트가 붙으면 이 스위치가 그걸 끈다
     var voice by remember { mutableStateOf(true) }
 
-    val step = steps[index]
-    val next = steps.getOrNull(index + 1)
+    val step = steps[clock.index]
+    val next = steps.getOrNull(clock.index + 1)
 
-    fun moveTo(target: Int) {
-        if (target > steps.lastIndex) {
-            onFinish()
-            return
-        }
-        val safe = target.coerceAtLeast(0)
-        index = safe
-        remain = steps[safe].seconds ?: 0
+    // 새 시계로 갈아 끼우고 다시 그린다. **마지막을 막 넘겼을 때 한 번만** 끝낸다
+    fun update(updated: SessionClock) {
+        val justFinished = updated.finished && !clock.finished
+        clock = updated
+        now = System.currentTimeMillis()
+        if (justFinished) onFinish()
     }
 
     // **세트 사이에 화면이 꺼지면 매번 깨워야 한다** (SPEC W 공통 규칙)
@@ -125,14 +129,14 @@ fun WorkoutSessionScreen(
         onDispose { view.keepScreenOn = false }
     }
 
-    // 재생 중일 때만 흐른다. 웜업은 남은 시간이 0 이 되면 **스스로 넘어간다**
-    LaunchedEffect(playing, index) {
-        while (playing) {
-            delay(1000)
-            elapsed += 1
-            if (steps[index].seconds != null) {
-                if (remain > 1) remain -= 1 else moveTo(index + 1)
-            }
+    // 틱마다 시간이 다 된 웜업을 **스스로 넘긴다** — 잠겨 있던 사이 끝난 것까지 한 번에.
+    // 흐르는 중에는 **다음 초 경계까지** 기다린다 — 숫자가 실제 초와 같은 박자로 넘어가야
+    // 잠금화면 시계(시스템이 흘린다)와 어긋나지 않는다
+    LaunchedEffect(Unit) {
+        while (true) {
+            val elapsed = clock.elapsed(System.currentTimeMillis())
+            delay(if (clock.isPlaying) (1000 - elapsed % 1000).coerceAtLeast(16) else 250)
+            update(clock.catchUp(System.currentTimeMillis()))
         }
     }
 
@@ -144,7 +148,7 @@ fun WorkoutSessionScreen(
             .navigationBarsPadding(),
     ) {
         SessionHeader(
-            elapsed = elapsed,
+            elapsed = clock.elapsedSeconds(now),
             voice = voice,
             onVoice = { voice = !voice },
             onExit = onExit,
@@ -156,7 +160,7 @@ fun WorkoutSessionScreen(
                 .padding(horizontal = MyFisSpacing.screenHorizontal),
         ) {
             Text(
-                stageLabel(steps, index),
+                stageLabel(steps, clock.index),
                 style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextSecondary,
             )
@@ -173,15 +177,15 @@ fun WorkoutSessionScreen(
             // 운동 중에는 손이 젖어 있고, 필요한 것이 전부 한 판에 있어야 한다
             DemoStage(Modifier.weight(1f).padding(top = MyFisSpacing.lg))
 
-            StepPanel(step, remain, Modifier.padding(top = MyFisSpacing.lg))
+            StepPanel(step, clock.remainSeconds(now), Modifier.padding(top = MyFisSpacing.lg))
             NextCard(next, Modifier.padding(top = MyFisSpacing.lg))
         }
 
         Controls(
-            playing = playing,
-            onPlay = { playing = !playing },
-            onPrev = { moveTo(index - 1) },
-            onNext = { moveTo(index + 1) },
+            playing = clock.isPlaying,
+            onPlay = { update(clock.toggle(System.currentTimeMillis())) },
+            onPrev = { update(clock.previous(System.currentTimeMillis())) },
+            onNext = { update(clock.next(System.currentTimeMillis())) },
             modifier = Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(top = MyFisSpacing.lg, bottom = MyFisSpacing.xxl),
