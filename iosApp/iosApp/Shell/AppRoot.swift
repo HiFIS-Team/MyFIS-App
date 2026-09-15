@@ -3,20 +3,23 @@ import SwiftUI
 /// 앱의 뿌리 — 안드로이드 `AppShell` 의 `NavHost` 와 같은 자리.
 ///
 /// ```
-/// NavigationStack       ← 시스템 내비 바 · push · 뒤로 버튼 · 가장자리 쓸기
-/// ├── TabShell (뿌리)    ← 탭 콘텐츠 + 하단 유리 탭 바 + **탭별 툴바**
-/// └── pages[…]          ← 오른쪽에서 밀려 들어와 셸을 통째로 덮는다 (탭 바까지)
+/// TabShell (TabView)            ← 하단 유리 탭 바
+/// └── 자리마다 NavigationStack    ← 시스템 내비 바 · push · 뒤로 버튼 · 가장자리 쓸기
+///     ├── 탭 화면 + 툴바
+///     └── paths[자리][…]          ← 오른쪽에서 밀려 들어오고 하단 탭 바를 숨긴다
 /// ```
 ///
 /// **시스템 내비게이션을 쓴다** 🟢 (2026-09-15, 사용자 지정 — *"그냥 크림처럼 하고싶다 크림처럼 해봐"*).
 /// 옆에서 화면이 들어올 때 헤더 유리가 새 화면 아이콘으로 녹아 바뀌는 것(iOS 26)은 시스템 내비 바만 한다.
 /// 2026-08-25 에 끄고 직접 만들었던 덮개(`ZStack` · 가장자리 스와이프 · 패럴랙스)를 걷었다 — 경위는 DESIGN §7.1
-/// - 스택은 **탭 밖**이다. 그래야 잎이 하단 탭 바까지 덮는다
-/// - 탭 화면 헤더는 `TabShell` 이 툴바로 올린다 — 스택이 탭 밖이면 탭 안 화면의 `.toolbar` 는 안 올라온다
+/// - 스택은 **탭 안**이다 — 밖에 두면 탭을 옮길 때 헤더가 먼저 바뀌고 본문이 나중에 바뀌었다 (같은 날, 사용자 지적)
 /// - 잎 화면은 **자기 툴바를 자기가 단다** (`navigationTitle` · `.toolbar`)
 /// - 뒤 화면 패럴랙스 · 전환 시간은 시스템 값이다
 struct AppRoot: View {
-    @State private var pages: [Route] = MyFisDebug.initialRoutes
+    /// 탭 자리마다 스택 — 잎은 **지금 탭 안에서** 쌓인다
+    @State private var paths: [[Route]] = Self.initialPaths
+    /// 지금 선택된 탭 자리 (`TabShell` 이 알려 준다)
+    @State private var slot = 0
     /// 찜 — 스토어 홈과 검색 잎(S-07)이 나눠 쓴다. TODO(서버): 계정에 붙는다
     @State private var liked: Set<Int> = []
     /// 최근 검색 — 잎이 열렸다 닫혀도 남아야 하므로 셸이 든다. TODO(서버): 계정에 붙는다
@@ -30,11 +33,8 @@ struct AppRoot: View {
     @State private var toasts = ToastCenter()
 
     var body: some View {
-        NavigationStack(path: $pages) {
-            TabShell(open: open, liked: $liked)
-                .navigationDestination(for: Route.self) { route in
-                    leaf(route)
-                }
+        TabShell(open: open, liked: $liked, activeSlot: $slot, paths: $paths) { route in
+            leaf(route)
         }
         // 툴바 아이콘 · 시스템 뒤로 버튼 색 — 라임은 콘텐츠 몫이다 (§6.7 탭 바와 같다)
         .tint(MyFisColor.textPrimary)
@@ -56,7 +56,17 @@ struct AppRoot: View {
     // MARK: - 이동
     //
     // 화면은 스스로 이동하지 않는다. 콜백으로 여기에 **요청**한다 (안드로이드와 같다).
-    // 시스템 뒤로 버튼 · 가장자리 쓸기는 스택이 `pages` 를 직접 줄인다.
+    // 시스템 뒤로 버튼 · 가장자리 쓸기는 스택이 `paths[자리]` 를 직접 줄인다.
+
+    /// 디버그로 띄운 잎(`MYFIS_ROUTE`)은 **시작 탭의 스택**에 넣는다
+    private static var initialPaths: [[Route]] {
+        var paths = Array(repeating: [Route](), count: BaseTab.allCases.count)
+        let slot = MyFisDebug.initialTabSet == .base
+            ? BaseTab.allCases.firstIndex(of: MyFisDebug.initialBaseTab) ?? 0
+            : WeightTab.allCases.firstIndex(of: MyFisDebug.initialWeightTab) ?? 0
+        paths[slot] = MyFisDebug.initialRoutes
+        return paths
+    }
 
     private func open(_ route: Route) {
         // 세션은 **밀어 넣기 전에** 연다 — 화면이 첫 프레임부터 새 시계를 그리고,
@@ -64,20 +74,20 @@ struct AppRoot: View {
         if case .workoutSession = route {
             WorkoutSessionStore.shared.start(WorkoutSessionPlaceholder.steps)
         }
-        pages.append(route)
+        paths[slot].append(route)
     }
 
     private func back() {
-        if !pages.isEmpty { pages.removeLast() }
+        if !paths[slot].isEmpty { paths[slot].removeLast() }
     }
 
     private func toggleLike(_ id: Int) {
         if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
     }
 
-    /// 셸까지 한 번에 돌아간다 (예: 장바구니에서 "상품 보러 가기")
+    /// 그 탭의 첫 화면까지 한 번에 돌아간다 (예: 장바구니에서 "상품 보러 가기")
     private func backToShell() {
-        pages.removeAll()
+        paths[slot].removeAll()
     }
 
     /// 잎 화면 하나. **불투명하게 화면 전체를 채운다** — 뒤가 비치면 겹쳐 보인다.

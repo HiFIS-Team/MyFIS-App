@@ -1,21 +1,34 @@
 import SwiftUI
 
-/// 탭 셸 — 화면(자기 헤더 포함) + **하단 유리 탭 바**.
+/// 탭 셸 — **탭 자리마다 내비게이션 스택** + 하단 유리 탭 바.
 ///
 /// 하단 바는 네이티브 `TabView` 를 쓴다 (§2 원칙 6) — iOS 26 이 Liquid Glass 로 그리고
 /// 선택 인디케이터·모션·스크롤 축소까지 전부 Apple 구현이다.
-/// **가시성을 상태로 토글하지 않는다.** 잎이 덮으므로 끌 일이 없다.
+///
+/// **스택은 탭 안에 있다** 🟢 (2026-09-15, 사용자 지적 — *"하단바로 이동할때 헤더랑 히어로랑 따로 노는데"*).
+/// 스택이 탭 밖이면 내비 바가 앱에 하나라, 탭을 누르는 순간 **헤더가 먼저 바뀌고 본문이 나중에** 바뀌었다.
+/// 탭마다 스택을 두면 헤더가 그 탭 화면의 일부라 **한 장으로 같이** 바뀐다 (크림 · 대부분의 UIKit 앱과 같은 짜임).
+/// - 잎은 **지금 탭의 스택**에 쌓이고 하단 탭 바를 숨긴다 (`.toolbar(.hidden, for: .tabBar)`)
+/// - 탭을 옮겼다 돌아오면 그 탭에서 열어 둔 잎이 그대로다 (시스템 탭 동작)
+/// - 탭 세트를 바꾸면 스택을 전부 비운다 — 자리(슬롯)는 같아도 화면이 다르다
 ///
 /// SPEC.md §3 — 웨이트 탭을 누르면 탭 세트가 통째로 교체된다 (DESIGN.md §9 의도된 이탈 #4).
 /// **세트 교체는 TabView 를 갈아끼우지 않는다.** 슬롯 5개짜리 `TabView` 하나를 유지하고
 /// 각 슬롯의 아이콘·콘텐츠만 바꾼다 — 그래야 바가 파괴·재생성되지 않는다.
-struct TabShell: View {
+struct TabShell<Leaf: View>: View {
     let open: (Route) -> Void
     /// 찜 — 스토어 홈과 검색 잎이 나눠 쓴다 (뿌리가 들고 있다)
     @Binding var liked: Set<Int>
+    /// 지금 선택된 자리 — 뿌리가 잎을 **어느 스택에** 쌓을지 여기서 안다
+    @Binding var activeSlot: Int
+    /// 자리마다 스택
+    @Binding var paths: [[Route]]
+    /// 잎 화면 — 뿌리가 만든다 (잎이 쓰는 상태를 뿌리가 들고 있다)
+    @ViewBuilder let leaf: (Route) -> Leaf
 
-    private static let baseTabs = BaseTab.allCases
-    private static let weightTabs = WeightTab.allCases
+    // 제네릭 타입이라 저장 static 을 못 둔다 — 계산으로 둔다
+    private static var baseTabs: [BaseTab] { BaseTab.allCases }
+    private static var weightTabs: [WeightTab] { WeightTab.allCases }
 
     @State private var tabSet: TabSet = MyFisDebug.initialTabSet
     @State private var baseTab: BaseTab = MyFisDebug.initialBaseTab
@@ -26,34 +39,51 @@ struct TabShell: View {
     var body: some View {
         TabView(selection: selection) {
             ForEach(0..<Self.baseTabs.count, id: \.self) { slot in
-                screen(at: slot)
-                    .tabItem { icon(at: slot).accessibilityLabel(label(at: slot)) }
-                    .tag(slot)
+                NavigationStack(path: $paths[slot]) {
+                    screen(at: slot)
+                        .toolbar { toolbar(at: slot) }
+                        .navigationBarTitleDisplayMode(.inline)
+                        .navigationDestination(for: Route.self) { route in
+                            // 잎은 하단 탭 바를 덮는다 — 탭 바는 `TabBarPush` 가 화면과 함께 밀어낸다.
+                            // ⚠️ `.toolbar(.hidden, for: .tabBar)` 를 쓰지 않는다 — 전환과 따로 툭 사라지고 툭 나타났다
+                            leaf(route)
+                        }
+                }
+                .tabItem { icon(at: slot).accessibilityLabel(label(at: slot)) }
+                .tag(slot)
             }
         }
         // 선택은 **색이 아니라 채움**으로 알린다 (§6.7).
         // 라임은 화면 콘텐츠 몫이다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
         .tint(MyFisColor.textPrimary)
-        .toolbar { tabToolbar }
-        .navigationBarTitleDisplayMode(.inline)
+        .onChange(of: currentSlot, initial: true) { _, now in activeSlot = now }
+        // 세트를 바꾸면 자리는 같아도 화면이 다르다 — 쌓아 둔 잎을 비운다
+        .onChange(of: tabSet) { _, _ in
+            paths = Array(repeating: [], count: paths.count)
+        }
+        .task { MyFisDebug.scheduleAutoTab { baseTab = $0 } }
+    }
+
+    /// 지금 선택된 자리
+    private var currentSlot: Int {
+        tabSet == .base ? Self.baseTabs.firstIndex(of: baseTab)! : Self.weightTabs.firstIndex(of: weightTab)!
     }
 
     // MARK: - 툴바 (탭 화면 헤더)
     //
-    // **탭 화면 헤더는 여기서 시스템 툴바로 올린다** 🟢 (2026-09-15, §6.9 · §7.1).
-    // 스택(`AppRoot`)이 탭 **밖**이라 탭 안 화면이 단 `.toolbar` 는 올라오지 않는다.
+    // **탭 화면 헤더는 시스템 툴바다** 🟢 (2026-09-15, §6.9 · §7.1). 각 자리 스택의 뿌리 화면에 단다.
     // 잎이 밀려 들어오면 이 아이템들이 잎의 뒤로 · 액션으로 **녹아 바뀐다** (iOS 26 유리).
     // 화면 이름 · 칩은 유리를 씌우지 않는다 (`withoutGlass`) — 판이 없어야 하거나 자기 판이 있다
 
     @ToolbarContentBuilder
-    private var tabToolbar: some ToolbarContent {
-        if tabSet == .base && baseTab == .home { homeToolbar }
-        if tabSet == .base && baseTab == .benefit { benefitToolbar }
-        if tabSet == .base && baseTab == .store { storeToolbar }
-        if tabSet == .base && baseTab == .my { myToolbar }
-        if tabSet == .weight && weightTab == .weight { weightToolbar }
-        if tabSet == .weight && weightTab == .cardio { cardioToolbar }
-        if tabSet == .weight && weightTab == .group { groupToolbar }
+    private func toolbar(at slot: Int) -> some ToolbarContent {
+        if tabSet == .base && Self.baseTabs[slot] == .home { homeToolbar }
+        if tabSet == .base && Self.baseTabs[slot] == .benefit { benefitToolbar }
+        if tabSet == .base && Self.baseTabs[slot] == .store { storeToolbar }
+        if tabSet == .base && Self.baseTabs[slot] == .my { myToolbar }
+        if tabSet == .weight && Self.weightTabs[slot] == .weight { weightToolbar }
+        if tabSet == .weight && Self.weightTabs[slot] == .cardio { cardioToolbar }
+        if tabSet == .weight && Self.weightTabs[slot] == .group { groupToolbar }
     }
 
     /// 홈 — 지점 · 워드마크 · 멤버십 + 알림

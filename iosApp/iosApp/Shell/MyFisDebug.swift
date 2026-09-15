@@ -31,6 +31,7 @@ import UIKit
 /// SIMCTL_CHILD_MYFIS_ACTIVITY=ladder          활동 랜딩(MYFIS_ROUTE=activity)에 띄울 활동
 /// SIMCTL_CHILD_MYFIS_AUTOPLAY=2               2초 뒤 그 활동의 연출을 스스로 재생한다
 /// SIMCTL_CHILD_MYFIS_SHEET=expanded           기구 찾기(M-08) 바닥 시트를 펼친 채로 시작
+/// SIMCTL_CHILD_MYFIS_AUTOTAB=store            2초 뒤 이 탭으로 옮긴다 (benefit · store · my) — 헤더와 본문이 같이 바뀌는지 찍는다
 /// ```
 enum MyFisDebug {
     private static var env: [String: String] { ProcessInfo.processInfo.environment }
@@ -330,6 +331,22 @@ enum MyFisDebug {
         #endif
     }
 
+    /// 2초 뒤 기본 세트의 이 탭으로 옮긴다 — `SIMCTL_CHILD_MYFIS_AUTOTAB=store`.
+    /// 시뮬레이터에서 탭을 누를 수단이 없어, 탭을 옮길 때 **헤더와 본문이 같이 바뀌는지** 찍으려고 둔다 (2026-09-15)
+    static func scheduleAutoTab(select: @escaping (BaseTab) -> Void) {
+        #if DEBUG
+        let tab: BaseTab? = switch env["MYFIS_AUTOTAB"] {
+        case "home": .home
+        case "benefit": .benefit
+        case "store": .store
+        case "my": .my
+        default: nil
+        }
+        guard let tab else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { select(tab) }
+        #endif
+    }
+
     /// 스스로 잎을 열고 되돌아온다.
     ///
     /// `Task` 가 아니라 `DispatchQueue` 로 건다 — 잎이 셸을 덮으면 `.task` 는 취소된다 (확인함).
@@ -340,6 +357,8 @@ enum MyFisDebug {
         #if DEBUG
         guard let route = route(env["MYFIS_AUTOPUSH"]) else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) { open(route) }
+        // 진단 — 잎이 들어간 뒤 뷰 컨트롤러 나무 (`MYFIS_VCDUMP=1`)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) { UINavigationController.myFisDumpControllers() }
         if let pop = Double(env["MYFIS_AUTOPOP"] ?? "0"), pop > 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 2 + pop) { back() }
         }
