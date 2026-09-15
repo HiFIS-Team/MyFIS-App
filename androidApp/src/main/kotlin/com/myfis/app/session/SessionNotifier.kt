@@ -43,7 +43,8 @@ internal object SessionNotifier {
         ensureChannel(context)
 
         val builder = NotificationCompat.Builder(context, CHANNEL)
-            .setSmallIcon(R.drawable.ic_tab_weight)
+            // FS 로고 — 상태 표시줄은 알파만 쓰므로 FS 실루엣으로 찍힌다 (iOS 잠금화면 표식과 맞춘다)
+            .setSmallIcon(R.drawable.ic_logo)
             .setColor(MyFisColor.Accent.toArgb())
             .setContentIntent(openApp(context))
             .setSilent(true)

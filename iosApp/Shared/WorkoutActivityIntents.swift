@@ -14,6 +14,8 @@ struct SessionToggleIntent: LiveActivityIntent {
     func perform() async throws -> some IntentResult {
         #if !MYFIS_LIVE_ACTIVITY
         await MainActor.run { WorkoutSessionStore.shared.toggle() }
+        // 잠금화면 갱신이 닿기 전에 돌아가면 iOS 가 앱을 재워 **늦게 바뀐다** — 끝날 때까지 기다린다
+        await WorkoutSessionStore.shared.synced()
         #endif
         return .result()
     }
@@ -26,6 +28,7 @@ struct SessionNextIntent: LiveActivityIntent {
     func perform() async throws -> some IntentResult {
         #if !MYFIS_LIVE_ACTIVITY
         await MainActor.run { WorkoutSessionStore.shared.next() }
+        await WorkoutSessionStore.shared.synced()
         #endif
         return .result()
     }

@@ -29,6 +29,8 @@ final class WorkoutSessionStore {
 
     @ObservationIgnored private var steps: [SessionStep] = []
     @ObservationIgnored private var activity: Activity<WorkoutActivityAttributes>?
+    /// 마지막으로 보낸 잠금화면 갱신 — 잠금화면 버튼은 **이게 끝날 때까지 기다린다** (`synced`)
+    @ObservationIgnored private var pendingSync: Task<Void, Never>?
 
     /// 완료 요약을 잠금화면에 남기는 시간
     private static let summaryLinger: TimeInterval = 15 * 60
@@ -63,6 +65,14 @@ final class WorkoutSessionStore {
         guard isRunning else { return }
         isRunning = false
         if clock?.finished != true { endActivity(state: nil, dismissal: .immediate) }
+    }
+
+    /// 보낸 잠금화면 갱신이 **시스템에 닿을 때까지** 기다린다.
+    ///
+    /// ⚠️ 잠금화면 버튼(`LiveActivityIntent`)은 앱을 잠깐 깨워 부른다. 갱신을 걸어 두기만 하고 바로 돌아가면
+    /// iOS 가 앱을 다시 재워서 **갱신이 늦게 가거나 안 갔다** — 앱은 멈췄는데 잠금화면 시계는 계속 흘렀다 (2026-09-15 실기)
+    func synced() async {
+        await pendingSync?.value
     }
 
     /// 앱이 뜰 때 — 지난번에 앱이 죽으며 남긴 잠금화면을 치운다
@@ -139,14 +149,14 @@ final class WorkoutSessionStore {
 
     private func updateActivity(_ state: WorkoutActivityAttributes.ContentState) {
         guard let activity else { return }
-        Task { await activity.update(.init(state: state, staleDate: nil)) }
+        pendingSync = Task { await activity.update(.init(state: state, staleDate: nil)) }
     }
 
     private func endActivity(state: WorkoutActivityAttributes.ContentState?,
                              dismissal: ActivityUIDismissalPolicy) {
         guard let activity else { return }
         self.activity = nil
-        Task {
+        pendingSync = Task {
             await activity.end(state.map { .init(state: $0, staleDate: nil) }, dismissalPolicy: dismissal)
         }
     }
