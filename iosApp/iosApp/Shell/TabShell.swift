@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// 탭 셸 — **탭 자리마다 내비게이션 스택** + 하단 유리 탭 바.
 ///
@@ -49,6 +50,12 @@ struct TabShell<Leaf: View>: View {
                             leaf(route)
                         }
                 }
+                // **세트가 바뀌면 스택을 새로 만든다** 🟢 (2026-09-15, 사용자 지적 — 하단바로 옮길 때 헤더 유리에 옆에서 들어올 때 같은 애니메이션).
+                // 같은 칸에서 내용만 갈아 끼우면 iOS 가 "같은 내비 바의 아이템 교체"로 보고 헤더를 비웠다가 유리를 번지게 다시 띄웠다
+                // (웨이트 · 이전 누를 때, 60fps 녹화로 확인). 새 스택이면 헤더가 페이지와 같이 바뀐다 — 기본 세트 탭끼리 옮길 때와 같다.
+                // ❌ 두 세트 스택을 칸마다 살려 두고 겹쳐 바꾸는 방식도 해 봤다 — 탭 바가 먼저 바뀌는 건 그대로였고,
+                //    같은 칸에 살려 둔 **다른 세트 화면(혜택)이 겹쳐 바뀌는 도중에 비쳤다** (60fps). 되돌렸다
+                .id(tabSet)
                 .tabItem { icon(at: slot).accessibilityLabel(label(at: slot)) }
                 .tag(slot)
             }
@@ -56,12 +63,31 @@ struct TabShell<Leaf: View>: View {
         // 선택은 **색이 아니라 채움**으로 알린다 (§6.7).
         // 라임은 화면 콘텐츠 몫이다 — 항상 켜져 있는 바가 액센트 예산을 먹으면 안 된다.
         .tint(MyFisColor.textPrimary)
-        .onChange(of: currentSlot, initial: true) { _, now in activeSlot = now }
+        .onChange(of: currentSlot, initial: true) { _, now in
+            activeSlot = now
+            labelTabs()
+        }
         // 세트를 바꾸면 자리는 같아도 화면이 다르다 — 쌓아 둔 잎을 비운다
         .onChange(of: tabSet) { _, _ in
             paths = Array(repeating: [], count: paths.count)
+            // **탭 바 아이콘도 페이지처럼 겹쳐 바꾼다** (2026-09-15, 사용자 — 3번 "거슬리는거 있으면 그것도 해").
+            // 그냥 두면 아이콘 다섯 개가 누르는 순간 한꺼번에 갈리고, 페이지는 시스템 전환이라 겹쳐 흐려진다
+            UITabBarController.myFisCrossfadeTabBar(duration: MyFisMotion.baseDuration)
+            // 자리 번호가 같은 채 세트만 바뀌기도 한다 (혜택 1 ↔ 웨이트 1) — 이름을 다시 단다
+            labelTabs()
         }
-        .task { MyFisDebug.scheduleAutoTab { baseTab = $0 } }
+        .task {
+            // **통로 칸(웨이트 · 이전)은 UIKit 이 고르지 않게 하고 선택값만 바꾼다** 🟢 (2026-09-15, `TabBarPush` · §7.1).
+            // 누르면 UIKit 이 통로 칸으로 전환을 시작했다가 SwiftUI 가 진짜 칸으로 되돌려, 페이지는 툭 · 헤더는 늦게 번지며 떴다
+            UITabBarController.myFisTakeOverSelection = { slot in
+                guard isPassage(slot) else { return false }
+                DispatchQueue.main.async { selection.wrappedValue = slot }
+                return true
+            }
+            MyFisDebug.scheduleAutoTab { baseTab = $0 }
+            MyFisDebug.scheduleAutoSlot { selection.wrappedValue = $0 }
+            MyFisDebug.scheduleAutoTap()
+        }
     }
 
     /// 지금 선택된 자리
@@ -219,6 +245,17 @@ struct TabShell<Leaf: View>: View {
                 }
             }
         )
+    }
+
+    /// 탭 이름을 VoiceOver 에 알린다 — 바 항목은 선택 · 세트가 바뀌면 다시 그려져 **다음 런루프**에 단다 (`TabBarPush`)
+    private func labelTabs() {
+        let labels = (0..<Self.baseTabs.count).map(label(at:))
+        DispatchQueue.main.async { UITabBarController.myFisLabelTabs(labels) }
+    }
+
+    /// 통로 칸 — 목적지가 아니라 **세트를 바꾸는 자리**다 (기본 세트 `웨이트` · 웨이트 세트 `이전`)
+    private func isPassage(_ slot: Int) -> Bool {
+        tabSet == .base ? Self.baseTabs[slot] == .weight : Self.weightTabs[slot] == .back
     }
 
     /// 선택된 자리만 **안쪽이 찬 벌**로 바꾼다. 실루엣이 같아 바뀔 때 튀지 않는다.
