@@ -333,19 +333,120 @@ enum MyFisDebug {
 
     /// 2초 뒤 기본 세트의 이 탭으로 옮긴다 — `SIMCTL_CHILD_MYFIS_AUTOTAB=store`.
     /// 시뮬레이터에서 탭을 누를 수단이 없어, 탭을 옮길 때 **헤더와 본문이 같이 바뀌는지** 찍으려고 둔다 (2026-09-15)
+    /// 쉼표로 여러 개를 주면 1.5초 간격으로 차례로 옮긴다 — `store,home,store` (처음 여는 탭과 다시 여는 탭을 같이 본다)
     static func scheduleAutoTab(select: @escaping (BaseTab) -> Void) {
         #if DEBUG
-        let tab: BaseTab? = switch env["MYFIS_AUTOTAB"] {
-        case "home": .home
-        case "benefit": .benefit
-        case "store": .store
-        case "my": .my
-        default: nil
+        guard let value = env["MYFIS_AUTOTAB"] else { return }
+        let tabs: [BaseTab] = value.split(separator: ",").compactMap {
+            switch $0 {
+            case "home": .home
+            case "benefit": .benefit
+            case "store": .store
+            case "my": .my
+            default: nil
+            }
         }
-        guard let tab else { return }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { select(tab) }
+        for (index, tab) in tabs.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2 + 1.5 * Double(index)) { select(tab) }
+        }
         #endif
     }
+
+    /// 2초 뒤부터 1.5초 간격으로 **탭 자리(0~4)를 누른 것처럼** 선택값을 바꾼다 — `SIMCTL_CHILD_MYFIS_AUTOSLOT=3,0,3`.
+    /// `AUTOTAB` 과 달리 탭 바를 누를 때와 **같은 선택 바인딩**을 거친다 — 웨이트(3) · 이전(0)으로 세트가 바뀌는 것까지 본다 (2026-09-15)
+    static func scheduleAutoSlot(select: @escaping (Int) -> Void) {
+        #if DEBUG
+        guard let value = env["MYFIS_AUTOSLOT"] else { return }
+        let slots = value.split(separator: ",").compactMap { Int($0) }
+        for (index, slot) in slots.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2 + 1.5 * Double(index)) { select(slot) }
+        }
+        #endif
+    }
+
+    /// 2초 뒤부터 1.5초 간격으로 **탭 바 버튼을 진짜로 누른다** — `SIMCTL_CHILD_MYFIS_AUTOTAP=1,0,3,0` (왼쪽부터 자리).
+    /// `AUTOSLOT` 은 선택 바인딩만 바꿔 **UIKit 이 탭을 받는 길을 건너뛴다** — 누르면 UIKit 이 먼저 그 칸으로 옮기고
+    /// SwiftUI 가 다른 칸으로 되돌리는지 봐야 해서 둔다 (2026-09-15). 손쓰기(VoiceOver)가 누르는 길 — `accessibilityActivate`.
+    /// 이름이 아니라 **자리**로 찾는다 — 탭 바 버튼의 손쓰기 라벨이 비어 있다
+    static func scheduleAutoTap() {
+        #if DEBUG
+        guard let value = env["MYFIS_AUTOTAP"] else { return }
+        let slots = value.split(separator: ",").compactMap { Int($0) }
+        for (index, slot) in slots.enumerated() {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2 + 1.5 * Double(index)) { tapTab(slot) }
+        }
+        #endif
+    }
+
+    #if DEBUG
+    private static func tapTab(_ slot: Int) {
+        guard let tabs = firstTabBarController() else {
+            fputs("[tap] 탭 바 컨트롤러 없음\n", stderr)
+            return
+        }
+        var found: [NSObject] = []
+        collectElements(in: tabs.tabBar, into: &found)
+        // 같은 버튼이 겹겹이 잡힌다 — 가운데 x 가 같으면 하나로 본다
+        var buttons: [NSObject] = []
+        for element in found.sorted(by: { $0.accessibilityFrame.midX < $1.accessibilityFrame.midX }) {
+            if let last = buttons.last, abs(last.accessibilityFrame.midX - element.accessibilityFrame.midX) < 8 { continue }
+            buttons.append(element)
+        }
+        let summary = buttons.map { "\($0.accessibilityLabel ?? "라벨없음")@\(Int($0.accessibilityFrame.midX))" }
+        guard buttons.indices.contains(slot) else {
+            fputs("[tap] \(slot) 없음 — 요소 \(summary)\n", stderr)
+            return
+        }
+        let button = buttons[slot]
+        let before = tabs.selectedIndex
+        // 손쓰기 누르기는 VoiceOver 가 꺼져 있으면 `false` 로 끝났다 — 컨트롤이면 손을 뗄 때 보내는 동작을 직접 보낸다.
+        // ⚠️ **한 번만** 보낸다 — 두 번 보내면 세트가 바뀐 뒤 같은 자리의 다른 탭(웨이트 → 모임)이 또 눌린다 (확인함)
+        var chain: [String] = []
+        var cls: AnyClass? = type(of: button)
+        while let c = cls { chain.append(NSStringFromClass(c)); cls = class_getSuperclass(c) }
+        let events: String
+        if let control = button as? UIControl {
+            events = "\(control.allControlEvents.rawValue)"
+            control.sendActions(for: .primaryActionTriggered)
+        } else {
+            events = "컨트롤 아님 activate=\(button.accessibilityActivate())"
+        }
+        fputs("[tap] \(slot) → \(chain.prefix(4)) 이벤트 \(events) 선택 \(before)→\(tabs.selectedIndex)\n", stderr)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            fputs("[tap] \(slot) 0.05초 뒤 선택 \(tabs.selectedIndex)\n", stderr)
+        }
+        // 손쓰기 라벨 — 세트가 바뀐 뒤 이름이 따라왔는지 (VoiceOver 가 읽는 값)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            var after: [NSObject] = []
+            collectElements(in: tabs.tabBar, into: &after)
+            let labels = after.sorted { $0.accessibilityFrame.midX < $1.accessibilityFrame.midX }
+                .map { $0.accessibilityLabel ?? "라벨없음" }
+            fputs("[tap] \(slot) 0.5초 뒤 라벨 \(labels)\n", stderr)
+        }
+    }
+
+    /// 손쓰기 요소 중 **탭 바 폭보다 좁은 것** — 바 전체·배경을 뺀 버튼들
+    private static func collectElements(in object: NSObject, into found: inout [NSObject]) {
+        if object.isAccessibilityElement, object.accessibilityFrame.width > 0,
+           object.accessibilityFrame.width < 200 {
+            found.append(object)
+        }
+        let children: [NSObject] = ((object as? UIView)?.subviews ?? []) + ((object.accessibilityElements as? [NSObject]) ?? [])
+        for child in children { collectElements(in: child, into: &found) }
+    }
+
+    private static func firstTabBarController() -> UITabBarController? {
+        func search(_ controller: UIViewController?) -> UITabBarController? {
+            guard let controller else { return nil }
+            if let tabs = controller as? UITabBarController { return tabs }
+            return controller.children.lazy.compactMap(search).first
+        }
+        return UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .lazy.compactMap { search($0.rootViewController) }.first
+    }
+    #endif
 
     /// 스스로 잎을 열고 되돌아온다.
     ///
