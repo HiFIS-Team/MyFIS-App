@@ -7,11 +7,10 @@ import WidgetKit
 /// 앱과 **다른 프로세스**다. 그릴 값은 앱이 `WorkoutActivityAttributes.ContentState` 로 보내고,
 /// 시간은 시각으로 받아 시스템이 흘린다 — 앱이 멈춰 있어도 숫자가 선다.
 ///
-/// - **잠금화면은 시스템 유리 위에 그린다** 🟢 (2026-09-15, 사용자 지적) — 바탕을 칠하지 않는다.
+/// - **잠금화면 바탕은 리퀴드 글래스**다 🟢 (2026-09-15, 사용자 지적 · 폰에서 후보를 보고 정함) — `liquidGlassBackground()`.
 ///   유리는 배경화면에 따라 밝아질 수 있어 **글자는 시스템 색**(`.primary` · `.secondary`)이다
 /// - **아일랜드는 시스템이 검정으로 고정한다** — 거기서는 우리 흰 글자 토큰을 쓴다
-/// - **표식은 FS 로고다** 🟢 (2026-09-15, 사용자 지정) — 아일랜드(검정 위)는 **글자 로고**,
-///   잠금화면(유리 위)은 **코인**. 라임 글자 로고는 밝은 유리 위에서 안 보인다 (라임 ↔ 흰색 1.27:1)
+/// - **표식은 메인 FS 로고 하나다** 🟢 (2026-09-15, 사용자 지정 — *"우리 메인 로고로 해야지"*)
 /// - `이전` · `나가기` 는 없다 — 좁은 자리에서 잘못 누르기 쉽고, 잠금화면에서 세션이 끝나면 안 된다
 /// - Pretendard 는 확장 `Info.plist` 의 `UIAppFonts` 로 올린다. 위젯은 시스템이 그리므로 런타임 등록이 닿지 않는다
 @main
@@ -24,8 +23,8 @@ struct MyFISLiveActivityBundle: WidgetBundle {
 struct WorkoutLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: WorkoutActivityAttributes.self) { context in
-            // 바탕을 칠하지 않는다 — 시스템 유리 (§6.37)
             WorkoutLockScreen(state: context.state)
+                .liquidGlassBackground()
         } dynamicIsland: { context in
             let state = context.state
             return DynamicIsland {
@@ -92,7 +91,7 @@ private struct WorkoutLockScreen: View {
     var body: some View {
         VStack(alignment: .leading, spacing: MyFisSpacing.xs) {
             HStack(spacing: MyFisSpacing.sm) {
-                FSCoin(size: 20)
+                FSWordmark(height: 16)
                 Text(state.isFinished ? "운동 세션" : state.stageLabel)
                     .font(MyFisFont.label)
                     .foregroundStyle(.secondary)
@@ -117,6 +116,8 @@ private struct WorkoutLockScreen: View {
                 .lineLimit(1)
         }
         .padding(MyFisSpacing.lg)
+        // 버튼 뒤 **1초쯤 천천히 바뀌던** 시스템 글자 전환을 줄인다 (2026-09-15 실기)
+        .contentTransition(.identity)
     }
 
     private var nextLine: String {
@@ -148,7 +149,7 @@ private struct SessionValue: View {
     var body: some View {
         Group {
             if let seconds = state.finishedSeconds {
-                Text(clockText(seconds))
+                Text(timerText(seconds))
             } else if state.isWarmup {
                 WarmupClock(state: state, alignment: .leading)
             } else {
@@ -173,7 +174,8 @@ private struct SessionControls: View {
     var body: some View {
         if !state.isFinished {
             HStack(spacing: MyFisSpacing.sm) {
-                Button(intent: SessionToggleIntent()) {
+                // 뒤집기가 아니라 **값**을 싣는다 — 늦게 바뀌어 두 번 눌러도 멈춤이 풀리지 않는다
+                Button(intent: SessionPlayIntent(playing: state.pausedAt != nil)) {
                     ControlGlyph(name: state.pausedAt == nil ? "ic_session_pause" : "ic_session_play",
                                  surface: surface)
                 }
@@ -214,7 +216,8 @@ private struct ControlGlyph: View {
     }
 }
 
-/// FS 글자 로고 — **검정 위**(아일랜드) 전용. 라임 그라데이션이라 밝은 면에서는 안 보인다
+/// **메인 FS 로고** — 잠금화면 · 아일랜드 모두 이것 하나다 🟢 (2026-09-15, 사용자 지정 — *"우리 메인 로고로 해야지"*).
+/// ⚠️ 한때 잠금화면에만 코인을 썼다 (밝은 유리 위 라임 대비를 걱정해서) — 사용자가 되돌렸다
 private struct FSWordmark: View {
     let height: CGFloat
 
@@ -223,17 +226,6 @@ private struct FSWordmark: View {
             .resizable()
             .aspectRatio(contentMode: .fit)
             .frame(height: height)
-    }
-}
-
-/// FS 코인 — 라임 원판 위 어두운 FS. **어느 바탕에서도** 읽혀서 유리 위(잠금화면)에 쓴다
-private struct FSCoin: View {
-    let size: CGFloat
-
-    var body: some View {
-        Image("ic_coin")
-            .resizable()
-            .frame(width: size, height: size)
     }
 }
 
@@ -250,10 +242,13 @@ private struct ElapsedClock: View {
     var body: some View {
         Group {
             if let seconds = state.finishedSeconds {
-                Text(clockText(seconds))
+                Text(timerText(seconds))
+            } else if let paused = state.pausedAt {
+                // 멈췄으면 **글자로 적는다** — 시스템 시계의 `pauseTime` 에 맡기지 않는다 (아래 `WarmupClock`)
+                Text(timerText(Int(paused.timeIntervalSince(state.elapsedFrom))))
             } else {
                 Text(timerInterval: state.elapsedFrom...state.elapsedFrom.addingTimeInterval(Self.cap),
-                     pauseTime: state.pausedAt, countsDown: false, showsHours: false)
+                     countsDown: false, showsHours: false)
             }
         }
         .monospacedDigit()
@@ -268,13 +263,41 @@ private struct WarmupClock: View {
 
     var body: some View {
         if let from = state.warmupFrom, let until = state.warmupUntil {
-            Text(timerInterval: from...until, pauseTime: state.pausedAt, countsDown: true, showsHours: false)
-                .monospacedDigit()
-                .multilineTextAlignment(alignment)
+            Group {
+                if let paused = state.pausedAt {
+                    // ⚠️ **거꾸로 세는 시스템 시계는 `pauseTime` 을 줘도 서지 않았다** (2026-09-15 폰 실기 —
+                    // 같은 카드의 경과 시계는 섰다). 멈췄으면 남은 초를 글자로 적는다 (앱과 같은 올림)
+                    Text(timerText(max(0, Int(until.timeIntervalSince(paused).rounded(.up)))))
+                } else {
+                    Text(timerInterval: from...until, countsDown: true, showsHours: false)
+                }
+            }
+            .monospacedDigit()
+            .multilineTextAlignment(alignment)
         }
     }
 }
 
-private func clockText(_ seconds: Int) -> String {
-    String(format: "%02d:%02d", seconds / 60, seconds % 60)
+private extension View {
+    /// 잠금화면 바탕 — **iOS 26 리퀴드 글래스** 🟢 (2026-09-15, 폰에서 후보 넷을 띄워 보고 정했다).
+    ///
+    /// - ⚠️ **칠(`activityBackgroundTint`)을 안 쓰면 시스템이 검은 판을 깔았다** — 같은 화면의 음악 카드는 유리였다
+    /// - 칠을 투명으로 두고 `glassEffect` 를 판으로 깐다. 공식 문서에 방법이 없어 `system` · `clear` · `tint` · `glass`
+    ///   넷을 폰에서 나란히 봤고 `glass` 가 음악 카드와 같았다
+    /// - iOS 17 ~ 25 는 시스템 기본 바탕 그대로 둔다
+    @ViewBuilder
+    func liquidGlassBackground() -> some View {
+        if #available(iOS 26.0, *) {
+            self
+                .background { Color.clear.glassEffect(.regular, in: Rectangle()) }
+                .activityBackgroundTint(.clear)
+        } else {
+            self
+        }
+    }
+}
+
+/// 시스템 시계와 **같은 모양**(`0:22` · `12:34`)으로 적는다 — 멈춤 · 끝남에서 글자로 바뀌어도 모양이 튀지 않게
+private func timerText(_ seconds: Int) -> String {
+    "\(seconds / 60):" + String(format: "%02d", seconds % 60)
 }

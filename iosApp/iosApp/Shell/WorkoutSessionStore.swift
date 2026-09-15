@@ -8,6 +8,17 @@ func nowMillis() -> Int64 {
     Int64(Date().timeIntervalSince1970 * 1000)
 }
 
+/// 잠금화면 버튼 진단 (DEBUG 전용) — 폰에서 `devicectl device process launch --console` 로 본다.
+///
+/// 2026-09-15 *"멈춤이 안 되고 느리게 바뀐다"* 를 재려고 넣었다. 버튼을 받은 시각 · 시계가 바뀐 시각 ·
+/// 잠금화면 갱신이 끝난 시각을 찍는다. `stderr` 라 버퍼에 갇히지 않는다
+func sessionTrace(_ message: String) {
+    #if DEBUG
+    let stamp = String(format: "%.3f", Date().timeIntervalSince1970.truncatingRemainder(dividingBy: 100))
+    fputs("[session \(stamp)] \(message)\n", stderr)
+    #endif
+}
+
 /// 운동 세션(W-04)의 **화면 밖 저장소** (DESIGN §6.37 · SPEC W-04).
 ///
 /// 세션 화면 · 잠금화면(라이브 액티비티) · 잠금화면 버튼 셋이 **같은 시계**를 본다.
@@ -56,6 +67,9 @@ final class WorkoutSessionStore {
 
     func toggle() { apply { $0.toggle(now: $1) } }
 
+    /// 잠금화면 `⏸` `▶` — 뒤집지 않고 **값으로** 둔다. 늦게 바뀌어 여러 번 눌러도 결과가 같다
+    func setPlaying(_ playing: Bool) { apply { playing ? $0.resume(now: $1) : $0.pause(now: $1) } }
+
     func next() { apply { $0.next(now: $1) } }
 
     func previous() { apply { $0.previous(now: $1) } }
@@ -89,6 +103,10 @@ final class WorkoutSessionStore {
         let now = nowMillis()
         let updated = change(old, now)
         clock = updated
+        if updated.index != old.index || updated.isPlaying != old.isPlaying || updated.finished != old.finished {
+            sessionTrace("시계 바뀜 — 흐름 \(old.isPlaying)→\(updated.isPlaying) · 단계 \(old.index)→\(updated.index) · " +
+                         "잠금화면 \(activity == nil ? "없음" : "있음")")
+        }
         if updated.finished && !old.finished {
             endActivity(state: state(updated, now: now),
                         dismissal: .after(Date().addingTimeInterval(Self.summaryLinger)))
@@ -149,7 +167,11 @@ final class WorkoutSessionStore {
 
     private func updateActivity(_ state: WorkoutActivityAttributes.ContentState) {
         guard let activity else { return }
-        pendingSync = Task { await activity.update(.init(state: state, staleDate: nil)) }
+        let sent = Date()
+        pendingSync = Task {
+            await activity.update(.init(state: state, staleDate: nil))
+            sessionTrace("잠금화면 갱신 끝 — \(Int(Date().timeIntervalSince(sent) * 1000))ms · 멈춤 \(state.pausedAt != nil)")
+        }
     }
 
     private func endActivity(state: WorkoutActivityAttributes.ContentState?,
