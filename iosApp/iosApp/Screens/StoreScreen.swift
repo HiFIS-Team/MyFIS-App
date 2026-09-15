@@ -46,24 +46,25 @@ struct StoreScreen: View {
     private var header: some View {
         HStack(spacing: 0) {
             MileageChip(balance: StorePlaceholder.balance)
-                .padding(.leading, MyFisSpacing.sm)
+                .padding(.leading, HeaderInset.edgeText)
 
             Spacer(minLength: MyFisSpacing.md)
 
-            HeaderIcon("ic_header_search", "검색", action: onSearch)
-            HeaderIcon("ic_header_cart", "장바구니", action: onCart)
-            HeaderIcon("ic_header_my", "마이", action: onMy)
+            HeaderGlass {
+                HeaderIcon("ic_header_search", "검색", action: onSearch)
+                HeaderIcon("ic_header_cart", "장바구니", action: onCart)
+                HeaderIcon("ic_header_my", "마이", action: onMy)
+            }
         }
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .padding(.horizontal, HeaderInset.horizontal)
         .frame(height: MyFisSize.header)
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
-            home
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        home
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            // 본문이 헤더 밑으로 지나간다 (§6.9)
+            .myFisHeader { header }
     }
 
     /// 본문 — 배너 · 카테고리 · 그리드.
@@ -71,8 +72,10 @@ struct StoreScreen: View {
     private var home: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                // 필터는 **위에 붙는다.** 목록을 내려가다 카테고리를 바꾸려고 위로 되돌아가면 안 된다
-                LazyVStack(alignment: .leading, spacing: 0, pinnedViews: [.sectionHeaders]) {
+                // **iOS 는 필터가 위에 붙지 않는다** 🟢 (2026-09-15, 사용자 지정 — 토스와 같다).
+                // 헤더가 유리가 되고 본문이 그 밑으로 지나가자, 붙은 필터 판에서 상품이 뚝 끊겨 **구멍처럼** 보였다.
+                // 배너와 함께 흘러 올라가 헤더 밑으로 지나간다. 안드로이드는 유리가 없어 그대로 붙는다 (§6.12)
+                LazyVStack(alignment: .leading, spacing: 0) {
                     BannerCarousel(banners: StorePlaceholder.banners)
                         .id(Self.topAnchor)
                         .padding(.top, MyFisSpacing.sm)
@@ -309,8 +312,7 @@ private struct CategoryFilter: View {
             }
             .onPreferenceChange(TabFrames.self) { frames = $0 }
         }
-        // 스티키 헤더라 배경이 불투명해야 아래 카드가 비쳐 지나가지 않는다
-        .background(MyFisColor.bgBase)
+        // 붙지 않으므로 바탕을 칠하지 않는다 — 본문과 함께 헤더 밑으로 흐려져 지나간다
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(MyFisColor.borderSubtle)
