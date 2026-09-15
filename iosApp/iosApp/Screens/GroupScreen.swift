@@ -22,9 +22,6 @@ struct GroupScreen: View {
     var onCreate: () -> Void = {}
     /// TODO: G-02 모임 상세가 붙으면 연결한다
     var onGroup: (GroupItem) -> Void = { _ in }
-    /// 헤더 돋보기 → **검색 잎(G-01 검색)** 을 연다.
-    /// ⚠️ 전에는 셸이 이걸 아무 데도 안 이어 줘서 **눌러도 아무 일이 없었다**
-    var onSearch: () -> Void = {}
 
     @State private var segment: GroupSegment = .browse
     @State private var category: GroupCategory = .all
@@ -97,32 +94,7 @@ struct GroupScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { header }
-    }
-
-    /// **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).
-    ///
-    /// 전에는 `{지점}의 모임` 이었다 — 모임이 지점에 매여 있다고 봤기 때문인데,
-    /// **활동 지역(§6.30)이 들어오면서 그 전제가 없어졌다.** 지점을 헤더에 계속 걸어 두면
-    /// 목록이 지점 것만인 줄 읽힌다.
-    /// 원본 헤더의 셋(검색·알림·메뉴) 중 알림은 셸이 이미 들고 있고 메뉴는 우리에게 없다 → 검색만 남긴다
-    private var header: some View {
-        HStack(spacing: 0) {
-            Text("모임")
-                // 화면 이름은 `title.lg` 다 (§4.2 · §6.9, 2026-09-04)
-                .font(MyFisFont.titleLg)
-                .foregroundStyle(MyFisColor.textPrimary)
-                .padding(.leading, HeaderInset.edgeText)
-
-            Spacer(minLength: MyFisSpacing.md)
-
-            HeaderGlass {
-                HeaderIcon("ic_header_search", "모임 검색", action: onSearch)
-            }
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, HeaderInset.horizontal)
+        // 헤더(`모임` + 검색)는 `TabShell` 이 시스템 툴바로 올린다 (§7.1)
     }
 }
 

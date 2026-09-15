@@ -27,15 +27,13 @@ struct NotificationScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader {
-            // TODO: Y-03 설정이 붙으면 onAction 을 연결한다
-            DetailHeader(
-                title: "알림",
-                onBack: onBack,
-                actionIcon: "ic_header_settings",
-                actionLabel: "설정"
-            )
+        // 헤더는 시스템 내비 바 — 뒤로는 시스템이 단다 (§7.1)
+        .navigationTitle("알림")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                // TODO: Y-03 설정이 붙으면 연결한다
+                ToolbarIcon("ic_header_settings", "설정") {}
+            }
         }
     }
 

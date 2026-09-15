@@ -61,19 +61,8 @@ struct GroupIntroScreen: View {
             .padding(.bottom, MyFisSpacing.md)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { header }
-    }
-
-    private var header: some View {
-        HStack(spacing: 0) {
-            HeaderGlass {
-                HeaderIcon("ic_header_close", "닫기", action: onClose)
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, HeaderInset.horizontal)
+        // 헤더는 시스템 내비 바 — 뒤로는 1단계로 간다 (§7.1, 2026-09-15).
+        // 전에는 `✕` 로 두 장을 한 번에 닫았다. 시스템 뒤로 버튼을 숨기면 가장자리 쓸기도 같이 꺼진다
     }
 
     /// 켜고 끄는 줄은 **네이티브 스위치 그대로** 쓴다 — 직접 그리면 두 판이 어긋난다

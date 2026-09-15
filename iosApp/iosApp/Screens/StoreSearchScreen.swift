@@ -24,6 +24,8 @@ struct StoreSearchScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            SearchHeader(text: $query, placeholder: "상품 검색", onBack: onBack)
+
             if query.isEmpty {
                 SearchEmptyState(
                     recents: recents.words,
@@ -39,8 +41,8 @@ struct StoreSearchScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { SearchHeader(text: $query, placeholder: "상품 검색", onBack: onBack) }
+        // **검색 잎은 시스템 내비 바를 숨긴다** — 필드가 곧 머리라 바에 올릴 게 없다 (§6.9 · §7.1)
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     /// 눌러서 들어온 말도 **최근 검색에 남는다** — 친 것과 다를 이유가 없다

@@ -3,25 +3,18 @@ import SwiftUI
 /// 앱의 뿌리 — 안드로이드 `AppShell` 의 `NavHost` 와 같은 자리.
 ///
 /// ```
-/// ZStack
-/// ├── TabShell     ← 헤더 + 탭 콘텐츠 + 하단 유리 탭 바. 잎이 들어오면 **폭 1/4 만큼 왼쪽으로 밀린다**
-/// └── pages[…]     ← 오른쪽에서 밀려 들어와 셸을 통째로 덮는다 (탭 바까지)
+/// NavigationStack       ← 시스템 내비 바 · push · 뒤로 버튼 · 가장자리 쓸기
+/// ├── TabShell (뿌리)    ← 탭 콘텐츠 + 하단 유리 탭 바 + **탭별 툴바**
+/// └── pages[…]          ← 오른쪽에서 밀려 들어와 셸을 통째로 덮는다 (탭 바까지)
 /// ```
 ///
-/// **왜 `NavigationStack` 을 쓰지 않나** (2026-08-25 결정, DESIGN.md §7.1)
-/// - 내비 바는 화면들이 **공유하는 크롬**이라, 화면이 바뀔 때마다 시스템이 아이템을
-///   morph 시킨다 — 유리 껍데기, 뒤로 버튼 옆 그루터기, 아이콘이 좌우로 밀리는 것 전부 그 결과다
-/// - 잎이 탭 안에서 밀리면 하단 유리 탭 바를 덮을 수 없어 **가시성을 상태로 토글**해야 했고,
-///   그러면 툭 사라지고 툭 생긴다
-/// - 헤더를 화면이 그리면 헤더는 화면과 **함께** 움직인다. 따로 노는 것이 없다
-///
-/// **뒤 화면은 폭의 `1/parallax` 만큼 같이 밀린다** 🟢 (2026-09-15 사용자 지정 —
-/// *"대부분 앱들이 저래서 우리도 그렇게 해야돼"*). 시스템 push 의 패럴랙스를 우리 덮개에서 다시 낸다.
-/// 안드로이드 `PARALLAX` 와 같은 값이다. 하단 유리 탭 바도 셸과 같이 밀린다.
-/// - 밀리는 건 **맨 위 잎 바로 밑 한 장**뿐이다 (잎이 하나면 셸). 더 밑은 이미 가려져 있어 밀린 자리에 둔다
-/// - 가장자리 스와이프 중에는 끄는 거리의 1/4 만큼 같이 돌아온다 — 놓는 순간 튀지 않는다
-/// - 가려진 잎은 **걷힐 때 움직이지 않고 사라진다** (`removal: .identity`). 셸까지 한 번에 돌아갈 때
-///   중간 잎이 맨 위 잎 뒤에서 따라 미끄러지는 띠가 보이지 않게 한다
+/// **시스템 내비게이션을 쓴다** 🟢 (2026-09-15, 사용자 지정 — *"그냥 크림처럼 하고싶다 크림처럼 해봐"*).
+/// 옆에서 화면이 들어올 때 헤더 유리가 새 화면 아이콘으로 녹아 바뀌는 것(iOS 26)은 시스템 내비 바만 한다.
+/// 2026-08-25 에 끄고 직접 만들었던 덮개(`ZStack` · 가장자리 스와이프 · 패럴랙스)를 걷었다 — 경위는 DESIGN §7.1
+/// - 스택은 **탭 밖**이다. 그래야 잎이 하단 탭 바까지 덮는다
+/// - 탭 화면 헤더는 `TabShell` 이 툴바로 올린다 — 스택이 탭 밖이면 탭 안 화면의 `.toolbar` 는 안 올라온다
+/// - 잎 화면은 **자기 툴바를 자기가 단다** (`navigationTitle` · `.toolbar`)
+/// - 뒤 화면 패럴랙스 · 전환 시간은 시스템 값이다
 struct AppRoot: View {
     @State private var pages: [Route] = MyFisDebug.initialRoutes
     /// 찜 — 스토어 홈과 검색 잎(S-07)이 나눠 쓴다. TODO(서버): 계정에 붙는다
@@ -35,54 +28,18 @@ struct AppRoot: View {
     @State private var groupRegion: String? = MyFisDebug.groupCreateRegion
     /// 토스트 — **셸이 든다.** 잎에서 한 일도 잎이 걷힌 뒤에 알려야 한다 (§6.35)
     @State private var toasts = ToastCenter()
-    /// 가장자리 스와이프로 끌고 있는 거리
-    @State private var drag: CGFloat = 0
-
-    /// 여기서 시작한 드래그만 뒤로가기로 본다 (§7.1)
-    private static let edge: CGFloat = 24
-    /// 이만큼 끌었으면 손을 떼도 닫는다
-    private static let closeDistance: CGFloat = 90
-    /// 잎이 들어올 때 뒤 화면이 밀리는 몫 — 폭의 `1/4` (안드로이드 `PARALLAX` 와 같다. iOS 기본 push 는 약 `0.3`)
-    private static let parallax: CGFloat = 4
-
-    /// 뒤 화면이 밀린 거리. `depth` 는 이 층 **위에** 얹힌 잎 수다
-    private func underOffset(depth: Int, width: CGFloat) -> CGFloat {
-        switch depth {
-        case 0: return 0
-        // 맨 위 잎 바로 밑 — 가장자리 스와이프로 끄는 만큼 같이 돌아온다
-        case 1: return -(width - drag) / Self.parallax
-        // 더 밑은 이미 가려져 있다. 밀린 자리에 둔다
-        default: return -width / Self.parallax
-        }
-    }
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                // 잎이 반투명하면 뒤가 비치므로, 바탕은 여기서 한 번만 깐다
-                MyFisColor.bgBase.ignoresSafeArea()
-
-                TabShell(open: open, liked: $liked)
-                    .offset(x: underOffset(depth: pages.count, width: proxy.size.width))
-                    // 덮인 셸에는 손이 닿지 않는다
-                    .allowsHitTesting(pages.isEmpty)
-
-                ForEach(Array(pages.enumerated()), id: \.offset) { index, route in
-                    let isTop = index == pages.count - 1
+        NavigationStack(path: $pages) {
+            TabShell(open: open, liked: $liked)
+                .navigationDestination(for: Route.self) { route in
                     leaf(route)
-                        .offset(x: isTop ? drag : underOffset(depth: pages.count - 1 - index,
-                                                              width: proxy.size.width))
-                        .zIndex(Double(index + 1))
-                        .transition(.asymmetric(insertion: .move(edge: .trailing),
-                                                removal: isTop ? .move(edge: .trailing) : .identity))
-                        .gesture(isTop ? edgeBack(width: proxy.size.width) : nil)
                 }
-
-                // **잎보다도 위다** — 잎에서 한 일을 잎이 걷히면서 알려야 한다
-                ToastLayer(center: toasts)
-                    .zIndex(Double(pages.count + 1))
-            }
         }
+        // 툴바 아이콘 · 시스템 뒤로 버튼 색 — 라임은 콘텐츠 몫이다 (§6.7 탭 바와 같다)
+        .tint(MyFisColor.textPrimary)
+        // **잎보다도 위다** — 잎에서 한 일을 잎이 걷히면서 알려야 한다
+        .overlay { ToastLayer(center: toasts) }
         .ignoresSafeArea(.keyboard)
         .task {
             // 유산소 `ORDER` 칸의 잔은 프레임 57장이라 **화면에서 풀면 늦는다** (§6.28).
@@ -96,68 +53,31 @@ struct AppRoot: View {
         }
     }
 
-    /// 왼쪽 가장자리에서 오른쪽으로 쓸면 잎을 걷는다 — 안드로이드 시스템 뒤로가기에 맞춘다.
-    ///
-    /// ⚠️ 예전에 화면 전체에 `simultaneousGesture(DragGesture())` 를 걸었다가
-    /// **버튼 탭을 삼켜서** "나가기를 연타해야 나가지는" 버그가 났다. 두 가지로 막는다 —
-    /// 1. `minimumDistance` 를 줘서 **움직이지 않는 탭은 제스처가 되지 않는다**
-    /// 2. `simultaneousGesture` 가 아니라 `gesture` 로 걸고, **가장자리에서 시작한 것만** 받는다
-    private func edgeBack(width: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 12, coordinateSpace: .local)
-            .onChanged { value in
-                guard value.startLocation.x <= Self.edge else { return }
-                // 세로로 긋는 손짓은 안쪽 스크롤 몫이다
-                guard abs(value.translation.width) > abs(value.translation.height) else { return }
-                drag = max(0, value.translation.width)
-            }
-            .onEnded { value in
-                guard value.startLocation.x <= Self.edge else { return }
-                let flung = value.predictedEndTranslation.width > 240
-                guard drag > Self.closeDistance || flung else {
-                    withAnimation(MyFisMotion.base) { drag = 0 }
-                    return
-                }
-                // **손가락 위치에서 이어서 화면 밖까지 밀어낸 뒤 걷는다.**
-                // 바로 걷으면 `.transition` 이 같이 돌아 화면이 한 번 튄다 (확인함)
-                withAnimation(MyFisMotion.base) {
-                    drag = width
-                } completion: {
-                    var snap = Transaction()
-                    snap.disablesAnimations = true
-                    withTransaction(snap) {
-                        _ = pages.popLast()
-                        drag = 0
-                    }
-                }
-            }
-    }
-
     // MARK: - 이동
     //
     // 화면은 스스로 이동하지 않는다. 콜백으로 여기에 **요청**한다 (안드로이드와 같다).
+    // 시스템 뒤로 버튼 · 가장자리 쓸기는 스택이 `pages` 를 직접 줄인다.
 
-    /// 전환은 DESIGN.md §7 `slow` (320ms) — 안드로이드 `pushSpec` 과 같은 값
     private func open(_ route: Route) {
         // 세션은 **밀어 넣기 전에** 연다 — 화면이 첫 프레임부터 새 시계를 그리고,
         // 지난 세션의 마지막 모습이 밀려 들어오지 않는다 (§6.37)
         if case .workoutSession = route {
             WorkoutSessionStore.shared.start(WorkoutSessionPlaceholder.steps)
         }
-        withAnimation(MyFisMotion.slow) { pages.append(route) }
+        pages.append(route)
     }
 
     private func back() {
-        withAnimation(MyFisMotion.slow) { _ = pages.popLast() }
-        drag = 0
+        if !pages.isEmpty { pages.removeLast() }
     }
 
-    /// 셸까지 한 번에 돌아간다 (예: 장바구니에서 "상품 보러 가기")
     private func toggleLike(_ id: Int) {
         if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
     }
 
+    /// 셸까지 한 번에 돌아간다 (예: 장바구니에서 "상품 보러 가기")
     private func backToShell() {
-        withAnimation(MyFisMotion.slow) { pages.removeAll() }
+        pages.removeAll()
     }
 
     /// 잎 화면 하나. **불투명하게 화면 전체를 채운다** — 뒤가 비치면 겹쳐 보인다.

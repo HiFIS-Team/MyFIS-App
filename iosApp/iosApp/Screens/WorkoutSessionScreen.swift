@@ -105,8 +105,6 @@ struct WorkoutSessionScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             VStack(alignment: .leading, spacing: 0) {
                 Text(stageLabel)
                     .font(MyFisFont.bodySm)
@@ -135,6 +133,8 @@ struct WorkoutSessionScreen: View {
                 .padding(.bottom, MyFisSpacing.xxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 헤더는 시스템 내비 바 — 뒤로(세션 나가기)는 시스템이 단다 (§7.1)
+        .toolbar { sessionToolbar }
         // 틱은 *다시 그리라는 신호*다. 시간이 다 된 웜업은 저장소가 **스스로 넘긴다** —
         // 잠겨 있던 사이 끝난 것까지 한 번에
         .onReceive(tick) { _ in
@@ -164,27 +164,24 @@ struct WorkoutSessionScreen: View {
 
     // MARK: - 조각
 
-    /// `←` · **총 경과 시간** · 음성 가이드.
-    ///
-    /// 잎 화면이라 `DetailHeader` 를 쓰고 싶지만 그건 *왼쪽 아이콘 · 가운데 제목 · 오른쪽 아이콘*
-    /// 셋뿐이다. 여기는 **왼쪽 아이콘 옆에 숫자**가 붙는다 — 높이(56)와 좌우 여백은 그대로 맞춘다 (§6.9)
-    private var header: some View {
-        HStack(spacing: 0) {
-            HeaderGlass {
-                HeaderIcon("ic_tab_back", "세션 나가기", action: onExit)
-            }
+    /// 툴바 — 시스템 뒤로 · **총 경과 시간** · 음성 가이드 (§7.1, 2026-09-15 시스템 내비 바로 옮김).
+    /// 시계와 칩은 유리를 씌우지 않는다 — 숫자는 판 없이, 칩은 자기 판이 있다
+    @ToolbarContentBuilder
+    private var sessionToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
             // 자릿수가 늘어도(`59:59` → `1:00:00`) 안 흔들려야 한다 — metric 은 tnum 이다
             Text(mmss(Int(clock.elapsedSeconds(now: now))))
                 .font(MyFisFont.metricMd)
                 .foregroundStyle(MyFisColor.textPrimary)
-                .padding(.leading, MyFisSpacing.sm)
-
-            Spacer(minLength: MyFisSpacing.md)
-
-            voiceChip
+                // ⚠️ 툴바는 폭을 좁게 준다 — 안 고정하면 `…` 로 잘린다 (확인함)
+                .fixedSize()
         }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, HeaderInset.horizontal)
+        .withoutGlass()
+        ToolbarItem(placement: .topBarTrailing) {
+            voiceChip
+                .fixedSize()
+        }
+        .withoutGlass()
     }
 
     /// 끈 상태는 **색으로 죽인다** — 투명도를 쓰지 않는다 (§9 이탈 #2)

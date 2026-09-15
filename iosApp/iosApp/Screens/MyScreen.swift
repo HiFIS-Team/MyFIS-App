@@ -12,10 +12,9 @@ import SwiftUI
 /// 여기는 계기판이 아니라 **찾아 들어가는 목록**이고, 답이 "어디로 가지" 다.
 /// 그래도 회원권만은 숫자로 말한다 — 만료 경고 줄과 카드의 `남음` 이 그 몫이다.
 struct MyScreen: View {
-    var onProfile: () -> Void = {}
+    // 헤더(프로필 · 설정)는 `TabShell` 이 시스템 툴바로 올린다 (§6.9 · §7.1)
     var onMembership: () -> Void = {}
     var onPurchase: () -> Void = {}
-    var onSettings: () -> Void = {}
 
     private let profile = MyPlaceholder.profile
     private let membership = MyPlaceholder.membership
@@ -94,43 +93,33 @@ struct MyScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { header }
     }
+}
 
-    /// 마이 헤더 (§6.9) — **왼쪽이 프로필, 오른쪽이 톱니**다 🟢 (2026-09-07, 사용자 지정).
-    ///
-    /// 화면 이름을 적지 않는다. 대신 왼쪽 자리를 **"누구인지"** 가 쓴다 —
-    /// 스토어·혜택의 마일리지 칩이 그 자리에서 하는 일과 같다.
-    /// 톱니 하나만 두니 왼쪽이 통째로 비어 **줄로 안 읽혔다** (사용자 지적).
-    ///
-    /// 알림(H-02)은 넣지 않는다 — 홈 헤더가 이미 들고 있어 길만 둘이 된다.
-    private var header: some View {
-        HStack(spacing: 0) {
-            // TODO(Y-02): 프로필 수정 화면이 붙으면 연결한다
-            MyFisTappable(label: "\(profile.nickname) 프로필 수정", action: onProfile) {
-                HStack(spacing: 0) {
-                    Avatar(nickname: profile.nickname)
-                    Text(profile.nickname)
-                        .font(MyFisFont.titleSm)
-                        .foregroundStyle(MyFisColor.textPrimary)
-                        .padding(.leading, MyFisSpacing.sm)
-                    Chevron(size: 16).padding(.leading, 2)
-                }
-                .padding(.leading, HeaderInset.edgeText)
-                .padding(.trailing, MyFisSpacing.sm)
-                .padding(.vertical, MyFisSpacing.xs)
-            }
+/// 마이 헤더 왼쪽 — **"누구인지"** (아바타 + 닉네임 + `›`). 툴바 왼쪽에 선다 (`TabShell`, §6.9 · §7.1).
+///
+/// 🟢 (2026-09-07, 사용자 지정) 화면 이름을 적지 않는다. 대신 왼쪽 자리를 **"누구인지"** 가 쓴다 —
+/// 스토어·혜택의 마일리지 칩이 그 자리에서 하는 일과 같다.
+/// 톱니 하나만 두니 왼쪽이 통째로 비어 **줄로 안 읽혔다** (사용자 지적).
+/// 알림(H-02)은 넣지 않는다 — 홈 헤더가 이미 들고 있어 길만 둘이 된다.
+struct MyProfileChip: View {
+    // TODO(Y-02): 프로필 수정 화면이 붙으면 연결한다
+    var onProfile: () -> Void = {}
 
-            Spacer(minLength: MyFisSpacing.md)
-            // TODO(Y-03): 설정 화면이 붙으면 연결한다
-            HeaderGlass {
-                HeaderIcon("ic_header_settings", "설정", action: onSettings)
+    private let profile = MyPlaceholder.profile
+
+    var body: some View {
+        MyFisTappable(label: "\(profile.nickname) 프로필 수정", action: onProfile) {
+            HStack(spacing: 0) {
+                Avatar(nickname: profile.nickname)
+                Text(profile.nickname)
+                    .font(MyFisFont.titleSm)
+                    .foregroundStyle(MyFisColor.textPrimary)
+                    .padding(.leading, MyFisSpacing.sm)
+                Chevron(size: 16).padding(.leading, 2)
             }
+            .padding(.vertical, MyFisSpacing.xs)
         }
-        .frame(height: MyFisSize.header)
-        // 눈에 보이는 끝(글리프 · 유리 테두리)이 화면 여백(20) 선에 선다 (§6.9)
-        .padding(.horizontal, HeaderInset.horizontal)
     }
 }
 

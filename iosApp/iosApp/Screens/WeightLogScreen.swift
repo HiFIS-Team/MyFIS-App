@@ -22,8 +22,6 @@ struct WeightLogScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DetailHeader(title: "체중 기록", onBack: onBack)
-
             Spacer(minLength: 0)
 
             readout
@@ -41,6 +39,8 @@ struct WeightLogScreen: View {
             .padding(.bottom, MyFisSpacing.xxxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 헤더는 시스템 내비 바 (§7.1)
+        .navigationTitle("체중 기록")
         .task {
             guard tick == nil else { return }
             tick = WeightPlaceholder.lastTick

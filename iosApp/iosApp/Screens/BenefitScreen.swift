@@ -10,8 +10,6 @@ import SwiftUI
 /// 이 탭이 답하는 질문은 하나 — **"오늘 더 받을 수 있는 게 뭐지"**.
 /// 잔액을 자랑하는 화면이 아니다 (그건 스토어 §6.12 가 한다).
 struct BenefitScreen: View {
-    /// TODO: P-02 적립 내역이 붙으면 연결한다
-    var onHistory: () -> Void = {}
     var onAction: (BenefitAction) -> Void = { _ in }
 
     var body: some View {
@@ -33,30 +31,7 @@ struct BenefitScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { header }
-    }
-
-    /// **아이콘 줄이다** — 다른 탭 헤더(§6.9)와 같은 골격.
-    ///
-    /// 글자 제목을 달지 않는다. 탭 화면에 제목을 두는 건 우리 규칙이 아니고,
-    /// **마일리지 칩이 이미 "여기는 P를 모으는 곳"이라고 말한다** (스토어 띠 §6.12 와 같은 칩).
-    private var header: some View {
-        HStack(spacing: 0) {
-            Button(action: onHistory) {
-                MileageChip(balance: BenefitPlaceholder.balance)
-            }
-            .buttonStyle(.myFisTap)
-            .padding(.leading, HeaderInset.edgeText)
-
-            Spacer(minLength: MyFisSpacing.md)
-
-            HeaderGlass {
-                HeaderIcon("ic_header_history", "적립 내역", action: onHistory)
-            }
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, HeaderInset.horizontal)
+        // 헤더(마일리지 칩 + 적립 내역)는 `TabShell` 이 시스템 툴바로 올린다 (§7.1)
     }
 }
 

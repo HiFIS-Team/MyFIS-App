@@ -20,10 +20,10 @@ struct RegionSearchScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DetailHeader(title: "활동 지역 설정", onBack: onBack)
-
             searchField
                 .padding(.horizontal, MyFisSpacing.screenHorizontal)
+                // 헤더는 시스템 내비 바 (§7.1)
+                .navigationTitle("활동 지역 설정")
 
             // **찾는 것보다 빠른 길이다.** 대개 지금 서 있는 동네가 답이라 목록보다 위에 둔다
             Button {} label: {

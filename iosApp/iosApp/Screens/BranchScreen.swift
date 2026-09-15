@@ -33,14 +33,12 @@ struct BranchScreen: View {
             // 펼침은 **헤더 바로 밑까지** 올라간다 🟢 (2026-09-14, 사용자 지정).
             // 화면의 56% 에서 멈추니 `많이 찾는 기구` 를 보려면 시트 안을 굴려야 했고 3등이 잘렸다.
             // ⚠️ 한 번 "그 섹션이 딱 들어가는 높이"로 잘라 헤더 밑에서 멈추게 했다가 *"끝까지 안 올라간다"* 로 되돌렸다
-            let full = geo.size.height - MyFisSize.header
+            // 내비 바는 `geo` 밖이다 (시스템 바가 위 안전영역을 먹는다) — 빼지 않는다
+            let full = geo.size.height
 
             ZStack {
                 VStack(spacing: 0) {
-                    // 헤더는 **불투명한 바**다. 지도가 밑에서 시작한다
-                    DetailHeader(title: "기구 찾기", onBack: onBack)
-                        .background(MyFisColor.bgBase)
-
+                    // 지도는 시스템 내비 바 **밑에서** 시작한다 (§7.1)
                     ZStack(alignment: .top) {
                         // 평면도가 **바탕**이다. 찾기 줄과 시트가 이 위에 얹힌다
                         BranchMap(bottomInset: peek)
@@ -58,6 +56,8 @@ struct BranchScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 헤더는 시스템 내비 바 (§7.1)
+        .navigationTitle("기구 찾기")
         // ⚠️ **바닥 안전영역까지 쓴다.** 안 그러면 시트를 끝까지 올려도 화면 맨 밑에
         // 바탕색 띠가 남아 시트가 바닥에서 뜬 것처럼 보인다.
         // 홈 인디케이터에 글자가 닿는 건 시트 안쪽 여백(`xxxl`)이 막는다

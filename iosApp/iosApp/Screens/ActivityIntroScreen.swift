@@ -66,11 +66,10 @@ struct ActivityIntroScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        // 본문이 헤더 밑으로 지나간다 (§6.9) — 흰 바탕보다 먼저 건다
-        .myFisHeader {
-            DetailHeader(title: action.kind.intro.kicker, onBack: onClose,
-                         backIcon: "ic_header_close", backLabel: "닫기", light: true)
-        }
+        // 헤더는 시스템 내비 바 — 흰 바탕이라 밝은 화면용으로 그린다 (§7.1).
+        // 전에는 `✕` 로 닫았다. 시스템 뒤로 버튼을 쓴다 — 숨기면 가장자리 쓸기도 같이 꺼진다
+        .navigationTitle(action.kind.intro.kicker)
+        .toolbarColorScheme(.light, for: .navigationBar)
         // **흰 바탕** — 혜택의 활동 화면은 밝다 (§9 이탈 #1, 2026-08-28 개정)
         .background(MyFisColor.lightBgBase)
         .task { MyFisDebug.scheduleAutoPlay(tapButton) }

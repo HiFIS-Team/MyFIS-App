@@ -213,7 +213,6 @@ enum MyFisDebug {
         .base
         #endif
     }
-
     /// 기구 찾기(M-08) 바닥 시트를 펼친 채로 — `SIMCTL_CHILD_MYFIS_SHEET=expanded`.
     /// 시뮬레이터에서는 끌 수단이 없어 펼친 모습을 볼 방법이 이것뿐이다
     static var sheetExpanded: Bool {

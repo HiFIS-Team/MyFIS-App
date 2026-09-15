@@ -39,30 +39,17 @@ struct StoreItemScreen: View {
                 buyBar
             }
             .ignoresSafeArea(edges: .top)
-
-            floatingBar
         }
-    }
-
-    /// 떠 있는 버튼 줄 — 이미지 위에 얹힌다. **스크롤을 따라가지 않는다**
-    /// (내려 읽다가 뒤로가기가 사라지면 안 된다).
-    ///
-    /// 사진 위에서는 바탕이 없고, 이미지를 지나 **글자가 아이콘 밑으로 들어오면** 바탕을 켠다.
-    private var floatingBar: some View {
-        HeaderBar {
-            HeaderGlass {
-                HeaderIcon("ic_tab_back", "뒤로", action: onBack)
-            }
-        } center: {
-            EmptyView()
-        } trailing: {
-            HeaderGlass {
-                HeaderIcon("ic_header_search", "검색", action: onSearch)
-                HeaderIcon("ic_header_cart", "장바구니", action: onCart)
+        // 헤더는 시스템 내비 바 — 사진 위에 뜬다. 뒤로는 시스템이 단다 (§7.1)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                ToolbarIcon("ic_header_search", "검색", action: onSearch)
+                ToolbarIcon("ic_header_cart", "장바구니", action: onCart)
             }
         }
-        .background(MyFisColor.bgBase.opacity(scrolledPastImage ? 1 : 0))
-        .animation(MyFisMotion.base, value: scrolledPastImage)
+        // 사진을 지나 **글자가 바 밑으로 들어오면** 바 바탕을 켠다 (§6.21)
+        .toolbarBackground(MyFisColor.bgBase, for: .navigationBar)
+        .toolbarBackground(scrolledPastImage ? .visible : .hidden, for: .navigationBar)
     }
 
     /// 상품 이미지. 위 버튼들은 이미지 **위에 떠 있다** — 이미지를 화면 끝까지 쓰기 위해서다

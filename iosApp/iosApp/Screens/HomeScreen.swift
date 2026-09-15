@@ -5,13 +5,8 @@ import SwiftUI
 /// 헤더 바로 밑에 **이번 주 캘린더**가 있고, 그 아래가 고른 날의 내용이다.
 /// 아직 카드가 없어 자리값만 둔다.
 ///
-/// **헤더는 이 화면이 직접 그린다** (DESIGN.md §6.9 · §7.1) — 지점·워드마크·멤버십·알림.
-/// 시스템 내비 바에 얹지 않는다 — 그러면 화면이 바뀔 때마다 시스템이 아이템을 제멋대로 옮긴다.
+/// **헤더(지점 · 워드마크 · 멤버십 · 알림)는 `TabShell` 이 시스템 툴바로 올린다** (DESIGN.md §6.9 · §7.1, 2026-09-15).
 struct HomeScreen: View {
-    /// M-01 지점 선택 — 헤더 핀
-    var onBranch: () -> Void = {}
-    /// TODO: 회원권(M-06) 이 붙으면 연결한다
-    var onNotification: () -> Void = {}
     var onDiet: () -> Void = {}
     var onCardio: () -> Void = {}
     var onWeight: () -> Void = {}
@@ -25,8 +20,7 @@ struct HomeScreen: View {
     @State private var month = Date()
 
     var body: some View {
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        content.myFisHeader { header }
+        content
     }
 
     private var content: some View {
@@ -70,23 +64,6 @@ struct HomeScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
             .defaultScrollAnchor(MyFisDebug.homeScrollAnchor)
-    }
-
-    /// 홈 헤더 (§6.9) — 지점 · 워드마크 · 멤버십 · 알림.
-    /// 아이콘은 리퀴드 글래스에 얹는다 — 지점은 원, 멤버십 · 알림은 한 알약
-    private var header: some View {
-        HeaderBar {
-            HeaderGlass {
-                HeaderIcon("ic_header_branch", "지점", action: onBranch)
-            }
-        } center: {
-            Wordmark()
-        } trailing: {
-            HeaderGlass {
-                HeaderIcon("ic_header_membership", "멤버십") {}
-                HeaderIcon("ic_header_notification", "알림", action: onNotification)
-            }
-        }
     }
 }
 

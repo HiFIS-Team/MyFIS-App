@@ -129,20 +129,8 @@ struct GroupCreateScreen: View {
             .padding(.bottom, MyFisSpacing.md)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { header }
-    }
-
-    /// `✕` 하나뿐이다 — 잎 화면이라 뒤가 아니라 **닫는다** (§6.9)
-    private var header: some View {
-        HStack(spacing: 0) {
-            HeaderGlass {
-                HeaderIcon("ic_header_close", "닫기", action: onClose)
-            }
-            Spacer(minLength: 0)
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, HeaderInset.horizontal)
+        // 헤더는 시스템 내비 바 — 뒤로만 있다 (§7.1, 2026-09-15).
+        // 전에는 `✕` 하나였다. 시스템 뒤로 버튼을 숨기면 가장자리 쓸기도 같이 꺼진다
     }
 
     private func prompt(_ text: String) -> Text {

@@ -105,8 +105,8 @@ struct WeightScreen: View {
     var onSession: () -> Void = {}
     /// 순서를 바꾸므로 화면이 들고 있는다. TODO(서버): 바뀐 순서를 올린다
     @State private var exercises = RoutinePlaceholder.exercises
-    /// 요일 띠는 **접힌 채로 시작한다** 🟢 (2026-09-04, 사용자 지정)
-    @State private var weekOpen = MyFisDebug.weightWeekOpen
+    /// 요일 띠를 펼쳤나 — 여닫는 칩이 **툴바에 있어서 셸(`TabShell`)이 든다** (§7.1)
+    @Binding var weekOpen: Bool
     @State private var warmupOpen = MyFisDebug.weightWarmupOpen
     @State private var reordering = MyFisDebug.weightReordering
     @State private var minutes = RoutinePlaceholder.minutes
@@ -145,52 +145,7 @@ struct WeightScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { header }
-    }
-
-    /// `웨이트` + **이번 주를 여닫는 칩**.
-    ///
-    /// 유산소(§6.28)·모임(§6.29)은 이 자리에 마일리지 칩을 두지만 **웨이트는 뺐다**
-    /// 🟢 (2026-09-04, 사용자 지정) — 요일 띠가 늘 펼쳐져 있으면 화면 위 `100` 가까이를
-    /// *오늘 할 일이 아닌 것*이 먹는다. 자리를 맞바꿔서, **접힌 동안에도 `3 / 5` 는 남는다.**
-    private var header: some View {
-        HStack(spacing: MyFisSpacing.md) {
-            Text("웨이트")
-                // §4.2 에서 `title.lg` 가 **화면 제목**이다. `title.md` 는 섹션 제목이라
-                // 화면 이름에 쓰면 제목으로 안 읽힌다 (2026-09-04, 사용자 지정)
-                .font(MyFisFont.titleLg)
-                .foregroundStyle(MyFisColor.textPrimary)
-
-            Spacer(minLength: MyFisSpacing.md)
-
-            Button {
-                withAnimation(MyFisMotion.base) { weekOpen.toggle() }
-            } label: {
-                weekChip
-            }
-            .buttonStyle(.myFisTap)
-            .accessibilityLabel(weekOpen ? "이번 주 접기" : "이번 주 펼치기")
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
-    }
-
-    /// 마일리지 칩(§6.12)과 **같은 규격**이다 — 높이 `chip` · `surface.2` · 캡슐.
-    /// 옆 탭들과 헤더 오른쪽 덩어리가 같은 무게로 보여야 한다
-    private var weekChip: some View {
-        HStack(spacing: MyFisSpacing.sm) {
-            Text("이번 주")
-                .font(MyFisFont.label)
-                .foregroundStyle(MyFisColor.textSecondary)
-            Text("\(RoutinePlaceholder.doneCount) / \(RoutinePlaceholder.workoutCount)")
-                .font(MyFisFont.label.monospacedDigit())
-                .foregroundStyle(MyFisColor.textPrimary)
-            Chevron(degrees: weekOpen ? 180 : 0, size: 16)
-        }
-        .padding(.horizontal, MyFisSpacing.md)
-        .frame(height: MyFisSize.chip)
-        .background(MyFisColor.surface2, in: Capsule())
+        // 헤더(`웨이트` + 이번 주 칩)는 `TabShell` 이 시스템 툴바로 올린다 (§7.1)
     }
 
     /// 오늘의 조건 두 칸 — 고치면 **분량이 다시 짜인다**.
@@ -511,6 +466,32 @@ private struct ExerciseRow: View {
     }
 }
 
+/// `이번 주 3 / 5 ⌄` — 요일 띠를 여닫는 칩. **툴바 오른쪽**에 선다 (`TabShell`, §6.33 · §7.1).
+///
+/// 유산소(§6.28)·모임(§6.29)은 이 자리에 마일리지 칩을 두지만 **웨이트는 뺐다**
+/// 🟢 (2026-09-04, 사용자 지정) — 요일 띠가 늘 펼쳐져 있으면 화면 위 `100` 가까이를
+/// *오늘 할 일이 아닌 것*이 먹는다. 자리를 맞바꿔서, **접힌 동안에도 `3 / 5` 는 남는다.**
+///
+/// 마일리지 칩(§6.12)과 **같은 규격**이다 — 높이 `chip` · `surface.2` · 캡슐
+struct WeightWeekChip: View {
+    let open: Bool
+
+    var body: some View {
+        HStack(spacing: MyFisSpacing.sm) {
+            Text("이번 주")
+                .font(MyFisFont.label)
+                .foregroundStyle(MyFisColor.textSecondary)
+            Text("\(RoutinePlaceholder.doneCount) / \(RoutinePlaceholder.workoutCount)")
+                .font(MyFisFont.label.monospacedDigit())
+                .foregroundStyle(MyFisColor.textPrimary)
+            Chevron(degrees: open ? 180 : 0, size: 16)
+        }
+        .padding(.horizontal, MyFisSpacing.md)
+        .frame(height: MyFisSize.chip)
+        .background(MyFisColor.surface2, in: Capsule())
+    }
+}
+
 #Preview {
-    WeightScreen().preferredColorScheme(.dark)
+    WeightScreen(weekOpen: .constant(false)).preferredColorScheme(.dark)
 }

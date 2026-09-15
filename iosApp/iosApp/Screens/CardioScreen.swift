@@ -45,28 +45,7 @@ struct CardioScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader { header }
-    }
-
-    /// **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).
-    ///
-    /// 전에는 `색 원 + 첫 글자 + 이름` 이었다 — *누구의 기록인지* 밝히려던 것인데,
-    /// **혼자 쓰는 앱에서 내 이름은 알려 주는 게 없다.** 웨이트 세트의 다른 탭(모임 §6.29)과
-    /// 같은 꼴로 **화면 이름**을 둔다. 오른쪽 칩은 그대로다 — 유산소는 뛴 만큼 P가 붙는다
-    private var header: some View {
-        HStack(spacing: MyFisSpacing.md) {
-            Text("유산소")
-                // 화면 이름은 `title.lg` 다 (§4.2 · §6.9, 2026-09-04)
-                .font(MyFisFont.titleLg)
-                .foregroundStyle(MyFisColor.textPrimary)
-
-            Spacer(minLength: MyFisSpacing.md)
-
-            MileageChip(balance: BenefitPlaceholder.balance)
-        }
-        .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal)
+        // 헤더(`유산소` + 마일리지 칩)는 `TabShell` 이 시스템 툴바로 올린다 (§7.1)
     }
 
     /// 이번 달 누적 — **이 화면의 주인공**이다 (§2 원칙 1).

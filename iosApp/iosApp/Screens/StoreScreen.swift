@@ -11,10 +11,7 @@ import SwiftUI
 ///
 /// 헤더 아래(카테고리·마일리지)는 **스크롤해도 남는다** (S 공통 규칙 — 살 수 있는지 매번 계산하게 하지 않는다).
 struct StoreScreen: View {
-    /// 헤더는 **이 화면이 직접 그린다** (§6.9) — 검색 · 장바구니 · 마이
-    var onSearch: () -> Void = {}
-    var onCart: () -> Void = {}
-    var onMy: () -> Void = {}
+    // 헤더(마일리지 칩 · 검색 · 장바구니 · 마이)는 `TabShell` 이 시스템 툴바로 올린다 (§6.9 · §7.1)
     var onItem: (StoreItem) -> Void = { _ in }
 
     /// 찜 — 검색 잎(S-07)과 나눠 쓰므로 셸이 들고 있다
@@ -35,36 +32,9 @@ struct StoreScreen: View {
         if liked.contains(id) { liked.remove(id) } else { liked.insert(id) }
     }
 
-    /// 스토어 헤더 (§6.9) 🟢 (2026-09-04 개정, 사용자 지정) —
-    /// **왼쪽에 마일리지, 오른쪽에 아이콘 셋**(검색 · 장바구니 · 마이).
-    ///
-    /// 전에는 검색 필드가 폭을 다 먹었다. 스토어에서 **먼저 하는 일은 검색이 아니라 둘러보기**이고,
-    /// 정작 늘 궁금한 값(**얼마 있나**)은 헤더 아래 띠에 따로 있었다 → 값을 헤더로 올리고
-    /// 검색은 아이콘으로 접었다. 띠는 같은 값이 두 번 나오게 되므로 없앴다.
-    ///
-    /// **워드마크를 넣지 않는다** — 마일리지가 왼쪽을 쓰므로 가운데 자리가 없다.
-    private var header: some View {
-        HStack(spacing: 0) {
-            MileageChip(balance: StorePlaceholder.balance)
-                .padding(.leading, HeaderInset.edgeText)
-
-            Spacer(minLength: MyFisSpacing.md)
-
-            HeaderGlass {
-                HeaderIcon("ic_header_search", "검색", action: onSearch)
-                HeaderIcon("ic_header_cart", "장바구니", action: onCart)
-                HeaderIcon("ic_header_my", "마이", action: onMy)
-            }
-        }
-        .padding(.horizontal, HeaderInset.horizontal)
-        .frame(height: MyFisSize.header)
-    }
-
     var body: some View {
         home
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-            // 본문이 헤더 밑으로 지나간다 (§6.9)
-            .myFisHeader { header }
     }
 
     /// 본문 — 배너 · 카테고리 · 그리드.

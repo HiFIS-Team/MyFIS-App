@@ -31,15 +31,12 @@ struct StoreMyScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9)
-        .myFisHeader {
-            DetailHeader(
-                title: "내 교환",
-                onBack: onBack,
-                actionIcon: "ic_header_cart",
-                actionLabel: "장바구니",
-                onAction: onCart
-            )
+        // 헤더는 시스템 내비 바 (§7.1)
+        .navigationTitle("내 교환")
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ToolbarIcon("ic_header_cart", "장바구니", action: onCart)
+            }
         }
     }
 }

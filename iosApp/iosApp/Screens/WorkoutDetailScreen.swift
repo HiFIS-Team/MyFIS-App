@@ -167,9 +167,8 @@ struct WorkoutDetailScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        // 본문이 헤더 밑으로 지나간다 (§6.9).
-        // 제목을 본문에서 크게 다루므로 헤더는 비운다 (§6.21 상품 상세와 같다)
-        .myFisHeader { DetailHeader(title: nil, onBack: onBack) }
+        // 헤더는 시스템 내비 바 — 뒤로만 있다 (§7.1).
+        // 제목을 본문에서 크게 다루므로 바 제목은 비운다 (§6.21 상품 상세와 같다)
     }
 
     private var title: some View {
