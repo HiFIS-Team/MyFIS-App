@@ -71,7 +71,9 @@ enum MyFisMotion {
     /// 눌림, 토글, 체크
     static let fast = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.12 * scale)
     /// 카드 확장, 페이드
-    static let base = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.20 * scale)
+    static let base = Animation.timingCurve(0.2, 0, 0, 1, duration: baseDuration)
+    /// `base` 의 길이(초) — UIKit · CoreAnimation 에 넘길 때 (탭 세트 교체 때 탭 바 겹쳐 바꾸기)
+    static let baseDuration: TimeInterval = 0.20 * scale
     /// 바텀시트, 화면 전환
     static let slow = Animation.timingCurve(0.2, 0, 0, 1, duration: 0.32 * scale)
 
