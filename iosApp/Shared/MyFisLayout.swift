@@ -62,6 +62,22 @@ enum MyFisSize {
     static let header: CGFloat = 56
     /// 헤더 아이콘 (§6.9) — Android 24 / iOS 26
     static let headerIcon: CGFloat = 26
+
+    // MARK: iOS 26 툴바 알약 — 스토어 머리 검색칸 폭 계산용 (§6.9, 2026-09-15 시뮬레이터 402pt 실측)
+    //
+    // **우리가 고른 값이 아니라 시스템 값을 잰 것이다.** 내비 바가 왼쪽 항목에 남는 폭을 주지 않아
+    // 검색칸 폭을 직접 계산해야 해서 이름을 붙였다. iOS 가 바뀌면 다시 잰다
+
+    /// 오른쪽 알약 — 장바구니 · 마이 (실측 103.7)
+    static let toolbarPairPlatter: CGFloat = 104
+    /// 알약과 알약 사이 — **12 보다 좁히면 오른쪽 알약이 `…` 로 접힌다** (실측: 사이 10 에서 `취소` 가 접힘, 12 부터 안 접힘).
+    /// 크림 녹화의 사이도 약 12 다. ~~8~~ 은 제목 자리 검색창일 때 잰 값이었다
+    static let toolbarPlatterGap: CGFloat = 12
+    /// 화면 끝과 알약 사이 (실측 16)
+    static let toolbarEdge: CGFloat = 16
+    /// 검색칸 둘레에 알약이 덧대는 안쪽 여백 (실측 — 입력칸 258 에 알약 266, 한쪽 4).
+    /// 0 으로 두니 왼쪽 알약이 오른쪽 알약에 **붙었다** (사이 8 이 사라짐)
+    static let toolbarFieldInset: CGFloat = 4
 }
 
 /// DESIGN.md §7 모션 — 이징은 `cubic-bezier(0.2, 0, 0, 1)` (감속 위주).
