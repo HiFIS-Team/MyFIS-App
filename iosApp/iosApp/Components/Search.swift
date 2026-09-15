@@ -19,7 +19,9 @@ struct SearchHeader: View {
 
     var body: some View {
         HStack(spacing: MyFisSpacing.sm) {
-            HeaderIcon("ic_tab_back", "뒤로", action: onBack)
+            HeaderGlass {
+                HeaderIcon("ic_tab_back", "뒤로", action: onBack)
+            }
 
             SearchField(text: $text, placeholder: placeholder, autoFocus: true)
 
@@ -28,7 +30,7 @@ struct SearchHeader: View {
                 .foregroundStyle(MyFisColor.textSecondary)
                 .buttonStyle(.myFisTap)
         }
-        .padding(.leading, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .padding(.leading, HeaderInset.horizontal)
         .padding(.trailing, MyFisSpacing.screenHorizontal)
         .frame(height: MyFisSize.header)
     }
