@@ -38,13 +38,23 @@ enum WorkoutSessionPlaceholder {
     }()
 }
 
-private func mmss(_ seconds: Int) -> String {
-    String(format: "%02d:%02d", seconds / 60, seconds % 60)
+/// 지금 몇 번째인지 — **마디 안에서** 센다. 화면(`웜업 스트레칭 1 / 5`)과 잠금화면(`1/5`)이 같이 쓴다
+func sessionStagePosition(_ steps: [SessionStep], _ index: Int) -> (name: String, within: Int, total: Int) {
+    let stage = steps[index].stage
+    return (stage == .warmup ? "웜업 스트레칭" : "운동",
+            steps.prefix(index + 1).filter { $0.stage == stage }.count,
+            steps.filter { $0.stage == stage }.count)
 }
 
-/// 지금 시각 (epoch ms) — `SessionClock` 은 시각을 밖에서 받는다
-private func nowMillis() -> Int64 {
-    Int64(Date().timeIntervalSince1970 * 1000)
+extension RoutineExercise {
+    /// `20kg × 12회` · 맨몸이면 `10회` — 세션 값 판과 잠금화면이 같이 쓴다
+    var loadAndReps: String {
+        [load, "\(reps)회"].compactMap { $0 }.joined(separator: " × ")
+    }
+}
+
+private func mmss(_ seconds: Int) -> String {
+    String(format: "%02d:%02d", seconds / 60, seconds % 60)
 }
 
 // MARK: - 화면
@@ -67,11 +77,13 @@ struct WorkoutSessionScreen: View {
 
     private let steps = WorkoutSessionPlaceholder.steps
 
-    /// 세션 시계 — **시각으로 계산한다** (`shared` 의 `SessionClock`, 두 플랫폼 한 벌).
-    ///
-    /// ⚠️ 전에는 1초 틱마다 `elapsed += 1` 이었다. 폰을 잠그거나 앱을 내리면 틱이 오지 않아
-    /// 돌아왔을 때 **경과 시간이 덜 흘러 있었다.** 이제 틱은 *다시 그리라는 신호*일 뿐이다
-    @State private var clock = SessionClock.companion.start(
+    /// 세션 시계는 **화면 밖 저장소**에 있다 (`shared` 의 `SessionClock`, 두 플랫폼 한 벌).
+    /// 잠금화면 버튼이 앱 프로세스에서 같은 시계를 만진다 — 화면 `@State` 에 있으면 닿을 수 없다
+    private let store = WorkoutSessionStore.shared
+
+    /// 저장소가 세션을 열기 전에 그릴 시계 — **시작 순간과 같은 모습**이다.
+    /// 보통은 `AppRoot` 가 밀어 넣기 전에 열어 두므로 쓰이지 않는다 (디버그 훅으로 바로 띄울 때만)
+    @State private var opening = SessionClock.companion.start(
         stepSeconds: WorkoutSessionPlaceholder.steps.map { KotlinInt(int: Int32($0.seconds ?? 0)) },
         now: nowMillis()
     )
@@ -86,6 +98,7 @@ struct WorkoutSessionScreen: View {
     /// (잠금화면 시계는 시스템이 초 경계에 맞춰 흘린다)
     @State private var tick = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
 
+    private var clock: SessionClock { store.clock ?? opening }
     private var index: Int { Int(clock.index) }
     private var step: SessionStep { steps[index] }
     private var next: SessionStep? { index + 1 < steps.count ? steps[index + 1] : nil }
@@ -122,37 +135,31 @@ struct WorkoutSessionScreen: View {
                 .padding(.bottom, MyFisSpacing.xxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .onReceive(tick) { _ in advance() }
+        // 틱은 *다시 그리라는 신호*다. 시간이 다 된 웜업은 저장소가 **스스로 넘긴다** —
+        // 잠겨 있던 사이 끝난 것까지 한 번에
+        .onReceive(tick) { _ in
+            now = nowMillis()
+            store.tick()
+        }
+        // 잠금화면 `⏭` 로 마지막을 넘겨도 여기로 온다
+        .onChange(of: store.clock?.finished == true) { _, finished in
+            if finished && store.isRunning { onFinish() }
+        }
         // **세트 사이에 화면이 꺼지면 매번 깨워야 한다** (SPEC W 공통 규칙)
-        .onAppear { UIApplication.shared.isIdleTimerDisabled = true }
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
-    }
-
-    // MARK: - 흐름
-
-    /// 틱마다 부른다. 시간이 다 된 웜업은 **스스로 넘어간다** — 잠겨 있던 사이 끝난 것까지 한 번에
-    private func advance() {
-        update(clock.catchUp(now: nowMillis()))
-    }
-
-    private func move(to target: Int) {
-        update(clock.moveTo(target: Int32(target), now: nowMillis()))
-    }
-
-    /// 새 시계로 갈아 끼우고 다시 그린다. **마지막을 막 넘겼을 때 한 번만** 끝낸다
-    private func update(_ updated: SessionClock) {
-        let justFinished = updated.finished && !clock.finished
-        clock = updated
-        now = nowMillis()
-        if justFinished { onFinish() }
+        .onAppear {
+            UIApplication.shared.isIdleTimerDisabled = true
+            if !store.isRunning { store.start(steps) }
+        }
+        .onDisappear {
+            UIApplication.shared.isIdleTimerDisabled = false
+            store.close()
+        }
     }
 
     /// `웜업 스트레칭 1 / 5` · `운동 2 / 6` — 지금 몇 번째인지 (마디 안에서 센다)
     private var stageLabel: String {
-        let stage = step.stage
-        let within = steps.prefix(index + 1).filter { $0.stage == stage }.count
-        let total = steps.filter { $0.stage == stage }.count
-        return "\(stage == .warmup ? "웜업 스트레칭" : "운동") \(within) / \(total)"
+        let position = sessionStagePosition(steps, index)
+        return "\(position.name) \(position.within) / \(position.total)"
     }
 
     // MARK: - 조각
@@ -235,8 +242,7 @@ struct WorkoutSessionScreen: View {
                     Text("\(step.exercise?.sets ?? 0)세트")
                         .font(MyFisFont.label)
                         .foregroundStyle(MyFisColor.textSecondary)
-                    Text([step.exercise?.load, "\(step.exercise?.reps ?? 0)회"]
-                        .compactMap { $0 }.joined(separator: " × "))
+                    Text(step.exercise?.loadAndReps ?? "")
                         .font(MyFisFont.metricLg)
                         .foregroundStyle(MyFisColor.textPrimary)
                 }
@@ -280,16 +286,16 @@ struct WorkoutSessionScreen: View {
     private var controls: some View {
         HStack(spacing: MyFisSpacing.md) {
             MyFisSecondaryButton(title: "이전", tall: true, icon: "ic_session_prev") {
-                move(to: index - 1)
+                store.previous()
             }
             MyFisPrimaryButton(title: clock.isPlaying ? "일시정지" : "이어서 하기",
                                icon: clock.isPlaying ? "ic_session_pause" : "ic_session_play") {
-                update(clock.toggle(now: nowMillis()))
+                store.toggle()
             }
             // ▶↔⏸ 는 **즉시** 갈린다. 애니메이션이 실리면 두 글리프가 겹쳐 보여 굼뜨다
             .animation(nil, value: clock.isPlaying)
             MyFisSecondaryButton(title: "다음", tall: true, icon: "ic_session_next") {
-                move(to: index + 1)
+                store.next()
             }
         }
     }

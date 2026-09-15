@@ -88,6 +88,8 @@ struct AppRoot: View {
             // 유산소 `ORDER` 칸의 잔은 프레임 57장이라 **화면에서 풀면 늦는다** (§6.28).
             // 앱이 뜰 때 배경에서 미리 펴 둔다 — 도착했을 땐 준비돼 있다
             if let toast = MyFisDebug.initialToast { toasts.show(toast, kind: MyFisDebug.initialToastKind) }
+            // 지난번에 앱이 죽으며 남긴 운동 세션 잠금화면을 치운다 — 세션은 메모리라 이어 받을 수 없다
+            WorkoutSessionStore.shared.endOrphans()
             AnimatedDrink.prewarm()
             MyFisDebug.applySlowMotionIfNeeded()
             MyFisDebug.scheduleAutoNavigation(open: open, back: back)
@@ -136,6 +138,11 @@ struct AppRoot: View {
 
     /// 전환은 DESIGN.md §7 `slow` (320ms) — 안드로이드 `pushSpec` 과 같은 값
     private func open(_ route: Route) {
+        // 세션은 **밀어 넣기 전에** 연다 — 화면이 첫 프레임부터 새 시계를 그리고,
+        // 지난 세션의 마지막 모습이 밀려 들어오지 않는다 (§6.37)
+        if case .workoutSession = route {
+            WorkoutSessionStore.shared.start(WorkoutSessionPlaceholder.steps)
+        }
         withAnimation(MyFisMotion.slow) { pages.append(route) }
     }
 

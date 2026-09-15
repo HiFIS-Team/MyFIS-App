@@ -22,6 +22,7 @@ class SessionClockTest {
     fun 남은_시간은_올림이다() {
         assertEquals(60, start.remainSeconds(t0 + 500))
         assertEquals(59, start.remainSeconds(t0 + 1_000))
+        assertEquals(59_500, start.remainMillis(t0 + 500))
     }
 
     @Test

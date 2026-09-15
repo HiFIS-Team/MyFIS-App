@@ -44,11 +44,12 @@ data class SessionClock(
      * **올림**이다 — 들어온 순간엔 `72` 를 그대로 보이고, 1초가 다 지나야 `71` 이 된다.
      * 1초마다 빼던 전 화면과 같은 박자다
      */
-    fun remainSeconds(now: Long): Int {
-        if (!isTimed) return 0
-        val left = stepSeconds[index] * 1000L - (elapsed(now) - stepEnteredAt)
-        return if (left <= 0) 0 else ((left + 999) / 1000).toInt()
-    }
+    fun remainSeconds(now: Long): Int = ((remainMillis(now) + 999) / 1000).toInt()
+
+    /** 이 단계에 남은 시간 (ms). 분량 단계면 `0` — 잠금화면 카운트다운이 **끝나는 시각**을 여기서 잡는다 */
+    fun remainMillis(now: Long): Long =
+        if (!isTimed) 0
+        else (stepSeconds[index] * 1000L - (elapsed(now) - stepEnteredAt)).coerceAtLeast(0)
 
     fun pause(now: Long): SessionClock = if (isPlaying) copy(pausedAt = now) else this
 

@@ -6,9 +6,48 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		0F000000000000000000001D /* MyFISLiveActivity.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 0F0000000000000000000011 /* MyFISLiveActivity.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		0F000000000000000000001E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0F0000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0F0000000000000000000015;
+			remoteInfo = MyFISLiveActivity;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		0F000000000000000000001C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				0F000000000000000000001D /* MyFISLiveActivity.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		0F0000000000000000000004 /* iosApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = iosApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		0F0000000000000000000011 /* MyFISLiveActivity.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MyFISLiveActivity.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		0F0000000000000000000014 /* Exceptions for "LiveActivity" folder in "MyFISLiveActivity" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 0F0000000000000000000015 /* MyFISLiveActivity */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		0F0000000000000000000005 /* iosApp */ = {
@@ -16,10 +55,30 @@
 			path = iosApp;
 			sourceTree = "<group>";
 		};
+		0F0000000000000000000012 /* LiveActivity */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				0F0000000000000000000014 /* Exceptions for "LiveActivity" folder in "MyFISLiveActivity" target */,
+			);
+			path = LiveActivity;
+			sourceTree = "<group>";
+		};
+		0F0000000000000000000013 /* Shared */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Shared;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0F000000000000000000000E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0F000000000000000000001A /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -33,6 +92,8 @@
 			isa = PBXGroup;
 			children = (
 				0F0000000000000000000005 /* iosApp */,
+				0F0000000000000000000013 /* Shared */,
+				0F0000000000000000000012 /* LiveActivity */,
 				0F0000000000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +102,7 @@
 			isa = PBXGroup;
 			children = (
 				0F0000000000000000000004 /* iosApp.app */,
+				0F0000000000000000000011 /* MyFISLiveActivity.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -56,18 +118,42 @@
 				0F000000000000000000000D /* Sources */,
 				0F000000000000000000000E /* Frameworks */,
 				0F000000000000000000000F /* Resources */,
+				0F000000000000000000001C /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				0F000000000000000000001F /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				0F0000000000000000000005 /* iosApp */,
+				0F0000000000000000000013 /* Shared */,
+			);
+			name = iosApp;
+			productName = iosApp;
+			productReference = 0F0000000000000000000004 /* iosApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		0F0000000000000000000015 /* MyFISLiveActivity */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 0F0000000000000000000016 /* Build configuration list for PBXNativeTarget "MyFISLiveActivity" */;
+			buildPhases = (
+				0F0000000000000000000019 /* Sources */,
+				0F000000000000000000001A /* Frameworks */,
+				0F000000000000000000001B /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				0F0000000000000000000005 /* iosApp */,
+				0F0000000000000000000012 /* LiveActivity */,
+				0F0000000000000000000013 /* Shared */,
 			);
-			name = iosApp;
-			productName = iosApp;
-			productReference = 0F0000000000000000000004 /* iosApp.app */;
-			productType = "com.apple.product-type.application";
+			name = MyFISLiveActivity;
+			productName = MyFISLiveActivity;
+			productReference = 0F0000000000000000000011 /* MyFISLiveActivity.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -80,6 +166,9 @@
 				LastUpgradeCheck = 2600;
 				TargetAttributes = {
 					0F0000000000000000000006 = {
+						CreatedOnToolsVersion = 26.0;
+					};
+					0F0000000000000000000015 = {
 						CreatedOnToolsVersion = 26.0;
 					};
 				};
@@ -99,12 +188,20 @@
 			projectRoot = "";
 			targets = (
 				0F0000000000000000000006 /* iosApp */,
+				0F0000000000000000000015 /* MyFISLiveActivity */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		0F000000000000000000000F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		0F000000000000000000001B /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -143,7 +240,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		0F0000000000000000000019 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		0F000000000000000000001F /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0F0000000000000000000015 /* MyFISLiveActivity */;
+			targetProxy = 0F000000000000000000001E /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		0F0000000000000000000009 /* Debug */ = {
@@ -215,6 +327,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyFIS;
 				INFOPLIST_KEY_NFCReaderUsageDescription = "유산소 기기의 태그를 읽어 운동을 시작합니다.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -254,6 +367,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = MyFIS;
 				INFOPLIST_KEY_NFCReaderUsageDescription = "유산소 기기의 태그를 읽어 운동을 시작합니다.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -277,6 +391,58 @@
 			};
 			name = Release;
 		};
+		0F0000000000000000000017 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X559Z4GGSB;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyFIS;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myfis.app.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "MYFIS_LIVE_ACTIVITY $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		0F0000000000000000000018 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = X559Z4GGSB;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LiveActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MyFIS;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.myfis.app.LiveActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "MYFIS_LIVE_ACTIVITY $(inherited)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -294,6 +460,15 @@
 			buildConfigurations = (
 				0F000000000000000000000B /* Debug */,
 				0F000000000000000000000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		0F0000000000000000000016 /* Build configuration list for PBXNativeTarget "MyFISLiveActivity" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				0F0000000000000000000017 /* Debug */,
+				0F0000000000000000000018 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
