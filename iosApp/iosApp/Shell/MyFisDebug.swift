@@ -284,6 +284,49 @@ enum MyFisDebug {
     }
 
     /// `SIMCTL_CHILD_MYFIS_ROUTE=group_search MYFIS_GROUP_SEARCH=러닝`
+    /// 머리 오른쪽 끝 버튼을 **진짜로 누른다** — `MYFIS_NAV_TAP=2,5` (초). 시스템 검색 버튼 · 닫기가 코드로 켤 때와 같은지 본다
+    static func scheduleNavTap() {
+        #if DEBUG
+        guard let value = env["MYFIS_NAV_TAP"] else { return }
+        for seconds in value.split(separator: ",").compactMap({ Double($0) }) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { tapNavTrailing() }
+        }
+        #endif
+    }
+
+    #if DEBUG
+    private static func tapNavTrailing() {
+        guard let window = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows).first(where: \.isKeyWindow) else { return }
+        var controls: [UIControl] = []
+        func walk(_ view: UIView) {
+            if let control = view as? UIControl, !control.isHidden, control.alpha > 0.01 {
+                let frame = control.convert(control.bounds, to: window)
+                if frame.minY < 130, frame.width < 120, frame.width > 10 { controls.append(control) }
+            }
+            view.subviews.forEach(walk)
+        }
+        walk(window)
+        let sorted = controls.sorted { $0.convert($0.bounds, to: window).maxX < $1.convert($1.bounds, to: window).maxX }
+        let summary = sorted.map { "\(type(of: $0))[\($0.accessibilityLabel ?? "-")]@\(Int($0.convert($0.bounds, to: window).midX))" }
+        fputs("[navtap] 컨트롤 \(summary)\n", stderr)
+        guard let target = sorted.last else { return }
+        target.sendActions(for: .primaryActionTriggered)
+        target.sendActions(for: .touchUpInside)
+    }
+    #endif
+
+    /// 모임 머리 검색을 2초 뒤 켜고, 초를 주면 그만큼 뒤 끈다 — `MYFIS_GROUP_SEARCH_AUTO=5`
+    static func scheduleGroupSearch(open: @escaping () -> Void, cancel: @escaping () -> Void) {
+        #if DEBUG
+        guard let value = env["MYFIS_GROUP_SEARCH_AUTO"] else { return }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: open)
+        if let seconds = Double(value), seconds > 2 {
+            DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: cancel)
+        }
+        #endif
+    }
+
     /// 스토어 머리 검색을 **켠 채로** 띄운다 — `MYFIS_STORE_SEARCH=1` (2026-09-15). 검색어는 `MYFIS_SEARCH`
     static var storeSearchOpen: Bool {
         #if DEBUG
@@ -302,6 +345,15 @@ enum MyFisDebug {
         if let seconds = Double(value), seconds > 2 {
             DispatchQueue.main.asyncAfter(deadline: .now() + seconds, execute: cancel)
         }
+        #endif
+    }
+
+    /// 모임 머리 검색을 **이 검색어로** 켠다 — `MYFIS_GROUP_SEARCH_AUTO` 와 같이 줄 때만 (`MYFIS_GROUP_SEARCH=러닝`)
+    static var groupHeaderQuery: String {
+        #if DEBUG
+        env["MYFIS_GROUP_SEARCH_AUTO"] == nil ? "" : groupSearchQuery
+        #else
+        ""
         #endif
     }
 
