@@ -24,6 +24,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import com.myfis.app.session.SessionNotifier
+import com.myfis.app.session.WorkoutSessionStore
+import com.myfis.app.ui.screens.workoutSessionSteps
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -75,6 +80,9 @@ private const val PARALLAX = 4
 @Composable
 fun AppShell() {
     val nav = rememberNavController()
+    val context = LocalContext.current
+    // 지난번에 앱이 죽으며 남긴 운동 세션 진행 중 알림을 치운다 — 세션은 메모리라 이어 받을 수 없다
+    LaunchedEffect(Unit) { SessionNotifier.cancelOrphan(context) }
     // 상세로 넘길 상품. NavHost 인자로 객체를 실어 보낼 수 없어 셸이 들고 있는다
     var storeItem by remember { mutableStateOf<StoreItem?>(null) }
     // 물 마시기 미션 시각 — 두 화면이 나눠 쓴다. TODO(서버): 회원 설정으로 옮긴다 (SPEC P-05)
@@ -119,7 +127,12 @@ fun AppShell() {
                     workoutExercise = it
                     nav.navigateOnce(Route.WORKOUT_DETAIL)
                 },
-                onSession = { nav.navigateOnce(Route.WORKOUT_SESSION) },
+                onSession = {
+                    // 세션은 **밀어 넣기 전에** 연다 — 화면이 첫 프레임부터 새 시계를 그리고,
+                    // 지난 세션의 마지막 모습이 밀려 들어오지 않는다 (iOS `AppRoot.open` 과 같다)
+                    WorkoutSessionStore.start(context, workoutSessionSteps)
+                    nav.navigateOnce(Route.WORKOUT_SESSION)
+                },
                 onActivity = {
                     // 물 마시기는 **때가 정해진 미션**이라 랜딩을 거치지 않는다 (§6.25, 체중과 같은 처리)
                     if (it.kind == BenefitKind.WATER) {

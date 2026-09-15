@@ -1,5 +1,13 @@
 package com.myfis.app.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+import com.myfis.app.session.WorkoutSessionStore
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -100,12 +108,14 @@ fun WorkoutSessionScreen(
     onFinish: () -> Unit = onExit,
 ) {
     val steps = workoutSessionSteps
-    // 세션 시계 — **시각으로 계산한다** (`shared` 의 [SessionClock], 두 플랫폼 한 벌).
-    // ⚠️ 전에는 1초마다 `elapsed += 1` 이었다. 폰을 잠그거나 앱을 내리면 그 사이가 빠져서
-    // 돌아왔을 때 **경과 시간이 덜 흘러 있었다.** 이제 틱은 *다시 그리라는 신호*일 뿐이다
-    var clock by remember {
-        mutableStateOf(SessionClock.start(steps.map { it.seconds ?: 0 }, System.currentTimeMillis()))
-    }
+    val context = LocalContext.current
+    // 세션 시계는 **화면 밖 저장소**에 있다 (`shared` 의 [SessionClock], 두 플랫폼 한 벌) —
+    // 알림의 `일시정지` · `다음` 이 같은 시계를 만진다. 화면 `remember` 안에 있으면 닿을 수 없다
+    val store = WorkoutSessionStore
+    // 저장소가 세션을 열기 전에 그릴 시계 — **시작 순간과 같은 모습**이다.
+    // 보통은 `AppShell` 이 밀어 넣기 전에 열어 두므로 쓰이지 않는다
+    val opening = remember { SessionClock.start(steps.map { it.seconds ?: 0 }, System.currentTimeMillis()) }
+    val clock = store.clock ?: opening
     // 마지막으로 그린 시각 — 틱마다 갱신해서 숫자를 다시 그린다
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     // TODO(W-04): 음성 렙 카운트가 붙으면 이 스위치가 그걸 끈다
@@ -114,29 +124,42 @@ fun WorkoutSessionScreen(
     val step = steps[clock.index]
     val next = steps.getOrNull(clock.index + 1)
 
-    // 새 시계로 갈아 끼우고 다시 그린다. **마지막을 막 넘겼을 때 한 번만** 끝낸다
-    fun update(updated: SessionClock) {
-        val justFinished = updated.finished && !clock.finished
-        clock = updated
-        now = System.currentTimeMillis()
-        if (justFinished) onFinish()
+    // 알림 권한 (Android 13+) — 처음 세션을 열 때 묻는다. 거절하면 알림 없이 세션만 돈다
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) store.refreshNotification()
     }
 
     // **세트 사이에 화면이 꺼지면 매번 깨워야 한다** (SPEC W 공통 규칙)
     val view = LocalView.current
     DisposableEffect(Unit) {
         view.keepScreenOn = true
-        onDispose { view.keepScreenOn = false }
+        if (!store.isRunning) store.start(context, steps)
+        if (Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            permission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+        onDispose {
+            view.keepScreenOn = false
+            store.close()
+        }
     }
 
-    // 틱마다 시간이 다 된 웜업을 **스스로 넘긴다** — 잠겨 있던 사이 끝난 것까지 한 번에.
+    // 알림 `다음` 으로 마지막을 넘겨도 여기로 온다
+    val finished = store.isRunning && store.clock?.finished == true
+    LaunchedEffect(finished) { if (finished) onFinish() }
+
+    // 틱은 *다시 그리라는 신호*다. 시간이 다 된 웜업은 저장소가 **스스로 넘긴다** — 잠겨 있던 사이 끝난 것까지 한 번에.
     // 흐르는 중에는 **다음 초 경계까지** 기다린다 — 숫자가 실제 초와 같은 박자로 넘어가야
-    // 잠금화면 시계(시스템이 흘린다)와 어긋나지 않는다
+    // 알림 크로노미터(시스템이 흘린다)와 어긋나지 않는다
     LaunchedEffect(Unit) {
         while (true) {
-            val elapsed = clock.elapsed(System.currentTimeMillis())
-            delay(if (clock.isPlaying) (1000 - elapsed % 1000).coerceAtLeast(16) else 250)
-            update(clock.catchUp(System.currentTimeMillis()))
+            val current = store.clock ?: opening
+            val elapsed = current.elapsed(System.currentTimeMillis())
+            delay(if (current.isPlaying) (1000 - elapsed % 1000).coerceAtLeast(16) else 250)
+            store.tick()
+            now = System.currentTimeMillis()
         }
     }
 
@@ -160,7 +183,7 @@ fun WorkoutSessionScreen(
                 .padding(horizontal = MyFisSpacing.screenHorizontal),
         ) {
             Text(
-                stageLabel(steps, clock.index),
+                sessionStageLabel(steps, clock.index),
                 style = MyFisTheme.type.bodySm,
                 color = MyFisColor.TextSecondary,
             )
@@ -183,9 +206,9 @@ fun WorkoutSessionScreen(
 
         Controls(
             playing = clock.isPlaying,
-            onPlay = { update(clock.toggle(System.currentTimeMillis())) },
-            onPrev = { update(clock.previous(System.currentTimeMillis())) },
-            onNext = { update(clock.next(System.currentTimeMillis())) },
+            onPlay = { store.toggle() },
+            onPrev = { store.previous() },
+            onNext = { store.next() },
             modifier = Modifier
                 .padding(horizontal = MyFisSpacing.screenHorizontal)
                 .padding(top = MyFisSpacing.lg, bottom = MyFisSpacing.xxl),
@@ -193,8 +216,12 @@ fun WorkoutSessionScreen(
     }
 }
 
-/** `웜업 스트레칭 1 / 5` · `운동 2 / 6` — 지금 몇 번째인지 (마디 안에서 센다) */
-private fun stageLabel(steps: List<SessionStep>, index: Int): String {
+/** `20kg × 12회` · 맨몸이면 `10회` — 세션 값 판과 진행 중 알림이 같이 쓴다 */
+val RoutineExercise.loadAndReps: String
+    get() = listOfNotNull(load, "${reps}회").joinToString(" × ")
+
+/** `웜업 스트레칭 1 / 5` · `운동 2 / 6` — 지금 몇 번째인지 (마디 안에서 센다). 화면과 알림이 같이 쓴다 */
+fun sessionStageLabel(steps: List<SessionStep>, index: Int): String {
     val stage = steps[index].stage
     val within = steps.take(index + 1).count { it.stage == stage }
     val total = steps.count { it.stage == stage }
@@ -326,7 +353,7 @@ private fun StepPanel(step: SessionStep, remain: Int, modifier: Modifier = Modif
                         color = MyFisColor.TextSecondary,
                     )
                     Text(
-                        listOfNotNull(exercise?.load, "${exercise?.reps ?: 0}회").joinToString(" × "),
+                        exercise?.loadAndReps ?: "",
                         style = MyFisTheme.type.metricLg,
                         color = MyFisColor.TextPrimary,
                     )

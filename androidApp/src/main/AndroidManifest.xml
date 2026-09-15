@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- 운동 세션 진행 중 알림 (DESIGN §6.37) — Android 13+ 는 세션을 처음 열 때 묻는다 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Android 16 승격 알림 — 상태 표시줄 칩 · 잠금화면 위쪽에 올라간다 -->
+    <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -18,6 +23,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- 진행 중 알림의 일시정지 · 다음 — 앱 안에서만 받는다 -->
+        <receiver
+            android:name=".session.SessionActionReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>
