@@ -16,8 +16,6 @@ struct BenefitScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     InviteBanner()
@@ -35,6 +33,8 @@ struct BenefitScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { header }
     }
 
     /// **아이콘 줄이다** — 다른 탭 헤더(§6.9)와 같은 골격.
@@ -47,14 +47,16 @@ struct BenefitScreen: View {
                 MileageChip(balance: BenefitPlaceholder.balance)
             }
             .buttonStyle(.myFisTap)
-            .padding(.leading, MyFisSpacing.sm)
+            .padding(.leading, HeaderInset.edgeText)
 
             Spacer(minLength: MyFisSpacing.md)
 
-            HeaderIcon("ic_header_history", "적립 내역", action: onHistory)
+            HeaderGlass {
+                HeaderIcon("ic_header_history", "적립 내역", action: onHistory)
+            }
         }
         .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .padding(.horizontal, HeaderInset.horizontal)
     }
 }
 

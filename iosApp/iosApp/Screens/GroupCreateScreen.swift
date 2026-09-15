@@ -47,8 +47,6 @@ struct GroupCreateScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     // **질문은 안 사라진다** 🟢 (2026-09-04, 사용자 지정).
@@ -131,16 +129,20 @@ struct GroupCreateScreen: View {
             .padding(.bottom, MyFisSpacing.md)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { header }
     }
 
     /// `✕` 하나뿐이다 — 잎 화면이라 뒤가 아니라 **닫는다** (§6.9)
     private var header: some View {
         HStack(spacing: 0) {
-            HeaderIcon("ic_header_close", "닫기", action: onClose)
+            HeaderGlass {
+                HeaderIcon("ic_header_close", "닫기", action: onClose)
+            }
             Spacer(minLength: 0)
         }
         .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .padding(.horizontal, HeaderInset.horizontal)
     }
 
     private func prompt(_ text: String) -> Text {

@@ -22,8 +22,6 @@ struct MyScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     MyFisSectionTitle("멤버십", trailing: profile.branch)
@@ -96,6 +94,8 @@ struct MyScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { header }
     }
 
     /// 마이 헤더 (§6.9) — **왼쪽이 프로필, 오른쪽이 톱니**다 🟢 (2026-09-07, 사용자 지정).
@@ -117,17 +117,20 @@ struct MyScreen: View {
                         .padding(.leading, MyFisSpacing.sm)
                     Chevron(size: 16).padding(.leading, 2)
                 }
-                .padding(.horizontal, MyFisSpacing.sm)
+                .padding(.leading, HeaderInset.edgeText)
+                .padding(.trailing, MyFisSpacing.sm)
                 .padding(.vertical, MyFisSpacing.xs)
             }
 
             Spacer(minLength: MyFisSpacing.md)
             // TODO(Y-03): 설정 화면이 붙으면 연결한다
-            HeaderIcon("ic_header_settings", "설정", action: onSettings)
+            HeaderGlass {
+                HeaderIcon("ic_header_settings", "설정", action: onSettings)
+            }
         }
         .frame(height: MyFisSize.header)
-        // 아이콘 터치 영역만큼 빼서 글리프가 화면 여백(20) 선에 선다 (§6.9)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        // 눈에 보이는 끝(글리프 · 유리 테두리)이 화면 여백(20) 선에 선다 (§6.9)
+        .padding(.horizontal, HeaderInset.horizontal)
     }
 }
 

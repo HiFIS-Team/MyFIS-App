@@ -114,8 +114,6 @@ struct WeightScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -147,6 +145,8 @@ struct WeightScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { header }
     }
 
     /// `웨이트` + **이번 주를 여닫는 칩**.

@@ -13,14 +13,6 @@ struct StoreMyScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DetailHeader(
-                title: "내 교환",
-                onBack: onBack,
-                actionIcon: "ic_header_cart",
-                actionLabel: "장바구니",
-                onAction: onCart
-            )
-
             ScrollView {
                 // 마일리지 띠는 **좌우 여백 밖**이다. 선이 화면 끝까지 가야 스토어와 같아 보인다
                 // 스토어(§6.12)와 같은 마일리지 표기를 쓴다 — 화면마다 다르면 같은 값으로 안 읽힌다
@@ -39,6 +31,16 @@ struct StoreMyScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader {
+            DetailHeader(
+                title: "내 교환",
+                onBack: onBack,
+                actionIcon: "ic_header_cart",
+                actionLabel: "장바구니",
+                onAction: onCart
+            )
+        }
     }
 }
 

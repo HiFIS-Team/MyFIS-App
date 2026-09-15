@@ -44,8 +44,6 @@ struct GroupScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -99,6 +97,8 @@ struct GroupScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { header }
     }
 
     /// **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).
@@ -113,14 +113,16 @@ struct GroupScreen: View {
                 // 화면 이름은 `title.lg` 다 (§4.2 · §6.9, 2026-09-04)
                 .font(MyFisFont.titleLg)
                 .foregroundStyle(MyFisColor.textPrimary)
-                .padding(.leading, MyFisSpacing.sm)
+                .padding(.leading, HeaderInset.edgeText)
 
             Spacer(minLength: MyFisSpacing.md)
 
-            HeaderIcon("ic_header_search", "모임 검색", action: onSearch)
+            HeaderGlass {
+                HeaderIcon("ic_header_search", "모임 검색", action: onSearch)
+            }
         }
         .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .padding(.horizontal, HeaderInset.horizontal)
     }
 }
 

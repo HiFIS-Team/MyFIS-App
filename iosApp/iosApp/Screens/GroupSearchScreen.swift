@@ -25,8 +25,6 @@ struct GroupSearchScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            SearchHeader(text: $query, placeholder: "모임 검색", onBack: onBack)
-
             if query.isEmpty {
                 SearchEmptyState(
                     recents: recents.words,
@@ -42,6 +40,8 @@ struct GroupSearchScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { SearchHeader(text: $query, placeholder: "모임 검색", onBack: onBack) }
     }
 
     private var list: some View {

@@ -20,14 +20,6 @@ struct NotificationScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // TODO: Y-03 설정이 붙으면 onAction 을 연결한다
-            DetailHeader(
-                title: "알림",
-                onBack: onBack,
-                actionIcon: "ic_header_settings",
-                actionLabel: "설정"
-            )
-
             if items.isEmpty {
                 emptyState
             } else {
@@ -35,6 +27,16 @@ struct NotificationScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader {
+            // TODO: Y-03 설정이 붙으면 onAction 을 연결한다
+            DetailHeader(
+                title: "알림",
+                onBack: onBack,
+                actionIcon: "ic_header_settings",
+                actionLabel: "설정"
+            )
+        }
     }
 
     private var list: some View {

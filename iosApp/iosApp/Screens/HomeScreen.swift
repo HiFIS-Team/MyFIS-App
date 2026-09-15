@@ -25,8 +25,11 @@ struct HomeScreen: View {
     @State private var month = Date()
 
     var body: some View {
-        VStack(spacing: 0) {
-            header
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        content.myFisHeader { header }
+    }
+
+    private var content: some View {
             ScrollView {
                 VStack(spacing: 0) {
                 HomeCalendar(
@@ -67,17 +70,19 @@ struct HomeScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
             }
             .defaultScrollAnchor(MyFisDebug.homeScrollAnchor)
-        }
     }
 
-    /// 홈 헤더 (§6.9) — 지점 · 워드마크 · 멤버십 · 알림
+    /// 홈 헤더 (§6.9) — 지점 · 워드마크 · 멤버십 · 알림.
+    /// 아이콘은 리퀴드 글래스에 얹는다 — 지점은 원, 멤버십 · 알림은 한 알약
     private var header: some View {
         HeaderBar {
-            HeaderIcon("ic_header_branch", "지점", action: onBranch)
+            HeaderGlass {
+                HeaderIcon("ic_header_branch", "지점", action: onBranch)
+            }
         } center: {
             Wordmark()
         } trailing: {
-            HStack(spacing: 0) {
+            HeaderGlass {
                 HeaderIcon("ic_header_membership", "멤버십") {}
                 HeaderIcon("ic_header_notification", "알림", action: onNotification)
             }

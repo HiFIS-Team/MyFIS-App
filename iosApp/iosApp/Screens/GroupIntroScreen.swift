@@ -27,8 +27,6 @@ struct GroupIntroScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Text("모임을 소개해주세요")
@@ -63,15 +61,19 @@ struct GroupIntroScreen: View {
             .padding(.bottom, MyFisSpacing.md)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { header }
     }
 
     private var header: some View {
         HStack(spacing: 0) {
-            HeaderIcon("ic_header_close", "닫기", action: onClose)
+            HeaderGlass {
+                HeaderIcon("ic_header_close", "닫기", action: onClose)
+            }
             Spacer(minLength: 0)
         }
         .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .padding(.horizontal, HeaderInset.horizontal)
     }
 
     /// 켜고 끄는 줄은 **네이티브 스위치 그대로** 쓴다 — 직접 그리면 두 판이 어긋난다

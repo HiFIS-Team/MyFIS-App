@@ -24,8 +24,6 @@ struct StoreSearchScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            SearchHeader(text: $query, placeholder: "상품 검색", onBack: onBack)
-
             if query.isEmpty {
                 SearchEmptyState(
                     recents: recents.words,
@@ -41,6 +39,8 @@ struct StoreSearchScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { SearchHeader(text: $query, placeholder: "상품 검색", onBack: onBack) }
     }
 
     /// 눌러서 들어온 말도 **최근 검색에 남는다** — 친 것과 다를 이유가 없다

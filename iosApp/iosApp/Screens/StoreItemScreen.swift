@@ -50,11 +50,13 @@ struct StoreItemScreen: View {
     /// 사진 위에서는 바탕이 없고, 이미지를 지나 **글자가 아이콘 밑으로 들어오면** 바탕을 켠다.
     private var floatingBar: some View {
         HeaderBar {
-            HeaderIcon("ic_tab_back", "뒤로", action: onBack)
+            HeaderGlass {
+                HeaderIcon("ic_tab_back", "뒤로", action: onBack)
+            }
         } center: {
             EmptyView()
         } trailing: {
-            HStack(spacing: 0) {
+            HeaderGlass {
                 HeaderIcon("ic_header_search", "검색", action: onSearch)
                 HeaderIcon("ic_header_cart", "장바구니", action: onCart)
             }

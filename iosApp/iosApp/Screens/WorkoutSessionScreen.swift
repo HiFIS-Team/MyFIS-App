@@ -170,7 +170,9 @@ struct WorkoutSessionScreen: View {
     /// 셋뿐이다. 여기는 **왼쪽 아이콘 옆에 숫자**가 붙는다 — 높이(56)와 좌우 여백은 그대로 맞춘다 (§6.9)
     private var header: some View {
         HStack(spacing: 0) {
-            HeaderIcon("ic_tab_back", "세션 나가기", action: onExit)
+            HeaderGlass {
+                HeaderIcon("ic_tab_back", "세션 나가기", action: onExit)
+            }
             // 자릿수가 늘어도(`59:59` → `1:00:00`) 안 흔들려야 한다 — metric 은 tnum 이다
             Text(mmss(Int(clock.elapsedSeconds(now: now))))
                 .font(MyFisFont.metricMd)
@@ -182,7 +184,7 @@ struct WorkoutSessionScreen: View {
             voiceChip
         }
         .frame(height: MyFisSize.header)
-        .padding(.horizontal, MyFisSpacing.screenHorizontal - MyFisSpacing.sm)
+        .padding(.horizontal, HeaderInset.horizontal)
     }
 
     /// 끈 상태는 **색으로 죽인다** — 투명도를 쓰지 않는다 (§9 이탈 #2)

@@ -18,9 +18,6 @@ struct ActivityIntroScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            DetailHeader(title: action.kind.intro.kicker, onBack: onClose,
-                         backIcon: "ic_header_close", backLabel: "닫기", light: true)
-
             ScrollView {
                 VStack(spacing: 0) {
                     // 작은 라벨이 제목 위에 붙어야 머리가 두 단으로 잡힌다 (레퍼런스와 같은 구성)
@@ -69,6 +66,11 @@ struct ActivityIntroScreen: View {
                 .padding(.bottom, MyFisSpacing.xxxl)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // 본문이 헤더 밑으로 지나간다 (§6.9) — 흰 바탕보다 먼저 건다
+        .myFisHeader {
+            DetailHeader(title: action.kind.intro.kicker, onBack: onClose,
+                         backIcon: "ic_header_close", backLabel: "닫기", light: true)
+        }
         // **흰 바탕** — 혜택의 활동 화면은 밝다 (§9 이탈 #1, 2026-08-28 개정)
         .background(MyFisColor.lightBgBase)
         .task { MyFisDebug.scheduleAutoPlay(tapButton) }

@@ -19,8 +19,6 @@ struct CardioScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
@@ -47,6 +45,8 @@ struct CardioScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9)
+        .myFisHeader { header }
     }
 
     /// **화면 이름 한 줄** 🟢 (2026-09-04, 사용자 지정).

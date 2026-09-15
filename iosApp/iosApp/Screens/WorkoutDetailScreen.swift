@@ -139,9 +139,6 @@ struct WorkoutDetailScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 제목을 본문에서 크게 다루므로 헤더는 비운다 (§6.21 상품 상세와 같다)
-            DetailHeader(title: nil, onBack: onBack)
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     title
@@ -170,6 +167,9 @@ struct WorkoutDetailScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9).
+        // 제목을 본문에서 크게 다루므로 헤더는 비운다 (§6.21 상품 상세와 같다)
+        .myFisHeader { DetailHeader(title: nil, onBack: onBack) }
     }
 
     private var title: some View {

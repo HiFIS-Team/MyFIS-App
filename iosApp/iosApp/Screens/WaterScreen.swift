@@ -16,10 +16,6 @@ struct WaterScreen: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // 다른 잎 화면과 **같은 뒤로가기**를 쓴다 (2026-08-28 사용자 지정).
-            // 이 화면은 옆에서 밀려 들어오므로 `X`(덮개)보다 `←` 가 방향과 맞는다
-            DetailHeader(title: "물 마시기", onBack: onClose, light: true)
-
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     drop
@@ -77,6 +73,10 @@ struct WaterScreen: View {
                 .background(MyFisColor.lightBgBase)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        // 본문이 헤더 밑으로 지나간다 (§6.9) — 흰 바탕보다 **먼저** 건다. 26 미만에서 헤더 자리까지 희게 칠해진다.
+        // 다른 잎 화면과 **같은 뒤로가기**를 쓴다 (2026-08-28 사용자 지정).
+        // 이 화면은 옆에서 밀려 들어오므로 `X`(덮개)보다 `←` 가 방향과 맞는다
+        .myFisHeader { DetailHeader(title: "물 마시기", onBack: onClose, light: true) }
         // **흰 바탕** — 혜택의 활동 화면은 밝다 (§9 이탈 #1, 2026-08-28 개정)
         .background(MyFisColor.lightBgBase)
     }
