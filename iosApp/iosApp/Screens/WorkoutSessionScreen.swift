@@ -89,8 +89,6 @@ struct WorkoutSessionScreen: View {
     )
     /// 마지막으로 그린 시각 — 틱마다 갱신해서 숫자를 다시 그린다
     @State private var now = nowMillis()
-    /// TODO(W-04): 음성 렙 카운트가 붙으면 이 스위치가 그걸 끈다
-    @State private var voice = true
 
     /// ⚠️ `let` 으로 두면 **부모가 다시 그릴 때마다 새 퍼블리셔**가 생겨 구독이 갈아 끼워진다.
     /// `@State` 는 처음 값만 남긴다.
@@ -184,12 +182,14 @@ struct WorkoutSessionScreen: View {
         .withoutGlass()
     }
 
-    /// 끈 상태는 **색으로 죽인다** — 투명도를 쓰지 않는다 (§9 이탈 #2)
+    /// 끈 상태는 **색으로 죽인다** — 투명도를 쓰지 않는다 (§9 이탈 #2).
+    /// 켜짐은 **저장소**가 든다 — 끄는 순간 하던 말도 멈춰야 한다 (`SessionVoice`)
     private var voiceChip: some View {
+        let voice = store.voiceOn
         // `Button` 이 아니라 **탭만 받는 판**이다 (안드로이드 `tapWithHaptics` 와 같다) —
         // `Button` 의 눌림 트랜잭션에 색 변화가 실려 스르륵 어두워졌다 (§6.1)
-        MyFisTappable(label: voice ? "음성 가이드 끄기" : "음성 가이드 켜기",
-                      action: { voice.toggle() }) {
+        return MyFisTappable(label: voice ? "음성 가이드 끄기" : "음성 가이드 켜기",
+                             action: { store.toggleVoice() }) {
             HStack(spacing: MyFisSpacing.sm) {
                 Image("ic_session_voice")
                     .renderingMode(.template)

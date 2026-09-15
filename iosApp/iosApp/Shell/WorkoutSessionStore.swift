@@ -37,6 +37,13 @@ final class WorkoutSessionStore {
     private(set) var clock: SessionClock?
     /// 세션이 열려 있다 (화면이 떠 있다)
     private(set) var isRunning = false
+    /// 음성 가이드 켜짐 — 세션 화면 칩이 바꾼다. 세션을 열 때마다 켜진 채로 시작한다
+    private(set) var voiceOn = true
+
+    /// 음성 가이드 (§6.37) — 말은 `SessionVoiceScript`, 언제 말할지는 여기(`speak`)가 정한다
+    @ObservationIgnored private let voice = SessionVoice()
+    /// 이 단계에서 이미 센 숫자 — 멈췄다 이어도 같은 숫자를 두 번 세지 않는다
+    @ObservationIgnored private var countedDown: CountMark?
 
     @ObservationIgnored private var steps: [SessionStep] = []
     @ObservationIgnored private var activity: Activity<WorkoutActivityAttributes>?
@@ -58,6 +65,9 @@ final class WorkoutSessionStore {
         )
         self.clock = clock
         isRunning = true
+        voiceOn = true
+        countedDown = nil
+        voice.say(entering(0))
         endActivity(state: nil, dismissal: .immediate)
         startActivity(state(clock, now: now))
     }
@@ -78,7 +88,55 @@ final class WorkoutSessionStore {
     func close() {
         guard isRunning else { return }
         isRunning = false
-        if clock?.finished != true { endActivity(state: nil, dismissal: .immediate) }
+        // 끝나서 닫히면 `오늘 운동을 마쳤어요` 를 끝까지 읽게 둔다
+        if clock?.finished != true {
+            voice.stop()
+            endActivity(state: nil, dismissal: .immediate)
+        }
+    }
+
+    // MARK: - 음성 가이드
+
+    func toggleVoice() {
+        voiceOn.toggle()
+        if !voiceOn { voice.stop() }
+    }
+
+    /// 시계가 바뀔 때마다 — **끝남 · 단계 바뀜 · 웜업 끝 3초** 에만 말한다. 멈춤 · 이어서는 말하지 않는다
+    private func speak(from old: SessionClock, to new: SessionClock, now: Int64) {
+        guard voiceOn else { return }
+        if new.finished && !old.finished {
+            voice.say(SessionVoiceScript.shared.FINISHED)
+        } else if new.index != old.index {
+            countedDown = nil
+            voice.say(entering(Int(new.index)))
+        } else if new.isTimed && new.isPlaying {
+            let mark = CountMark(index: Int(new.index), remain: Int(new.remainSeconds(now: now)))
+            guard mark != countedDown,
+                  let word = SessionVoiceScript.shared.countdown(remainSeconds: Int32(mark.remain)) else { return }
+            countedDown = mark
+            voice.say(word)
+        }
+    }
+
+    private func entering(_ index: Int) -> String {
+        let step = steps[index]
+        let position = sessionStagePosition(steps, index)
+        return SessionVoiceScript.shared.entering(
+            warmup: step.stage == .warmup,
+            within: Int32(position.within),
+            total: Int32(position.total),
+            title: step.title,
+            seconds: Int32(step.seconds ?? 0),
+            sets: Int32(step.exercise?.sets ?? 0),
+            load: step.exercise?.load,
+            reps: Int32(step.exercise?.reps ?? 0)
+        )
+    }
+
+    private struct CountMark: Equatable {
+        let index: Int
+        let remain: Int
     }
 
     /// 보낸 잠금화면 갱신이 **시스템에 닿을 때까지** 기다린다.
@@ -103,6 +161,7 @@ final class WorkoutSessionStore {
         let now = nowMillis()
         let updated = change(old, now)
         clock = updated
+        speak(from: old, to: updated, now: now)
         if updated.index != old.index || updated.isPlaying != old.isPlaying || updated.finished != old.finished {
             sessionTrace("시계 바뀜 — 흐름 \(old.isPlaying)→\(updated.isPlaying) · 단계 \(old.index)→\(updated.index) · " +
                          "잠금화면 \(activity == nil ? "없음" : "있음")")
