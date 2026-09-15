@@ -29,7 +29,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -118,8 +117,6 @@ fun WorkoutSessionScreen(
     val clock = store.clock ?: opening
     // 마지막으로 그린 시각 — 틱마다 갱신해서 숫자를 다시 그린다
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    // TODO(W-04): 음성 렙 카운트가 붙으면 이 스위치가 그걸 끈다
-    var voice by remember { mutableStateOf(true) }
 
     val step = steps[clock.index]
     val next = steps.getOrNull(clock.index + 1)
@@ -172,8 +169,9 @@ fun WorkoutSessionScreen(
     ) {
         SessionHeader(
             elapsed = clock.elapsedSeconds(now),
-            voice = voice,
-            onVoice = { voice = !voice },
+            // 켜짐은 **저장소**가 든다 — 끄는 순간 하던 말도 멈춰야 한다 ([com.myfis.app.session.SessionVoice])
+            voice = store.voiceOn,
+            onVoice = { store.toggleVoice() },
             onExit = onExit,
         )
 

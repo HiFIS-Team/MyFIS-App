@@ -5,6 +5,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.myfis.app.shared.workout.SessionClock
+import com.myfis.app.shared.workout.SessionVoiceScript
+import com.myfis.app.ui.screens.SessionStage
 import com.myfis.app.ui.screens.SessionStep
 import com.myfis.app.ui.screens.loadAndReps
 import com.myfis.app.ui.screens.sessionStageLabel
@@ -28,8 +30,17 @@ object WorkoutSessionStore {
     var isRunning by mutableStateOf(false)
         private set
 
+    /** 음성 가이드 켜짐 — 세션 화면 칩이 바꾼다. 세션을 열 때마다 켜진 채로 시작한다 */
+    var voiceOn by mutableStateOf(true)
+        private set
+
     private var steps: List<SessionStep> = emptyList()
     private var appContext: Context? = null
+
+    /** 음성 가이드 (§6.37) — 말은 `SessionVoiceScript`, 언제 말할지는 여기([speak])가 정한다. 앱이 살아 있는 동안 하나를 쓴다 */
+    private var voice: SessionVoice? = null
+    /** 이 단계에서 이미 센 숫자 (단계 · 남은 초) — 멈췄다 이어도 같은 숫자를 두 번 세지 않는다 */
+    private var countedDown: Pair<Int, Int>? = null
 
     /** 새 세션을 연다 */
     fun start(context: Context, steps: List<SessionStep>) {
@@ -40,7 +51,16 @@ object WorkoutSessionStore {
         val started = SessionClock.start(steps.map { it.seconds ?: 0 }, now)
         clock = started
         isRunning = true
+        voiceOn = true
+        countedDown = null
+        val voice = voice ?: SessionVoice(app).also { voice = it }
+        voice.say(entering(0))
         SessionNotifier.post(app, snapshot(started, now))
+    }
+
+    fun toggleVoice() {
+        voiceOn = !voiceOn
+        if (!voiceOn) voice?.stop()
     }
 
     /** 틱마다 — 시간이 다 된 웜업을 넘긴다 */
@@ -63,8 +83,45 @@ object WorkoutSessionStore {
     fun close() {
         if (!isRunning) return
         isRunning = false
+        // 끝나서 닫히면 `오늘 운동을 마쳤어요` 를 끝까지 읽게 둔다
+        if (clock?.finished != true) voice?.stop()
         val app = appContext ?: return
         if (clock?.finished != true) SessionNotifier.cancel(app)
+    }
+
+    /** 시계가 바뀔 때마다 — **끝남 · 단계 바뀜 · 웜업 끝 3초** 에만 말한다. 멈춤 · 이어서는 말하지 않는다 */
+    private fun speak(old: SessionClock, new: SessionClock, now: Long) {
+        if (!voiceOn) return
+        val voice = voice ?: return
+        when {
+            new.finished && !old.finished -> voice.say(SessionVoiceScript.FINISHED)
+            new.index != old.index -> {
+                countedDown = null
+                voice.say(entering(new.index))
+            }
+            new.isTimed && new.isPlaying -> {
+                val mark = new.index to new.remainSeconds(now)
+                val word = SessionVoiceScript.countdown(mark.second)
+                if (mark != countedDown && word != null) {
+                    countedDown = mark
+                    voice.say(word)
+                }
+            }
+        }
+    }
+
+    private fun entering(index: Int): String {
+        val step = steps[index]
+        return SessionVoiceScript.entering(
+            warmup = step.stage == SessionStage.WARMUP,
+            within = steps.take(index + 1).count { it.stage == step.stage },
+            total = steps.count { it.stage == step.stage },
+            title = step.title,
+            seconds = step.seconds ?: 0,
+            sets = step.exercise?.sets ?: 0,
+            load = step.exercise?.load,
+            reps = step.exercise?.reps ?: 0,
+        )
     }
 
     private inline fun update(change: (SessionClock, Long) -> SessionClock) {
@@ -73,6 +130,7 @@ object WorkoutSessionStore {
         val now = System.currentTimeMillis()
         val updated = change(old, now)
         clock = updated
+        speak(old, updated, now)
         val changed = updated.finished != old.finished ||
             updated.index != old.index ||
             updated.isPlaying != old.isPlaying

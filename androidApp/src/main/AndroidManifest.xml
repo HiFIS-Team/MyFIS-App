@@ -6,6 +6,13 @@
     <!-- Android 16 승격 알림 — 상태 표시줄 칩 · 잠금화면 위쪽에 올라간다 -->
     <uses-permission android:name="android.permission.POST_PROMOTED_NOTIFICATIONS" />
 
+    <!-- 운동 세션 음성 가이드 (DESIGN §6.37) — Android 11+ 는 음성 엔진(TTS 서비스)을 찾으려면 조회를 선언해야 한다 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
