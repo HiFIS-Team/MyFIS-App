@@ -22,6 +22,11 @@ struct GroupScreen: View {
     var onCreate: () -> Void = {}
     /// TODO: G-02 모임 상세가 붙으면 연결한다
     var onGroup: (GroupItem) -> Void = { _ in }
+    /// 머리 검색 — 검색어 · 켜짐은 **셸이 든다** (내비 바 시스템 검색 버튼 `NavigationBarSearch` 가 바꾼다, 2026-09-15)
+    @Binding var query: String
+    @Binding var searching: Bool
+    /// 최근 검색 — 검색 잎과 나눠 쓴다 (뿌리가 들고 있다)
+    @Binding var recents: SearchRecents
 
     @State private var segment: GroupSegment = .browse
     @State private var category: GroupCategory = .all
@@ -40,6 +45,21 @@ struct GroupScreen: View {
     private var rising: [GroupItem] { rows.filter { $0.recruiting || $0.isNew } }
 
     var body: some View {
+        // **검색은 제자리에서 켜진다** 🟢 (2026-09-15, 사용자 — *"모임에서 검색도 저거랑 똑같이"*) — 스토어와 같다.
+        // 목록은 걷지 않고 숨긴다 — 취소하면 보던 자리 그대로다
+        ZStack {
+            browse
+                .opacity(searching ? 0 : 1)
+                .allowsHitTesting(!searching)
+            if searching {
+                GroupSearchResults(query: $query, recents: $recents, onGroup: onGroup)
+                    .transition(.opacity)
+            }
+        }
+        .animation(MyFisMotion.base, value: searching)
+    }
+
+    private var browse: some View {
         VStack(spacing: 0) {
             ZStack(alignment: .bottom) {
                 ScrollView {

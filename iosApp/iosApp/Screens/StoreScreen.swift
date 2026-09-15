@@ -11,8 +11,8 @@ import SwiftUI
 ///
 /// 헤더 아래(카테고리·마일리지)는 **스크롤해도 남는다** (S 공통 규칙 — 살 수 있는지 매번 계산하게 하지 않는다).
 struct StoreScreen: View {
-    // 헤더 — 왼쪽 **시스템 검색 입력칸**(`ToolbarSearchField`)과 오른쪽(장바구니 · 마이 ↔ `취소`)을
-    // `TabShell` 이 툴바로 올린다 (§6.9 · §7.1)
+    // 헤더 — 왼쪽 **검색칸**은 `TabShell` 이 이 화면 위에 붙이고(`PageHeaderSearchField`, 페이지와 같이 밀린다),
+    // 오른쪽(장바구니 · 마이 ↔ `취소`)은 툴바로 올린다 (§6.9 · §7.1)
     var onItem: (StoreItem) -> Void = { _ in }
 
     /// 찜 — 검색 잎(S-07)과 나눠 쓰므로 셸이 들고 있다

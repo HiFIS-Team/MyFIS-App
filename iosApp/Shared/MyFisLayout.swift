@@ -70,6 +70,8 @@ enum MyFisSize {
 
     /// 오른쪽 알약 — 장바구니 · 마이 (실측 103.7)
     static let toolbarPairPlatter: CGFloat = 104
+    /// 오른쪽 알약 — `취소` (실측 59.7). 검색 중 검색칸을 넓힐 때 쓴다 (크림)
+    static let toolbarCancelPlatter: CGFloat = 60
     /// 알약과 알약 사이 — **12 보다 좁히면 오른쪽 알약이 `…` 로 접힌다** (실측: 사이 10 에서 `취소` 가 접힘, 12 부터 안 접힘).
     /// 크림 녹화의 사이도 약 12 다. ~~8~~ 은 제목 자리 검색창일 때 잰 값이었다
     static let toolbarPlatterGap: CGFloat = 12

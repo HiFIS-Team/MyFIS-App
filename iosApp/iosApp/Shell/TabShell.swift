@@ -22,6 +22,8 @@ struct TabShell<Leaf: View>: View {
     @Binding var liked: Set<Int>
     /// 최근 검색 — 스토어 머리 검색과 검색 잎이 나눠 쓴다 (뿌리가 들고 있다)
     @Binding var storeRecents: SearchRecents
+    /// 최근 검색 — 모임 머리 검색과 모임 검색 잎이 나눠 쓴다 (뿌리가 들고 있다)
+    @Binding var groupRecents: SearchRecents
     /// 지금 선택된 자리 — 뿌리가 잎을 **어느 스택에** 쌓을지 여기서 안다
     @Binding var activeSlot: Int
     /// 자리마다 스택
@@ -41,19 +43,42 @@ struct TabShell<Leaf: View>: View {
     /// 스토어 머리 검색 — **셸이 든다.** 검색창은 스토어 화면이 제목 자리에 달고, `취소` 는 이 셸의 툴바에 있다 (§6.9)
     @State private var storeQuery = MyFisDebug.storeSearchOpen ? MyFisDebug.searchQuery : ""
     @State private var storeSearching = MyFisDebug.storeSearchOpen
-    /// 화면 폭 — 스토어 검색칸 폭을 계산한다 (`storeSearchWidth`)
+    /// 모임 머리 검색 — 시스템 검색 버튼이 펼쳐진다 (`NavigationBarSearch`, 2026-09-15)
+    @State private var groupQuery = MyFisDebug.groupHeaderQuery
+    @State private var groupSearching = false
+    /// 화면 폭 — 검색칸 폭을 계산한다 (`storeSearchWidth` · `groupSearchWidth`)
     @State private var shellWidth: CGFloat = 0
 
-    /// 스토어 검색칸 폭 — **내비 바가 왼쪽 항목에 남는 폭을 주지 않는다** (`maxWidth: .infinity` → 36pt 돋보기 원만 남았다).
-    /// 화면 폭 − 양끝 여백 − 알약 사이 − 오른쪽 알약(장바구니 · 마이). 알약 치수는 iOS 26 시스템 값이라 **실측해서 토큰으로 뒀다** (DESIGN §6.9)
+    /// 스토어 검색칸 폭 — 화면 폭 − 양끝 여백 − 알약 사이 − 오른쪽 알약.
+    /// 오른쪽 알약 치수는 iOS 26 시스템 값이라 **실측해서 토큰으로 뒀다** (DESIGN §6.9)
     ///
-    /// **검색 중에도 폭을 바꾸지 않는다** — `취소` 가 좁은 만큼 넓히면(크림) 알약이 커지고 줄어드는 동안
-    /// **돋보기 · 글자가 옆으로 튀었다** (60fps: 켤 때 오른쪽으로 밀림 · 끌 때 돋보기 잘림). 왼쪽 정렬로도, 애니메이션 없이 바꿔도
-    /// 끌 때는 그대로였고, 폭을 두면 켤 때 · 끌 때 둘 다 제자리였다
+    /// **검색 중엔 `취소` 가 좁은 만큼 넓어진다** (크림, 2026-09-15 사용자 — *"검색할때는 더 넓어져야 하는거 아닌가"*).
+    /// 폭은 켜짐만 따르고, 켜고 끄는 `withAnimation` 을 같이 탄다 (`cancelStoreSearch`)
     private var storeSearchWidth: CGFloat {
-        let width = shellWidth - MyFisSize.toolbarEdge * 2 - MyFisSize.toolbarPlatterGap - MyFisSize.toolbarPairPlatter
+        searchWidth(trailing: storeSearching ? MyFisSize.toolbarCancelPlatter : MyFisSize.toolbarPairPlatter)
+    }
+
+    private func searchWidth(trailing: CGFloat) -> CGFloat {
+        let width = shellWidth - MyFisSize.toolbarEdge * 2 - MyFisSize.toolbarPlatterGap - trailing
             - MyFisSize.toolbarFieldInset * 2
         return max(MyFisSize.minTouchTarget, width)
+    }
+
+    /// 스토어 검색 끄기 — `취소` · 디버그가 같이 쓴다.
+    ///
+    /// **끄기와 좁히기를 한 애니메이션에** 🟢 (60fps 넷 비교, 2026-09-15 사용자 — *"접힐때는 바로 확접히네"*)
+    /// - ✅ 같은 순간 — 검색칸이 네다섯 장에 걸쳐 좁아지고 돋보기 · 글자는 제자리
+    /// - ❌ 먼저 좁히고 0.05초 뒤 끄기 — 좁히기가 애니메이션 밖이라 **한 장 만에 확 접혔다**
+    /// - ❌ 폭에 애니메이션을 태우기(같은 순간 · 먼저 좁히기 둘 다) — 돋보기 · 글자가 **왼쪽으로 튀어 잘렸다**
+    /// - ❌ 전환이 끝난 뒤 좁히기 — 넓은 칸 옆에 아이콘 알약이 안 들어가 `…` 로 접혔다
+    private func cancelStoreSearch() {
+        storeQuery = ""
+        withAnimation(MyFisMotion.slow) { storeSearching = false }
+    }
+
+    private func cancelGroupSearch() {
+        groupQuery = ""
+        withAnimation(MyFisMotion.base) { groupSearching = false }
     }
 
     var body: some View {
@@ -93,6 +118,8 @@ struct TabShell<Leaf: View>: View {
             // 스택을 새로 만들므로 머리 검색도 닫는다 — 돌아왔을 때 키보드가 불쑥 올라오지 않게
             storeQuery = ""
             storeSearching = false
+            groupQuery = ""
+            groupSearching = false
             // **탭 바 아이콘도 페이지처럼 겹쳐 바꾼다** (2026-09-15, 사용자 — 3번 "거슬리는거 있으면 그것도 해").
             // 그냥 두면 아이콘 다섯 개가 누르는 순간 한꺼번에 갈리고, 페이지는 시스템 전환이라 겹쳐 흐려진다
             UITabBarController.myFisCrossfadeTabBar(duration: MyFisMotion.baseDuration)
@@ -110,12 +137,14 @@ struct TabShell<Leaf: View>: View {
             MyFisDebug.scheduleAutoTab { baseTab = $0 }
             MyFisDebug.scheduleAutoSlot { selection.wrappedValue = $0 }
             MyFisDebug.scheduleAutoTap()
+            MyFisDebug.scheduleNavTap()
             MyFisDebug.scheduleStoreSearch(
                 open: { withAnimation(MyFisMotion.slow) { storeSearching = true } },
-                cancel: {
-                    storeQuery = ""
-                    withAnimation(MyFisMotion.slow) { storeSearching = false }
-                }
+                cancel: cancelStoreSearch
+            )
+            MyFisDebug.scheduleGroupSearch(
+                open: { withAnimation(MyFisMotion.slow) { groupSearching = true } },
+                cancel: cancelGroupSearch
             )
         }
     }
@@ -180,23 +209,17 @@ struct TabShell<Leaf: View>: View {
         // **마일리지 칩은 뺐다** 🟢 (2026-09-15, 사용자 — *"스토어에서 마일리지 표기는 일단 없애버려 어디에 둘지 같이 고민해보게"*).
         // 🔵 어디에 둘지 미정
         //
-        // **왼쪽은 시스템 검색 입력칸** — 오른쪽 아이콘과 **같은 툴바 유리 알약**에 담는다 (`ToolbarSearchField`, 크림).
-        // ❌ 제목 자리에 두니 알약보다 5pt 아래였고, 잎에 다녀오면 유리 판만 사라졌다 (사용자 지적)
-        ToolbarItem(placement: .topBarLeading) {
-            ToolbarSearchField(text: $storeQuery, active: $storeSearching, placeholder: "상품 검색",
-                               onSubmit: { storeRecents.add($0) })
-                .frame(width: storeSearchWidth)
-        }
+        // **왼쪽 검색칸은 툴바에 없다 — 스토어 페이지에 붙어 있다** 🟢 (`PageHeaderSearchField`, 크림 60fps, 2026-09-15).
+        // 잎이 드나들 때 페이지와 같이 밀리고, 뒤로 버튼 원과 섞이지 않는다.
+        // ❌ 왼쪽 툴바 항목 — 시스템이 넓은 알약을 뒤로 버튼 원으로 녹여 **날개 달린 원**이 남았다. 뺐다가 전환 뒤 넣기로 막았지만 검색칸이 사라졌다 나타났다 (사용자 지적)
+        // ❌ 제목 자리 — 알약보다 5pt 아래였고, 잎에 다녀오면 유리 판만 사라졌다 (사용자 지적)
         // 오른쪽은 **항목 그룹** — 장바구니 · 마이 ↔ `취소`. 시스템이 알약을 녹여 바꾼다 (60fps 확인)
         // ⚠️ 항목 하나 안에 아이콘 둘을 넣었다가 **간격이 시스템보다 좁아졌다** (알약 104 → 84pt, 사용자 지적) — 그룹이면 시스템이 잡는다
         // `마이` 는 **마이 탭이 아니다** — 교환에 관한 나(S-08)로 간다
         ToolbarItemGroup(placement: .topBarTrailing) {
             if storeSearching {
-                Button("취소") {
-                    storeQuery = ""
-                    withAnimation(MyFisMotion.slow) { storeSearching = false }
-                }
-                .font(MyFisFont.body)
+                Button("취소", action: cancelStoreSearch)
+                    .font(MyFisFont.body)
             } else {
                 ToolbarIcon("ic_header_cart", "장바구니") { open(.storeCart) }
                 ToolbarIcon("ic_header_my", "마이") { open(.storeMy) }
@@ -252,15 +275,19 @@ struct TabShell<Leaf: View>: View {
     }
 
     /// 모임 — 화면 이름 + 검색 (§6.29). 지점은 걸지 않는다 — 활동 지역이 들어와 목록이 지점 것만이 아니다
+    ///
+    /// **돋보기는 시스템 검색 버튼이다** 🟢 — 누르면 시스템이 검색창으로 펼치고 닫기(✕)를 붙인다 (`NavigationBarSearch`, 화면 뒤에 깔림).
+    /// 툴바에는 화면 이름만 둔다 — 검색 중엔 시스템이 알아서 가린다 (2026-09-15, 60fps)
+    /// - ❌ 오른쪽 툴바 항목에 입력칸을 넣고 폭을 늘리기 — 접힌 원 안 돋보기가 치우쳤고, `취소` 가 끼어들 때
+    ///   **빈 원 · 네모 날개**가 생겼다 사라졌다 (사용자 지적)
+    /// - ❌ 제목 · 돋보기를 검색칸 · `취소` 로 바꿔 끼우기 — 펼쳐지지 않고 흐려지며 나타났다
+    /// - ❌ SwiftUI `searchToolbarBehavior(.minimize)` — 코드로 켜니 펼쳐지지 않았다
     @ToolbarContentBuilder
     private var groupToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
             ToolbarScreenTitle("모임")
         }
         .withoutGlass()
-        ToolbarItem(placement: .topBarTrailing) {
-            ToolbarIcon("ic_header_search", "모임 검색") { open(.groupSearch) }
-        }
     }
 
     // MARK: - 탭 선택
@@ -370,6 +397,11 @@ struct TabShell<Leaf: View>: View {
                         searching: $storeSearching,
                         recents: $storeRecents
                     )
+                    // 머리 검색칸 — 페이지에 붙어 잎이 드나들 때 같이 밀린다 (크림)
+                    .overlay {
+                        PageHeaderSearchField(text: $storeQuery, active: $storeSearching, placeholder: "상품 검색",
+                                              width: storeSearchWidth, onSubmit: { storeRecents.add($0) })
+                    }
                 case .my:
                     MyScreen()
                 case .weight:
@@ -391,7 +423,14 @@ struct TabShell<Leaf: View>: View {
                 case .ranking:
                     PlaceholderScreen(id: "R-01", title: "랭킹", description: "웨이트 · 유산소 · 마일리지")
                 case .group:
-                    GroupScreen(onCreate: { open(.groupCreate) })
+                    GroupScreen(onCreate: { open(.groupCreate) },
+                                query: $groupQuery,
+                                searching: $groupSearching,
+                                recents: $groupRecents)
+                        .background {
+                            NavigationBarSearch(text: $groupQuery, active: $groupSearching, placeholder: "모임 검색",
+                                                onSubmit: { groupRecents.add($0) })
+                        }
                 case .back:
                     Color.clear // 통로
                 }
